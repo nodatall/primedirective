@@ -156,17 +156,8 @@ for name in "${REPO_NAMES[@]}"; do
     continue
   fi
 
-  if ((NO_SYNC == 0)); then
-    "$SCRIPT_DIR/sync-repo.sh" --repo-name "$name"
-  fi
-
-  if [[ -z "$(git -C "$target_repo" status --porcelain -- AGENTS.md CLAUDE.md rules)" ]]; then
-    echo "  skip: no sync changes for $name"
-    skipped_count=$((skipped_count + 1))
-    continue
-  fi
-
-  branch_name="${BRANCH_PREFIX}-${timestamp}"
+  original_branch=$(git -C "$target_repo" symbolic-ref --quiet --short HEAD || true)
+  branch_name="${BRANCH_PREFIX}-${name}-${timestamp}"
 
   if ! git -C "$target_repo" fetch origin "$BASE_BRANCH"; then
     echo "  fail: could not fetch origin/$BASE_BRANCH"
@@ -180,11 +171,28 @@ for name in "${REPO_NAMES[@]}"; do
     continue
   fi
 
+  if ((NO_SYNC == 0)); then
+    "$SCRIPT_DIR/sync-repo.sh" --repo-name "$name"
+  fi
+
+  if [[ -z "$(git -C "$target_repo" status --porcelain -- AGENTS.md CLAUDE.md rules)" ]]; then
+    echo "  skip: no sync changes for $name"
+    if [[ -n "$original_branch" && "$original_branch" != "$branch_name" ]]; then
+      git -C "$target_repo" switch "$original_branch" >/dev/null 2>&1 || true
+    fi
+    git -C "$target_repo" branch -D "$branch_name" >/dev/null 2>&1 || true
+    skipped_count=$((skipped_count + 1))
+    continue
+  fi
+
   git -C "$target_repo" add AGENTS.md CLAUDE.md rules/*.md
 
   if git -C "$target_repo" diff --cached --quiet; then
     echo "  skip: no staged changes after add"
-    git -C "$target_repo" switch "$BASE_BRANCH" >/dev/null 2>&1 || true
+    if [[ -n "$original_branch" && "$original_branch" != "$branch_name" ]]; then
+      git -C "$target_repo" switch "$original_branch" >/dev/null 2>&1 || true
+    fi
+    git -C "$target_repo" branch -D "$branch_name" >/dev/null 2>&1 || true
     skipped_count=$((skipped_count + 1))
     continue
   fi
@@ -233,6 +241,10 @@ for name in "${REPO_NAMES[@]}"; do
     else
       echo "  warn: could not enable auto-merge for $pr_url"
     fi
+  fi
+
+  if [[ -n "$original_branch" && "$original_branch" != "$branch_name" ]]; then
+    git -C "$target_repo" switch "$original_branch" >/dev/null 2>&1 || true
   fi
 done
 
