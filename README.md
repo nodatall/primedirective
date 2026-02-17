@@ -18,6 +18,8 @@ for each consumer repo listed in `repos/<name>/repo.path`.
 - `scripts/sync-repo.sh` render one consumer
 - `scripts/sync-all.sh` render all consumers
 - `scripts/validate.sh` CI-style sync check
+- `scripts/sync-open-prs.sh` sync, commit, and open PRs in consumer repos
+- `scripts/sync-all-automerge.sh` one-command sync + PR + auto-merge for all repos
 
 ## Local-only config
 
@@ -58,6 +60,24 @@ Validate all repos are current:
 
 ```bash
 ./scripts/validate.sh
+```
+
+Sync and open PRs for all configured repos:
+
+```bash
+./scripts/sync-open-prs.sh
+```
+
+Sync and open PRs for one repo:
+
+```bash
+./scripts/sync-open-prs.sh --repo-name <repo-name>
+```
+
+One-command sync + PR + auto-merge for all configured repos:
+
+```bash
+./scripts/sync-all-automerge.sh
 ```
 
 ## Recommended workflow
