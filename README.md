@@ -15,6 +15,7 @@ for each consumer repo listed in `repos/<name>/repo.path`.
 - `core/` shared canonical content
 - `repos/<name>/overlay/` local-only repo-specific overrides (gitignored)
 - `templates/` optional starter template(s)
+- `scripts/add-repo.sh` register a consumer repo in `repos/`
 - `scripts/sync-repo.sh` render one consumer
 - `scripts/sync-all.sh` render all consumers
 - `scripts/validate.sh` CI-style sync check
@@ -25,6 +26,38 @@ for each consumer repo listed in `repos/<name>/repo.path`.
 
 - `repos/` is intentionally ignored by git and should not be pushed.
 - Each machine should create its own `repos/<name>/repo.path` and optional overlays.
+
+## Setup
+
+Recommended workspace layout (siblings under one parent folder):
+
+```text
+<workspace-root>/
+  primedirective/
+  repo-a/
+  repo-b/
+```
+
+Run setup from `primedirective/`:
+
+1. Register each consumer repo:
+
+```bash
+./scripts/add-repo.sh --repo-path ../repo-a
+./scripts/add-repo.sh --repo-path ../repo-b
+```
+
+2. Sync generated files into all configured repos:
+
+```bash
+./scripts/sync-all.sh
+```
+
+3. Optional one-command PR flow (sync + PR + auto-merge):
+
+```bash
+./scripts/sync-all-automerge.sh
+```
 
 ## Overlay behavior
 
@@ -48,6 +81,12 @@ Sync one repo:
 
 ```bash
 ./scripts/sync-repo.sh --repo-name <repo-name>
+```
+
+Add/register one repo:
+
+```bash
+./scripts/add-repo.sh --repo-path <path-to-repo> [--repo-name <name>]
 ```
 
 Sync all repos:

@@ -1,6 +1,7 @@
 # Agents
 
-Primary workflow rules live in `rules/task-management.md`. Follow that first.
+Primary execution workflow rules live in `rules/task-management.md`.  
+Planning workflow rules live in `rules/socratic-planning.md`.
 
 ## Repo-Specific Norms
 - Branch naming: `nodatall/<short-task-name>` (concise, concrete).
@@ -9,6 +10,11 @@ Primary workflow rules live in `rules/task-management.md`. Follow that first.
 - Tests: prefer `npm test`; if skipped, say why.
 - Bugs: add regression test when it fits.
 - When working on browser E2E tests (especially files under `tests/e2e/**`, `playwright.config.*`, or Playwright CI scripts), use the `playwright` skill by default.
+
+## Planning Trigger Workflow
+- Accepted planning trigger phrase: `start planning for <feature-name>`.
+- On this trigger, run `rules/socratic-planning.md` first and follow its gates before PRD/TDD/task generation.
+- Socratic planning is pre-implementation workflow and is separate from the Step 1-9 task execution flow below.
 
 ## Task Trigger Workflow
 - Accepted trigger phrase: `begin task <task-id> in <prd-key>` (example: `begin task 1.3 in sortinghat`).
