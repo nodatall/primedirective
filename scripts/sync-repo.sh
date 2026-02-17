@@ -118,7 +118,8 @@ render_rule_file() {
 }
 
 render_root_file "AGENTS"
-render_root_file "CLAUDE"
+# CLAUDE.md intentionally mirrors AGENTS.md exactly across all repos.
+cp "$TMP_DIR/AGENTS.md" "$TMP_DIR/CLAUDE.md"
 
 for core_rule in "$ROOT_DIR"/core/rules/*.md; do
   render_rule_file "$core_rule"

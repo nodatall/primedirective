@@ -14,17 +14,19 @@ for each consumer repo listed in `repos/<name>/repo.path`.
 
 - `core/` shared canonical content
 - `repos/<name>/overlay/` repo-specific overrides
+- `templates/` optional starter template(s)
 - `scripts/sync-repo.sh` render one consumer
 - `scripts/sync-all.sh` render all consumers
 - `scripts/validate.sh` CI-style sync check
 
 ## Overlay behavior
 
-For root files (`AGENTS.md`, `CLAUDE.md`):
+For root files:
 
-1. If `overlay/<FILE>.full.md` exists, it fully replaces core.
-2. Else if `overlay/<FILE>.append.md` exists, it is appended to core.
-3. Else core is used as-is.
+1. `AGENTS.md` supports overlays:
+   - `overlay/AGENTS.full.md` fully replaces core.
+   - `overlay/AGENTS.append.md` appends to core.
+2. `CLAUDE.md` is always generated as an exact copy of `AGENTS.md` across all repos.
 
 For rule files:
 
