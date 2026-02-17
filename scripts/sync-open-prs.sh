@@ -236,10 +236,26 @@ for name in "${REPO_NAMES[@]}"; do
   created_count=$((created_count + 1))
 
   if ((AUTO_MERGE == 1)); then
-    if (cd "$target_repo" && gh pr merge --auto --squash --delete-branch "$pr_url" >/dev/null); then
+    set +e
+    auto_merge_output=$(cd "$target_repo" && gh pr merge --auto --squash --delete-branch "$pr_url" 2>&1)
+    auto_merge_exit=$?
+    set -e
+
+    if ((auto_merge_exit == 0)); then
       echo "  auto-merge enabled for $pr_url"
     else
-      echo "  warn: could not enable auto-merge for $pr_url"
+      set +e
+      direct_merge_output=$(cd "$target_repo" && gh pr merge --squash --delete-branch "$pr_url" 2>&1)
+      direct_merge_exit=$?
+      set -e
+
+      if ((direct_merge_exit == 0)); then
+        echo "  merged immediately for $pr_url (auto-merge not available)"
+      else
+        echo "  warn: could not auto-merge or merge immediately for $pr_url"
+        echo "  auto-merge error: ${auto_merge_output%%$'\n'*}"
+        echo "  direct-merge error: ${direct_merge_output%%$'\n'*}"
+      fi
     fi
   fi
 
