@@ -15,6 +15,8 @@ Planning workflow rules live in `rules/socratic-planning.md`.
 - Accepted planning trigger phrase: `start planning for <feature-name>`.
 - On this trigger, run `rules/socratic-planning.md` first and follow its gates before PRD/TDD/task generation.
 - Socratic planning is pre-implementation workflow and is separate from the Step 1-9 task execution flow below.
+- During Socratic planning, keep prompts non-technical by default and avoid narrating internal process mechanics.
+- During Socratic planning, use short rounds (max 2 questions) and resolve ambiguity before advancing sequence steps.
 
 ## Task Trigger Workflow
 - Accepted trigger phrase: `begin task <task-id> in <prd-key>` (example: `begin task 1.3 in sortinghat`).

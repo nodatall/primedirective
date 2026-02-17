@@ -34,9 +34,45 @@ Store generated planning artifacts in `/tasks/`:
 - `tdd-<feature>.md`
 - `tasks-prd-<feature>.md`
 
+## Phase 0: Planning Preflight (Required)
+
+Before asking any Socratic questions:
+
+1. Verify trigger intent matches this workflow (`start planning for <feature-name>`).
+2. Verify required rule files exist and are readable:
+   - `rules/socratic-planning.md`
+   - `rules/create-prd.md`
+   - `rules/create-tdd.md`
+   - `rules/generate-tasks.md`
+3. Verify planning artifact paths under `/tasks/` and create missing artifacts when needed.
+4. Confirm feature slug and source reference in one short line.
+
+If preflight fails, ask one plain-language corrective question and stop until resolved.
+
 ## Phase 1: Socratic Rounds (Mandatory)
 
-Run micro-rounds with **1-3 high-impact questions per round**.
+Run micro-rounds with **1-2 high-impact questions per round**.
+
+### Conversation Style (Required)
+
+- Ask questions in plain language suitable for a non-technical stakeholder.
+- Default to product/operational wording; only ask deep technical questions when they are strictly required by the current sequence step.
+- Prefer concrete options over open-ended technical prompts (use simple A/B choices when helpful).
+- Avoid process narration in user-facing replies (for example: "locking decisions", "gates", "auditable chain", "handoff integrity").
+- Keep each user turn short: one recap paragraph plus the next 1-2 questions.
+- Maintain schemas/files in the background without narrating internal bookkeeping each turn.
+
+### Round Interaction Contract (Required)
+
+- Ask at most 2 questions per turn.
+- Ask one concept per question.
+- For ambiguous topics, present options with a recommended default first.
+- Do not proceed to a new sequence step while prior-step ambiguity remains unresolved.
+
+User-facing turn format:
+
+1. `Recap` (2-4 sentences, plain language)
+2. `Questions` (1-2 items, each answerable quickly)
 
 Each round must include:
 
@@ -62,6 +98,17 @@ Maintain `decision-log-<feature>.md` with this schema:
 - `reason`
 - `alternatives`
 - `impact`
+- `status` (`active` | `superseded`)
+- `superseded_by` (optional decision id)
+
+### Ambiguity Handling (Required)
+
+- If user answer is vague (for example: "sure", "not sure", "depends"), do not silently lock it.
+- Respond with:
+  - one-sentence interpretation,
+  - one confirmation question (`yes/no` or `A/B`),
+  - optional recommended default.
+- Record decision only after explicit confirmation.
 
 ### Required Socratic Sequence (in order)
 
@@ -74,6 +121,21 @@ Maintain `decision-log-<feature>.md` with this schema:
 7. Failure clarity: what can fail, detection, recovery, rollback.
 8. Rollout clarity: release shape, monitoring, operator workflow.
 9. Plain-language readiness: 12-year-old summary + checklist.
+
+Sequence behavior:
+
+- Do not jump ahead to execution-level technical details during Problem/Success/Scope clarity unless the user explicitly asks.
+- Convert vague answers into simple measurable criteria using non-technical wording first, then map to technical artifacts later in PRD/TDD.
+- By the end of Success Clarity, convert quality goals into observable pass/fail criteria (percentages, thresholds, or explicit rule sets).
+
+### Contradiction Check (Required After Every Round)
+
+- Run a contradiction sweep against all prior locked decisions.
+- If conflict exists:
+  - mark older decision(s) as `superseded`,
+  - reference the replacement via `superseded_by`,
+  - include one-line plain-language note in round recap.
+- Do not leave two active decisions that conflict.
 
 ## Gate to Move Forward
 
@@ -143,6 +205,10 @@ Execution cleanup/archive behavior belongs to `rules/task-management.md` and `AG
   - Expected: do not proceed to PRD/TDD generation.
 - Plain-language checklist not approved:
   - Expected: return to Socratic rounds, no implementation handoff.
+- Ambiguous user answer left unconfirmed:
+  - Expected: do not lock decision; ask one clarification before continuing sequence.
+- Conflicting decisions both marked active:
+  - Expected: mark prior decision superseded before advancing.
 
 ## Assumptions and Defaults
 
