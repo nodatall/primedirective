@@ -22,6 +22,27 @@ Guidelines for managing task lists in markdown files to track progress on comple
 - Stop after each sub-task and wait for the user's go-ahead.
   - Exception: when task mode is explicitly `begin one-shot in <prd-id>`, do not pause between sub-tasks.
 
+## Cleanup Phase (Required)
+
+When the final remaining checkbox in `tasks/tasks-prd-<prd-ref>.md` is marked `[x]`, run archive cleanup immediately.
+
+Archive target:
+
+- `tasks/archive/<prd-ref>/`
+
+Files to move:
+
+- `tasks/tasks-prd-<prd-ref>.md`
+- `tasks/prd-<prd-ref>.md`
+- `tasks/tdd-<prd-ref>.md`
+
+Rules:
+
+1. Create `tasks/archive/<prd-ref>/` if it does not already exist.
+2. Move all three files into that folder after final completion is confirmed.
+3. If any required file is missing, stop and ask the user before archiving.
+4. Perform cleanup before opening the final task-based PR.
+
 ## Task List Maintenance
 
 1. **Update the task list as you work:**
@@ -47,3 +68,4 @@ When working with task lists, the AI must:
 7. Before starting work, check which sub-task is next.
 8. After implementing a sub-task, update the file and then pause for user approval.
    - Exception: when task mode is explicitly `begin one-shot in <prd-id>`, continue directly to the next sub-task after commit + review completion.
+9. When all tasks are complete, archive `tasks-prd`, `prd`, and `tdd` into `tasks/archive/<prd-ref>/` before final PR handoff.

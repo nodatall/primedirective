@@ -19,7 +19,7 @@ Primary workflow rules live in `rules/task-management.md`. Follow that first.
   - `<prd-ref>` means the provided PRD token (`<prd-key>` in standard mode, `<prd-id>` in one-shot mode).
 - Standard mode: if `<task-id>` or `<prd-key>` is missing, or if either file does not exist, stop and ask for clarification.
 - One-shot mode: if `<prd-id>` is missing, or if either file does not exist, stop and ask for clarification.
-- Execute steps in order. Do not skip, reorder, or merge steps.
+- For task execution triggers only (`begin task ...` and `begin one-shot ...`), execute Steps 1-9 in order. Do not skip, reorder, or merge steps.
 - Standard mode gate: pause after Step 2 and wait for plan approval before Step 3.
 - Standard mode gate: complete one sub-task at a time and pause for user go-ahead between sub-tasks per `rules/task-management.md`.
 - One-shot mode (`begin one-shot in <prd-id>`) behavior:
@@ -34,6 +34,8 @@ Primary workflow rules live in `rules/task-management.md`. Follow that first.
 - Branch stability rule for review:
   - During `begin review ...` and `resume review ...`, do **not** create, rename, or switch branches.
   - Keep review work on the current branch being reviewed.
+  - Review mode always starts at Step 4. Never run Step 1, Step 2, or Step 3 from any review trigger.
+  - Step 1 branch-creation instructions are task-mode only and are not permitted during review.
 - Review prompts must be executed one-at-a-time in sequence (A, then B, then C, then D, then E). Do not batch multiple prompts into one combined pass.
 - Mandatory review-round rule:
   - Run **one full review round** (Prompts A-E) for each review cycle.
@@ -45,6 +47,10 @@ Primary workflow rules live in `rules/task-management.md`. Follow that first.
 Please fetch the latest `origin/main` from github.
 We are going to work on task <task-id> in [tasks/tasks-prd-<prd-key>.md], please create and switch to a new branch from `origin/main`.
 ```
+Scope:
+- Task execution only (`begin task ...` / `begin one-shot ...`).
+- Do not run Step 1 for `begin review ...` or `resume review ...`.
+
 Operational translation:
 - `git fetch origin main`
 - If there are uncommitted changes in the working tree, stop and ask for guidance before creating the task branch.
@@ -132,17 +138,28 @@ Action: Keep what adds value; delete what adds noise.
 
 ### Step 9: Finalization Prompt
 ```text
-Please pull the latest main from github and rebase. If this is task-based work, mark the task complete, then open a pull request. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
+Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the task list, PRD, and TDD into `tasks/archive/<prd-ref>/`, then open a pull request. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
 ```
 Operational translation:
 - `git fetch origin main`
 - `git rebase origin/main`
 - Resolve conflicts and rerun relevant tests.
 - Update task checklist/relevant files only for task-based PRD work.
+- If all checkboxes in `tasks/tasks-prd-<prd-ref>.md` are complete:
+  - `mkdir -p tasks/archive/<prd-ref>`
+  - `mv tasks/tasks-prd-<prd-ref>.md tasks/archive/<prd-ref>/`
+  - `mv tasks/prd-<prd-ref>.md tasks/archive/<prd-ref>/`
+  - `mv tasks/tdd-<prd-ref>.md tasks/archive/<prd-ref>/`
+  - If any file is missing, stop and ask the user before proceeding.
 - Open PR with task id, summary, test evidence, and known risks/follow-ups.
 - For ad-hoc reviews, open PR with ad-hoc scope summary, test evidence, and known risks/follow-ups.
 - One-shot rule: run Step 9 once after all queued sub-tasks are complete; open one PR that summarizes the full one-shot scope.
 ## Review Trigger Commands
+- `begin review <task-id>`:
+  - Start review for an existing task after implementation edits.
+  - Stay on the current branch. Do not rename/create/switch branches during review.
+  - Start at Step 4 and run **all of Steps 4/5/6/7/8** in order.
+  - Create or append `tasks/tmp/review-task-<task-id>.md` and review full branch scope.
 - `resume review <task-id>`:
   - Continue review for an existing task after additional edits.
   - Stay on the current branch. Do not rename/create/switch branches during review.

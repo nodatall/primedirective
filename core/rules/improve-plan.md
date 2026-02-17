@@ -7,7 +7,9 @@ alwaysApply: false
 
 ## Goal
 
-After `prd-*.md` and `tasks-prd-*.md` are both generated, run a focused senior-engineering review pass to improve the plan before implementation starts.
+After `prd-*.md`, `tdd-*.md`, and `tasks-prd-*.md` are generated, run a focused senior-engineering review pass to improve the plan before implementation starts.
+
+Use PRD as product truth (`what/why`), TDD as execution truth (`how`), and ensure tasks cover both.
 
 ## Core Engineering Principles
 
@@ -33,6 +35,7 @@ When multiple valid approaches exist:
 ### 1. Architecture Review
 
 Evaluate and improve:
+- Alignment between PRD intent and TDD architecture choices
 - Component boundaries and responsibility clarity
 - Dependency structure and coupling risks
 - Data flow simplicity and bottlenecks
@@ -61,6 +64,7 @@ Refactor only where improvement is concrete and measurable in clarity or safety.
 ### 3. Test Review
 
 Evaluate and improve:
+- Traceability from TDD test strategy (`TDR-*`) into task verification
 - Coverage of critical logic paths
 - Protection against regressions in risky areas
 - Missing edge-case tests

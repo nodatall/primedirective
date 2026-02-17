@@ -3,36 +3,46 @@ description:
 globs:
 alwaysApply: false
 ---
-# Rule: Generating a Task List from a PRD
+# Rule: Generating a Task List from PRD + TDD
 
 ## Goal
 
-To guide an AI assistant in creating a detailed, step-by-step task list in Markdown format based on an existing Product Requirements Document (PRD). The task list should guide a developer through implementation.
+Generate a detailed, implementation-ready task list by combining:
+
+- product intent from `prd-<feature>.md`
+- execution design from `tdd-<feature>.md`
+
+The task list is complete only when both PRD and TDD coverage are explicit.
 
 ## Output
 
 - **Format:** Markdown (`.md`)
 - **Location:** `/tasks/`
-- **Filename:** `tasks-[prd-file-name].md` (e.g., `tasks-prd-user-profile-editing.md`)
+- **Filename:** `tasks-prd-<feature>.md`
 
 ## Process
 
-1.  **Receive PRD Reference:** The user points the AI to a specific PRD file
-2.  **Analyze PRD:** The AI reads and analyzes the functional requirements, user stories, and other sections of the specified PRD.
-3.  **Build Requirement Coverage Map (Required):** Extract all functional requirement IDs (`FR-*`) and acceptance criteria into a mapping table. Every generated sub-task must point to one or more requirement IDs.
-4.  **Risk-First Ordering Pass (Required):** Prioritize parent tasks so high-risk / high-uncertainty / high-impact work is scheduled earlier.
-5.  **Phase 1: Generate Parent Tasks:** Based on the PRD analysis, create the file and generate the main, high-level tasks required to implement the feature. Use your judgement on how many high-level tasks to use. It's likely to be about 5. Present these tasks to the user in the specified format (without sub-tasks yet). Inform the user: "I have generated the high-level tasks based on the PRD. Ready to generate the sub-tasks? Respond with 'Go' to proceed."
-6.  **Wait for Confirmation:** Pause and wait for the user to respond with "Go".
-7.  **Phase 2: Generate Sub-Tasks:** Once the user confirms, break down each parent task into smaller, actionable sub-tasks necessary to complete the parent task. Ensure sub-tasks logically follow from the parent task and cover the implementation details implied by the PRD.
-8.  **Sub-Task Specificity Rule (Required):** Every sub-task must include:
-    - `covers:` one or more requirement IDs (`FR-*`)
-    - `output:` concrete artifact(s) to produce (files, endpoint, migration, test, doc)
-    - `verify:` command(s) or checks used to validate behavior
-    - `done_when:` clear completion condition
-9.  **Identify Relevant Files:** Based on the tasks and PRD, identify potential files that will need to be created or modified. List these under the `Relevant Files` section, including corresponding test files if applicable.
-10. **Generate Final Output:** Combine the parent tasks, sub-tasks, relevant files, and notes into the final Markdown structure.
-11. **Save Task List:** Save the generated document in the `/tasks/` directory with the filename `tasks-[prd-file-name].md`, where `[prd-file-name]` matches the base name of the input PRD file (e.g., if the input was `prd-user-profile-editing.md`, the output is `tasks-prd-user-profile-editing.md`).
-12. **Run Plan Improvement Pass (Required):** After both `prd-*.md` and `tasks-prd-*.md` exist, run the review/improvement workflow in `rules/improve-plan.md` and update the PRD/task files accordingly.
+1. **Receive Inputs:** Read both `tasks/prd-<feature>.md` and `tasks/tdd-<feature>.md`.
+2. **Readiness Gate (Required):** Stop if either file is missing.
+3. **TDD Source Gate (Required):** Confirm TDD was generated through `rules/create-tdd.md` expectations (includes `TDR-*`, command contract, failure/rollback, observability, and test strategy).
+4. **Build PRD Coverage Map (Required):** Extract all `FR-*` requirements and acceptance criteria.
+5. **Build TDD Coverage Map (Required):** Extract all `TDR-*` requirements and technical constraints.
+6. **Conflict Gate (Required):** If PRD and TDD disagree on behavior or scope, stop and reconcile before generating tasks.
+7. **Risk-First Ordering Pass (Required):** Order parent tasks to execute highest risk/impact items first.
+8. **Phase 1: Generate Parent Tasks:** Produce high-level parent tasks and present them first. Then ask: `I have generated the high-level tasks based on the PRD and TDD. Ready to generate the sub-tasks? Respond with 'Go' to proceed.`
+9. **Wait for Confirmation:** Pause until user responds with `Go`.
+10. **Phase 2: Generate Sub-Tasks:** Expand parent tasks into actionable sub-tasks that jointly satisfy PRD and TDD.
+11. **Sub-Task Metadata Rule (Required):** Every sub-task must include:
+    - `covers_prd:` one or more `FR-*`
+    - `covers_tdd:` one or more `TDR-*`
+    - `output:` concrete artifact(s)
+    - `verify:` exact commands/checks
+    - `done_when:` observable pass condition
+12. **Identify Relevant Files:** Include files implied by both PRD scope and TDD scope (including tests, runbooks, migration files, interfaces/contracts docs where applicable).
+13. **Generate Final Output:** Combine parent tasks, sub-tasks, relevant files, and notes in the required format.
+14. **Save Task List:** Write `tasks/tasks-prd-<feature>.md`.
+15. **Run Plan Improvement Pass (Required):** After `prd-*.md`, `tdd-*.md`, and `tasks-prd-*.md` exist, run `rules/improve-plan.md` and update the plan artifacts.
+16. **Completion Cleanup Gate (Required):** When the final task is checked off during execution, move `tasks-prd-<feature>.md`, `prd-<feature>.md`, and `tdd-<feature>.md` to `tasks/archive/<feature>/` before final PR handoff.
 
 ## Output Format
 
@@ -58,18 +68,21 @@ See `rules/task-management.md` for task workflow and review guidelines.
 
 - [ ] 1.0 Parent Task Title
   - [ ] 1.1 [Sub-task description 1.1]
-    - covers: FR-1
+    - covers_prd: FR-1
+    - covers_tdd: TDR-1
     - output: `path/to/file.ts`, `path/to/file.test.ts`
     - verify: `npm test -- path/to/file.test.ts`
     - done_when: [specific observable condition]
   - [ ] 1.2 [Sub-task description 1.2]
-    - covers: FR-2, FR-3
+    - covers_prd: FR-2, FR-3
+    - covers_tdd: TDR-2
     - output: [concrete artifact]
     - verify: [command/check]
     - done_when: [specific observable condition]
 - [ ] 2.0 Parent Task Title
   - [ ] 2.1 [Sub-task description 2.1]
-    - covers: FR-4
+    - covers_prd: FR-4
+    - covers_tdd: TDR-3
     - output: [concrete artifact]
     - verify: [command/check]
     - done_when: [specific observable condition]
