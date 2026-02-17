@@ -40,22 +40,24 @@ For rule files:
 
 ## Commands
 
+Run commands from the repository root.
+
 Sync one repo:
 
 ```bash
-/Volumes/Code/primedirective/scripts/sync-repo.sh --repo-name autoprophet
+./scripts/sync-repo.sh --repo-name <repo-name>
 ```
 
 Sync all repos:
 
 ```bash
-/Volumes/Code/primedirective/scripts/sync-all.sh
+./scripts/sync-all.sh
 ```
 
 Validate all repos are current:
 
 ```bash
-/Volumes/Code/primedirective/scripts/validate.sh
+./scripts/validate.sh
 ```
 
 ## Recommended workflow
