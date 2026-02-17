@@ -13,11 +13,16 @@ for each consumer repo listed in `repos/<name>/repo.path`.
 ## Layout
 
 - `core/` shared canonical content
-- `repos/<name>/overlay/` repo-specific overrides
+- `repos/<name>/overlay/` local-only repo-specific overrides (gitignored)
 - `templates/` optional starter template(s)
 - `scripts/sync-repo.sh` render one consumer
 - `scripts/sync-all.sh` render all consumers
 - `scripts/validate.sh` CI-style sync check
+
+## Local-only config
+
+- `repos/` is intentionally ignored by git and should not be pushed.
+- Each machine should create its own `repos/<name>/repo.path` and optional overlays.
 
 ## Overlay behavior
 
