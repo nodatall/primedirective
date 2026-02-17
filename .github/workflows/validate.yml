@@ -1,0 +1,14 @@
+name: validate-instructions
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate consumer sync
+        run: ./scripts/validate.sh
