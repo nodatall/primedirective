@@ -15,10 +15,15 @@ This is a **process gate**
 
 Accepted command:
 
-`start planning for <feature-name>`
+`start planning "<unformed-plan>"`
+
+Example:
+
+`start planning "1. do this 2. do this next thing 3. this is a list 4. etc"`
 
 Optional payload:
 
+- `feature: <feature-name>`
 - `goal: ...`
 - `constraints: ...`
 - `must-have: ...`
@@ -38,16 +43,28 @@ Store generated planning artifacts in `/tasks/`:
 
 Before asking any Socratic questions:
 
-1. Verify trigger intent matches this workflow (`start planning for <feature-name>`).
+1. Verify trigger intent matches this workflow (`start planning "<unformed-plan>"`).
 2. Verify required rule files exist and are readable:
    - `rules/socratic-planning.md`
    - `rules/create-prd.md`
    - `rules/create-tdd.md`
    - `rules/generate-tasks.md`
 3. Verify planning artifact paths under `/tasks/` and create missing artifacts when needed.
-4. Confirm feature slug and source reference in one short line.
+4. Confirm feature slug and source reference in one short line. If feature is missing, ask one short question and stop.
 
 If preflight fails, ask one plain-language corrective question and stop until resolved.
+
+## Phase 0.5: Unformed Plan Quote Capture (Required)
+
+Before any Socratic question round:
+
+1. Collect all currently available raw plan input from the trigger's quoted text and follow-up messages.
+2. Present it as a quoted list titled `Unformed Plan So Far (Quoted)` using block quotes.
+3. Preserve wording as closely as possible; split into short quote lines for readability.
+4. Ask one quick confirmation question: "What did I miss or misquote?"
+5. Persist this capture in `socratic-<feature>.md` as `raw_plan_quotes`.
+
+If trigger text is not quoted or no raw plan text is present, ask one short corrective question and stop until provided.
 
 ## Phase 1: Socratic Rounds (Mandatory)
 
@@ -71,8 +88,9 @@ Run micro-rounds with **1-2 high-impact questions per round**.
 
 User-facing turn format:
 
-1. `Recap` (2-4 sentences, plain language)
-2. `Questions` (1-2 items, each answerable quickly)
+1. `Unformed Plan So Far (Quoted)` (block quotes, required until confirmed complete)
+2. `Recap` (2-4 sentences, plain language)
+3. `Questions` (1-2 items, each answerable quickly)
 
 Each round must include:
 
@@ -84,6 +102,7 @@ Each round must include:
 
 Persist round history in `socratic-<feature>.md` using this schema:
 
+- `raw_plan_quotes` (required in first round; update if corrected later)
 - `round`
 - `questions`
 - `answers`
@@ -191,6 +210,18 @@ Use `rules/generate-tasks.md`, which must enforce:
 - Stop on PRD/TDD conflicts until reconciled
 - Sub-task metadata: `covers_prd`, `covers_tdd`, `verify`, `done_when`
 
+## Execution Trigger Gate (Mandatory Hard Stop)
+
+After planning artifacts are complete (`socratic-*`, `decision-log-*`, `prd-*`, `tdd-*`, `tasks-prd-*`, and plan-improvement pass):
+
+- Stop the flow and wait for an explicit build-start command.
+- Do NOT begin implementation, code edits, branch creation, or Step 1-9 execution from planning flow.
+- Accepted build-start commands are only:
+  - `begin task <task-id> in <prd-key>`
+  - `begin one-shot in <prd-id>`
+  - `begin 1 shot in <prd-id>` (alias of one-shot mode)
+- If user requests to "continue" or "start building" without one of the accepted commands, ask for one of the exact commands and do not proceed.
+
 Execution cleanup/archive behavior belongs to `rules/task-management.md` and `AGENTS.md` finalization flow, not Socratic planning.
 
 ## Process Validation Scenarios
@@ -205,6 +236,8 @@ Execution cleanup/archive behavior belongs to `rules/task-management.md` and `AG
   - Expected: do not proceed to PRD/TDD generation.
 - Plain-language checklist not approved:
   - Expected: return to Socratic rounds, no implementation handoff.
+- PRD/TDD/task plan complete but no build trigger command:
+  - Expected: hard stop and wait; do not start implementation.
 - Ambiguous user answer left unconfirmed:
   - Expected: do not lock decision; ask one clarification before continuing sequence.
 - Conflicting decisions both marked active:

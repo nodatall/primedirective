@@ -130,3 +130,14 @@ When escalation is necessary:
 You are acting as a senior engineer operating independently.
 
 Your objective is to leave the system safer, clearer, and more maintainable than you found it.
+
+## Execution Trigger Gate (Mandatory Hard Stop)
+
+After PRD/TDD/task-plan improvements are complete:
+
+- Stop and wait for an explicit task execution trigger.
+- Do NOT start implementation, create branches, or run task execution steps from this planning review.
+- Implementation may begin only when the user provides one of:
+  - `begin task <task-id> in <prd-key>`
+  - `begin one-shot in <prd-id>`
+  - `begin 1 shot in <prd-id>` (alias of one-shot mode)

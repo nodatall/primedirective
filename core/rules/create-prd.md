@@ -73,3 +73,4 @@ The PRD should be complete on product intent while intentionally avoiding deep t
 4. Keep PRD product-only; move implementation depth to TDD
 5. After PRD approval, generate `tdd-<feature>.md` using `rules/create-tdd.md`
 6. After task generation is completed for this PRD, run `rules/improve-plan.md` to refine the PRD + task plan before implementation
+7. Hard stop gate: completion of PRD/TDD/tasks planning does not authorize implementation. Start build only when user provides `begin task <task-id> in <prd-key>`, `begin one-shot in <prd-id>`, or `begin 1 shot in <prd-id>`.

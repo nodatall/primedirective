@@ -7,6 +7,14 @@ alwaysApply: false
 
 Guidelines for managing task lists in markdown files to track progress on completing a PRD
 
+## Execution Entry Gate (Required)
+
+- This execution workflow may start only from:
+  - `begin task <task-id> in <prd-key>`
+  - `begin one-shot in <prd-id>`
+  - `begin 1 shot in <prd-id>` (alias of one-shot mode)
+- If those commands were not provided, do not implement code or run task execution flow.
+
 ## Task Implementation
 - **One sub-task at a time:** Do **NOT** start the next sub-task until you ask the user for permission and they say "yes" or "y".
   - Exception: when task mode is explicitly `begin one-shot in <prd-id>`, proceed automatically to the next sub-task after completing the current one.

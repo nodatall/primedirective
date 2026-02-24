@@ -43,6 +43,7 @@ The task list is complete only when both PRD and TDD coverage are explicit.
 14. **Save Task List:** Write `tasks/tasks-prd-<feature>.md`.
 15. **Run Plan Improvement Pass (Required):** After `prd-*.md`, `tdd-*.md`, and `tasks-prd-*.md` exist, run `rules/improve-plan.md` and update the plan artifacts.
 16. **Completion Cleanup Gate (Required):** When the final task is checked off during execution, move `tasks-prd-<feature>.md`, `prd-<feature>.md`, and `tdd-<feature>.md` to `tasks/archive/<feature>/` before final PR handoff.
+17. **Execution Trigger Gate (Required):** After planning artifacts are ready, stop and wait. Do not start implementation unless the user explicitly sends `begin task <task-id> in <prd-key>`, `begin one-shot in <prd-id>`, or `begin 1 shot in <prd-id>`.
 
 ## Output Format
 

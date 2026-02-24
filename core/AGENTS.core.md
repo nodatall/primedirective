@@ -5,28 +5,36 @@ Planning workflow rules live in `rules/socratic-planning.md`.
 
 ## Repo-Specific Norms
 - Branch naming: `nodatall/<short-task-name>` (concise, concrete).
-- Update `tasks/tasks-prd-<prd-key>.md` after every PRD task sub-task (Relevant Files + checkboxes). Ad-hoc maintenance changes do not require task-list updates unless explicitly requested.
+- Update `tasks/tasks-prd-<prd-key>.md` after every PRD/TDD-backed task sub-task (Relevant Files + checkboxes). For any ad-hoc work outside `begin task ...` / `begin one-shot ...`, task-list updates are not required unless explicitly requested.
 - Update `README.md` only when setup/commands/env requirements change.
 - Tests: prefer `npm test`; if skipped, say why.
 - Bugs: add regression test when it fits.
 - When working on browser E2E tests (especially files under `tests/e2e/**`, `playwright.config.*`, or Playwright CI scripts), use the `playwright` skill by default.
 
 ## Planning Trigger Workflow
-- Accepted planning trigger phrase: `start planning for <feature-name>`.
+- Accepted planning trigger phrase: `start planning "<unformed-plan>"`.
 - On this trigger, run `rules/socratic-planning.md` first and follow its gates before PRD/TDD/task generation.
 - Socratic planning is pre-implementation workflow and is separate from the Step 1-9 task execution flow below.
 - During Socratic planning, keep prompts non-technical by default and avoid narrating internal process mechanics.
 - During Socratic planning, use short rounds (max 2 questions) and resolve ambiguity before advancing sequence steps.
+- Hard stop gate: after Socratic/PRD/TDD/task-plan generation is complete, stop and wait. Do not start building, branch creation, or Step 1-9 execution from planning flow.
+- Build start gate: implementation may start only from one of these exact triggers:
+  - `begin task <task-id> in <prd-key>`
+  - `begin one-shot in <prd-id>`
+  - `begin 1 shot in <prd-id>` (alias of one-shot mode)
+- If user asks to "continue", "start building", or similar without one of the exact build triggers, ask for one of the accepted build trigger commands and do not proceed to coding.
 
 ## Task Trigger Workflow
 - Accepted trigger phrase: `begin task <task-id> in <prd-key>` (example: `begin task 1.3 in sortinghat`).
 - Accepted one-shot trigger phrase: `begin one-shot in <prd-id>`.
+- Accepted one-shot alias: `begin 1 shot in <prd-id>`.
 - Resolve files from `<prd-key>` (standard mode) or `<prd-id>` (one-shot mode):
   - Task list: `tasks/tasks-prd-<prd-ref>.md`
   - PRD reference: `tasks/prd-<prd-ref>.md`
+  - TDD reference: `tasks/tdd-<prd-ref>.md`
   - `<prd-ref>` means the provided PRD token (`<prd-key>` in standard mode, `<prd-id>` in one-shot mode).
-- Standard mode: if `<task-id>` or `<prd-key>` is missing, or if either file does not exist, stop and ask for clarification.
-- One-shot mode: if `<prd-id>` is missing, or if either file does not exist, stop and ask for clarification.
+- Standard mode: if `<task-id>` or `<prd-key>` is missing, or if any required file does not exist, stop and ask for clarification.
+- One-shot mode: if `<prd-id>` is missing, or if any required file does not exist, stop and ask for clarification.
 - For task execution triggers only (`begin task ...` and `begin one-shot ...`), execute Steps 1-9 in order. Do not skip, reorder, or merge steps.
 - Standard mode gate: pause after Step 2 and wait for plan approval before Step 3.
 - Standard mode gate: complete one sub-task at a time and pause for user go-ahead between sub-tasks per `rules/task-management.md`.
@@ -69,14 +77,14 @@ Operational translation:
 ### Step 2: Planning Prompt
 ```text
 Switch to planning mode:
-Create a plan for how to implement task <task-id>. Save the approved plan to [tasks/tmp/plan-task-<task-id>.md]. When the task is marked complete in [tasks/tasks-prd-<prd-key>.md], delete the task plan doc.
+Create a plan for how to implement task <task-id> using [tasks/tasks-prd-<prd-key>.md], [tasks/prd-<prd-key>.md], and [tasks/tdd-<prd-key>.md] as references. Save the approved plan to [tasks/tmp/plan-task-<task-id>.md]. When the task is marked complete in [tasks/tasks-prd-<prd-key>.md], delete the task plan doc.
 ```
 - One-shot rule: do not wait for plan approval; proceed directly to Step 3 for that sub-task.
 
 ### Step 3: Build Prompt
 ```text
 To begin coding (switch back to edit mode):
-Build task <task-id> from [tasks/tasks-prd-<prd-key>.md] using [tasks/prd-<prd-key>.md] as reference. Keep these quality standards in mind as you work:
+Build task <task-id> from [tasks/tasks-prd-<prd-key>.md] using [tasks/prd-<prd-key>.md] and [tasks/tdd-<prd-key>.md] as references. Keep these quality standards in mind as you work:
 - Compact: remove dead code/redundancy/over-abstraction.
 - Concise: prefer the simplest implementation that passes tests.
 - Clean: keep naming/structure consistent; avoid obvious comments.
@@ -96,6 +104,8 @@ Review target rule:
 - For task-mode `/review`, always provide:
   - `tasks/tmp/plan-task-<task-id>.md`
   - `tasks/tasks-prd-<prd-key>.md`
+  - `tasks/prd-<prd-key>.md`
+  - `tasks/tdd-<prd-key>.md`
 
 ### Step 5: Review Prompt B
 ```text
@@ -152,7 +162,7 @@ Operational translation:
 - `git fetch origin main`
 - `git rebase origin/main`
 - Resolve conflicts and rerun relevant tests.
-- Update task checklist/relevant files only for task-based PRD work.
+- Update task checklist/relevant files only for task-based PRD/TDD work.
 - If all checkboxes in `tasks/tasks-prd-<prd-ref>.md` are complete:
   - `mkdir -p tasks/archive/<prd-ref>`
   - `mv tasks/tasks-prd-<prd-ref>.md tasks/archive/<prd-ref>/`
@@ -174,11 +184,11 @@ Operational translation:
   - Start at Step 4 and run **all of Steps 4/5/6/7/8** in order.
   - Append a new round in `tasks/tmp/review-task-<task-id>.md` and re-review full branch scope.
 - `begin review ad-hoc`:
-  - Start review for non-PRD maintenance work or work begun without a task ID.
+  - Start review for non-PRD/TDD maintenance work or work begun without a task ID.
   - Stay on the current branch. Do not rename/create/switch branches during review.
   - Create `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`.
   - Start at Step 4 using full-branch scope.
-  - Task-list updates are not required for non-PRD maintenance docs/workflow/tooling changes.
+  - For any ad-hoc work outside `begin task ...` / `begin one-shot ...`, task-list updates are not required unless explicitly requested.
 - `resume review ad-hoc`:
   - Continue ad-hoc review after additional edits.
   - Stay on the current branch. Do not rename/create/switch branches during review.
