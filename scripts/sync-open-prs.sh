@@ -119,6 +119,26 @@ skipped_count=0
 failed_count=0
 declare -a pr_urls=()
 
+restore_repo_state() {
+  local repo_path="$1"
+  local original_branch="$2"
+  local stashed_changes="$3"
+  local stash_ref="$4"
+  local current_branch
+
+  current_branch=$(git -C "$repo_path" symbolic-ref --quiet --short HEAD || true)
+  if [[ -n "$original_branch" && "$current_branch" != "$original_branch" ]]; then
+    git -C "$repo_path" switch "$original_branch" >/dev/null 2>&1 || true
+  fi
+
+  if ((stashed_changes == 1)); then
+    if ! git -C "$repo_path" stash pop --index "$stash_ref" >/dev/null 2>&1; then
+      echo "  warn: could not restore stashed changes ($stash_ref) in $repo_path"
+      echo "  run manually: git -C \"$repo_path\" stash list"
+    fi
+  fi
+}
+
 for name in "${REPO_NAMES[@]}"; do
   if [[ -z "$name" ]]; then
     echo "Encountered empty --repo-name value" >&2
@@ -150,24 +170,50 @@ for name in "${REPO_NAMES[@]}"; do
     continue
   fi
 
+  original_branch=$(git -C "$target_repo" symbolic-ref --quiet --short HEAD || true)
+  stashed_changes=0
+  stash_ref=""
+
   if [[ -n "$(git -C "$target_repo" status --porcelain)" ]]; then
-    echo "  skip: target repo has uncommitted changes: $target_repo"
-    skipped_count=$((skipped_count + 1))
-    continue
+    if [[ -z "$original_branch" ]]; then
+      echo "  skip: target repo has uncommitted changes and detached HEAD: $target_repo"
+      skipped_count=$((skipped_count + 1))
+      continue
+    fi
+
+    if [[ "$original_branch" == "$BASE_BRANCH" ]]; then
+      echo "  skip: target repo has uncommitted changes on $BASE_BRANCH: $target_repo"
+      skipped_count=$((skipped_count + 1))
+      continue
+    fi
+
+    stash_marker="sync-open-prs-${timestamp}-${name}"
+    if ! git -C "$target_repo" stash push --include-untracked -m "$stash_marker" >/dev/null; then
+      echo "  fail: could not stash uncommitted changes on $original_branch"
+      failed_count=$((failed_count + 1))
+      continue
+    fi
+    stashed_changes=1
+    stash_ref=$(git -C "$target_repo" stash list --format='%gd %s' | awk -v marker="$stash_marker" '$0 ~ marker {print $1; exit}')
+    if [[ -z "$stash_ref" ]]; then
+      stash_ref="stash@{0}"
+    fi
+    echo "  note: stashed uncommitted changes from $original_branch ($stash_ref)"
   fi
 
-  original_branch=$(git -C "$target_repo" symbolic-ref --quiet --short HEAD || true)
   branch_name="${BRANCH_PREFIX}-${name}-${timestamp}"
 
   if ! git -C "$target_repo" fetch origin "$BASE_BRANCH"; then
     echo "  fail: could not fetch origin/$BASE_BRANCH"
     failed_count=$((failed_count + 1))
+    restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
     continue
   fi
 
   if ! git -C "$target_repo" switch -c "$branch_name" "origin/$BASE_BRANCH"; then
     echo "  fail: could not create branch $branch_name from origin/$BASE_BRANCH"
     failed_count=$((failed_count + 1))
+    restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
     continue
   fi
 
@@ -182,6 +228,7 @@ for name in "${REPO_NAMES[@]}"; do
     fi
     git -C "$target_repo" branch -D "$branch_name" >/dev/null 2>&1 || true
     skipped_count=$((skipped_count + 1))
+    restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
     continue
   fi
 
@@ -194,18 +241,21 @@ for name in "${REPO_NAMES[@]}"; do
     fi
     git -C "$target_repo" branch -D "$branch_name" >/dev/null 2>&1 || true
     skipped_count=$((skipped_count + 1))
+    restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
     continue
   fi
 
   if ! git -C "$target_repo" commit -m "$COMMIT_MESSAGE" >/dev/null; then
     echo "  fail: commit failed"
     failed_count=$((failed_count + 1))
+    restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
     continue
   fi
 
   if ! git -C "$target_repo" push -u origin "$branch_name" >/dev/null; then
     echo "  fail: push failed for $branch_name"
     failed_count=$((failed_count + 1))
+    restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
     continue
   fi
 
@@ -227,6 +277,7 @@ for name in "${REPO_NAMES[@]}"; do
     if ((pr_lookup_exit != 0)) || [[ -z "$pr_url" ]]; then
       echo "  fail: PR creation failed and no existing PR found for $branch_name"
       failed_count=$((failed_count + 1))
+      restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
       continue
     fi
   fi
@@ -259,9 +310,7 @@ for name in "${REPO_NAMES[@]}"; do
     fi
   fi
 
-  if [[ -n "$original_branch" && "$original_branch" != "$branch_name" ]]; then
-    git -C "$target_repo" switch "$original_branch" >/dev/null 2>&1 || true
-  fi
+  restore_repo_state "$target_repo" "$original_branch" "$stashed_changes" "$stash_ref"
 done
 
 echo
