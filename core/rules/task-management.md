@@ -12,7 +12,6 @@ Guidelines for managing task lists in markdown files to track progress on comple
 - This execution workflow may start only from:
   - `begin task <task-id> in <prd-key>`
   - `begin one-shot in <prd-id>`
-  - `begin 1 shot in <prd-id>` (alias of one-shot mode)
 - If those commands were not provided, do not implement code or run task execution flow.
 
 ## Task Implementation

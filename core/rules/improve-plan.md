@@ -140,4 +140,3 @@ After PRD/TDD/task-plan improvements are complete:
 - Implementation may begin only when the user provides one of:
   - `begin task <task-id> in <prd-key>`
   - `begin one-shot in <prd-id>`
-  - `begin 1 shot in <prd-id>` (alias of one-shot mode)

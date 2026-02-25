@@ -29,21 +29,20 @@ The task list is complete only when both PRD and TDD coverage are explicit.
 5. **Build TDD Coverage Map (Required):** Extract all `TDR-*` requirements and technical constraints.
 6. **Conflict Gate (Required):** If PRD and TDD disagree on behavior or scope, stop and reconcile before generating tasks.
 7. **Risk-First Ordering Pass (Required):** Order parent tasks to execute highest risk/impact items first.
-8. **Phase 1: Generate Parent Tasks:** Produce high-level parent tasks and present them first. Then ask: `I have generated the high-level tasks based on the PRD and TDD. Ready to generate the sub-tasks? Respond with 'Go' to proceed.`
-9. **Wait for Confirmation:** Pause until user responds with `Go`.
-10. **Phase 2: Generate Sub-Tasks:** Expand parent tasks into actionable sub-tasks that jointly satisfy PRD and TDD.
-11. **Sub-Task Metadata Rule (Required):** Every sub-task must include:
+8. **Generate Parent Tasks and Sub-Tasks in One Pass (Required):** Produce high-level parent tasks and immediately expand them into actionable sub-tasks that jointly satisfy PRD and TDD.
+9. **Optional Review Checkpoint:** Only pause after parent tasks if the user explicitly asks for a review checkpoint.
+10. **Sub-Task Metadata Rule (Required):** Every sub-task must include:
     - `covers_prd:` one or more `FR-*`
     - `covers_tdd:` one or more `TDR-*`
     - `output:` concrete artifact(s)
     - `verify:` exact commands/checks
     - `done_when:` observable pass condition
-12. **Identify Relevant Files:** Include files implied by both PRD scope and TDD scope (including tests, runbooks, migration files, interfaces/contracts docs where applicable).
-13. **Generate Final Output:** Combine parent tasks, sub-tasks, relevant files, and notes in the required format.
-14. **Save Task List:** Write `tasks/tasks-prd-<feature>.md`.
-15. **Run Plan Improvement Pass (Required):** After `prd-*.md`, `tdd-*.md`, and `tasks-prd-*.md` exist, run `rules/improve-plan.md` and update the plan artifacts.
-16. **Completion Cleanup Gate (Required):** When the final task is checked off during execution, move `tasks-prd-<feature>.md`, `prd-<feature>.md`, and `tdd-<feature>.md` to `tasks/archive/<feature>/` before final PR handoff.
-17. **Execution Trigger Gate (Required):** After planning artifacts are ready, stop and wait. Do not start implementation unless the user explicitly sends `begin task <task-id> in <prd-key>`, `begin one-shot in <prd-id>`, or `begin 1 shot in <prd-id>`.
+11. **Identify Relevant Files:** Include files implied by both PRD scope and TDD scope (including tests, runbooks, migration files, interfaces/contracts docs where applicable).
+12. **Generate Final Output:** Combine parent tasks, sub-tasks, relevant files, and notes in the required format.
+13. **Save Task List:** Write `tasks/tasks-prd-<feature>.md`.
+14. **Run Plan Improvement Pass (Required):** After `prd-*.md`, `tdd-*.md`, and `tasks-prd-*.md` exist, run `rules/improve-plan.md` and update the plan artifacts.
+15. **Completion Cleanup Gate (Required):** When the final task is checked off during execution, move `tasks-prd-<feature>.md`, `prd-<feature>.md`, and `tdd-<feature>.md` to `tasks/archive/<feature>/` before final PR handoff.
+16. **Execution Trigger Gate (Required):** After planning artifacts are ready, stop and wait. Do not start implementation unless the user explicitly sends `begin task <task-id> in <prd-key>` or `begin one-shot in <prd-id>`.
 
 ## Output Format
 

@@ -61,4 +61,4 @@ The TDD must include:
 3. Use stable `TDR-*` IDs for technical requirements
 4. Ensure command contract and verification paths are concrete enough to run without guessing
 5. Generate tasks only after both PRD and TDD are complete
-6. Hard stop gate: after TDD/task-plan completion, do not begin coding automatically. Build starts only on `begin task <task-id> in <prd-key>`, `begin one-shot in <prd-id>`, or `begin 1 shot in <prd-id>`.
+6. Hard stop gate: after TDD/task-plan completion, do not begin coding automatically. Build starts only on `begin task <task-id> in <prd-key>` or `begin one-shot in <prd-id>`.

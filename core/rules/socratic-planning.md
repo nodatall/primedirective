@@ -231,7 +231,6 @@ After planning artifacts are complete (`socratic-*`, `decision-log-*`, `prd-*`, 
 - Accepted build-start commands are only:
   - `begin task <task-id> in <prd-key>`
   - `begin one-shot in <prd-id>`
-  - `begin 1 shot in <prd-id>` (alias of one-shot mode)
 - If user requests to "continue" or "start building" without one of the accepted commands, ask for one of the exact commands and do not proceed.
 
 Execution cleanup/archive behavior belongs to `rules/task-management.md` and `AGENTS.md` finalization flow, not Socratic planning.
