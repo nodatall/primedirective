@@ -76,21 +76,32 @@ Run micro-rounds with **1-2 high-impact questions per round**.
 - Default to product/operational wording; only ask deep technical questions when they are strictly required by the current sequence step.
 - Prefer concrete options over open-ended technical prompts (use simple A/B choices when helpful).
 - Avoid process narration in user-facing replies (for example: "locking decisions", "gates", "auditable chain", "handoff integrity").
-- Keep each user turn short: one recap paragraph plus the next 1-2 questions.
+- Keep each user turn short: one recap paragraph plus the next question (default 1 question per turn; use 2 only when tightly coupled).
 - Maintain schemas/files in the background without narrating internal bookkeeping each turn.
+- Do not use jargon without a one-line plain-English definition.
+- If the user signals questions are "too technical", switch immediately to plain-language mode:
+  - ask only 1 question per turn,
+  - do not ask for threshold tuning unless the user explicitly asks for it,
+  - offer a recommended default and ask for simple confirmation.
 
 ### Round Interaction Contract (Required)
 
-- Ask at most 2 questions per turn.
+- Ask at most 2 questions per turn (default 1).
 - Ask one concept per question.
 - For ambiguous topics, present options with a recommended default first.
 - Do not proceed to a new sequence step while prior-step ambiguity remains unresolved.
 
 User-facing turn format:
 
-1. `Unformed Plan So Far (Quoted)` (block quotes, required until confirmed complete)
-2. `Recap` (2-4 sentences, plain language)
-3. `Questions` (1-2 items, each answerable quickly)
+1. `Current understanding` (short bullets; include only new/changed points)
+2. `Recap` (1-3 sentences, plain language)
+3. `Question` (1 item, answerable quickly)
+
+Quote behavior:
+
+- Show `Unformed Plan So Far (Quoted)` in full during initial capture only.
+- Repeat full quote only when the user asks for it or when the quote content changes materially.
+- Never repeat an unchanged long quote block every turn.
 
 Each round must include:
 
@@ -145,7 +156,8 @@ Sequence behavior:
 
 - Do not jump ahead to execution-level technical details during Problem/Success/Scope clarity unless the user explicitly asks.
 - Convert vague answers into simple measurable criteria using non-technical wording first, then map to technical artifacts later in PRD/TDD.
-- By the end of Success Clarity, convert quality goals into observable pass/fail criteria (percentages, thresholds, or explicit rule sets).
+- By the end of Success Clarity, convert quality goals into observable pass/fail criteria.
+- If the user does not want to choose numeric thresholds, apply documented defaults, explain them in plain language, and request a simple approve/adjust decision.
 
 ### Contradiction Check (Required After Every Round)
 
