@@ -77,7 +77,7 @@ fi
 REPO_DIR="$ROOT_DIR/repos/$REPO_NAME"
 REPO_PATH_FILE="$REPO_DIR/repo.path"
 
-mkdir -p "$REPO_DIR/overlay/rules"
+mkdir -p "$REPO_DIR/overlay/skills"
 
 if [[ -f "$REPO_PATH_FILE" && $FORCE -ne 1 ]]; then
   echo "Config already exists: $REPO_PATH_FILE" >&2

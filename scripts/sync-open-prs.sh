@@ -27,7 +27,7 @@ REPO_NAMES=()
 BASE_BRANCH="main"
 BRANCH_PREFIX="sync/primedirective"
 TITLE="Sync agent instructions"
-BODY="Automated sync from primedirective core instructions and rules."
+BODY="Automated sync from primedirective core instructions and skills."
 COMMIT_MESSAGE="Sync agent instructions from primedirective"
 DRAFT=0
 AUTO_MERGE=0
@@ -221,7 +221,7 @@ for name in "${REPO_NAMES[@]}"; do
     "$SCRIPT_DIR/sync-repo.sh" --repo-name "$name"
   fi
 
-  if [[ -z "$(git -C "$target_repo" status --porcelain -- AGENTS.md CLAUDE.md rules)" ]]; then
+  if [[ -z "$(git -C "$target_repo" status --porcelain -- AGENTS.md CLAUDE.md skills rules)" ]]; then
     echo "  skip: no sync changes for $name"
     if [[ -n "$original_branch" && "$original_branch" != "$branch_name" ]]; then
       git -C "$target_repo" switch "$original_branch" >/dev/null 2>&1 || true
@@ -232,7 +232,7 @@ for name in "${REPO_NAMES[@]}"; do
     continue
   fi
 
-  git -C "$target_repo" add AGENTS.md CLAUDE.md rules/*.md
+  git -C "$target_repo" add -A
 
   if git -C "$target_repo" diff --cached --quiet; then
     echo "  skip: no staged changes after add"

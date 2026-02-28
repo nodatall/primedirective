@@ -6,13 +6,14 @@ Shared source-of-truth for agent instruction files across repos.
 
 - `AGENTS.md`
 - `CLAUDE.md`
-- `rules/*.md`
+- `skills/**`
 
 for each consumer repo listed in `repos/<name>/repo.path`.
 
 ## Layout
 
 - `core/` shared canonical content
+- `core/skills/` shared workflow skills and references
 - `repos/<name>/overlay/` local-only repo-specific overrides (gitignored)
 - `templates/` optional starter template(s)
 - `scripts/add-repo.sh` register a consumer repo in `repos/`
@@ -68,10 +69,11 @@ For root files:
    - `overlay/AGENTS.append.md` appends to core.
 2. `CLAUDE.md` is always generated as an exact copy of `AGENTS.md` across all repos.
 
-For rule files:
+For skills:
 
-- `core/rules/<name>.md` is used by default.
-- If `overlay/rules/<name>.md` exists, it fully overrides core for that repo.
+- `core/skills/**` is used by default.
+- If `overlay/skills/**` contains the same relative file, overlay fully overrides that file.
+- Additional files under `overlay/skills/**` are copied as additive files.
 
 ## Commands
 
@@ -126,3 +128,7 @@ One-command sync + PR + auto-merge for all configured repos:
 3. Run `scripts/sync-all.sh`.
 4. Commit changes in consumer repos.
 5. Run `scripts/validate.sh` in CI to prevent drift.
+
+## Migration note
+
+This repo now hard-cuts to `skills/**` publishing. During sync, previously generated legacy `rules/*.md` files are removed from consumer repos.

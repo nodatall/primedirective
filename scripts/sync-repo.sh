@@ -64,7 +64,7 @@ TMP_DIR=$(mktemp -d)
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-mkdir -p "$TMP_DIR/rules"
+mkdir -p "$TMP_DIR/skills"
 
 prepend_generated_header() {
   local src="$1"
@@ -105,25 +105,36 @@ render_root_file() {
   fi
 }
 
-render_rule_file() {
-  local base
-  base=$(basename "$1")
-  local overlay_rule="$OVERLAY_DIR/rules/$base"
+render_skill_files() {
+  local core_skills_dir="$ROOT_DIR/core/skills"
+  local overlay_skills_dir="$OVERLAY_DIR/skills"
 
-  if [[ -f "$overlay_rule" ]]; then
-    prepend_generated_header "$overlay_rule" "$TMP_DIR/rules/$base"
-  else
-    prepend_generated_header "$1" "$TMP_DIR/rules/$base"
+  if [[ ! -d "$core_skills_dir" ]]; then
+    echo "Missing core skills dir: $core_skills_dir" >&2
+    exit 1
+  fi
+
+  while IFS= read -r src; do
+    rel="${src#$core_skills_dir/}"
+    out="$TMP_DIR/skills/$rel"
+    mkdir -p "$(dirname "$out")"
+    prepend_generated_header "$src" "$out"
+  done < <(find "$core_skills_dir" -type f | sort)
+
+  if [[ -d "$overlay_skills_dir" ]]; then
+    while IFS= read -r src; do
+      rel="${src#$overlay_skills_dir/}"
+      out="$TMP_DIR/skills/$rel"
+      mkdir -p "$(dirname "$out")"
+      prepend_generated_header "$src" "$out"
+    done < <(find "$overlay_skills_dir" -type f | sort)
   fi
 }
 
 render_root_file "AGENTS"
 # CLAUDE.md intentionally mirrors AGENTS.md exactly across all repos.
 cp "$TMP_DIR/AGENTS.md" "$TMP_DIR/CLAUDE.md"
-
-for core_rule in "$ROOT_DIR"/core/rules/*.md; do
-  render_rule_file "$core_rule"
-done
+render_skill_files
 
 if ((CHECK_ONLY == 1)); then
   diff_failed=0
@@ -137,13 +148,13 @@ if ((CHECK_ONLY == 1)); then
     diff_failed=1
   fi
 
-  while IFS= read -r gen_rule; do
-    rel="rules/$(basename "$gen_rule")"
-    if ! diff -u "$TARGET_REPO/$rel" "$gen_rule" >/dev/null 2>&1; then
-      echo "$rel differs for $REPO_NAME"
+  while IFS= read -r gen_skill; do
+    rel="${gen_skill#$TMP_DIR/skills/}"
+    if ! diff -u "$TARGET_REPO/skills/$rel" "$gen_skill" >/dev/null 2>&1; then
+      echo "skills/$rel differs for $REPO_NAME"
       diff_failed=1
     fi
-  done < <(find "$TMP_DIR/rules" -type f | sort)
+  done < <(find "$TMP_DIR/skills" -type f | sort)
 
   if ((diff_failed == 1)); then
     exit 1
@@ -153,9 +164,28 @@ if ((CHECK_ONLY == 1)); then
   exit 0
 fi
 
-mkdir -p "$TARGET_REPO/rules"
 cp "$TMP_DIR/AGENTS.md" "$TARGET_REPO/AGENTS.md"
 cp "$TMP_DIR/CLAUDE.md" "$TARGET_REPO/CLAUDE.md"
-cp "$TMP_DIR"/rules/*.md "$TARGET_REPO/rules/"
+mkdir -p "$TARGET_REPO/skills"
+while IFS= read -r gen_skill; do
+  rel="${gen_skill#$TMP_DIR/skills/}"
+  out="$TARGET_REPO/skills/$rel"
+  mkdir -p "$(dirname "$out")"
+  cp "$gen_skill" "$out"
+done < <(find "$TMP_DIR/skills" -type f | sort)
+
+# Hard-cut migration: remove previously generated rule files.
+legacy_rules=(
+  create-prd.md
+  create-tdd.md
+  generate-tasks.md
+  improve-plan.md
+  socratic-planning.md
+  task-management.md
+)
+for rule_file in "${legacy_rules[@]}"; do
+  rm -f "$TARGET_REPO/rules/$rule_file"
+done
+rmdir "$TARGET_REPO/rules" >/dev/null 2>&1 || true
 
 echo "Synced: $REPO_NAME -> $TARGET_REPO"
