@@ -1,6 +1,6 @@
 ---
 name: review-chain
-description: Use when the user requests explicit review via `begin review <task-id>`, `resume review <task-id>`, `begin review ad-hoc`, or `resume review ad-hoc`, and run the full A-E review protocol with required review logs and gates.
+description: Use when the user requests explicit review via `begin review` (ad-hoc default) or `begin review <task-id>`, and run the full A-E review protocol with required review logs and gates.
 ---
 
 # Review Chain Skill
@@ -11,10 +11,8 @@ Run explicit branch review workflows.
 
 Accept:
 
+- `begin review`
 - `begin review <task-id>`
-- `resume review <task-id>`
-- `begin review ad-hoc`
-- `resume review ad-hoc`
 
 ## Required references
 
@@ -26,7 +24,7 @@ Load these files before running:
 ## Workflow
 
 1. Keep current branch (do not create/rename/switch branch during review).
-2. Create or append the correct review log file.
+2. Create the correct review log file when missing, otherwise append a new review round to the existing file.
 3. Execute prompts A-E sequentially, one prompt at a time.
 4. Record findings, fixes, and test evidence for each prompt.
 5. Enforce completion gates, including unresolved TODO checks.

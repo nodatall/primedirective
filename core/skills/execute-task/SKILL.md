@@ -48,4 +48,4 @@ Load these files before running:
 
 ## Review relationship
 
-Task execution includes automatic review rounds. Manual ad-hoc or resumed review runs through `review-chain` skill triggers.
+Task execution includes automatic review rounds. Manual review runs through `review-chain` triggers (`begin review` or `begin review <task-id>`).

@@ -99,6 +99,16 @@ Create and maintain log files:
 - Task review: `tasks/tmp/review-task-<task-id>.md`
 - Ad-hoc review: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
+Trigger-to-log mapping:
+
+- `begin review <task-id>`: use `tasks/tmp/review-task-<task-id>.md`
+- `begin review`: use `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
+
+Round behavior:
+
+- If the target review log does not exist, create it and start `review_round: 1`.
+- If the target review log exists, append a new round and increment `review_round`.
+
 Initialize each new log with:
 
 - `review_mode: task | ad-hoc`
@@ -135,7 +145,7 @@ Deletion gate:
 
 ## Branch stability for explicit review triggers
 
-For `begin review ...` and `resume review ...`:
+For `begin review` and `begin review <task-id>`:
 
 - Do not create, rename, or switch branches.
 - Start at Prompt A.

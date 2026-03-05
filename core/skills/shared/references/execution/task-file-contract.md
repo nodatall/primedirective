@@ -7,8 +7,8 @@ Canonical path and trigger contract for planning, build, and review skills.
 - Planning: `start planning "<unformed-plan>"`
 - Standard task execution: `begin task <task-id> in <plan-key>`
 - One-shot execution: `begin one-shot in <plan-key>`
-- Task review: `begin review <task-id>`, `resume review <task-id>`
-- Ad-hoc review: `begin review ad-hoc`, `resume review ad-hoc`
+- Task review: `begin review <task-id>`
+- Ad-hoc review (default): `begin review`
 
 ## Plan key resolution
 

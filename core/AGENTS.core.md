@@ -15,10 +15,8 @@ Trigger mapping:
 - `start planning "<unformed-plan>"` -> `plan-task`
 - `begin task <task-id> in <plan-key>` -> `execute-task`
 - `begin one-shot in <plan-key>` -> `execute-task`
+- `begin review` -> `review-chain`
 - `begin review <task-id>` -> `review-chain`
-- `resume review <task-id>` -> `review-chain`
-- `begin review ad-hoc` -> `review-chain`
-- `resume review ad-hoc` -> `review-chain`
 
 Planning defaults:
 
@@ -29,7 +27,7 @@ Planning defaults:
 Execution behavior:
 
 - `execute-task` includes automatic review rounds for task-based implementation flow.
-- `review-chain` exists for explicit review triggers, including ad-hoc and resume review flows.
+- `review-chain` exists for explicit review triggers (`begin review` and `begin review <task-id>`).
 
 Shared references:
 
@@ -39,7 +37,7 @@ Shared references:
 
 ## Repo-Specific Norms
 
-- Branch naming: `nodatall/<short-task-name>` (concise, concrete).
+- Branch naming: `<short-task-name>` (concise, concrete).
 - Update `tasks/tasks-plan-<plan-key>.md` after each completed sub-task in task-mode execution.
 - For ad-hoc work outside `begin task ...` / `begin one-shot ...`, task-list updates are not required unless explicitly requested.
 - Update `README.md` only when setup/commands/env requirements change.
