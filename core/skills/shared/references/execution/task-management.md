@@ -7,22 +7,49 @@ Guidelines for managing task lists in markdown files.
 - This execution workflow may start only from:
   - `begin task <task-id> in <plan-key>`
   - `begin one-shot in <plan-key>`
-- If those commands were not provided, do not implement code or run task execution flow.
+- Execution requires:
+  - `tasks/prd-<plan-key>.md`
+  - `tasks/tdd-<plan-key>.md`
+  - `tasks/tasks-plan-<plan-key>.md`
+- If those commands or files are missing, do not implement code.
 
-## Task Implementation
+## Standard task mode
 
-- **One sub-task at a time:** do not start the next sub-task until the user approves (`yes`/`y`).
-  - Exception: in one-shot mode (`begin one-shot in <plan-key>`), continue automatically.
-- **Temporary plan doc workflow:**
-  1. Create `tasks/tmp/plan-task-<task-id>.md`.
-  2. Implement the sub-task from that plan.
-  3. Run review chain and capture findings/fixes/tests.
-  4. Delete temp plan doc only after review completion.
-  5. Mark sub-task complete.
-- **Completion protocol:**
-  1. Mark completed sub-task `[x]` immediately.
-  2. Mark parent `[x]` when all child sub-tasks are `[x]`.
-- Stop after each sub-task for approval in standard mode.
+- Standard mode is single-agent.
+- Work one sub-task at a time starting from the requested task scope.
+- Stop after each completed sub-task for user approval.
+
+## One-shot mode
+
+- One-shot mode is a sequential worker-subagent loop.
+- For each sub-task:
+  1. Main agent selects the next unchecked sub-task in file order.
+  2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` with focused implementation notes if needed.
+  3. Main agent spawns one worker subagent with:
+     - `tasks/prd-<plan-key>.md`
+     - `tasks/tdd-<plan-key>.md`
+     - `tasks/tasks-plan-<plan-key>.md`
+     - the exact sub-task block
+  4. Worker implements one sub-task only and returns control.
+  5. Main agent reviews and integrates the result.
+  6. Main agent runs the automatic review chain and tests.
+  7. Main agent marks the checklist complete and creates the commit.
+  8. Main agent starts the next sub-task.
+
+- Do not run sub-task workers in parallel. One-shot execution is strictly sequential.
+
+## Temporary plan doc workflow
+
+1. Create `tasks/tmp/plan-task-<task-id>.md` before execution when focused implementation notes are useful.
+2. Use it to capture sub-task-specific plan, findings, or test notes.
+3. Delete temp plan doc only after review completion for that sub-task.
+
+## Completion protocol
+
+1. Mark completed sub-task `[x]` immediately.
+2. Mark parent `[x]` when all child sub-tasks are `[x]`.
+3. Keep `Relevant Files` current as work evolves.
+4. Keep task coverage references (`covers_prd` / `covers_tdd`) accurate when tasks change.
 
 ## Cleanup Phase (Required)
 
@@ -34,21 +61,15 @@ Archive target:
 
 Files:
 
-- Always move `tasks/tasks-plan-<plan-key>.md`.
-- Move `tasks/prd-<plan-key>.md` only if it exists.
-- Move `tasks/tdd-<plan-key>.md` only if it exists.
+- `tasks/tasks-plan-<plan-key>.md`
+- `tasks/prd-<plan-key>.md`
+- `tasks/tdd-<plan-key>.md`
 
 Rules:
 
 1. Create `tasks/archive/<plan-key>/` if missing.
-2. Move required task file after final completion is confirmed.
-3. If optional files are expected by user but missing, ask before proceeding.
-4. Perform cleanup before opening the final task-based PR.
-
-## Task List Maintenance
-
-1. Update checklist and add new tasks as they emerge.
-2. Maintain `Relevant Files` with every modified/created file and purpose.
+2. Move all three required files after final completion is confirmed.
+3. Perform cleanup before opening the final task-based PR.
 
 ## AI Instructions
 
@@ -58,5 +79,5 @@ Rules:
 4. Keep checklist status accurate for sub-task and parent tasks.
 5. Keep `Relevant Files` accurate.
 6. In standard mode, pause after each sub-task for approval.
-7. In one-shot mode, continue automatically after commit + review completion.
+7. In one-shot mode, continue automatically after main-agent review + commit completion.
 8. When all tasks complete, archive artifacts under `tasks/archive/<plan-key>/` before final PR handoff.

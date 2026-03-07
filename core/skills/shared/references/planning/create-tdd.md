@@ -1,23 +1,22 @@
-# Rule: Generating an Optional Technical Design Document (TDD)
+# Rule: Generating the Technical Design Document (TDD)
 
 ## Goal
 
-Generate a technical design doc when explicitly requested or when major complexity escalation is accepted.
+Generate a required TDD that preserves and normalizes the technical and implementation-facing substance of the planning input.
 
-TDD is optional in default planning mode.
+TDD is always required for planned work.
 
 ## When to run
 
-Run this only if one is true:
-
-1. User explicitly asks for TDD.
-2. Major complexity detection triggered and user confirmed PRD/TDD generation.
+Run this for every completed planning flow after PRD structure is locked and before tasks-plan finalization.
 
 ## Input
 
 - `<plan-key>`
-- `tasks/prd-<plan-key>.md` if present
-- planning/task context from `tasks/tasks-plan-<plan-key>.md`
+- `tasks/prd-<plan-key>.md`
+- source plan or source prompt
+- locked decisions from Socratic refinement
+- finalized plain-language summary
 
 ## Output
 
@@ -25,27 +24,59 @@ Run this only if one is true:
 - **Location:** `/tasks/`
 - **Filename:** `tdd-<plan-key>.md`
 
-## TDD structure
+## Required TDD structure
 
-1. Overview and scope alignment
-2. Architecture and component boundaries
-3. Data model/storage changes
-4. Interfaces/contracts
-5. Technical requirements (`TDR-*`)
-6. Command contract
-7. Failure modes and rollback
-8. Observability and monitoring
-9. Test strategy
-10. Rollout plan/runbook
-11. Open technical questions
+1. Title
+2. Plain-Language Summary
+3. Technical Summary
+4. Scope Alignment to PRD
+5. Current Technical Diagnosis
+6. Architecture / Approach
+7. System Boundaries / Source of Truth
+8. Dependencies
+9. Route / API / Public Interface Changes
+10. Data Model / Schema / Storage Changes
+11. Technical Requirements (`TDR-*`)
+12. Ingestion / Backfill / Migration / Rollout Plan
+13. Failure Modes / Recovery / Rollback
+14. Operational Readiness
+15. Verification and Test Strategy
+
+## Plain-Language Summary rules
+
+- Must be understandable to a 12-year-old.
+- Explain the technical approach in concrete, plain language.
+- Preserve the same core meaning as the Socratic plain-language summary.
+- Use it to sanity-check that the design still matches the product intent.
+
+## Mapping rules
+
+If the source plan contains sections like these, preserve them in TDD under the closest matching headings:
+
+- System boundaries or source-of-truth statements
+- Dependencies on services, jobs, sources, flags, secrets, or rollout order
+- Route and API Changes
+- Public Interface / Type Changes
+- Program Signal Schema Changes
+- Data Source Plan
+- Implementation Plan
+- External Source Validation
+- Migration, backfill, rollout, or rollback detail
+- Test Cases and Scenarios with technical verification content
+
+Do not collapse concrete interface, schema, migration, or verification detail into generic prose.
 
 ## Rules
 
 1. Do not start implementation while creating TDD.
-2. Keep TDD aligned with PRD when PRD exists.
-3. Use stable `TDR-*` IDs.
-4. Include executable command contract with expected outcomes.
-5. TDD generation is optional and must not block task-plan generation when not requested.
+2. Keep TDD aligned with PRD scope and acceptance criteria.
+3. Use stable `TDR-*` IDs for meaningful technical obligations.
+4. Preserve interface examples and type-shape examples when they matter to implementation.
+5. Convert unresolved ambiguity into explicit defaults before finalizing.
+6. Do not include an `Open technical questions` section.
+7. Ensure verification strategy is concrete enough to drive task `verify` steps later.
+8. Keep the section order stable so the plain-language summary is the first substantive section a human or agent reads.
+9. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
 
 ## Build gate reminder
 

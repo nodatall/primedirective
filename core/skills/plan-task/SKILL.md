@@ -1,6 +1,6 @@
 ---
 name: plan-task
-description: Use when the user starts planning with `start planning "<unformed-plan>"` and needs conversational task planning that produces `tasks/tasks-plan-<plan-key>.md`, with optional PRD/TDD escalation only for explicit request or confirmed major complexity.
+description: Use when the user starts planning with `start planning "<unformed-plan>"` and needs rich-plan intake, targeted Socratic refinement, and normalization into required `prd`, `tdd`, and `tasks-plan` artifacts.
 ---
 
 # Plan Task Skill
@@ -13,26 +13,41 @@ Accept only:
 
 - `start planning "<unformed-plan>"`
 
+The quoted input may be a sparse idea or a fully fleshed-out Codex/Claude plan. Treat rich source plans as the default case.
+
 ## Required references
 
 Load these files before running:
 
 - `skills/shared/references/planning/socratic-planning.md`
-- `skills/shared/references/planning/generate-tasks.md`
 - `skills/shared/references/planning/create-prd.md`
 - `skills/shared/references/planning/create-tdd.md`
+- `skills/shared/references/planning/generate-tasks.md`
 - `skills/shared/references/planning/improve-plan.md`
 - `skills/shared/references/execution/task-file-contract.md`
 
 ## Workflow
 
 1. Run planning preflight from `socratic-planning.md`.
-2. Run conversational Socratic loop (one question per turn): intent -> example -> acceptance.
-3. Run major-complexity detection from `socratic-planning.md`.
-4. If complexity is high, ask one confirmation question before generating optional PRD/TDD.
-5. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
-6. If PRD/TDD exist, optionally run `improve-plan.md` once.
-7. Stop and wait for implementation trigger.
+2. Intake the source material and classify it as rich source plan or sparse source prompt.
+3. Run the Socratic refinement loop:
+   - one question per turn
+   - plain language
+   - gap-check, contradiction-check, and assumption-check only
+   - produce a final plain-language summary that a 12-year-old could follow
+4. Generate `tasks/prd-<plan-key>.md` using `create-prd.md`.
+5. Generate `tasks/tdd-<plan-key>.md` using `create-tdd.md`.
+6. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
+7. Run `improve-plan.md` once against the source plan plus all generated artifacts.
+8. Stop and wait for implementation trigger.
+
+## Planning rules
+
+- Always produce all three planning artifacts.
+- Do not use lean-mode branching. Simpler work produces shorter docs naturally.
+- Do not leave `Open questions` or `Open technical questions` in final artifacts.
+- Preserve substantive source-plan sections; normalize them without dropping content.
+- Restore traceability from tasks to `FR-*` and `TDR-*` IDs.
 
 ## UI behavior
 

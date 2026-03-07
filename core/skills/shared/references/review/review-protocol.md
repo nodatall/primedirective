@@ -6,7 +6,7 @@ Mandatory review behavior for task execution and explicit review commands.
 
 ```text
 Please fetch the latest `origin/main` from github.
-We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], please create and switch to a new branch from `origin/main`.
+We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. Please create and switch to a new branch from `origin/main`.
 ```
 
 Operational translation:
@@ -15,6 +15,16 @@ Operational translation:
 - If working tree is dirty, stop and ask before creating branch.
 - Create/switch `nodatall/<short-task-name>` from `origin/main`.
 - If `main` is checked out elsewhere in another worktree, create branch directly from `origin/main`.
+
+## Review context for task-based work
+
+For task-based execution or task-scoped review, evaluate changes against:
+
+- `tasks/prd-<plan-key>.md`
+- `tasks/tdd-<plan-key>.md`
+- `tasks/tasks-plan-<plan-key>.md`
+
+Use those artifacts to judge scope alignment, missing work, and regression risk.
 
 ## Prompts A-E (full review round)
 
@@ -155,7 +165,7 @@ For `begin review` and `begin review <task-id>`:
 ## Step 9: Finalization
 
 ```text
-Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the task plan and any optional PRD/TDD docs into `tasks/archive/<plan-key>/`, then open a pull request. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
+Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the PRD, TDD, and task plan into `tasks/archive/<plan-key>/`, then open a pull request. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
 ```
 
 Operational translation:
@@ -165,7 +175,7 @@ Operational translation:
 - Resolve conflicts and rerun relevant tests.
 - For task-based work, update checklist and relevant files.
 - If all checkboxes in task list are complete, archive:
-  - `tasks/tasks-plan-<plan-key>.md` (required)
-  - `tasks/prd-<plan-key>.md` (if present)
-  - `tasks/tdd-<plan-key>.md` (if present)
+  - `tasks/prd-<plan-key>.md`
+  - `tasks/tdd-<plan-key>.md`
+  - `tasks/tasks-plan-<plan-key>.md`
 - Open PR with summary, test evidence, and known risks/follow-ups.

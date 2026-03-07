@@ -20,13 +20,20 @@ Trigger mapping:
 
 Planning defaults:
 
-- Default planning output is `tasks/tasks-plan-<plan-key>.md`.
-- Socratic flow is conversational: one question per turn, plain language.
-- Optional PRD/TDD docs are generated only by explicit request or complexity-confirmed escalation.
+- Planning treats user input as source-plan material to improve and normalize.
+- Planning always outputs:
+  - `tasks/prd-<plan-key>.md`
+  - `tasks/tdd-<plan-key>.md`
+  - `tasks/tasks-plan-<plan-key>.md`
+- Socratic flow is conversational: one question per turn, plain language, targeted gap-checking.
+- Final planning artifacts must not contain `Open questions` or `Open technical questions`.
+- Plain-language summaries are required in the Socratic flow, PRD, and TDD.
 
 Execution behavior:
 
-- `execute-task` includes automatic review rounds for task-based implementation flow.
+- `execute-task` requires PRD + TDD + tasks-plan before coding starts.
+- Standard `begin task ...` execution is single-agent.
+- `begin one-shot ...` uses one sequential worker subagent per sub-task, with the main agent owning review, integration, task updates, and commits.
 - `review-chain` exists for explicit review triggers (`begin review` and `begin review <task-id>`).
 
 Shared references:

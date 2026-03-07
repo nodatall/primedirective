@@ -25,12 +25,13 @@ Load these files before running:
 
 1. Keep current branch (do not create/rename/switch branch during review).
 2. Create the correct review log file when missing, otherwise append a new review round to the existing file.
-3. Execute prompts A-E sequentially, one prompt at a time.
-4. Record findings, fixes, and test evidence for each prompt.
-5. Enforce completion gates, including unresolved TODO checks.
-6. Provide summary and delete review log only after all review checks pass.
+3. For task-scoped review, use PRD + TDD + tasks-plan as scope context when those artifacts exist.
+4. Execute prompts A-E sequentially, one prompt at a time.
+5. Record findings, fixes, and test evidence for each prompt.
+6. Enforce completion gates, including unresolved TODO checks.
+7. Provide summary and delete review log only after all review checks pass.
 
 ## Scope
 
-- Task mode review: review all branch changes vs `origin/main`, including working-tree edits.
-- Ad-hoc review: same branch-wide scope, without PRD/TDD checklist requirements unless explicitly requested.
+- Task mode review: review all branch changes vs `origin/main`, including working-tree edits, against PRD + TDD + tasks-plan context.
+- Ad-hoc review: same branch-wide scope, without task-artifact requirements unless explicitly requested.

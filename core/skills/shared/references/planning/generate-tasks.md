@@ -1,24 +1,22 @@
-# Rule: Generating a Task Plan
+# Rule: Generating the Task Plan
 
 ## Goal
 
-Generate one implementation-ready task plan file:
+Generate one implementation-ready task plan file from finalized PRD and TDD:
 
 - `tasks/tasks-plan-<plan-key>.md`
 
-Do not require PRD/TDD by default.
+Tasks-plan is always required, but it is no longer the sole planning artifact.
 
 ## Inputs
 
 Required:
 
-- Planning conversation outcomes (intent, example, acceptance)
-- Locked decisions and assumptions
-
-Optional (if available):
-
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
+- locked planning decisions and defaults
+
+Tasks must be generated from finalized PRD and TDD, not directly from the raw source plan.
 
 ## Output
 
@@ -29,45 +27,51 @@ Optional (if available):
 ## Required structure
 
 ```markdown
-See `skills/shared/references/execution/task-management.md` for task workflow and review guidelines.
+See `skills/shared/references/execution/task-management.md` for execution workflow and review guidelines.
 
-## Goal
-- [1-3 lines]
+# <Plan Title>
 
-## Acceptance Criteria
-- [3-7 concrete bullets]
-
-## Decisions
-- [final choices that steer implementation]
-
-## Assumptions
-- [unresolved items with chosen defaults]
-
-## Out of Scope
-- [optional]
+## Scope Summary
+- Short summary of what this plan covers.
+- Call out the highest-risk implementation concerns.
 
 ## Relevant Files
 - `path/to/file.ts` - Why this file matters.
 - `path/to/file.test.ts` - Tests for the file.
 
+## Task Ordering Notes
+- Sequencing assumptions and dependency notes.
+- Any required migration/backfill/rollout order.
+
 ## Tasks
 - [ ] 1.0 Parent task title
+  - covers_prd: `FR-001`, `FR-002`
+  - covers_tdd: `TDR-001`
   - [ ] 1.1 Sub-task description
+    - covers_prd: `FR-001`
+    - covers_tdd: `TDR-001`
     - output: `path/to/file.ts`
     - verify: `npm test -- path/to/file.test.ts`
-    - done_when: [observable pass condition]
+    - done_when: Observable pass condition
 ```
 
-## Process
+## Generation rules
 
 1. Confirm `<plan-key>` is known.
-2. Synthesize core behavior from planning answers.
-3. Incorporate optional PRD/TDD context when present.
-4. Order work risk-first.
-5. Generate parent tasks and actionable sub-tasks.
-6. Ensure each sub-task has `output`, `verify`, and `done_when`.
-7. Save `tasks/tasks-plan-<plan-key>.md`.
-8. Stop and wait for build trigger.
+2. Confirm PRD and TDD are both finalized first.
+3. Derive task sequencing from finalized PRD and TDD obligations.
+4. Order work risk-first and dependency-aware.
+5. Preserve meaningful implementation detail from the source plan by expressing it as actionable tasks.
+6. Ensure every meaningful `FR-*` and `TDR-*` is covered by at least one task or sub-task.
+7. Ensure every sub-task has `covers_prd`, `covers_tdd`, `output`, `verify`, and `done_when`.
+8. Save `tasks/tasks-plan-<plan-key>.md`.
+9. Stop and wait for build trigger.
+
+## Coverage rule
+
+No requirement from PRD or TDD may disappear during task generation.
+
+If something is intentionally omitted from tasks, it must already be explicitly marked as out of scope, deferred, or non-goal in PRD/TDD before task generation.
 
 ## Hard stop
 

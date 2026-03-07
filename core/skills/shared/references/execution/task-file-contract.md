@@ -16,9 +16,9 @@ Use `<plan-key>` directly for both standard and one-shot execution.
 
 Resolve files exactly as:
 
+- Required PRD: `tasks/prd-<plan-key>.md`
+- Required TDD: `tasks/tdd-<plan-key>.md`
 - Required task list: `tasks/tasks-plan-<plan-key>.md`
-- Optional PRD: `tasks/prd-<plan-key>.md`
-- Optional TDD: `tasks/tdd-<plan-key>.md`
 
 ## Temporary execution files
 
@@ -26,19 +26,42 @@ Resolve files exactly as:
 - Task review log: `tasks/tmp/review-task-<task-id>.md`
 - Ad-hoc review log: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
+## Execution artifact gate
+
+Execution requires all three planning artifacts.
+
+If any one of these is missing:
+
+- `tasks/prd-<plan-key>.md`
+- `tasks/tdd-<plan-key>.md`
+- `tasks/tasks-plan-<plan-key>.md`
+
+Then:
+
+- stop immediately
+- do not code
+- do not auto-generate missing planning docs
+- instruct the user to complete planning first
+
 ## Mode rules
 
 ### Standard mode
 
 - Requires `<task-id>` and `<plan-key>`.
-- If `tasks/tasks-plan-<plan-key>.md` is missing, stop and ask for clarification.
+- Executes the requested task/sub-task in the main agent.
 - Pause for user confirmation between sub-tasks.
 
 ### One-shot mode
 
 - Requires `<plan-key>`.
-- If `tasks/tasks-plan-<plan-key>.md` is missing, stop and ask for clarification.
-- Start at first unchecked sub-task, continue in file order.
+- Start at first unchecked sub-task and continue in file order.
+- Use one worker subagent per sub-task.
+- Worker context must include:
+  - `tasks/prd-<plan-key>.md`
+  - `tasks/tdd-<plan-key>.md`
+  - `tasks/tasks-plan-<plan-key>.md`
+  - the exact sub-task block being implemented
+- Main agent owns task-list updates, review, commits, integration checks, and finalization.
 - No pauses between sub-tasks.
 - Run finalization once after all sub-tasks complete.
 
