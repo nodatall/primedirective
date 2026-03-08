@@ -26,7 +26,7 @@ For task-based execution or task-scoped review, evaluate changes against:
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
 
-## Prompts A-E (full review round)
+## Prompts A-H (full review round)
 
 ### Prompt A
 
@@ -85,9 +85,52 @@ Filler words and hedging in strings/docs.
 Action: Keep what adds value; delete what adds noise.
 ```
 
+### Prompt F
+
+```text
+Thorough Testing: Coverage and Verification
+Goal: Verify the change is actually exercised beyond the happy path.
+Review For:
+Boundary conditions and edge cases.
+Invalid inputs and failure paths.
+Integration points with real dependencies where practical.
+Concurrent or async behavior where relevant.
+Actual outputs and side effects, not just passing assertions.
+Action: Identify missing or weak coverage, add the highest-value tests, run them, and record exactly what was executed and what remains unverified.
+```
+
+### Prompt G
+
+```text
+Production Readiness Validation
+Goal: Verify the change is ready for real deployment with evidence, not assertions.
+Check:
+Error handling and logging for realistic failure modes.
+Configuration externalization and absence of hardcoded secrets.
+Rollback, migration, or backfill safety where relevant.
+Performance under expected usage where relevant.
+Dependency and security hygiene.
+Monitoring and alerting visibility where relevant.
+Action: Report concrete evidence for each applicable item, flag gaps explicitly, and fix any production-readiness issues that are in scope for this change.
+```
+
+### Prompt H
+
+```text
+Final Completion Audit
+Goal: Confirm the work is complete, solves the original problem, and has no silent gaps.
+Ask:
+Does this actually work based on executed verification?
+Does it solve the original problem end-to-end or only part of it?
+Was anything skipped, deferred, or left implicit?
+What assumptions remain and should be documented?
+What is most likely to break in production?
+Action: Give an honest assessment, list any remaining issues or accepted risks explicitly, and do not mark the review complete while unresolved in-scope issues remain.
+```
+
 ## Prompt execution protocol (required)
 
-For each prompt A-E, execute one-by-one in sequence:
+For each required prompt, execute one-by-one in sequence:
 
 1. Run prompt.
 2. Record findings.
@@ -97,10 +140,11 @@ For each prompt A-E, execute one-by-one in sequence:
 
 Rules:
 
-- Do not ask permission between prompts A-E.
+- Do not ask permission between prompts.
 - Complete one full round per review cycle.
 - If a prompt introduces code changes, continue to remaining prompts in same round.
 - Do not mark prompts complete retroactively from one combined pass.
+- Prompt G is required only for deploy-bound work or changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability. Otherwise mark it `not applicable` with a reason.
 
 ## Review log protocol (required)
 
@@ -133,6 +177,9 @@ Checklist (in order):
 - [ ] Prompt C: Code quality pass
 - [ ] Prompt D: LARP assessment
 - [ ] Prompt E: Clean up slop
+- [ ] Prompt F: Thorough testing
+- [ ] Prompt G: Production readiness validation (or mark not applicable with reason)
+- [ ] Prompt H: Final completion audit
 
 Per prompt entry include:
 
@@ -140,12 +187,14 @@ Per prompt entry include:
 - concrete findings
 - fixes made
 - tests run
+- applicability when prompt is optional
 
 Completion gates:
 
-- All prompt checkboxes completed.
+- All required and applicable prompt checkboxes completed.
 - Minimum 1 full round complete.
 - No unresolved LARP remediation TODO items.
+- No unresolved final-audit issues without explicit accepted-risk or blocked status.
 - Tests passing or explicitly justified.
 
 Deletion gate:
@@ -159,7 +208,7 @@ For `begin review` and `begin review <task-id>`:
 
 - Do not create, rename, or switch branches.
 - Start at Prompt A.
-- Run full sequence A-E.
+- Run full sequence A-H, treating Prompt G as conditional when not applicable.
 - Review scope is full branch diff vs `origin/main`, including uncommitted edits.
 
 ## Step 9: Finalization
