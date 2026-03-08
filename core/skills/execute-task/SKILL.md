@@ -37,7 +37,7 @@ Load these files before running:
 5. For each completed sub-task:
    - create/update `tasks/tmp/plan-task-<task-id>.md`
    - build using PRD + TDD + tasks-plan + exact sub-task block
-   - run one full review round (A-H) automatically using `review-protocol.md`, treating Prompt G as conditional when not applicable
+   - run one full review round (A-I) automatically using `review-protocol.md`, treating Prompts G and H as conditional when not applicable
    - apply fixes from review findings and rerun relevant tests
    - mark checklist updates in `tasks/tasks-plan-<plan-key>.md`
    - create a dedicated commit for the sub-task

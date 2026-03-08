@@ -26,7 +26,7 @@ For task-based execution or task-scoped review, evaluate changes against:
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
 
-## Prompts A-H (full review round)
+## Prompts A-I (full review round)
 
 ### Prompt A
 
@@ -102,6 +102,21 @@ Action: Identify missing or weak coverage, add the highest-value tests, run them
 ### Prompt G
 
 ```text
+Frontend Evidence Review
+Goal: Verify all user-facing changes through actual visual inspection, not code inspection alone.
+Required When:
+Any change affects UI, layout, styling, interaction flows, responsive behavior, animations, or rendered content.
+Action:
+Use Playwright MCP by default to open the changed UI, exercise the affected flows, resize for relevant breakpoints, and capture screenshots of all changed screens and states.
+When motion, timing, or multi-step interaction matters, also capture video or trace evidence using the Playwright CLI workflow.
+Review the captured evidence for visual regressions, broken layout, missing states, incorrect copy, and obvious accessibility issues visible in the UI.
+Record exactly what was captured, what was reviewed, and what remains unverified.
+Do not mark frontend-facing work complete without visual evidence.
+```
+
+### Prompt H
+
+```text
 Production Readiness Validation
 Goal: Verify the change is ready for real deployment with evidence, not assertions.
 Check:
@@ -114,7 +129,7 @@ Monitoring and alerting visibility where relevant.
 Action: Report concrete evidence for each applicable item, flag gaps explicitly, and fix any production-readiness issues that are in scope for this change.
 ```
 
-### Prompt H
+### Prompt I
 
 ```text
 Final Completion Audit
@@ -144,7 +159,8 @@ Rules:
 - Complete one full round per review cycle.
 - If a prompt introduces code changes, continue to remaining prompts in same round.
 - Do not mark prompts complete retroactively from one combined pass.
-- Prompt G is required only for deploy-bound work or changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability. Otherwise mark it `not applicable` with a reason.
+- Prompt G is required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior. Otherwise mark it `not applicable` with a reason.
+- Prompt H is required only for deploy-bound work or changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability. Otherwise mark it `not applicable` with a reason.
 
 ## Review log protocol (required)
 
@@ -178,8 +194,9 @@ Checklist (in order):
 - [ ] Prompt D: LARP assessment
 - [ ] Prompt E: Clean up slop
 - [ ] Prompt F: Thorough testing
-- [ ] Prompt G: Production readiness validation (or mark not applicable with reason)
-- [ ] Prompt H: Final completion audit
+- [ ] Prompt G: Frontend evidence review (or mark not applicable with reason)
+- [ ] Prompt H: Production readiness validation (or mark not applicable with reason)
+- [ ] Prompt I: Final completion audit
 
 Per prompt entry include:
 
@@ -208,7 +225,7 @@ For `begin review` and `begin review <task-id>`:
 
 - Do not create, rename, or switch branches.
 - Start at Prompt A.
-- Run full sequence A-H, treating Prompt G as conditional when not applicable.
+- Run full sequence A-I, treating Prompts G and H as conditional when not applicable.
 - Review scope is full branch diff vs `origin/main`, including uncommitted edits.
 
 ## Step 9: Finalization
