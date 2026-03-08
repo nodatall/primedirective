@@ -45,6 +45,7 @@ Shared references:
 ## Repo-Specific Norms
 
 - Branch naming: `<short-task-name>` (concise, concrete).
+- After a feature branch is confirmed merged into `origin/main`, delete it locally and on `origin` when safe. Never delete `main`, the currently checked out branch, a branch with unmerged local commits, or a branch tied to an open PR.
 - Update `tasks/tasks-plan-<plan-key>.md` after each completed sub-task in task-mode execution.
 - For ad-hoc work outside `begin task ...` / `begin one-shot ...`, task-list updates are not required unless explicitly requested.
 - Update `README.md` only when setup/commands/env requirements change.

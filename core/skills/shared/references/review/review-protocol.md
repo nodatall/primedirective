@@ -245,3 +245,18 @@ Operational translation:
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
 - Open PR with summary, test evidence, and known risks/follow-ups.
+
+## Step 10: Post-Merge Branch Cleanup
+
+```text
+If the current work has already been merged into `main`, clean up the merged feature branch locally and on GitHub.
+```
+
+Operational translation:
+
+- `git fetch origin --prune`
+- Confirm the feature branch tip is reachable from `origin/main`.
+- Do not delete `main`, any currently checked out branch, any branch with unmerged local commits, or any branch tied to an open PR.
+- Delete the remote branch on GitHub with `git push origin --delete <branch>` when it still exists and is safe to remove.
+- Switch to `main` or another safe branch/worktree before deleting the local branch.
+- Delete the local merged branch with `git branch -d <branch>`.
