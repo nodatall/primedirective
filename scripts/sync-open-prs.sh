@@ -166,6 +166,48 @@ cleanup_generated_branch() {
   fi
 }
 
+is_retryable_pr_create_error() {
+  local output="$1"
+
+  [[ "$output" == *"Head sha can't be blank"* ]] ||
+  [[ "$output" == *"Base sha can't be blank"* ]] ||
+  [[ "$output" == *"Head ref must be a branch"* ]] ||
+  [[ "$output" == *"No commits between "* ]]
+}
+
+run_pr_create_with_retry() {
+  local repo_path="$1"
+  local branch_name="$2"
+  shift 2
+
+  local attempt=1
+  local max_attempts=4
+  local sleep_seconds=2
+
+  PR_CREATE_OUTPUT=""
+  PR_CREATE_EXIT=0
+
+  while true; do
+    set +e
+    PR_CREATE_OUTPUT=$(cd "$repo_path" && gh "$@" 2>&1)
+    PR_CREATE_EXIT=$?
+    set -e
+
+    if ((PR_CREATE_EXIT == 0)); then
+      return 0
+    fi
+
+    if ((attempt >= max_attempts)) || ! is_retryable_pr_create_error "$PR_CREATE_OUTPUT"; then
+      return "$PR_CREATE_EXIT"
+    fi
+
+    echo "  note: GitHub has not indexed $branch_name for PR creation yet; retrying in ${sleep_seconds}s"
+    sleep "$sleep_seconds"
+    attempt=$((attempt + 1))
+    sleep_seconds=$((sleep_seconds * 2))
+  done
+}
+
 for name in "${REPO_NAMES[@]}"; do
   if [[ -z "$name" ]]; then
     echo "Encountered empty --repo-name value" >&2
@@ -293,9 +335,10 @@ for name in "${REPO_NAMES[@]}"; do
   fi
 
   set +e
-  pr_url=$(cd "$target_repo" && gh "${pr_args[@]}")
+  run_pr_create_with_retry "$target_repo" "$branch_name" "${pr_args[@]}"
   pr_create_exit=$?
   set -e
+  pr_url="$PR_CREATE_OUTPUT"
 
   if ((pr_create_exit != 0)); then
     set +e
@@ -304,6 +347,7 @@ for name in "${REPO_NAMES[@]}"; do
     set -e
     if ((pr_lookup_exit != 0)) || [[ -z "$pr_url" ]]; then
       echo "  fail: PR creation failed and no existing PR found for $branch_name"
+      echo "  gh error: ${PR_CREATE_OUTPUT%%$'\n'*}"
       failed_count=$((failed_count + 1))
       restore_repo_state "$target_repo" "$original_branch" "$original_head" "$stashed_changes" "$stash_ref"
       continue
