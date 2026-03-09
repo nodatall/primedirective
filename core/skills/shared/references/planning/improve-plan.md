@@ -37,6 +37,7 @@ When multiple solutions are valid:
 
 Evaluate and improve:
 
+- Whether the locked `Goal`, `Context`, `Constraints`, and `Done when` intake survived normalization.
 - Whether any meaningful source-plan section was dropped.
 - Whether product-facing sections landed in PRD.
 - Whether technical sections landed in TDD.
@@ -96,16 +97,17 @@ Evaluate and improve:
 The improved plan must explicitly satisfy all of these:
 
 1. Nothing important from the source plan was dropped.
-2. PRD and TDD boundaries are correct.
-3. Every meaningful product requirement has an `FR-*` ID.
-4. Every meaningful technical obligation has a `TDR-*` ID.
-5. Every task or sub-task maps back to relevant `FR-*` and `TDR-*` IDs.
-6. Test strategy covers the stated acceptance criteria.
-7. Migration/backfill/rollback detail exists when relevant.
-8. No final artifact contains `Open questions` or `Open technical questions`.
-9. Plain-language summaries remain clear and faithful to the full plan.
-10. PRD includes clear user/problem framing and success guardrails.
-11. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
+2. The locked `Goal`, `Context`, `Constraints`, and `Done when` intake remains explicit after normalization.
+3. PRD and TDD boundaries are correct.
+4. Every meaningful product requirement has an `FR-*` ID.
+5. Every meaningful technical obligation has a `TDR-*` ID.
+6. Every task or sub-task maps back to relevant `FR-*` and `TDR-*` IDs.
+7. Test strategy covers the stated acceptance criteria.
+8. Migration/backfill/rollback detail exists when relevant.
+9. No final artifact contains `Open questions` or `Open technical questions`.
+10. Plain-language summaries remain clear and faithful to the full plan.
+11. PRD includes clear user/problem framing and success guardrails.
+12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
 
 ## For every issue identified
 

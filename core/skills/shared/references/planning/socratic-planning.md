@@ -43,6 +43,22 @@ Default assumption:
 
 - Treat the input as a `rich source plan` unless it is clearly sparse.
 
+## Intake Normalization (Required)
+
+Before asking planning questions, normalize the request into these four buckets:
+
+1. `Goal`: What needs to change or be built, and why it matters.
+2. `Context`: The files, flows, docs, examples, systems, errors, or current-state details that matter.
+3. `Constraints`: Requirements, conventions, architecture boundaries, safety rules, and defaults that must be respected.
+4. `Done when`: The observable conditions that must be true before the work is considered complete.
+
+Rules:
+
+- Do not skip a bucket just because the user's wording is informal.
+- If a bucket is implicit, extract it and restate it plainly.
+- If a bucket is missing, ask the smallest clarifying question needed or choose an explicit default.
+- Use this intake shape to drive the rest of the planning conversation; do not let important request context remain scattered or unstated.
+
 ## Source-Plan Intake Rules
 
 For a rich source plan:
@@ -59,6 +75,7 @@ For a sparse source prompt:
 1. Ask enough targeted questions to reach decision completeness.
 2. Build the same final artifact set.
 3. Do not use a separate lean-mode contract.
+4. Use `Goal`, `Context`, `Constraints`, and `Done when` as the minimum intake structure.
 
 ## Conversational Question Loop
 
@@ -81,19 +98,21 @@ Do not re-walk the whole plan if the plan already covers it.
 
 Use this simple loop:
 
-1. Intent
-2. Example
-3. Acceptance
+1. Goal
+2. Context
+3. Constraints
+4. Done when
 
-Add constraint or failure-path questions only when they materially change the implementation.
+Ask example or failure-path questions only when they materially clarify one of those four buckets or change implementation behavior.
 
 ## Socratic Output Requirements
 
 Before document generation, produce and lock:
 
-1. a final plain-language summary that a 12-year-old could follow
-2. resolved decisions or explicit defaults for anything that would otherwise remain ambiguous
-3. confirmation that important source-plan content will survive normalization
+1. an intake summary with `Goal`, `Context`, `Constraints`, and `Done when`
+2. a final plain-language summary that a 12-year-old could follow
+3. resolved decisions or explicit defaults for anything that would otherwise remain ambiguous
+4. confirmation that important source-plan content will survive normalization
 
 Rules:
 
@@ -131,11 +150,12 @@ All three are mandatory for execution.
 
 When transforming a rich source plan into PRD, TDD, and tasks-plan:
 
-1. Do not collapse detailed sections into vague summaries.
-2. Preserve route, API, schema, migration, rollout, and test content.
-3. Preserve product rules, UX rules, missing-data behavior, and non-goals.
-4. Split mixed sections across PRD and TDD only when needed; do not drop any part.
-5. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
+1. Preserve and map the locked intake summary across PRD, TDD, and tasks-plan rather than letting it disappear during normalization.
+2. Do not collapse detailed sections into vague summaries.
+3. Preserve route, API, schema, migration, rollout, and test content.
+4. Preserve product rules, UX rules, missing-data behavior, and non-goals.
+5. Split mixed sections across PRD and TDD only when needed; do not drop any part.
+6. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
 
 ## Execution Trigger Gate (Hard Stop)
 

@@ -29,11 +29,12 @@ Load these files before running:
 ## Workflow
 
 1. Run planning preflight from `socratic-planning.md`.
-2. Intake the source material and classify it as rich source plan or sparse source prompt.
+2. Intake the source material, classify it as rich source plan or sparse source prompt, and normalize it into `Goal`, `Context`, `Constraints`, and `Done when`.
 3. Run the Socratic refinement loop:
    - one question per turn
    - plain language
    - gap-check, contradiction-check, and assumption-check only
+   - close gaps in `Goal`, `Context`, `Constraints`, and `Done when` before document generation
    - produce a final plain-language summary that a 12-year-old could follow
 4. Generate `tasks/prd-<plan-key>.md` using `create-prd.md`.
 5. Generate `tasks/tdd-<plan-key>.md` using `create-tdd.md`.
