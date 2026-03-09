@@ -24,6 +24,7 @@ Resolve files exactly as:
 
 - Per-sub-task plan doc: `tasks/tmp/plan-task-<task-id>.md`
 - Task review log: `tasks/tmp/review-task-<task-id>.md`
+- One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review log: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
 ## Execution artifact gate

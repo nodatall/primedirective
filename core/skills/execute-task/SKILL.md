@@ -37,16 +37,17 @@ Load these files before running:
 5. For each completed sub-task:
    - create/update `tasks/tmp/plan-task-<task-id>.md`
    - build using PRD + TDD + tasks-plan + exact sub-task block
-   - run one full review round (A-I) automatically using `review-protocol.md`, treating Prompts G and H as conditional when not applicable
+   - run one `sub-task` review round (A-I) automatically using `review-protocol.md`, treating Prompts G and H as conditional when not applicable
    - apply fixes from review findings and rerun relevant tests
    - mark checklist updates in `tasks/tasks-plan-<plan-key>.md`
    - create a dedicated commit for the sub-task
-6. Run finalization from `review-protocol.md` Step 9 rules after the active execution scope is complete.
+6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round (A-I) automatically using `review-protocol.md` before finalization.
+7. Run finalization from `review-protocol.md` Step 9 rules after the active execution scope is complete.
 
 ## Mode behavior
 
 - Standard mode (`begin task ...`): single-agent execution, pause for approval between sub-tasks.
-- One-shot mode (`begin one-shot ...`): sequential worker-subagent loop, no approval pauses between sub-tasks, one main-agent integration/review/commit cycle per sub-task.
+- One-shot mode (`begin one-shot ...`): sequential worker-subagent loop, no approval pauses between sub-tasks, one main-agent integration/review/commit cycle per sub-task, then one final full-branch review before finalization.
 
 ## Review relationship
 

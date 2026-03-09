@@ -26,18 +26,32 @@ For task-based execution or task-scoped review, evaluate changes against:
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
 
+## Review scopes
+
+Use one of these scopes for each review round:
+
+- `sub-task`: only the current sub-task delta since the last committed branch state, plus current uncommitted changes
+- `full-branch`: all branch changes compared to `origin/main`, including current uncommitted changes
+
+Default scope rules:
+
+- Standard task execution review: `sub-task`
+- One-shot per-sub-task automatic review: `sub-task`
+- End-of-one-shot final review: `full-branch`
+- Explicit `begin review` and `begin review <task-id>`: `full-branch`
+
 ## Prompts A-I (full review round)
 
 ### Prompt A
 
 ```text
-Please review all changes in this branch compared to origin/main, including current uncommitted changes.
+Please review all changes in the current review scope, including current uncommitted changes.
 ```
 
 ### Prompt B
 
 ```text
-Review a second time over the same branch-wide scope.
+Review a second time over the same review scope.
 ```
 
 ### Prompt C
@@ -167,12 +181,14 @@ Rules:
 Create and maintain log files:
 
 - Task review: `tasks/tmp/review-task-<task-id>.md`
+- One-shot final review: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
 Trigger-to-log mapping:
 
 - `begin review <task-id>`: use `tasks/tmp/review-task-<task-id>.md`
 - `begin review`: use `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
+- One-shot final automatic full-branch review: use `tasks/tmp/review-task-final-<plan-key>.md`
 
 Round behavior:
 
@@ -182,14 +198,14 @@ Round behavior:
 Initialize each new log with:
 
 - `review_mode: task | ad-hoc`
-- `branch_base_ref: origin/main`
+- `branch_base_ref: origin/main | HEAD`
 - `review_round: 1`
-- `review_scope: full-branch`
+- `review_scope: sub-task | full-branch`
 
 Checklist (in order):
 
-- [ ] Prompt A: Review full branch diff vs origin/main
-- [ ] Prompt B: Review second pass on full branch diff
+- [ ] Prompt A: Review current review scope
+- [ ] Prompt B: Review second pass on current review scope
 - [ ] Prompt C: Code quality pass
 - [ ] Prompt D: LARP assessment
 - [ ] Prompt E: Clean up slop
@@ -205,6 +221,11 @@ Per prompt entry include:
 - fixes made
 - tests run
 - applicability when prompt is optional
+
+Scope metadata rules:
+
+- For `sub-task` review rounds, set `branch_base_ref: HEAD` and record the exact sub-task ID being reviewed.
+- For `full-branch` review rounds, set `branch_base_ref: origin/main`.
 
 Completion gates:
 
@@ -227,6 +248,19 @@ For `begin review` and `begin review <task-id>`:
 - Start at Prompt A.
 - Run full sequence A-I, treating Prompts G and H as conditional when not applicable.
 - Review scope is full branch diff vs `origin/main`, including uncommitted edits.
+
+## Automatic review behavior during execution
+
+For standard task execution and one-shot execution:
+
+- After each completed sub-task and before its commit, run one review round in `sub-task` scope.
+- Review only the current sub-task delta against `HEAD`, not the entire branch history.
+- Apply fixes and rerun relevant tests before creating the sub-task commit.
+
+For one-shot execution only:
+
+- After all sub-tasks are complete and before finalization, run one additional review round in `full-branch` scope.
+- This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
 
 ## Step 9: Finalization
 

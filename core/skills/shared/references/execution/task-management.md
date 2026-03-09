@@ -32,9 +32,10 @@ Guidelines for managing task lists in markdown files.
      - the exact sub-task block
   4. Worker implements one sub-task only and returns control.
   5. Main agent reviews and integrates the result.
-  6. Main agent runs the automatic review chain and tests.
+  6. Main agent runs one automatic `sub-task` review round and relevant tests.
   7. Main agent marks the checklist complete and creates the commit.
   8. Main agent starts the next sub-task.
+  9. After the final sub-task, main agent runs one additional automatic `full-branch` review round before finalization.
 
 - Do not run sub-task workers in parallel. One-shot execution is strictly sequential.
 
@@ -80,4 +81,5 @@ Rules:
 5. Keep `Relevant Files` accurate.
 6. In standard mode, pause after each sub-task for approval.
 7. In one-shot mode, continue automatically after main-agent review + commit completion.
-8. When all tasks complete, archive artifacts under `tasks/archive/<plan-key>/` before final PR handoff.
+8. In one-shot mode, review each completed sub-task in `sub-task` scope, then run one final `full-branch` review after all sub-tasks complete.
+9. When all tasks complete, archive artifacts under `tasks/archive/<plan-key>/` before final PR handoff.
