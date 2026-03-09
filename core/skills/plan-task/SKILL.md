@@ -34,6 +34,7 @@ Load these files before running:
    - one question per turn
    - plain language
    - gap-check, contradiction-check, and assumption-check only
+   - for non-trivial rich plans touching infrastructure, deployment, scheduling, source-of-truth, or operations, ask at least one targeted challenge question before document generation
    - close gaps in `Goal`, `Context`, `Constraints`, and `Done when` before document generation
    - produce a final plain-language summary that a 12-year-old could follow
 4. Generate `tasks/prd-<plan-key>.md` using `create-prd.md`.

@@ -94,6 +94,20 @@ Ask only targeted questions that expose:
 
 Do not re-walk the whole plan if the plan already covers it.
 
+#### Challenge-question minimum
+
+For any non-trivial rich source plan, ask at least one targeted challenge question before document generation unless the plan is clearly small, local-only, and already decision-complete.
+
+Asking at least one challenge question is required when the plan introduces any of:
+
+- new infrastructure, hosting, or deployment behavior
+- new schedulers, background jobs, cron-style automation, or always-on services
+- source-of-truth changes, replication, backup, or sync behavior
+- new external systems, secrets, networking, or connectivity assumptions
+- migration, rollout, backfill, rollback, or operational recovery behavior
+
+The challenge question must test an assumption that could materially change implementation, operations, or ownership. Do not spend the question on something cosmetic or already explicit.
+
 ### Sparse-plan mode
 
 Use this simple loop:
@@ -118,6 +132,7 @@ Rules:
 
 - Ask one follow-up if an answer is vague.
 - If the answer is still vague, choose a reasonable default and state it explicitly.
+- Do not silently default through required challenge-question categories in rich-plan mode.
 - Stop when the plan is decision-complete.
 - Prefer structured dialog questions when client supports them.
 - Fallback to plain-text one-question turns when dialog is unavailable.
@@ -173,7 +188,7 @@ Legacy trigger wording with `prd-key`/`prd-id` must be rejected and corrected.
 
 ## Validation Scenarios
 
-- Rich source plan provided: ask only targeted refinement questions, preserve structure, then generate PRD/TDD/tasks-plan.
+- Rich source plan provided: ask only targeted refinement questions, including at least one challenge question when the plan changes infrastructure, operations, scheduling, or source-of-truth behavior, preserve structure, then generate PRD/TDD/tasks-plan.
 - Sparse request provided: ask enough questions to reach decision completeness, then generate PRD/TDD/tasks-plan.
 - Source plan contains unresolved ambiguity: convert to explicit default or ask until resolved.
 - Source plan contains detailed route/schema/test content: preserve it during normalization.
