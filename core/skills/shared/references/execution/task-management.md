@@ -22,6 +22,7 @@ Guidelines for managing task lists in markdown files.
 ## One-shot mode
 
 - One-shot mode is a sequential worker-subagent loop.
+- One-shot execution scope is the entire unchecked remainder of `tasks/tasks-plan-<plan-key>.md`, not just the current parent task, milestone, or section.
 - For each sub-task:
   1. Main agent selects the next unchecked sub-task in file order.
   2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` with focused implementation notes if needed.
@@ -38,6 +39,7 @@ Guidelines for managing task lists in markdown files.
   9. After the final sub-task, main agent runs one additional automatic `full-branch` review round before finalization.
 
 - Do not run sub-task workers in parallel. One-shot execution is strictly sequential.
+- Do not stop one-shot execution after completing a parent task such as `1.0` or at any section boundary while unchecked sub-tasks remain later in the file.
 
 ## Temporary plan doc workflow
 
@@ -83,3 +85,4 @@ Rules:
 7. In one-shot mode, continue automatically after main-agent review + commit completion.
 8. In one-shot mode, review each completed sub-task in `sub-task` scope, then run one final `full-branch` review after all sub-tasks complete.
 9. When all tasks complete, archive artifacts under `tasks/archive/<plan-key>/` before final PR handoff.
+10. In one-shot mode, do not pause or summarize as complete merely because the next remaining work starts under a new parent task number like `2.0` or `3.0`.

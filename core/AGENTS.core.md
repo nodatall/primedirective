@@ -33,7 +33,7 @@ Execution behavior:
 
 - `execute-task` requires PRD + TDD + tasks-plan before coding starts.
 - Standard `begin task ...` execution is single-agent.
-- `begin one-shot ...` uses one sequential worker subagent per sub-task, with the main agent owning review, integration, task updates, and commits.
+- `begin one-shot ...` uses one sequential worker subagent per sub-task across the entire remaining unchecked task file, with the main agent owning review, integration, task updates, and commits.
 - `review-chain` exists for explicit review triggers (`begin review` and `begin review <task-id>`).
 
 Shared references:

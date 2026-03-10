@@ -56,6 +56,7 @@ Then:
 
 - Requires `<plan-key>`.
 - Start at first unchecked sub-task and continue in file order.
+- Continue until there are no unchecked sub-tasks left anywhere in the file; do not stop at parent-task or section boundaries.
 - Use one worker subagent per sub-task.
 - Worker context must include:
   - `tasks/prd-<plan-key>.md`
