@@ -10,6 +10,7 @@ Required planning artifacts:
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - `tasks/tasks-plan-<plan-key>.md`
+- `tasks/tmp/research-plan-<plan-key>.md` when `--deep-research --preserve-planning-artifacts` is used
 
 This pass exists to strengthen the plan and to prove that normalization did not drop anything important.
 
@@ -70,6 +71,7 @@ Evaluate and improve:
 - Presence of migration, rollout, backfill, rollback, and failure-mode detail when relevant.
 - Presence of operational readiness detail when production behavior changes.
 - Whether the TDD plain-language summary is clear enough for non-technical review.
+- Whether deep-research findings were reflected in the technical design when `--deep-research` was used.
 
 ### 4. Task-plan quality review
 
@@ -91,6 +93,15 @@ Evaluate and improve:
 - Regression protection for risky areas.
 - Missing edge-case or negative-path checks.
 - Gaps in migration/backfill/rollback validation.
+
+### 6. Research integration review
+
+Evaluate and improve when `--deep-research` was used:
+
+- Whether the selected design reflects the strongest research-backed recommendation.
+- Whether source-backed risks, rollout work, or verification gaps were carried into TDD and tasks-plan.
+- Whether the research stayed within `Tech + Delivery` scope unless the plan clearly required more.
+- Whether PRD changed only where research affected product-facing constraints or defaults.
 
 ## Required audit checks
 

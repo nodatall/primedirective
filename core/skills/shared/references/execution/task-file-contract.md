@@ -4,7 +4,7 @@ Canonical path and trigger contract for planning, build, and review skills.
 
 ## Accepted triggers
 
-- Planning: `start planning "<unformed-plan>"`
+- Planning: `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]`
 - Standard task execution: `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
 - One-shot execution: `begin one-shot in <plan-key> [--preserve-review-artifacts]`
 - Task review: `begin review <task-id> [--preserve-review-artifacts]`
@@ -20,14 +20,15 @@ Resolve files exactly as:
 - Required TDD: `tasks/tdd-<plan-key>.md`
 - Required task list: `tasks/tasks-plan-<plan-key>.md`
 
-## Temporary execution files
+## Temporary workflow files
 
+- Planning research memo: `tasks/tmp/research-plan-<plan-key>.md`
 - Per-sub-task plan doc: `tasks/tmp/plan-task-<task-id>.md`
 - Task review log: `tasks/tmp/review-task-<task-id>.md`
 - One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review log: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
-By default, these temporary files are deleted after successful review completion. If the trigger includes `--preserve-review-artifacts`, keep them in place and surface their paths in the final summary.
+By default, planning and review temporary files are deleted after successful completion. If the trigger includes `--preserve-planning-artifacts` or `--preserve-review-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 

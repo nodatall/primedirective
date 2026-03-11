@@ -15,6 +15,7 @@ Run this for every completed planning flow before TDD/task generation is finaliz
 - `<plan-key>`
 - source plan or source prompt
 - locked decisions from Socratic refinement
+- deep-research findings when `--deep-research` is active
 - finalized plain-language summary
 
 ## Output
@@ -73,8 +74,9 @@ Do not drop product-facing detail just because the source heading name differs f
 5. Convert unresolved ambiguity into explicit defaults before finalizing.
 6. Do not include an `Open questions` section.
 7. If source-plan content appears both product and technical, keep product intent in PRD and let TDD carry the technical realization.
-8. Keep the section order stable so the plain-language summary is the first substantive section a human or agent reads.
-9. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
+8. If deep research produced technical-only findings, keep them out of PRD unless they change product-facing constraints or defaults.
+9. Keep the section order stable so the plain-language summary is the first substantive section a human or agent reads.
+10. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
 
 ## Build gate reminder
 

@@ -15,6 +15,7 @@ Required:
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - locked planning decisions and defaults
+- deep-research findings when `--deep-research` is active
 
 Tasks must be generated from finalized PRD and TDD, not directly from the raw source plan.
 
@@ -66,6 +67,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 7. Ensure every sub-task has `covers_prd`, `covers_tdd`, `output`, `verify`, and `done_when`.
 8. Save `tasks/tasks-plan-<plan-key>.md`.
 9. Stop and wait for build trigger.
+10. If `--deep-research` is active, fold research-discovered rollout, migration, verification, and cleanup work into the task ordering and sub-task details.
 
 ## Coverage rule
 

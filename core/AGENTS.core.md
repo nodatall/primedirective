@@ -12,7 +12,7 @@ Use these skills for workflow triggers:
 
 Trigger mapping:
 
-- `start planning "<unformed-plan>"` -> `plan-task`
+- `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]` -> `plan-task`
 - `begin task <task-id> in <plan-key> [--preserve-review-artifacts]` -> `execute-task`
 - `begin one-shot in <plan-key> [--preserve-review-artifacts]` -> `execute-task`
 - `begin review [--preserve-review-artifacts]` -> `review-chain`
@@ -21,6 +21,8 @@ Trigger mapping:
 Planning defaults:
 
 - Planning treats user input as source-plan material to improve and normalize.
+- `--deep-research` runs a pre-draft research pass focused on technical design, rollout/migration, security/ops, and verification strategy.
+- `--preserve-planning-artifacts` keeps temporary planning research artifacts under `tasks/tmp/`.
 - Planning always outputs:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
