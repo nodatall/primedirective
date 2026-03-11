@@ -77,5 +77,5 @@ If something is intentionally omitted from tasks, it must already be explicitly 
 
 Do not start coding after generating the task plan. Build starts only from:
 
-- `begin task <task-id> in <plan-key>`
-- `begin one-shot in <plan-key>`
+- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+- `begin one-shot in <plan-key> [--preserve-review-artifacts]`

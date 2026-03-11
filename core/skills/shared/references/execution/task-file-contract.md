@@ -5,10 +5,10 @@ Canonical path and trigger contract for planning, build, and review skills.
 ## Accepted triggers
 
 - Planning: `start planning "<unformed-plan>"`
-- Standard task execution: `begin task <task-id> in <plan-key>`
-- One-shot execution: `begin one-shot in <plan-key>`
-- Task review: `begin review <task-id>`
-- Ad-hoc review (default): `begin review`
+- Standard task execution: `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+- One-shot execution: `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+- Task review: `begin review <task-id> [--preserve-review-artifacts]`
+- Ad-hoc review (default): `begin review [--preserve-review-artifacts]`
 
 ## Plan key resolution
 
@@ -26,6 +26,8 @@ Resolve files exactly as:
 - Task review log: `tasks/tmp/review-task-<task-id>.md`
 - One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review log: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
+
+By default, these temporary files are deleted after successful review completion. If the trigger includes `--preserve-review-artifacts`, keep them in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 
@@ -51,6 +53,7 @@ Then:
 - Requires `<task-id>` and `<plan-key>`.
 - Executes the requested task/sub-task in the main agent.
 - Pause for user confirmation between sub-tasks.
+- If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs and review logs.
 
 ### One-shot mode
 
@@ -66,6 +69,7 @@ Then:
 - Main agent owns task-list updates, review, commits, integration checks, and finalization.
 - No pauses between sub-tasks.
 - Run finalization once after all sub-tasks complete.
+- If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs and review logs, plus the final full-branch review log.
 
 ## Legacy syntax
 

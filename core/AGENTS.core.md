@@ -13,10 +13,10 @@ Use these skills for workflow triggers:
 Trigger mapping:
 
 - `start planning "<unformed-plan>"` -> `plan-task`
-- `begin task <task-id> in <plan-key>` -> `execute-task`
-- `begin one-shot in <plan-key>` -> `execute-task`
-- `begin review` -> `review-chain`
-- `begin review <task-id>` -> `review-chain`
+- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]` -> `execute-task`
+- `begin one-shot in <plan-key> [--preserve-review-artifacts]` -> `execute-task`
+- `begin review [--preserve-review-artifacts]` -> `review-chain`
+- `begin review <task-id> [--preserve-review-artifacts]` -> `review-chain`
 
 Planning defaults:
 

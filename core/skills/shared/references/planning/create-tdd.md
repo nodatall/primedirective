@@ -82,5 +82,5 @@ Do not collapse concrete interface, schema, migration, or verification detail in
 
 Implementation starts only from:
 
-- `begin task <task-id> in <plan-key>`
-- `begin one-shot in <plan-key>`
+- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+- `begin one-shot in <plan-key> [--preserve-review-artifacts]`

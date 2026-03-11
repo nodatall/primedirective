@@ -59,7 +59,7 @@ Prefer structured dialog questions when client supports them. Fallback to plain-
 
 After planning is complete, wait for one of these implementation triggers:
 
-- `begin task <task-id> in <plan-key>`
-- `begin one-shot in <plan-key>`
+- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
 
 Do not start coding from planning flow.

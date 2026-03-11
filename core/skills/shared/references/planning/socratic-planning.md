@@ -181,8 +181,8 @@ After planning outputs are complete:
 
 Accepted build triggers:
 
-- `begin task <task-id> in <plan-key>`
-- `begin one-shot in <plan-key>`
+- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
 
 Legacy trigger wording with `prd-key`/`prd-id` must be rejected and corrected.
 

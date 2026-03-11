@@ -80,5 +80,5 @@ Do not drop product-facing detail just because the source heading name differs f
 
 Implementation starts only from:
 
-- `begin task <task-id> in <plan-key>`
-- `begin one-shot in <plan-key>`
+- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+- `begin one-shot in <plan-key> [--preserve-review-artifacts]`

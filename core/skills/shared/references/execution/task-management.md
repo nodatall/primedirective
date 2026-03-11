@@ -5,8 +5,8 @@ Guidelines for managing task lists in markdown files.
 ## Execution Entry Gate (Required)
 
 - This execution workflow may start only from:
-  - `begin task <task-id> in <plan-key>`
-  - `begin one-shot in <plan-key>`
+  - `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+  - `begin one-shot in <plan-key> [--preserve-review-artifacts]`
 - Execution requires:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
@@ -45,7 +45,7 @@ Guidelines for managing task lists in markdown files.
 
 1. Create `tasks/tmp/plan-task-<task-id>.md` before execution when focused implementation notes are useful.
 2. Use it to capture sub-task-specific plan, findings, or test notes.
-3. Delete temp plan doc only after review completion for that sub-task.
+3. Delete temp plan doc only after review completion for that sub-task, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
 
 ## Completion protocol
 
@@ -86,3 +86,4 @@ Rules:
 8. In one-shot mode, review each completed sub-task in `sub-task` scope, then run one final `full-branch` review after all sub-tasks complete.
 9. When all tasks complete, archive artifacts under `tasks/archive/<plan-key>/` before final PR handoff.
 10. In one-shot mode, do not pause or summarize as complete merely because the next remaining work starts under a new parent task number like `2.0` or `3.0`.
+11. If `--preserve-review-artifacts` is present, keep `tasks/tmp/` plan and review files created during execution and list them in the final handoff.

@@ -40,6 +40,18 @@ Default scope rules:
 - End-of-one-shot final review: `full-branch`
 - Explicit `begin review` and `begin review <task-id>`: `full-branch`
 
+## Artifact preservation flag
+
+Supported trigger suffix:
+
+- `--preserve-review-artifacts`
+
+Behavior when present on `begin task ...`, `begin one-shot ...`, `begin review`, or `begin review <task-id>`:
+
+- Keep review logs under `tasks/tmp/` after successful completion instead of deleting them.
+- For task execution modes, also keep per-sub-task temp plan docs created under `tasks/tmp/`.
+- Include the preserved artifact paths in the final user-visible summary.
+
 ## Prompts A-I (full review round)
 
 ### Prompt A
@@ -186,8 +198,8 @@ Create and maintain log files:
 
 Trigger-to-log mapping:
 
-- `begin review <task-id>`: use `tasks/tmp/review-task-<task-id>.md`
-- `begin review`: use `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
+- `begin review <task-id> [--preserve-review-artifacts]`: use `tasks/tmp/review-task-<task-id>.md`
+- `begin review [--preserve-review-artifacts]`: use `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 - One-shot final automatic full-branch review: use `tasks/tmp/review-task-final-<plan-key>.md`
 
 Round behavior:
@@ -238,7 +250,7 @@ Completion gates:
 Deletion gate:
 
 - Provide user-visible summary of latest round.
-- Delete review log after all required checks complete.
+- Delete review log after all required checks complete unless `--preserve-review-artifacts` is active for the parent trigger.
 
 ## Branch stability for explicit review triggers
 
@@ -248,6 +260,7 @@ For `begin review` and `begin review <task-id>`:
 - Start at Prompt A.
 - Run full sequence A-I, treating Prompts G and H as conditional when not applicable.
 - Review scope is full branch diff vs `origin/main`, including uncommitted edits.
+- Keep the review log when `--preserve-review-artifacts` is present.
 
 ## Automatic review behavior during execution
 
@@ -256,11 +269,13 @@ For standard task execution and one-shot execution:
 - After each completed sub-task and before its commit, run one review round in `sub-task` scope.
 - Review only the current sub-task delta against `HEAD`, not the entire branch history.
 - Apply fixes and rerun relevant tests before creating the sub-task commit.
+- Delete sub-task review logs and temp plan docs after successful completion unless `--preserve-review-artifacts` is active.
 
 For one-shot execution only:
 
 - After all sub-tasks are complete and before finalization, run one additional review round in `full-branch` scope.
 - This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
+- Keep the final full-branch review log when `--preserve-review-artifacts` is active.
 
 ## Step 9: Finalization
 

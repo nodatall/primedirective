@@ -1,6 +1,6 @@
 ---
 name: execute-task
-description: Use when the user starts implementation with `begin task <task-id> in <plan-key>` or `begin one-shot in <plan-key>` and needs end-to-end execution from required PRD, TDD, and tasks-plan artifacts.
+description: Use when the user starts implementation with `begin task <task-id> in <plan-key> [--preserve-review-artifacts]` or `begin one-shot in <plan-key> [--preserve-review-artifacts]` and needs end-to-end execution from required PRD, TDD, and tasks-plan artifacts.
 ---
 
 # Execute Task Skill
@@ -15,8 +15,8 @@ Implement task work from the required planning artifact set:
 
 Accept:
 
-- `begin task <task-id> in <plan-key>`
-- `begin one-shot in <plan-key>`
+- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
+- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
 
 ## Required references
 
@@ -39,6 +39,7 @@ Load these files before running:
    - build using PRD + TDD + tasks-plan + exact sub-task block
    - run one `sub-task` review round (A-I) automatically using `review-protocol.md`, treating Prompts G and H as conditional when not applicable
    - apply fixes from review findings and rerun relevant tests
+   - keep temp review artifacts under `tasks/tmp/` when `--preserve-review-artifacts` is enabled; otherwise clean them up per protocol
    - mark checklist updates in `tasks/tasks-plan-<plan-key>.md`
    - create a dedicated commit for the sub-task
 6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round (A-I) automatically using `review-protocol.md` before finalization.

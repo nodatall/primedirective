@@ -1,6 +1,6 @@
 ---
 name: review-chain
-description: Use when the user requests explicit review via `begin review` (ad-hoc default) or `begin review <task-id>`, and run the full A-I review protocol with required review logs and gates.
+description: Use when the user requests explicit review via `begin review [--preserve-review-artifacts]` (ad-hoc default) or `begin review <task-id> [--preserve-review-artifacts]`, and run the full A-I review protocol with required review logs and gates.
 ---
 
 # Review Chain Skill
@@ -11,8 +11,8 @@ Run explicit branch review workflows.
 
 Accept:
 
-- `begin review`
-- `begin review <task-id>`
+- `begin review [--preserve-review-artifacts]`
+- `begin review <task-id> [--preserve-review-artifacts]`
 
 ## Required references
 
@@ -31,7 +31,7 @@ Load these files before running:
 6. Treat Prompt H as required only when the change is deploy-bound or materially affects operations, infrastructure, migrations, security posture, or runtime observability. Otherwise record it as not applicable with a reason.
 7. Record findings, fixes, and test evidence for each prompt.
 8. Enforce completion gates, including unresolved TODO checks.
-9. Provide summary and delete review log only after all review checks pass.
+9. Provide summary and delete review log only after all review checks pass, unless `--preserve-review-artifacts` was supplied.
 
 ## Scope
 
