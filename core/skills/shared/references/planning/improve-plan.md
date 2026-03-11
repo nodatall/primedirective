@@ -99,10 +99,13 @@ Evaluate and improve:
 Evaluate and improve when `--deep-research` was used:
 
 - Whether the deep-research pass actually met the evidence bar rather than stopping after a few searches.
+- Whether the deep-research memo used live web research and included the required web-status section.
+- Whether the deep-research memo included at least 5 substantive external primary web sources.
 - Whether the selected design reflects the strongest research-backed recommendation.
 - Whether source-backed risks, rollout work, or verification gaps were carried into TDD and tasks-plan.
 - Whether the research stayed within `Tech + Delivery` scope unless the plan clearly required more.
 - Whether PRD changed only where research affected product-facing constraints or defaults.
+- Whether any cited sources were merely decorative rather than materially supporting the selected design.
 
 ## Required audit checks
 
@@ -120,6 +123,7 @@ The improved plan must explicitly satisfy all of these:
 10. Plain-language summaries remain clear and faithful to the full plan.
 11. PRD includes clear user/problem framing and success guardrails.
 12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
+13. Any `--deep-research` pass includes live web research, the external-source minimum, and the required memo sections.
 
 ## For every issue identified
 
@@ -133,6 +137,8 @@ You must:
 6. Update the PRD, TDD, or tasks-plan accordingly.
 
 Do not dump option menus on the user unless business intent is ambiguous.
+
+If a `--deep-research` pass fails the mandatory web-backed evidence bar, do not improve around the gap. Treat the planning pass as incomplete and require the research step to be redone before execution begins.
 
 ## Escalation policy (rare)
 
