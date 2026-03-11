@@ -98,6 +98,7 @@ Evaluate and improve:
 
 Evaluate and improve when `--deep-research` was used:
 
+- Whether the deep-research pass actually met the evidence bar rather than stopping after a few searches.
 - Whether the selected design reflects the strongest research-backed recommendation.
 - Whether source-backed risks, rollout work, or verification gaps were carried into TDD and tasks-plan.
 - Whether the research stayed within `Tech + Delivery` scope unless the plan clearly required more.

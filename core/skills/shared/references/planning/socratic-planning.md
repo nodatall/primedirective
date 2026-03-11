@@ -178,6 +178,7 @@ When transforming a rich source plan into PRD, TDD, and tasks-plan:
 5. Split mixed sections across PRD and TDD only when needed; do not drop any part.
 6. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
 7. If `--deep-research` is active, apply research findings before generating PRD, TDD, and tasks-plan.
+8. If `--deep-research` is active, complete the evidence bar and working memo in `deep-research.md` before document generation begins.
 
 ## Execution Trigger Gate (Hard Stop)
 

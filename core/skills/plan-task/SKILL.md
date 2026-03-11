@@ -52,6 +52,7 @@ Load these files before running:
 - Do not leave `Open questions` or `Open technical questions` in final artifacts.
 - Preserve substantive source-plan sections; normalize them without dropping content.
 - With `--deep-research`, research defaults to `Tech + Delivery`: technical design, migration/rollout/rollback, security/ops, and verification strategy.
+- With `--deep-research`, do not begin PRD/TDD/tasks drafting until the research memo and completion checks from `deep-research.md` are complete.
 - `--deep-research` should influence TDD and tasks-plan first; update PRD only when product constraints or defaults materially change.
 - With `--preserve-planning-artifacts`, keep `tasks/tmp/research-plan-<plan-key>.md` and mention it in the final planning summary.
 - Restore traceability from tasks to `FR-*` and `TDR-*` IDs.
