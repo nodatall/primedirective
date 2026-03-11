@@ -276,6 +276,7 @@ For one-shot execution only:
 - After all sub-tasks are complete and before finalization, run one additional review round in `full-branch` scope.
 - This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
 - Keep the final full-branch review log when `--preserve-review-artifacts` is active.
+- Do not issue a terminal user handoff before this final full-branch review and Step 9 finalization are complete, unless a real blocker prevents continuation.
 
 ## Step 9: Finalization
 
@@ -294,6 +295,7 @@ Operational translation:
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
 - Open PR with summary, test evidence, and known risks/follow-ups.
+- Only after these steps may one-shot execution produce its terminal completion handoff.
 
 ## Step 10: Post-Merge Branch Cleanup
 

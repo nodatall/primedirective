@@ -44,11 +44,12 @@ Load these files before running:
    - create a dedicated commit for the sub-task
 6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round (A-I) automatically using `review-protocol.md` before finalization.
 7. Run finalization from `review-protocol.md` Step 9 rules only after all unchecked sub-tasks in the task plan are complete.
+8. In one-shot mode, do not stop after an intermediate sub-task merely to report status, preserve a clean commit boundary, or hand off remaining work. Only stop early for a real blocker that cannot be resolved inside the current run.
 
 ## Mode behavior
 
 - Standard mode (`begin task ...`): single-agent execution, pause for approval between sub-tasks.
-- One-shot mode (`begin one-shot ...`): sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, one main-agent integration/review/commit cycle per sub-task, then one final full-branch review before finalization.
+- One-shot mode (`begin one-shot ...`): sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, one main-agent integration/review/commit cycle per sub-task, then one final full-branch review before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
 
 ## Review relationship
 
