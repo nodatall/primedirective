@@ -26,17 +26,22 @@ The quoted payload may contain:
 
 Before asking planning questions:
 
-1. Confirm trigger matches this workflow.
-2. Confirm these references are readable:
+1. Detect the current collaboration mode.
+   - If the agent is currently in collaboration `Plan` mode, stop immediately.
+   - Alert the user that `start planning ...` cannot run from collaboration `Plan` mode and they must exit back to collaboration `Default` mode first.
+   - Do not ask planning questions, do not generate artifacts, and do not continue the workflow.
+   - This guard refers to the agent's collaboration mode, not the `rich source plan` / `sparse source prompt` intake classification below.
+2. Confirm trigger matches this workflow.
+3. Confirm these references are readable:
    - `skills/shared/references/planning/socratic-planning.md`
    - `skills/shared/references/planning/deep-research.md`
    - `skills/shared/references/planning/create-prd.md`
    - `skills/shared/references/planning/create-tdd.md`
    - `skills/shared/references/planning/generate-tasks.md`
    - `skills/shared/references/planning/improve-plan.md`
-3. Choose a stable `<plan-key>` from user context (slug form).
-4. If `<plan-key>` is unclear, ask one short clarifying question and stop.
-5. Classify the planning input:
+4. Choose a stable `<plan-key>` from user context (slug form).
+5. If `<plan-key>` is unclear, ask one short clarifying question and stop.
+6. Classify the planning input:
    - `rich source plan` if it already contains meaningful product/design/execution structure
    - `sparse source prompt` if it does not
 

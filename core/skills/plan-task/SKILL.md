@@ -30,6 +30,8 @@ Load these files before running:
 ## Workflow
 
 1. Run planning preflight from `socratic-planning.md`.
+   - If the agent is currently in collaboration `Plan` mode, alert the user to exit back to collaboration `Default` mode and stop immediately.
+   - Do not ask planning questions or generate artifacts while that mode guard is active.
 2. Intake the source material, classify it as rich source plan or sparse source prompt, and normalize it into `Goal`, `Context`, `Constraints`, and `Done when`.
 3. Run the Socratic refinement loop:
    - one question per turn
