@@ -132,6 +132,9 @@ Frontend Evidence Review
 Goal: Verify all user-facing changes through actual visual inspection, not code inspection alone.
 Required When:
 Any change affects UI, layout, styling, interaction flows, responsive behavior, animations, or rendered content.
+Default Scope Rule:
+Require this prompt for frontend-facing `full-branch` review rounds and for explicit review runs that cover frontend work.
+For one-shot automatic `sub-task` review rounds, defer this prompt to the final `full-branch` review and record it as `not applicable` with a note that visual verification is pending the branch-wide pass.
 Action:
 Use Playwright MCP by default to open the changed UI, exercise the affected flows, resize for relevant breakpoints, and capture screenshots of all changed screens and states.
 When motion, timing, or multi-step interaction matters, also capture video or trace evidence using the Playwright CLI workflow.
@@ -185,7 +188,9 @@ Rules:
 - Complete one full round per review cycle.
 - If a prompt introduces code changes, continue to remaining prompts in same round.
 - Do not mark prompts complete retroactively from one combined pass.
-- Prompt G is required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior. Otherwise mark it `not applicable` with a reason.
+- Prompt G is required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior.
+- Exception: during one-shot automatic `sub-task` review rounds, mark Prompt G `not applicable` with a note that visual verification is deferred to the final `full-branch` review.
+- Otherwise mark Prompt G `not applicable` with a reason.
 - Prompt H is required only for deploy-bound work or changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability. Otherwise mark it `not applicable` with a reason.
 
 ## Review log protocol (required)
@@ -268,6 +273,7 @@ For standard task execution and one-shot execution:
 
 - After each completed sub-task and before its commit, run one review round in `sub-task` scope.
 - Review only the current sub-task delta against `HEAD`, not the entire branch history.
+- In one-shot execution, do not run Prompt G browser/visual verification during these per-sub-task rounds; record Prompt G as deferred to the final `full-branch` review.
 - Apply fixes and rerun relevant tests before creating the sub-task commit.
 - Delete sub-task review logs and temp plan docs after successful completion unless `--preserve-review-artifacts` is active.
 
@@ -275,6 +281,7 @@ For one-shot execution only:
 
 - After all sub-tasks are complete and before finalization, run one additional review round in `full-branch` scope.
 - This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
+- If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.
 - Keep the final full-branch review log when `--preserve-review-artifacts` is active.
 - Do not issue a terminal user handoff before this final full-branch review and Step 9 finalization are complete, unless a real blocker prevents continuation.
 
