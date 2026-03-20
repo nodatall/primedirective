@@ -30,10 +30,10 @@ Load these files before running:
 
 1. Resolve artifact files from trigger using `task-file-contract.md`.
 2. Require PRD, TDD, and tasks-plan before doing any execution work.
-3. Run kickoff branch setup from `review-protocol.md` Step 1 rules.
+3. Run kickoff branch setup from `review-protocol.md` Step 1 rules, carrying and committing the required planning artifacts on the new branch when they are the only uncommitted kickoff files.
 4. Execute according to mode:
    - Standard mode: implement the requested task/sub-task in the main agent.
-   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; for each sub-task in file order, the main agent spawns one worker subagent, waits for completion, then owns integration, review, task updates, and commit before moving to the next sub-task.
+   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent spawns one worker subagent, waits for completion, then owns integration, review, task updates, and commit before moving to the next sub-task.
 5. For each completed sub-task:
    - create/update `tasks/tmp/plan-task-<task-id>.md`
    - build using PRD + TDD + tasks-plan + exact sub-task block

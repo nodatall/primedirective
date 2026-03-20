@@ -28,6 +28,12 @@ Resolve files exactly as:
 - One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review log: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
+## Archive workflow files
+
+- Final archive directory: `tasks/archive/<yyyy-mm-dd>-<plan-key>/`
+
+Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
+
 By default, planning and review temporary files are deleted after successful completion. If the trigger includes `--preserve-planning-artifacts` or `--preserve-review-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
@@ -60,10 +66,11 @@ Then:
 
 - Requires `<plan-key>`.
 - Start at first unchecked sub-task and continue in file order.
+- If kickoff begins with only the current plan's required planning artifacts uncommitted, carry them onto the new feature branch and commit them there before the first implementation sub-task begins.
 - Continue until there are no unchecked sub-tasks left anywhere in the file; do not stop at parent-task or section boundaries.
 - Do not stop to provide an interim “progress so far” handoff when unchecked sub-tasks remain.
 - A clean commit boundary, milestone boundary, or partially completed checklist is not a valid stopping point.
-- Only return control early when a real blocker remains unresolved after reasonable attempts to proceed, such as missing required artifacts, a dirty-tree branch-creation conflict that needs user choice, or an external approval/dependency failure that prevents continued execution.
+- Only return control early when a real blocker remains unresolved after reasonable attempts to proceed, such as missing required artifacts, unrelated dirty-tree changes that need user choice before branch creation, or an external approval/dependency failure that prevents continued execution.
 - Use one worker subagent per sub-task.
 - Worker context must include:
   - `tasks/prd-<plan-key>.md`

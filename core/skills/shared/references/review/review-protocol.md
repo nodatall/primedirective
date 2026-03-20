@@ -6,13 +6,15 @@ Mandatory review behavior for task execution and explicit review commands.
 
 ```text
 Please fetch the latest `origin/main` from github.
-We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. Please create and switch to a new branch from `origin/main`.
+We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. Please create and switch to a new branch from `origin/main`. If the only uncommitted changes are those required planning artifacts for this plan, carry them onto the new branch and commit them there before implementation starts.
 ```
 
 Operational translation:
 
 - `git fetch origin main`
-- If working tree is dirty, stop and ask before creating branch.
+- If the working tree is clean, create/switch the feature branch from `origin/main`.
+- If the only dirty files are `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` for the current plan, create/switch the feature branch from `origin/main`, carry those files onto the branch, and commit them before implementation starts.
+- If the working tree contains unrelated changes, stop and ask before creating branch.
 - Create/switch `nodatall/<short-task-name>` from `origin/main`.
 - If `main` is checked out elsewhere in another worktree, create branch directly from `origin/main`.
 
@@ -288,7 +290,7 @@ For one-shot execution only:
 ## Step 9: Finalization
 
 ```text
-Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the PRD, TDD, and task plan into `tasks/archive/<plan-key>/`, then open a pull request. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
+Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the PRD, TDD, and task plan into `tasks/archive/<yyyy-mm-dd>-<plan-key>/`, then open a pull request. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
 ```
 
 Operational translation:
@@ -298,6 +300,7 @@ Operational translation:
 - Resolve conflicts and rerun relevant tests.
 - For task-based work, update checklist and relevant files.
 - If all checkboxes in task list are complete, archive:
+  - Create `tasks/archive/<yyyy-mm-dd>-<plan-key>/` using the local current date in ISO format (`YYYY-MM-DD`)
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
