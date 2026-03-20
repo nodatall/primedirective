@@ -131,15 +131,19 @@ Ask example or failure-path questions only when they materially clarify one of t
 Before document generation, produce and lock:
 
 1. an intake summary with `Goal`, `Context`, `Constraints`, and `Done when`
-2. a final plain-language summary that a 12-year-old could follow
-3. resolved decisions or explicit defaults for anything that would otherwise remain ambiguous
-4. confirmation that important source-plan content will survive normalization
+2. a final plain-language summary that a 12-year-old could follow, written as exactly three short paragraphs
+3. a standalone summary checkpoint turn that shows those three paragraphs before any PRD, TDD, or tasks-plan drafting starts
+4. resolved decisions or explicit defaults for anything that would otherwise remain ambiguous
+5. confirmation that important source-plan content will survive normalization
 
 Rules:
 
 - Ask one follow-up if an answer is vague.
 - If the answer is still vague, choose a reasonable default and state it explicitly.
 - Do not silently default through required challenge-question categories in rich-plan mode.
+- Do not collapse the summary checkpoint into PRD, TDD, or tasks-plan generation output.
+- End the checkpoint turn with one plain-language question asking what is wrong or missing.
+- Do not start document generation until the checkpoint question has been answered or there is nothing left for the user to correct.
 - Stop when the plan is decision-complete.
 - Prefer structured dialog questions when client supports them.
 - Fallback to plain-text one-question turns when dialog is unavailable.
@@ -202,7 +206,8 @@ Legacy trigger wording with `prd-key`/`prd-id` must be rejected and corrected.
 ## Validation Scenarios
 
 - Rich source plan provided: ask only targeted refinement questions, including at least one challenge question when the plan changes infrastructure, operations, scheduling, or source-of-truth behavior, preserve structure, then generate PRD/TDD/tasks-plan.
-- Deep-research planning requested: lock the intake summary first, run the deep research pass, then generate PRD/TDD/tasks-plan from the refined decisions.
+- Decision-complete plan provided: present the three-paragraph summary checkpoint first, resolve any correction, then generate PRD/TDD/tasks-plan.
+- Deep-research planning requested: lock the intake summary first, run the deep research pass, present the three-paragraph summary checkpoint from the refined decisions, then generate PRD/TDD/tasks-plan.
 - Sparse request provided: ask enough questions to reach decision completeness, then generate PRD/TDD/tasks-plan.
 - Source plan contains unresolved ambiguity: convert to explicit default or ask until resolved.
 - Source plan contains detailed route/schema/test content: preserve it during normalization.

@@ -28,6 +28,7 @@ Planning defaults:
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
 - Socratic flow is conversational: one question per turn, plain language, targeted gap-checking.
+- Before drafting PRD, TDD, or tasks-plan, planning must present a separate plain-language checkpoint in exactly three short paragraphs and give the user a chance to correct it.
 - Final planning artifacts must not contain `Open questions` or `Open technical questions`.
 - Plain-language summaries are required in the Socratic flow, PRD, and TDD.
 

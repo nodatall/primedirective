@@ -57,6 +57,7 @@ Evaluate and improve:
 - Usefulness of success metrics or guardrails.
 - Quality and stability of `FR-*` requirements.
 - Whether the PRD plain-language summary is clear enough for non-technical review.
+- Whether the standalone three-paragraph summary checkpoint happened before artifact generation.
 
 ### 3. TDD quality review
 
@@ -71,6 +72,7 @@ Evaluate and improve:
 - Presence of migration, rollout, backfill, rollback, and failure-mode detail when relevant.
 - Presence of operational readiness detail when production behavior changes.
 - Whether the TDD plain-language summary is clear enough for non-technical review.
+- Whether the checkpoint summary meaning survived into both PRD and TDD without drift.
 - Whether deep-research findings were reflected in the technical design when `--deep-research` was used.
 
 ### 4. Task-plan quality review
@@ -124,6 +126,7 @@ The improved plan must explicitly satisfy all of these:
 11. PRD includes clear user/problem framing and success guardrails.
 12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
 13. Any `--deep-research` pass includes live web research, the external-source minimum, and the required memo sections.
+14. The user saw a separate three-paragraph plain-language checkpoint before PRD, TDD, and tasks-plan drafting started.
 
 ## For every issue identified
 

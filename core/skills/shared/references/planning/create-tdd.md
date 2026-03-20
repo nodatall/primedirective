@@ -17,7 +17,7 @@ Run this for every completed planning flow after PRD structure is locked and bef
 - source plan or source prompt
 - locked decisions from Socratic refinement
 - deep-research findings when `--deep-research` is active
-- finalized plain-language summary
+- finalized three-paragraph plain-language summary from the summary checkpoint
 
 ## Output
 
@@ -49,6 +49,7 @@ Run this for every completed planning flow after PRD structure is locked and bef
 - Explain the technical approach in concrete, plain language.
 - Preserve the same core meaning as the Socratic plain-language summary.
 - Use it to sanity-check that the design still matches the product intent.
+- Keep the same three-paragraph structure unless a paragraph is genuinely empty after normalization.
 
 ## Mapping rules
 

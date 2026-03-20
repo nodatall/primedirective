@@ -16,7 +16,7 @@ Run this for every completed planning flow before TDD/task generation is finaliz
 - source plan or source prompt
 - locked decisions from Socratic refinement
 - deep-research findings when `--deep-research` is active
-- finalized plain-language summary
+- finalized three-paragraph plain-language summary from the summary checkpoint
 
 ## Output
 
@@ -47,6 +47,7 @@ Run this for every completed planning flow before TDD/task generation is finaliz
 - Keep it concrete and plain.
 - Use it to sanity-check that the document still matches the actual intent.
 - Preserve the same core meaning as the Socratic plain-language summary.
+- Keep the same three-paragraph structure unless a paragraph is genuinely empty after normalization.
 
 ## Mapping rules
 

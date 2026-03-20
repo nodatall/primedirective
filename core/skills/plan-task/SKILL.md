@@ -39,13 +39,15 @@ Load these files before running:
    - gap-check, contradiction-check, and assumption-check only
    - for non-trivial rich plans touching infrastructure, deployment, scheduling, source-of-truth, or operations, ask at least one targeted challenge question before document generation
    - close gaps in `Goal`, `Context`, `Constraints`, and `Done when` before document generation
-   - produce a final plain-language summary that a 12-year-old could follow
+   - produce a final plain-language summary that a 12-year-old could follow, in exactly three short paragraphs
 4. If `--deep-research` is present, run `deep-research.md` after decisions are locked and before artifact generation.
-5. Generate `tasks/prd-<plan-key>.md` using `create-prd.md`.
-6. Generate `tasks/tdd-<plan-key>.md` using `create-tdd.md`.
-7. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
-8. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo when preserved.
-9. Stop and wait for implementation trigger.
+5. Present that three-paragraph summary to the user as a standalone checkpoint before artifact generation and ask if anything is wrong or missing.
+6. If the user corrects the summary, resolve the correction before continuing.
+7. Generate `tasks/prd-<plan-key>.md` using `create-prd.md`.
+8. Generate `tasks/tdd-<plan-key>.md` using `create-tdd.md`.
+9. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
+10. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo when preserved.
+11. Stop and wait for implementation trigger.
 
 ## Planning rules
 
