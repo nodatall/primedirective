@@ -57,10 +57,13 @@ Load these files before running:
 - Preserve substantive source-plan sections; normalize them without dropping content.
 - With `--deep-research`, research defaults to `Tech + Delivery`: technical design, migration/rollout/rollback, security/ops, and verification strategy.
 - With `--deep-research`, live web research is mandatory and the working memo must include at least 5 substantive external primary web sources.
+- With `--deep-research`, the research framing must include the exact current date and the plan-specific stack, constraints, and quality priorities before web research begins.
+- With `--deep-research`, record source freshness metadata for substantive external sources and distinguish adopt-now guidance from emerging or avoid guidance.
 - With `--deep-research`, PRD and TDD may be drafted before research, but treat them as interim drafts until the research memo and completion checks from `deep-research.md` are complete and adopted findings are applied back into both documents as needed.
 - With `--deep-research`, do not proceed if live web research is unavailable; stop and tell the user the deep-research pass cannot run without web access.
 - With `--deep-research`, do not begin `tasks-plan` drafting until the research memo is complete and PRD/TDD have been revised from the adopted findings.
 - `--deep-research` should influence TDD and tasks-plan first; update PRD only when product constraints or defaults materially change.
+- With `--deep-research`, end the memo with a plan-specific checklist or implementation guidance section so the adopted findings are easy to carry into execution for this plan.
 - With `--preserve-planning-artifacts`, keep `tasks/tmp/research-plan-<plan-key>.md` and mention it in the final planning summary.
 - Restore traceability from tasks to `FR-*` and `TDR-*` IDs.
 

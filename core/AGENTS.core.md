@@ -22,6 +22,8 @@ Planning defaults:
 
 - Planning treats user input as source-plan material to improve and normalize.
 - `--deep-research` runs a substantial staged research pass focused on technical design, rollout/migration, security/ops, and verification strategy after initial PRD/TDD drafting and before task generation; it is not satisfied by a token search burst.
+- `--deep-research` must be anchored to the exact current date, scoped to the plan's actual stack and constraints, and backed by current external primary sources with freshness notes.
+- `--deep-research` must produce plan-specific implementation guidance in addition to improving the current PRD/TDD.
 - `--preserve-planning-artifacts` keeps temporary planning research artifacts under `tasks/tmp/`.
 - Planning always outputs:
   - `tasks/prd-<plan-key>.md`

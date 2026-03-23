@@ -102,13 +102,17 @@ Evaluate and improve when `--deep-research` was used:
 
 - Whether the deep-research pass actually met the evidence bar rather than stopping after a few searches.
 - Whether the deep-research memo used live web research and included the required web-status section.
+- Whether the deep-research memo captured the exact current date and used plan-specific stack and constraint framing rather than a generic research prompt.
 - Whether the deep-research memo included at least 5 substantive external primary web sources.
+- Whether substantive external sources included freshness metadata and were current enough for the claims they supported.
 - Whether the deep-research pass reviewed the initial PRD/TDD drafts rather than researching in the abstract.
 - Whether the selected design reflects the strongest research-backed recommendation.
 - Whether the best ideas from the research memo were pulled back into PRD/TDD before tasks-plan generation.
 - Whether source-backed risks, rollout work, or verification gaps were carried into TDD and tasks-plan.
 - Whether the research stayed within `Tech + Delivery` scope unless the plan clearly required more.
 - Whether PRD changed only where research affected product-facing constraints or defaults.
+- Whether findings were clearly separated into adopt-now guidance, emerging trends, and avoid guidance where relevant.
+- Whether the research produced a plan-specific checklist or implementation guidance section rather than only a raw source dump.
 - Whether any cited sources were merely decorative rather than materially supporting the selected design.
 
 ## Required audit checks
@@ -128,7 +132,9 @@ The improved plan must explicitly satisfy all of these:
 11. PRD includes clear user/problem framing and success guardrails.
 12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
 13. Any `--deep-research` pass includes live web research, the external-source minimum, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
-14. The user saw a separate three-paragraph plain-language checkpoint before tasks-plan drafting started.
+14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
+15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
+16. The user saw a separate three-paragraph plain-language checkpoint before tasks-plan drafting started.
 
 ## For every issue identified
 
