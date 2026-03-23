@@ -54,7 +54,24 @@ Behavior when present on `begin task ...`, `begin one-shot ...`, `begin review`,
 - For task execution modes, also keep per-sub-task temp plan docs created under `tasks/tmp/`.
 - Include the preserved artifact paths in the final user-visible summary.
 
-## Prompts A-I (full review round)
+## Prompt profile selection
+
+Detect the active review prompt profile before each review round:
+
+- `codex-short` when the current agent identifies as Codex or is running on an OpenAI GPT/Codex-family model.
+- `full-chain` otherwise.
+
+Use these prompt sets:
+
+- `codex-short`: Prompt A, then Prompt G when required, then Prompt H when required, then Prompt I.
+- `full-chain`: Prompts A-I in order, treating Prompts G and H as conditional when not applicable.
+
+Rationale:
+
+- Codex review runs tend to produce most useful findings in the first broad review plus the closing audit, with Prompt G still valuable for frontend evidence and Prompt H still valuable for deploy-bound changes.
+- Non-Codex agents should continue to use the full redundant multi-pass chain.
+
+## Prompts A-I
 
 ### Prompt A
 
@@ -176,7 +193,7 @@ Action: Give an honest assessment, list any remaining issues or accepted risks e
 
 ## Prompt execution protocol (required)
 
-For each required prompt, execute one-by-one in sequence:
+For each prompt required by the active prompt profile, execute one-by-one in sequence:
 
 1. Run prompt.
 2. Record findings.
@@ -190,6 +207,7 @@ Rules:
 - Complete one full round per review cycle.
 - If a prompt introduces code changes, continue to remaining prompts in same round.
 - Do not mark prompts complete retroactively from one combined pass.
+- If a prompt is outside the active prompt profile, mark it `not applicable` with a short reason rather than leaving it incomplete.
 - Prompt G is required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior.
 - Exception: during one-shot automatic `sub-task` review rounds, mark Prompt G `not applicable` with a note that visual verification is deferred to the final `full-branch` review.
 - Otherwise mark Prompt G `not applicable` with a reason.
@@ -218,6 +236,7 @@ Initialize each new log with:
 
 - `review_mode: task | ad-hoc`
 - `branch_base_ref: origin/main | HEAD`
+- `review_prompt_profile: codex-short | full-chain`
 - `review_round: 1`
 - `review_scope: sub-task | full-branch`
 
@@ -248,7 +267,7 @@ Scope metadata rules:
 
 Completion gates:
 
-- All required and applicable prompt checkboxes completed.
+- All prompts required by the active prompt profile and all otherwise applicable conditional prompts completed.
 - Minimum 1 full round complete.
 - No unresolved LARP remediation TODO items.
 - No unresolved final-audit issues without explicit accepted-risk or blocked status.
@@ -265,7 +284,7 @@ For `begin review` and `begin review <task-id>`:
 
 - Do not create, rename, or switch branches.
 - Start at Prompt A.
-- Run full sequence A-I, treating Prompts G and H as conditional when not applicable.
+- Run the active prompt profile, treating Prompts G and H as conditional when not applicable.
 - Review scope is full branch diff vs `origin/main`, including uncommitted edits.
 - Keep the review log when `--preserve-review-artifacts` is present.
 

@@ -34,7 +34,7 @@ Guidelines for managing task lists in markdown files.
      - the exact sub-task block
   4. Worker implements one sub-task only and returns control.
   5. Main agent reviews and integrates the result.
-  6. Main agent runs one automatic `sub-task` review round and relevant tests. In one-shot mode, defer Prompt G frontend/browser verification to the final branch-wide review.
+  6. Main agent runs one automatic `sub-task` review round using the active review prompt profile and relevant tests. In one-shot mode, defer Prompt G frontend/browser verification to the final branch-wide review.
   7. Main agent marks the checklist complete and creates the commit.
   8. Main agent starts the next sub-task.
   9. After the final sub-task, main agent runs one additional automatic `full-branch` review round before finalization. This final round owns Prompt G frontend/browser verification for one-shot frontend work.

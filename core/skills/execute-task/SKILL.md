@@ -37,12 +37,12 @@ Load these files before running:
 5. For each completed sub-task:
    - create/update `tasks/tmp/plan-task-<task-id>.md`
    - build using PRD + TDD + tasks-plan + exact sub-task block
-   - run one `sub-task` review round (A-I) automatically using `review-protocol.md`, treating Prompt H as conditional when not applicable and, in one-shot mode, deferring Prompt G to the final `full-branch` review
+   - run one `sub-task` review round automatically using the active prompt profile from `review-protocol.md`; in one-shot mode, defer Prompt G to the final `full-branch` review
    - apply fixes from review findings and rerun relevant tests
    - keep temp review artifacts under `tasks/tmp/` when `--preserve-review-artifacts` is enabled; otherwise clean them up per protocol
    - mark checklist updates in `tasks/tasks-plan-<plan-key>.md`
    - create a dedicated commit for the sub-task
-6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round (A-I) automatically using `review-protocol.md` before finalization. This is the review round that must satisfy Prompt G for frontend-facing work.
+6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round automatically using the active prompt profile from `review-protocol.md` before finalization. This is the review round that must satisfy Prompt G for frontend-facing work.
 7. Run finalization from `review-protocol.md` Step 9 rules only after all unchecked sub-tasks in the task plan are complete.
 8. In one-shot mode, do not stop after an intermediate sub-task merely to report status, preserve a clean commit boundary, or hand off remaining work. Only stop early for a real blocker that cannot be resolved inside the current run.
 
