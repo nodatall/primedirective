@@ -8,14 +8,14 @@ PRD is always required for planned work.
 
 ## When to run
 
-Run this for every completed planning flow before TDD/task generation is finalized.
+Run this for every completed planning flow after decisions are locked. When `--deep-research` is active, generate the initial PRD before the research pass, then revise it after research only if product-facing constraints changed.
 
 ## Input
 
 - `<plan-key>`
 - source plan or source prompt
 - locked decisions from Socratic refinement
-- deep-research findings when `--deep-research` is active
+- deep-research findings when `--deep-research` is active and available during finalization
 - finalized three-paragraph plain-language summary from the summary checkpoint
 
 ## Output
@@ -78,6 +78,7 @@ Do not drop product-facing detail just because the source heading name differs f
 8. If deep research produced technical-only findings, keep them out of PRD unless they change product-facing constraints or defaults.
 9. Keep the section order stable so the plain-language summary is the first substantive section a human or agent reads.
 10. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
+11. When `--deep-research` is active, treat the first PRD draft as a staging artifact for research review, then update it only with adopted product-facing findings before tasks-plan generation.
 
 ## Build gate reminder
 

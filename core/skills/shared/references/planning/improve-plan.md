@@ -57,7 +57,7 @@ Evaluate and improve:
 - Usefulness of success metrics or guardrails.
 - Quality and stability of `FR-*` requirements.
 - Whether the PRD plain-language summary is clear enough for non-technical review.
-- Whether the standalone three-paragraph summary checkpoint happened before artifact generation.
+- Whether the standalone three-paragraph summary checkpoint happened before tasks-plan generation.
 
 ### 3. TDD quality review
 
@@ -103,7 +103,9 @@ Evaluate and improve when `--deep-research` was used:
 - Whether the deep-research pass actually met the evidence bar rather than stopping after a few searches.
 - Whether the deep-research memo used live web research and included the required web-status section.
 - Whether the deep-research memo included at least 5 substantive external primary web sources.
+- Whether the deep-research pass reviewed the initial PRD/TDD drafts rather than researching in the abstract.
 - Whether the selected design reflects the strongest research-backed recommendation.
+- Whether the best ideas from the research memo were pulled back into PRD/TDD before tasks-plan generation.
 - Whether source-backed risks, rollout work, or verification gaps were carried into TDD and tasks-plan.
 - Whether the research stayed within `Tech + Delivery` scope unless the plan clearly required more.
 - Whether PRD changed only where research affected product-facing constraints or defaults.
@@ -125,8 +127,8 @@ The improved plan must explicitly satisfy all of these:
 10. Plain-language summaries remain clear and faithful to the full plan.
 11. PRD includes clear user/problem framing and success guardrails.
 12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
-13. Any `--deep-research` pass includes live web research, the external-source minimum, and the required memo sections.
-14. The user saw a separate three-paragraph plain-language checkpoint before PRD, TDD, and tasks-plan drafting started.
+13. Any `--deep-research` pass includes live web research, the external-source minimum, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
+14. The user saw a separate three-paragraph plain-language checkpoint before tasks-plan drafting started.
 
 ## For every issue identified
 
@@ -141,7 +143,7 @@ You must:
 
 Do not dump option menus on the user unless business intent is ambiguous.
 
-If a `--deep-research` pass fails the mandatory web-backed evidence bar, do not improve around the gap. Treat the planning pass as incomplete and require the research step to be redone before execution begins.
+If a `--deep-research` pass fails the mandatory web-backed evidence bar, or if PRD/TDD were not revised from the adopted findings before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the research step to be redone before execution begins.
 
 ## Escalation policy (rare)
 

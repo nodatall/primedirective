@@ -15,7 +15,7 @@ Required:
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - locked planning decisions and defaults
-- deep-research findings when `--deep-research` is active
+- deep-research findings when `--deep-research` is active, already applied to finalized PRD/TDD
 
 Tasks must be generated from finalized PRD and TDD, not directly from the raw source plan.
 
@@ -59,7 +59,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 ## Generation rules
 
 1. Confirm `<plan-key>` is known.
-2. Confirm PRD and TDD are both finalized first.
+2. Confirm PRD and TDD are both finalized first. If `--deep-research` is active, confirm they were revised after the research pass before continuing.
 3. Derive task sequencing from finalized PRD and TDD obligations.
 4. Order work risk-first and dependency-aware.
 5. Preserve meaningful implementation detail from the source plan by expressing it as actionable tasks.

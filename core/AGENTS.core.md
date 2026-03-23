@@ -21,7 +21,7 @@ Trigger mapping:
 Planning defaults:
 
 - Planning treats user input as source-plan material to improve and normalize.
-- `--deep-research` runs a substantial pre-draft research pass focused on technical design, rollout/migration, security/ops, and verification strategy; it is not satisfied by a token search burst.
+- `--deep-research` runs a substantial staged research pass focused on technical design, rollout/migration, security/ops, and verification strategy after initial PRD/TDD drafting and before task generation; it is not satisfied by a token search burst.
 - `--preserve-planning-artifacts` keeps temporary planning research artifacts under `tasks/tmp/`.
 - Planning always outputs:
   - `tasks/prd-<plan-key>.md`

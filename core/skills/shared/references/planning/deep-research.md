@@ -2,11 +2,11 @@
 
 ## Goal
 
-Run a focused pre-draft research pass when the planning trigger includes `--deep-research`.
+Run a focused draft-improvement research pass when the planning trigger includes `--deep-research`.
 
-This pass exists to strengthen the technical design before PRD, TDD, and tasks-plan are generated. It should reduce avoidable implementation mistakes, missing rollout work, and weak verification strategy.
+This pass exists to strengthen drafted PRD and TDD before tasks-plan is generated. It should reduce avoidable implementation mistakes, missing rollout work, and weak verification strategy.
 
-This mode is not satisfied by a token burst of a few searches. Treat `--deep-research` as a substantial, web-backed research pass with a real evidence bar before planning artifacts may be drafted.
+This mode is not satisfied by a token burst of a few searches. Treat `--deep-research` as a substantial, web-backed research pass with a real evidence bar before tasks-plan may be drafted and before PRD/TDD may be treated as final.
 
 ## Accepted trigger suffixes
 
@@ -26,10 +26,13 @@ Run this only after Socratic refinement has locked:
 - `Constraints`
 - `Done when`
 
-Run it before generating:
+Run it after generating initial drafts of:
 
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
+
+Run it before generating:
+
 - `tasks/tasks-plan-<plan-key>.md`
 
 ## Default research scope
@@ -48,28 +51,36 @@ Do not expand into broad market research or product discovery unless the source 
 
 ## Research process
 
-1. Start from the locked planning decisions, not from a blank prompt.
-2. Identify the highest-risk technical and delivery questions that could change implementation quality or sequencing.
+1. Start from the locked planning decisions plus the current PRD/TDD drafts, not from a blank prompt.
+2. Review the source plan and current PRD/TDD drafts to identify the highest-risk technical and delivery questions that could change implementation quality or sequencing.
 3. Write a short research agenda first:
    - the main technical questions to answer
    - the highest-risk unknowns
    - which research buckets apply to this plan
 4. Create a temporary working memo at `tasks/tmp/research-plan-<plan-key>.md` while the research pass is in progress.
-5. Research in multiple passes, not one search burst:
+5. Seed the working memo with an improvement backlog:
+   - draft weaknesses or assumptions to test
+   - candidate improvements or alternatives to validate
+   - the expected impact of each candidate on PRD, TDD, or task sequencing
+6. Research in multiple passes, not one search burst:
    - first pass: official docs and primary references for the core stack or provider
    - second pass: operational constraints, failure modes, limits, rollout, and verification guidance
    - third pass: any plan-specific edge areas uncovered by the first two passes
-6. Prefer primary sources for technical claims:
+7. Prefer primary sources for technical claims:
    - official documentation
    - vendor documentation
    - standards or specifications
    - primary technical references
-7. Use live web research. It is required for every `--deep-research` run.
-8. Start with external primary sources in the first pass. Repo-local sources are supplemental context, not a substitute for the external evidence bar.
-9. If live web research is unavailable at runtime, stop immediately and tell the user that `--deep-research` cannot proceed without web access.
-10. Do not create a local-only exception for narrowly scoped or repo-heavy tasks. If the user wants a faster repo-only pass, they should use planning without `--deep-research`.
-11. Keep the effort bounded to a deep pass, targeting roughly 20-30 minutes of research effort, and do not treat the pass as complete until the completion checks below are met.
-12. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
+8. Use live web research. It is required for every `--deep-research` run.
+9. Start with external primary sources in the first pass. Repo-local sources are supplemental context, not a substitute for the external evidence bar.
+10. If live web research is unavailable at runtime, stop immediately and tell the user that `--deep-research` cannot proceed without web access.
+11. Do not create a local-only exception for narrowly scoped or repo-heavy tasks. If the user wants a faster repo-only pass, they should use planning without `--deep-research`.
+12. Budget a real deep pass, typically around 20-30 minutes for non-trivial plans, and do not treat the pass as complete until the completion checks below are met.
+13. End the research pass by triaging the working memo:
+   - choose the highest-value findings to adopt
+   - note meaningful ideas rejected or deferred and why
+   - update PRD/TDD before tasks-plan generation
+14. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
 
 ## Minimum evidence bar
 
@@ -103,13 +114,15 @@ The temporary research memo must contain:
 - external primary sources reviewed, with direct links and one-line notes on what each source answered
 - research agenda
 - sources reviewed
+- improvement backlog and candidate ideas being tested
 - findings by bucket
+- adopted ideas, rejected ideas, and why
 - design decisions or defaults changed by research
 - risks or unknowns that remain
 - which findings came from external web sources versus repo-local sources
 - explicit note when a bucket was not applicable
 
-Do not start PRD, TDD, or tasks-plan drafting until this memo is substantively complete.
+Do not start `tasks-plan` drafting until this memo is substantively complete and the adopted findings have been written back into PRD/TDD.
 
 ## Research output
 
@@ -118,13 +131,14 @@ Capture these outcomes:
 - a short research summary
 - concrete recommendations adopted into the plan
 - alternatives considered and rejected when they materially affect the design
+- the best ideas pulled from the working memo and how they changed PRD/TDD
 - risks, constraints, or follow-up validation uncovered by research
 - source links or citations supporting the adopted recommendations
 - at least 3 answered research questions backed by cited external sources
 
 Default behavior:
 
-- inline the findings into the TDD and improve-plan pass
+- inline the findings into PRD when product-facing constraints changed, into TDD for technical rationale, and into the improve-plan pass
 - delete the standalone research memo after planning completes
 
 Preservation behavior:
@@ -136,15 +150,15 @@ Preservation behavior:
 
 - PRD: update only when research changes product-facing constraints, defaults, guardrails, or acceptance behavior
 - TDD: absorb the detailed technical recommendations and rationale
-- tasks-plan: add any new rollout, migration, verification, cleanup, or sequencing work discovered by research
+- tasks-plan: generate only after PRD/TDD revisions are complete, and add any new rollout, migration, verification, cleanup, or sequencing work discovered by research
 
 ## Completion checks
 
-Before continuing to document generation:
+Before continuing to tasks-plan generation:
 
 1. The research has answered the most important technical and delivery questions for this plan.
 2. The selected approach is supported by cited external sources, with repo-local context used only as supplemental grounding.
-3. Any new risks or sequencing requirements are ready to be reflected in TDD and tasks-plan.
+3. Any new risks or sequencing requirements are reflected in revised PRD/TDD where appropriate and are ready to be carried into tasks-plan.
 4. The research did not silently widen scope into broad product discovery.
 5. The working memo meets the minimum evidence bar, including the external-source minimum and required web-status sections.
-6. PRD, TDD, and tasks-plan drafting has not started before the research memo was completed.
+6. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.

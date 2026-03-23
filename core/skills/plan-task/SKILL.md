@@ -1,6 +1,6 @@
 ---
 name: plan-task
-description: Use when the user starts planning with `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]` and needs rich-plan intake, optional deep research, targeted Socratic refinement, and normalization into required `prd`, `tdd`, and `tasks-plan` artifacts.
+description: Use when the user starts planning with `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]` and needs rich-plan intake, optional staged deep research, targeted Socratic refinement, and normalization into required `prd`, `tdd`, and `tasks-plan` artifacts.
 ---
 
 # Plan Task Skill
@@ -40,11 +40,11 @@ Load these files before running:
    - for non-trivial rich plans touching infrastructure, deployment, scheduling, source-of-truth, or operations, ask at least one targeted challenge question before document generation
    - close gaps in `Goal`, `Context`, `Constraints`, and `Done when` before document generation
    - produce a final plain-language summary that a 12-year-old could follow, in exactly three short paragraphs
-4. If `--deep-research` is present, run `deep-research.md` after decisions are locked and before artifact generation.
-5. Present that three-paragraph summary to the user as a standalone checkpoint before artifact generation and ask if anything is wrong or missing.
-6. If the user corrects the summary, resolve the correction before continuing.
-7. Generate `tasks/prd-<plan-key>.md` using `create-prd.md`.
-8. Generate `tasks/tdd-<plan-key>.md` using `create-tdd.md`.
+4. Generate an initial `tasks/prd-<plan-key>.md` draft using `create-prd.md`.
+5. Generate an initial `tasks/tdd-<plan-key>.md` draft using `create-tdd.md`.
+6. If `--deep-research` is present, run `deep-research.md` against the locked decisions plus the source plan and current PRD/TDD drafts, then revise PRD/TDD with the adopted findings.
+7. Present that three-paragraph summary to the user as a standalone checkpoint before task generation and ask if anything is wrong or missing.
+8. If the user corrects the summary, resolve the correction in PRD/TDD before continuing.
 9. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
 10. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo when preserved.
 11. Stop and wait for implementation trigger.
@@ -57,8 +57,9 @@ Load these files before running:
 - Preserve substantive source-plan sections; normalize them without dropping content.
 - With `--deep-research`, research defaults to `Tech + Delivery`: technical design, migration/rollout/rollback, security/ops, and verification strategy.
 - With `--deep-research`, live web research is mandatory and the working memo must include at least 5 substantive external primary web sources.
-- With `--deep-research`, do not begin PRD/TDD/tasks drafting until the research memo and completion checks from `deep-research.md` are complete.
+- With `--deep-research`, PRD and TDD may be drafted before research, but treat them as interim drafts until the research memo and completion checks from `deep-research.md` are complete and adopted findings are applied back into both documents as needed.
 - With `--deep-research`, do not proceed if live web research is unavailable; stop and tell the user the deep-research pass cannot run without web access.
+- With `--deep-research`, do not begin `tasks-plan` drafting until the research memo is complete and PRD/TDD have been revised from the adopted findings.
 - `--deep-research` should influence TDD and tasks-plan first; update PRD only when product constraints or defaults materially change.
 - With `--preserve-planning-artifacts`, keep `tasks/tmp/research-plan-<plan-key>.md` and mention it in the final planning summary.
 - Restore traceability from tasks to `FR-*` and `TDR-*` IDs.
