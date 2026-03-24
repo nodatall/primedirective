@@ -8,6 +8,7 @@ Primary workflow uses skills under `skills/`.
 - `begin one-shot in <plan-key> [--preserve-review-artifacts]` -> `execute-task`
 - `begin review [--preserve-review-artifacts]` -> `review-chain`
 - `begin review <task-id> [--preserve-review-artifacts]` -> `review-chain`
+- `begin repo review [--preserve-review-artifacts]` -> `repo-sweep`
 
 ## Repo-Specific Norms
 - <repo-specific norms>
