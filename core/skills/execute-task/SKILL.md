@@ -26,6 +26,10 @@ Load these files before running:
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/review/review-protocol.md`
 
+For frontend-facing work that changes rendered UI, layout, styling, interaction flows, or visual design, also load:
+
+- `skills/frontend-design-improve/SKILL.md`
+
 ## Workflow
 
 1. Resolve artifact files from trigger using `task-file-contract.md`.
@@ -35,7 +39,7 @@ Load these files before running:
    - Standard mode: implement the requested task/sub-task in the main agent.
    - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent spawns one worker subagent, waits for completion, then owns integration, review, task updates, and commit before moving to the next sub-task.
 5. For each completed sub-task:
-   - create/update `tasks/tmp/plan-task-<task-id>.md`
+   - create/update `tasks/tmp/plan-task-<task-id>.md` with the sub-task contract before coding, then keep it current as implementation and review findings refine the slice
    - build using PRD + TDD + tasks-plan + exact sub-task block
    - run one `sub-task` review round automatically using the active prompt profile from `review-protocol.md`; in one-shot mode, defer Prompt G to the final `full-branch` review
    - apply fixes from review findings and rerun relevant tests

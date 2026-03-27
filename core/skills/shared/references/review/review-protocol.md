@@ -25,6 +25,7 @@ For task-based execution or task-scoped review, evaluate changes against:
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - `tasks/tasks-plan-<plan-key>.md`
+- `tasks/tmp/plan-task-<task-id>.md` when it exists for the reviewed sub-task
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
 
@@ -158,6 +159,10 @@ Action:
 Use Playwright MCP by default to open the changed UI, exercise the affected flows, resize for relevant breakpoints, and capture screenshots of all changed screens and states.
 When motion, timing, or multi-step interaction matters, also capture video or trace evidence using the Playwright CLI workflow.
 Review the captured evidence for visual regressions, broken layout, missing states, incorrect copy, and obvious accessibility issues visible in the UI.
+Grade the result explicitly on four criteria: design quality, originality, craft, and functionality.
+Use the sub-task contract when present to judge whether the intended screens, states, and design direction actually shipped.
+Be skeptical of merely functional but generic output. If the task is meaningfully user-facing, do not approve work that meets functional checks while still reading as template-level or incoherent.
+Fail Prompt G when functionality is below 4/5, craft is below 3/5, or design quality/originality is below 3/5 for work whose value includes the user experience.
 Record exactly what was captured, what was reviewed, and what remains unverified.
 Do not mark frontend-facing work complete without visual evidence.
 ```
@@ -208,6 +213,7 @@ Rules:
 - If a prompt introduces code changes, continue to remaining prompts in same round.
 - Do not mark prompts complete retroactively from one combined pass.
 - If a prompt is outside the active prompt profile, mark it `not applicable` with a short reason rather than leaving it incomplete.
+- Compare the implementation against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists; treat unexplained contract drift as a finding.
 - Prompt G is required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior.
 - Exception: during one-shot automatic `sub-task` review rounds, mark Prompt G `not applicable` with a note that visual verification is deferred to the final `full-branch` review.
 - Otherwise mark Prompt G `not applicable` with a reason.

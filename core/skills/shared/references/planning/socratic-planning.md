@@ -96,6 +96,7 @@ Ask only targeted questions that expose:
 - contradictions between sections
 - risky assumptions
 - missing acceptance or verification coverage
+- missing frontend design direction or frontend quality criteria for user-facing work
 - missing migration, rollout, backfill, or failure-path details
 - unclear defaults that would force implementer guesswork
 
@@ -184,10 +185,11 @@ When transforming a rich source plan into PRD, TDD, and tasks-plan:
 2. Do not collapse detailed sections into vague summaries.
 3. Preserve route, API, schema, migration, rollout, and test content.
 4. Preserve product rules, UX rules, missing-data behavior, and non-goals.
-5. Split mixed sections across PRD and TDD only when needed; do not drop any part.
-6. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
-7. If `--deep-research` is active, draft PRD and TDD first, then apply research findings to revise them before generating tasks-plan.
-8. If `--deep-research` is active, complete the evidence bar and working memo in `deep-research.md` before tasks-plan generation begins.
+5. Preserve concrete frontend design direction and visible quality expectations for user-facing work.
+6. Split mixed sections across PRD and TDD only when needed; do not drop any part.
+7. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
+8. If `--deep-research` is active, draft PRD and TDD first, then apply research findings to revise them before generating tasks-plan.
+9. If `--deep-research` is active, complete the evidence bar and working memo in `deep-research.md` before tasks-plan generation begins.
 
 ## Execution Trigger Gate (Hard Stop)
 

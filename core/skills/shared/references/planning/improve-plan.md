@@ -85,6 +85,8 @@ Evaluate and improve:
 - Elimination of vague steps.
 - Missing failure-path or cleanup work.
 - Whether `output`, `verify`, and `done_when` are concrete enough for implementation.
+- Whether each sub-task is narrow enough to support a pre-coding contract and a meaningful review pass without bundling unrelated work together.
+- For frontend-facing work, whether tasks name the affected screens, states, flows, and visible quality bar instead of leaving design intent implicit.
 
 ### 5. Verification coverage review
 
@@ -95,6 +97,7 @@ Evaluate and improve:
 - Regression protection for risky areas.
 - Missing edge-case or negative-path checks.
 - Gaps in migration/backfill/rollback validation.
+- For frontend-facing work, whether browser-based verification covers the changed states, responsive breakpoints, and obvious visual regressions.
 
 ### 6. Research integration review
 
