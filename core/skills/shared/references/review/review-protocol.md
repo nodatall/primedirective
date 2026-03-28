@@ -324,6 +324,7 @@ Operational translation:
 - `git rebase origin/main`
 - Resolve conflicts and rerun relevant tests.
 - For task-based work, update checklist and relevant files.
+- For one-shot task-based work, re-open `tasks/tasks-plan-<plan-key>.md` immediately before terminal handoff and confirm no unchecked sub-tasks remain anywhere in the file.
 - If all checkboxes in task list are complete, archive:
   - Create `tasks/archive/<yyyy-mm-dd>-<plan-key>/` using the local current date in ISO format (`YYYY-MM-DD`)
   - `tasks/prd-<plan-key>.md`
