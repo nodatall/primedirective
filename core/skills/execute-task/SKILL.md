@@ -26,10 +26,6 @@ Load these files before running:
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/review/review-protocol.md`
 
-For frontend-facing work that changes rendered UI, layout, styling, interaction flows, or visual design, also load:
-
-- `skills/frontend-design-improve/SKILL.md`
-
 ## Workflow
 
 1. Resolve artifact files from trigger using `task-file-contract.md`.

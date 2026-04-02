@@ -44,8 +44,6 @@ Execution behavior:
 - One-shot execution must continue until the remaining unchecked task file is fully complete and finalized; a clean intermediate commit boundary is not a valid stopping point.
 - `review-chain` exists for explicit review triggers (`begin review` and `begin review <task-id>`).
 - `repo-sweep` exists for explicit fix-first full-repository sweeps (`begin repo review`).
-- For frontend-facing planning, implementation, or review, use `skills/frontend-design-improve/SKILL.md` to set design intent, avoid generic UI output, and verify against explicit visual criteria.
-
 Shared references:
 
 - Planning: `skills/shared/references/planning/`

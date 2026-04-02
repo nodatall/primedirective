@@ -21,10 +21,6 @@ Load these files before running:
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/execution/task-file-contract.md`
 
-For frontend-facing review, also load:
-
-- `skills/frontend-design-improve/SKILL.md`
-
 ## Workflow
 
 1. Keep current branch (do not create/rename/switch branch during review).

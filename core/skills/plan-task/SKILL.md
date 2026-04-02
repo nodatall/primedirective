@@ -27,10 +27,6 @@ Load these files before running:
 - `skills/shared/references/planning/improve-plan.md`
 - `skills/shared/references/execution/task-file-contract.md`
 
-For frontend-heavy or design-sensitive work, also load:
-
-- `skills/frontend-design-improve/SKILL.md`
-
 ## Workflow
 
 1. Run planning preflight from `socratic-planning.md`.
