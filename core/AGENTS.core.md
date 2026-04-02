@@ -10,6 +10,7 @@ Use these skills for workflow triggers:
 - `skills/execute-task/SKILL.md`
 - `skills/review-chain/SKILL.md`
 - `skills/repo-sweep/SKILL.md`
+- `skills/cleanup-merged-branches/SKILL.md`
 
 Trigger mapping:
 
@@ -19,6 +20,7 @@ Trigger mapping:
 - `begin review [--preserve-review-artifacts]` -> `review-chain`
 - `begin review <task-id> [--preserve-review-artifacts]` -> `review-chain`
 - `begin repo review [--preserve-review-artifacts]` -> `repo-sweep`
+- `clean up merged branches [<branch-name>]` -> `cleanup-merged-branches`
 
 Planning defaults:
 
@@ -53,7 +55,7 @@ Shared references:
 ## Repo-Specific Norms
 
 - Branch naming: `<short-task-name>` (concise, concrete).
-- After a feature branch is confirmed merged into `origin/main`, delete it locally and on `origin` when safe. Never delete `main`, the currently checked out branch, a branch with unmerged local commits, or a branch tied to an open PR.
+- After a feature branch is confirmed merged into `origin/main`, delete it locally and on `origin` when safe. Use `clean up merged branches [<branch-name>]` for this. Never delete `main`, the currently checked out branch, a branch with unmerged local commits, or a branch tied to an open PR.
 - Update `tasks/tasks-plan-<plan-key>.md` after each completed sub-task in task-mode execution.
 - For ad-hoc work outside `begin task ...` / `begin one-shot ...`, task-list updates are not required unless explicitly requested.
 - Update `README.md` only when setup/commands/env requirements change.
