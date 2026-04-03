@@ -19,7 +19,7 @@ Trigger mapping:
 - `begin one-shot in <plan-key> [--preserve-review-artifacts]` -> `execute-task`
 - `begin review [--preserve-review-artifacts]` -> `review-chain`
 - `begin review <task-id> [--preserve-review-artifacts]` -> `review-chain`
-- `begin repo review [--preserve-review-artifacts]` -> `repo-sweep`
+- `begin repo review [--report-only] [--preserve-review-artifacts]` -> `repo-sweep`
 - `clean up merged branches [<branch-name>]` -> `cleanup-merged-branches`
 
 Planning defaults:
@@ -46,7 +46,7 @@ Execution behavior:
 - One-shot execution must continue until the remaining unchecked task file is fully complete and finalized; a clean intermediate commit boundary is not a valid stopping point.
 - In one-shot mode, any mid-run progress update must be non-terminal and must name the next sub-task already being continued; partial-progress handoffs are invalid unless a real blocker exists.
 - `review-chain` exists for explicit review triggers (`begin review` and `begin review <task-id>`).
-- `repo-sweep` exists for explicit fix-first full-repository sweeps (`begin repo review`).
+- `repo-sweep` exists for explicit full-repository sweeps (`begin repo review`), including `--report-only` no-fix runs.
 Shared references:
 
 - Planning: `skills/shared/references/planning/`
