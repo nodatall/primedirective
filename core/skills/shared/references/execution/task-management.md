@@ -36,13 +36,16 @@ Guidelines for managing task lists in markdown files.
   5. Main agent reviews and integrates the result.
   6. Main agent runs one automatic `sub-task` review round using the active review prompt profile and relevant tests. In one-shot mode, defer Prompt G frontend/browser verification to the final branch-wide review.
   7. Main agent marks the checklist complete and creates the commit.
-  8. Main agent starts the next sub-task.
-  9. After the final sub-task, main agent runs one additional automatic `full-branch` review round before finalization. This final round owns Prompt G frontend/browser verification for one-shot frontend work.
+  8. Main agent immediately re-opens `tasks/tasks-plan-<plan-key>.md` after that commit and re-scans for the next unchecked sub-task in file order.
+  9. If another unchecked sub-task exists, main agent starts it immediately instead of producing a terminal-style handoff.
+  10. After the final sub-task, main agent runs one additional automatic `full-branch` review round before finalization. This final round owns Prompt G frontend/browser verification for one-shot frontend work.
 
 - Do not run sub-task workers in parallel. One-shot execution is strictly sequential.
 - Do not stop one-shot execution after completing a parent task such as `1.0` or at any section boundary while unchecked sub-tasks remain later in the file.
 - Do not end the run on an intermediate checkpoint just because the branch is in a clean, committable state.
 - Do not present “work is in progress, not finished” as the terminal outcome of a one-shot unless a real blocker prevented continuation.
+- Do not produce checkpoint summaries like “implemented through task X” or “remaining unchecked work is ...” as the last message of a one-shot turn while unchecked sub-tasks still remain.
+- If a progress update is necessary mid-run, it must be explicitly non-terminal and must include the exact next sub-task already being executed.
 - Before any terminal handoff, re-open `tasks/tasks-plan-<plan-key>.md` and verify there are no remaining `- [ ]` sub-task entries anywhere in the file. If any unchecked sub-task remains, continue execution rather than handing off.
 
 ## Temporary plan doc workflow
@@ -106,3 +109,5 @@ Rules:
 14. In one-shot mode, the only valid terminal outcomes are:
     - all remaining unchecked sub-tasks completed, reviewed, finalized, and handed off
     - execution blocked by an unresolved issue that is explicitly described, with the exact next required user action
+15. Before any user-visible one-shot completion message, run a liveness check against `tasks/tasks-plan-<plan-key>.md`: if any `- [ ]` entry remains, do not hand off and do not summarize as a stopping point.
+16. If a one-shot progress update is emitted between sub-tasks, it must say both what just finished and which exact sub-task is already in progress next.

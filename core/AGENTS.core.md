@@ -44,6 +44,7 @@ Execution behavior:
 - Standard `begin task ...` execution is single-agent.
 - `begin one-shot ...` uses one sequential worker subagent per sub-task across the entire remaining unchecked task file, with the main agent owning review, integration, task updates, and commits.
 - One-shot execution must continue until the remaining unchecked task file is fully complete and finalized; a clean intermediate commit boundary is not a valid stopping point.
+- In one-shot mode, any mid-run progress update must be non-terminal and must name the next sub-task already being continued; partial-progress handoffs are invalid unless a real blocker exists.
 - `review-chain` exists for explicit review triggers (`begin review` and `begin review <task-id>`).
 - `repo-sweep` exists for explicit fix-first full-repository sweeps (`begin repo review`).
 Shared references:

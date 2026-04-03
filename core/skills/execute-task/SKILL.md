@@ -42,10 +42,12 @@ Load these files before running:
    - keep temp review artifacts under `tasks/tmp/` when `--preserve-review-artifacts` is enabled; otherwise clean them up per protocol
    - mark checklist updates in `tasks/tasks-plan-<plan-key>.md`
    - create a dedicated commit for the sub-task
+   - in one-shot mode, immediately re-open `tasks/tasks-plan-<plan-key>.md` after the commit, identify the next unchecked sub-task in file order, and continue directly when one exists
 6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round automatically using the active prompt profile from `review-protocol.md` before finalization. This is the review round that must satisfy Prompt G for frontend-facing work.
 7. Run finalization from `review-protocol.md` Step 9 rules only after all unchecked sub-tasks in the task plan are complete.
 8. Before any terminal handoff in one-shot mode, re-open `tasks/tasks-plan-<plan-key>.md` and confirm there are no remaining unchecked sub-tasks anywhere in the file. If any remain, continue execution instead of handing off unless a real blocker prevents further progress.
 9. In one-shot mode, do not stop after an intermediate sub-task merely to report status, preserve a clean commit boundary, or hand off remaining work. Only stop early for a real blocker that cannot be resolved inside the current run.
+10. In one-shot mode, do not emit terminal-style progress summaries such as “implemented through task X”, “remaining work is Y”, or “resuming from here” while unchecked sub-tasks still remain. Any optional progress update must be explicitly non-terminal and must name the next sub-task that execution is already continuing into.
 
 ## Mode behavior
 
