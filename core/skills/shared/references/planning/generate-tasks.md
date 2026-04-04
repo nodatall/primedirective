@@ -65,12 +65,14 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 5. Preserve meaningful implementation detail from the source plan by expressing it as actionable tasks.
 6. Ensure every meaningful `FR-*` and `TDR-*` is covered by at least one task or sub-task.
 7. Ensure every sub-task has `covers_prd`, `covers_tdd`, `output`, `verify`, and `done_when`.
-8. Make every sub-task small enough that implementation and review can agree on a concrete contract before coding starts.
-9. For frontend-facing sub-tasks, make `verify` and `done_when` describe the actual screens, states, interactions, and visible quality bar to be checked in the browser. Avoid generic wording such as `UI looks good`.
-10. Sequence frontend work so shared layout/theming primitives land before high-polish states, unless the risk profile clearly favors a spike first.
-11. Save `tasks/tasks-plan-<plan-key>.md`.
-12. Stop and wait for build trigger.
-13. If `--deep-research` is active, fold research-discovered rollout, migration, verification, and cleanup work into the task ordering and sub-task details.
+8. When repo-local implementation or test patterns are a good fit, name them in `Relevant Files`, `Task Ordering Notes`, or the relevant task text so execution knows what local convention to follow without adding new required task fields.
+9. For code-bearing, practically testable sub-tasks, make `verify` identify the targeted test command that execution should run red first and then green after implementation; for slices where a failing-first loop is not practical, make that exception visible in the task wording or ordering notes without introducing a new required field.
+10. Make every sub-task small enough that implementation and review can agree on a concrete contract before coding starts.
+11. For frontend-facing sub-tasks, make `verify` and `done_when` describe the actual screens, states, interactions, and visible quality bar to be checked in the browser. Avoid generic wording such as `UI looks good`.
+12. Sequence frontend work so shared layout/theming primitives land before high-polish states, unless the risk profile clearly favors a spike first.
+13. Save `tasks/tasks-plan-<plan-key>.md`.
+14. Stop and wait for build trigger.
+15. If `--deep-research` is active, fold research-discovered rollout, migration, verification, and cleanup work into the task ordering and sub-task details.
 
 ## Coverage rule
 

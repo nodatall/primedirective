@@ -28,6 +28,7 @@ For task-based execution or task-scoped review, evaluate changes against:
 - `tasks/tmp/plan-task-<task-id>.md` when it exists for the reviewed sub-task
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
+Also verify, when `tasks/tmp/plan-task-<task-id>.md` exists, that the implementation followed the recorded local reference pattern, used a failing-test-first loop when practical, and justified any exception or trust-boundary handling recorded there.
 
 ## Review scopes
 
@@ -71,6 +72,16 @@ Rationale:
 
 - Codex review runs tend to produce most useful findings in the first broad review plus the closing audit, with Prompt G still valuable for frontend evidence and Prompt H still valuable for deploy-bound changes.
 - Non-Codex agents should continue to use the full redundant multi-pass chain.
+
+## Required review checks
+
+Every applicable review round must explicitly verify:
+
+- whether the slice was driven by a failing targeted test first when the work was practically testable
+- whether any skipped red/green loop has a recorded and justified exception in the sub-task contract
+- whether an existing repo-local implementation or test pattern was followed when one existed
+- whether any newly introduced pattern or deliberate deviation is justified by the actual slice constraints
+- whether any recorded `trust_boundary_notes` are still true in the implemented change
 
 ## Prompts A-I
 
@@ -179,7 +190,10 @@ Rollback, migration, or backfill safety where relevant.
 Performance under expected usage where relevant.
 Dependency and security hygiene.
 Monitoring and alerting visibility where relevant.
-Action: Report concrete evidence for each applicable item, flag gaps explicitly, and fix any production-readiness issues that are in scope for this change.
+Whether the change can access private data.
+Whether the change accepts or is exposed to untrusted input.
+Whether the change can send data externally or invoke outbound tools/actions.
+Action: Report concrete evidence for each applicable item, flag gaps explicitly, and fix any production-readiness issues that are in scope for this change. Fail this prompt when the change combines access to private data, exposure to untrusted input, and outbound capability without a hard separation boundary or a human approval gate.
 ```
 
 ### Prompt I
@@ -214,10 +228,11 @@ Rules:
 - Do not mark prompts complete retroactively from one combined pass.
 - If a prompt is outside the active prompt profile, mark it `not applicable` with a short reason rather than leaving it incomplete.
 - Compare the implementation against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists; treat unexplained contract drift as a finding.
+- When the task contract exists, verify `reference_patterns`, `test_first_plan`, and any `trust_boundary_notes` against the actual implementation and recorded verification evidence.
 - Prompt G is required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior.
 - Exception: during one-shot automatic `sub-task` review rounds, mark Prompt G `not applicable` with a note that visual verification is deferred to the final `full-branch` review.
 - Otherwise mark Prompt G `not applicable` with a reason.
-- Prompt H is required only for deploy-bound work or changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability. Otherwise mark it `not applicable` with a reason.
+- Prompt H is required for deploy-bound work, for changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability, and for any change touching agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise mark it `not applicable` with a reason.
 
 ## Review log protocol (required)
 

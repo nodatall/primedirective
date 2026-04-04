@@ -36,7 +36,11 @@ Load these files before running:
    - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent spawns one worker subagent, waits for completion, then owns integration, review, task updates, and commit before moving to the next sub-task.
 5. For each completed sub-task:
    - create/update `tasks/tmp/plan-task-<task-id>.md` with the sub-task contract before coding, then keep it current as implementation and review findings refine the slice
-   - build using PRD + TDD + tasks-plan + exact sub-task block
+   - identify repo-local implementation and test reference patterns before coding, record the chosen pattern in the sub-task contract, and justify any deliberate deviation
+   - write or update the targeted test first when the slice is practically testable
+   - run the targeted test command and confirm the intended failure before implementation begins
+   - implement the change using PRD + TDD + tasks-plan + exact sub-task block + the chosen local pattern
+   - rerun the targeted verification until the slice passes, then expand to any additional relevant checks
    - run one `sub-task` review round automatically using the active prompt profile from `review-protocol.md`; in one-shot mode, defer Prompt G to the final `full-branch` review
    - apply fixes from review findings and rerun relevant tests
    - keep temp review artifacts under `tasks/tmp/` when `--preserve-review-artifacts` is enabled; otherwise clean them up per protocol
@@ -53,6 +57,12 @@ Load these files before running:
 
 - Standard mode (`begin task ...`): single-agent execution, pause for approval between sub-tasks.
 - One-shot mode (`begin one-shot ...`): sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, one main-agent integration/review/commit cycle per sub-task, defer frontend browser evidence to the final branch-wide review, then run one final full-branch review before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
+
+## Execution defaults
+
+- Treat a failing-test-first red/green loop as the default for code-bearing, practically testable slices.
+- A test-first exception is allowed only when a failing-first loop is not practical for that exact slice; record the exception reason in `tasks/tmp/plan-task-<task-id>.md` before implementation starts.
+- Before coding, search the repo for similar implementations and tests, follow an existing local pattern when it is a good fit, and record why any new pattern or deviation is necessary.
 
 ## Review relationship
 

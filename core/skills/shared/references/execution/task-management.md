@@ -26,7 +26,7 @@ Guidelines for managing task lists in markdown files.
 - If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, move them onto the new feature branch and commit them before the first implementation sub-task.
 - For each sub-task:
   1. Main agent selects the next unchecked sub-task in file order.
-  2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` as the sub-task contract before coding starts.
+  2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` as the sub-task contract before coding starts, including reference pattern choice, test-first plan, and any required trust-boundary notes.
   3. Main agent spawns one worker subagent with:
      - `tasks/prd-<plan-key>.md`
      - `tasks/tdd-<plan-key>.md`
@@ -56,13 +56,18 @@ Guidelines for managing task lists in markdown files.
    - goal: what this slice changes
    - in_scope / out_of_scope: what is and is not part of this slice
    - surfaces: files, routes, screens, or jobs expected to change
+   - reference_patterns: repo-local paths or symbols for the implementation or test examples being followed; record `none found` only after searching, and justify any deliberate deviation from the closest usable pattern
+   - test_first_plan: the targeted test to add or update first and the exact command expected to fail before implementation; if failing-first is not practical, record the exception reason here before coding starts
    - verify: the exact checks that will prove the slice works
-4. For frontend-facing work, also record:
+4. Add `trust_boundary_notes` only when the slice touches agents, secrets, untrusted input, or outbound actions. Record the boundary, approval gate, or separation rule that implementation and review must preserve.
+5. For frontend-facing work, also record:
    - changed screens and states
    - visual direction or design intent
    - anti-goals to avoid generic or off-brand output
-5. Update the contract when implementation or review reveals a better-scoped slice or a missing verification step.
-6. Delete temp plan doc only after review completion for that sub-task, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
+6. Before coding, search the repo for similar implementations and tests, record the chosen local pattern in `reference_patterns`, and justify any decision to introduce a new pattern instead of following the existing one.
+7. Default to a red/green loop for code-bearing, practically testable slices: add or update the targeted test first, run the failure-first command, then implement. Only skip that order when the recorded `test_first_plan` exception makes the reason explicit.
+8. Update the contract when implementation or review reveals a better-scoped slice, a better local pattern, or a missing verification step.
+9. Delete temp plan doc only after review completion for that sub-task, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
 
 ## Completion protocol
 

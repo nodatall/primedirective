@@ -67,6 +67,7 @@ If the source plan contains sections like these, preserve them in TDD under the 
 - Test Cases and Scenarios with technical verification content
 
 Do not collapse concrete interface, schema, migration, or verification detail into generic prose.
+When the plan involves agents, secrets, untrusted input, or outbound actions, make those constraints explicit in the existing `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` sections rather than inventing standalone security-only headings.
 
 ## Rules
 
@@ -81,6 +82,10 @@ Do not collapse concrete interface, schema, migration, or verification detail in
 9. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
 10. If `--deep-research` is active, TDD is the primary home for research-backed technical recommendations and rationale.
 11. When `--deep-research` is active, treat the first TDD draft as a staging artifact for research review, then update it with the adopted findings before tasks-plan generation.
+12. When repo-local implementations or tests already provide a good pattern, name them in the relevant design sections so execution can follow an existing local convention.
+13. When the plan breaks into executable slices, make clear which slices are expected to use a failing-test-first red/green loop and where a test-first exception is likely because the work is not practically testable first.
+14. When the plan touches agents, secrets, untrusted input, or outbound actions, enrich `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` with the concrete trust and approval constraints that execution and review must enforce.
+15. Do not add standalone `Security Trust Boundaries` or `Agent Safety Constraints` sections; enrich the existing section set only when those concerns are relevant.
 
 ## Build gate reminder
 

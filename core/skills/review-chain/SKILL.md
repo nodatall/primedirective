@@ -28,8 +28,8 @@ Load these files before running:
 3. For task-scoped review, use PRD + TDD + tasks-plan as scope context when those artifacts exist.
 4. Select the active prompt profile from `review-protocol.md`, then execute its prompts sequentially, one prompt at a time.
 5. Treat Prompt G as required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior. Otherwise record it as not applicable with a reason.
-6. Treat Prompt H as required only when the change is deploy-bound or materially affects operations, infrastructure, migrations, security posture, or runtime observability. Otherwise record it as not applicable with a reason.
-7. Record findings, fixes, and test evidence for each prompt, comparing the change against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists.
+6. Treat Prompt H as required when the change is deploy-bound, materially affects operations, infrastructure, migrations, security posture, or runtime observability, or touches agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise record it as not applicable with a reason.
+7. Record findings, fixes, and test evidence for each prompt, comparing the change against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists, including the recorded test-first plan, local reference patterns, and any trust-boundary notes.
 8. Enforce completion gates, including unresolved TODO checks.
 9. Provide summary and delete review log only after all review checks pass, unless `--preserve-review-artifacts` was supplied.
 
