@@ -1,17 +1,23 @@
 ---
 name: repo-sweep
-description: Use when the user requests `begin repo review [--report-only] [--preserve-review-artifacts]` and needs a full-repository sweep that starts with an adversarial no-edit security/config/API-surface audit, then either reports verified issues only or continues into repair and a closing production-readiness pass.
+description: Use when the user requests `begin repo review [--preserve-review-artifacts]` and needs a comprehensive full-repository sweep that starts with an adversarial no-edit audit plus the full normal review chain, then pauses on a hard user gate before any fixes begin.
 ---
 
 # Repo Sweep Skill
 
-Run a full-repository sweep that separates adversarial detection from repair. The sweep should expose production risks even when the repo "works" locally, then fix what is safe and in scope.
+Run a full-repository sweep that separates adversarial detection from repair. The sweep should expose production risks even when the repo "works" locally, cover the same review components and gates as the normal review chain, present a structured repo-wide report, and only then ask whether fixes should begin.
 
-## Trigger
+## Triggers
 
 Accept:
 
-- `begin repo review [--report-only] [--preserve-review-artifacts]`
+- `begin repo review [--preserve-review-artifacts]`
+
+## Required references
+
+Load these files before running:
+
+- `skills/shared/references/review/review-protocol.md`
 
 ## Scope
 
@@ -20,14 +26,10 @@ Accept:
 - Use docs or specs only as secondary evidence when they clarify intent or reveal contradictions.
 - Detect before repairing.
 - Prefer verified findings over plausible theory.
-- Prefer fixing over reporting only after the first findings checkpoint.
+- Do not edit files before the repo-wide report and explicit user approval to proceed with fixes.
+- Include all normal review-chain components. For repo sweep, force a comprehensive review pass rather than a shortened provider-specific subset.
 
 ## Workflow
-
-Mode selection:
-
-- Default mode: audit, findings checkpoint, stabilization fixes, final production-readiness pass.
-- `--report-only`: audit, findings checkpoint, optional verification commands needed to confirm impact, then stop without making code edits.
 
 1. Establish the baseline.
    - Detect repo structure, frameworks, languages, package managers, monorepo layout, and tooling.
@@ -51,34 +53,49 @@ Mode selection:
    - When the repo exposes HTTP, RPC, webhook, queue-consumer, CLI, or worker entrypoints that can be executed locally, run the service and probe the real interface.
    - Use actual requests against the running app for representative entrypoints instead of relying only on unit tests or static inspection.
    - If runtime probing is impossible, state exactly why and treat the corresponding area as a residual risk unless disproven by stronger evidence.
-5. Emit a findings checkpoint before repairs.
-   - Before making substantive fixes, report the top verified findings already discovered, ordered by severity.
-   - Keep the checkpoint short, but do not bury serious production risks behind later stabilization notes.
-   - If no verified findings exist yet, say so explicitly and continue.
-6. If `--report-only` is set, continue gathering evidence without edits, then stop after the final production-readiness summary.
-   - You may still run verification commands, start services, and probe runtime behavior to confirm severity or scope.
-   - Do not patch files, change config, or "fix while reviewing" in this mode.
-   - Prefer breadth after the first verified finding: continue enumerating additional high-value issues instead of stopping at the first blocker unless the environment cannot be exercised further.
-7. Run everything that defines repo health.
+5. Run the normal review chain components as part of the no-edit review phase.
+   - Use the prompts from `review-protocol.md` as required review components for the repo sweep.
+   - For repo sweep, force the comprehensive `full-chain` coverage: Prompt A through Prompt I, one prompt at a time.
+   - Treat Prompt G and Prompt H with the same applicability rules as the normal review chain, but record them explicitly as executed or `not applicable`.
+   - Record findings, fixes attempted, and test or probe evidence for each prompt, even when the fix field is `none during no-edit phase`.
+   - Enforce the normal review-chain completion gates during reporting: do not mark the review phase complete while material verified findings are still hidden, unclassified, or hand-waved.
+   - During this pre-fix review phase, use the prompts to deepen evidence collection and categorization, not to edit files.
+6. Emit the repo-wide report before repairs.
+   - Before making substantive fixes, report the verified findings already discovered, ordered by severity inside clear sections.
+   - Use these sections:
+     - `Security`
+     - `Architecture and Design`
+     - `Logic and Stability`
+     - `Testing and Verification`
+     - `Code Quality and Maintainability`
+     - `Performance and Operations`
+     - `Needs Human Decision`
+     - `Residual Risks`
+   - If a section has no verified findings, say `none verified`.
+   - Keep the report concise, but do not bury serious production risks behind lower-priority cleanup.
+7. Stop on a hard user gate after the report.
+   - After presenting the report, explicitly ask whether the user wants fixes to proceed.
+   - Do not patch files, change config, or "fix while reviewing" until the user answers yes.
+   - If the user declines or does not answer, stop after the report.
+8. After approval, run everything that defines repo health.
    - Run every relevant install, lint, format check, typecheck, test, build, migration, and security command defined by the repo or CI.
    - Treat any failing verification command as top priority.
-8. Work in a fix-first stabilization loop.
+9. Work in a fix-first stabilization loop.
    - Reproduce the failure.
    - Find the root cause from code.
    - Apply the smallest correct fix.
    - Re-run the affected command or flow.
    - Continue until green or blocked.
-9. Sweep for high-value issues beyond verification.
+10. Sweep for high-value issues beyond verification.
    - Trace the top 5-10 core user or system journeys through entrypoint, handler, business logic, DB or side effects, and response or error handling.
    - Check actual routes, pages, jobs, integrations, schema, migrations, auth, validation, error handling, observability, and deployability.
    - Fix weak links when the remediation is clear and low-risk.
-10. Run a dedicated final production-readiness and security pass.
+11. Run a dedicated final production-readiness and security pass after fixes.
    - Always run this pass after stabilization, regardless of model or prompt profile.
-   - In `--report-only` mode, run this as an evidence-gathering and risk-summarization pass with no code edits.
-   - Use a Prompt-H-style review: verify deployment readiness with evidence, not assertions.
+   - Re-run the relevant normal review-chain components needed to validate the repaired state, including Prompt H and Prompt I, plus Prompt G when frontend work was touched.
    - Re-check configuration externalization, rollback or migration safety, dependency and security hygiene, logging and monitoring visibility, performance-sensitive paths, and operational failure handling.
    - Re-confirm the high-risk API-surface findings against the post-fix state so repaired systems are not accidentally re-opened by later changes.
-11. Stop only on a real blocker.
+12. Stop only on a real blocker.
    - Ask the user only when the correct fix would change product behavior, auth rules, schema semantics, billing logic, customer-visible UX intent, or public API behavior in a non-obvious way.
 
 ## Artifact behavior
@@ -93,27 +110,33 @@ Keep output compact and action-oriented.
 While working:
 
 - give short progress updates
-- say what you are running, what failed, and what you are fixing next
-- after the no-edit audit, emit a brief findings checkpoint before repairs begin
-- in `--report-only` mode, say what evidence you are collecting next instead of what you are fixing next
+- say what you are running, what failed, and whether you are still in review mode or have started the approved fix phase
+- after the no-edit audit and review-chain passes, emit the structured repo-wide report before repairs begin
+- after the report, stop and ask a direct yes-or-no question about whether to proceed with fixes
 
-At the end, output only:
+Before any fixes, output the repo-wide report in this order:
 
-1. Findings checkpoint
+1. Security
+2. Architecture and Design
+3. Logic and Stability
+4. Testing and Verification
+5. Code Quality and Maintainability
+6. Performance and Operations
+7. Needs Human Decision
+8. Residual Risks
+9. Fix Recommendation
+
+After approved fixes, output only:
+
+1. Initial repo-wide report summary
 2. Fixed
 3. Still failing
 4. Needs human decision
 5. Residual risks
 
-In `--report-only` mode:
+Success before fixes means the report is evidence-backed, broad enough to surface the major production risks on the reachable surface, and explicit about what remains unverified.
 
-- `Fixed` should be `none`
-- `Still failing` should list verified breakages or unsafe behaviors without proposing that they were remediated
-- `Residual risks` should include anything that could not be executed or disproven
-
-Success means the repository is measurably healthier and no obvious production-safety regressions remain on the verified public surface.
-
-In `--report-only` mode, success means the report is evidence-backed, broad enough to surface the major production risks on the reachable surface, and explicit about what remains unverified.
+Success after fixes means the repository is measurably healthier, the approved in-scope issues were addressed or cleanly escalated, and no obvious production-safety regressions remain on the verified public surface.
 
 For backend and API repos, do not mark the sweep successful while any of these remain true on the verified public surface:
 
