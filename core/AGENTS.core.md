@@ -58,7 +58,12 @@ Shared references:
 - Branch naming: `<short-task-name>` (concise, concrete).
 - After a feature branch is confirmed merged into `origin/main`, delete it locally and on `origin` when safe. Use `clean up merged branches [<branch-name>]` for this. Never delete `main`, the currently checked out branch, a branch with unmerged local commits, or a branch tied to an open PR.
 - Update `tasks/tasks-plan-<plan-key>.md` after each completed sub-task in task-mode execution.
-- For ad-hoc work outside `begin task ...` / `begin one-shot ...`, task-list updates are not required unless explicitly requested.
+- For ad-hoc work outside the explicit workflow commands above, task-list updates are not required unless explicitly requested.
+- For ad-hoc code changes, follow existing local implementation and test patterns before introducing a new pattern.
+- For ad-hoc code changes, prefer the fastest meaningful verification for the exact slice being changed.
+- For ad-hoc changes that are practically testable with a targeted unit, component, or narrow integration test, prefer a failing test first before implementing the change.
+- For ad-hoc frontend work, do not default to broad browser or E2E runs during normal iteration; use them only when the change touches a user-critical flow that cannot be validated well with cheaper checks, when the relevant files or repo norms already require them, or when the user explicitly asks for them.
+- If a failing-test-first loop is not practical for an ad-hoc change, say why briefly and run the best relevant verification instead.
 - Update `README.md` only when setup/commands/env requirements change.
 - Tests: prefer `npm test`; if skipped, say why.
 - Bugs: add regression test when it fits.
