@@ -52,6 +52,7 @@ Load these files before running:
 8. Before any terminal handoff in one-shot mode, re-open `tasks/tasks-plan-<plan-key>.md` and confirm there are no remaining unchecked sub-tasks anywhere in the file. If any remain, continue execution instead of handing off unless a real blocker prevents further progress.
 9. In one-shot mode, do not stop after an intermediate sub-task merely to report status, preserve a clean commit boundary, or hand off remaining work. Only stop early for a real blocker that cannot be resolved inside the current run.
 10. In one-shot mode, do not emit terminal-style progress summaries such as “implemented through task X”, “remaining work is Y”, or “resuming from here” while unchecked sub-tasks still remain. Any optional progress update must be explicitly non-terminal and must name the next sub-task that execution is already continuing into.
+11. In one-shot mode, do not expose internal worker handoffs as user-visible stopping points. Message shapes like “Completed and committed now: ...”, “Latest passing verifies: ...”, “I've already started X ...”, or “Remaining unchecked work is ...” are invalid as the last user-visible content while unchecked sub-tasks remain, even if the message also says execution is still in progress.
 
 ## Mode behavior
 

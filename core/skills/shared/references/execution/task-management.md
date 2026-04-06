@@ -45,6 +45,7 @@ Guidelines for managing task lists in markdown files.
 - Do not end the run on an intermediate checkpoint just because the branch is in a clean, committable state.
 - Do not present “work is in progress, not finished” as the terminal outcome of a one-shot unless a real blocker prevented continuation.
 - Do not produce checkpoint summaries like “implemented through task X” or “remaining unchecked work is ...” as the last message of a one-shot turn while unchecked sub-tasks still remain.
+- Do not surface internal worker-handoff state to the user as a stopping point. A last-message recap of completed items, passing verify commands, an already-started next sub-task, or a remaining-work list is still an invalid terminal handoff while unchecked sub-tasks remain.
 - If a progress update is necessary mid-run, it must be explicitly non-terminal and must include the exact next sub-task already being executed.
 - Before any terminal handoff, re-open `tasks/tasks-plan-<plan-key>.md` and verify there are no remaining `- [ ]` sub-task entries anywhere in the file. If any unchecked sub-task remains, continue execution rather than handing off.
 
@@ -116,3 +117,4 @@ Rules:
     - execution blocked by an unresolved issue that is explicitly described, with the exact next required user action
 15. Before any user-visible one-shot completion message, run a liveness check against `tasks/tasks-plan-<plan-key>.md`: if any `- [ ]` entry remains, do not hand off and do not summarize as a stopping point.
 16. If a one-shot progress update is emitted between sub-tasks, it must say both what just finished and which exact sub-task is already in progress next.
+17. Treat a recap shaped like `completed items + passing verifies + already started next task + remaining unchecked work` as a terminal-style handoff attempt, not as a valid progress update. When that pattern is about to occur, suppress it and continue execution.
