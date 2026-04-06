@@ -11,6 +11,7 @@ Use these skills for workflow triggers:
 - `skills/review-chain/SKILL.md`
 - `skills/repo-sweep/SKILL.md`
 - `skills/cleanup-merged-branches/SKILL.md`
+- `skills/first-principles-mode/SKILL.md`
 
 Trigger mapping:
 
@@ -21,6 +22,7 @@ Trigger mapping:
 - `begin review <task-id> [--preserve-review-artifacts]` -> `review-chain`
 - `begin repo review [--preserve-review-artifacts]` -> `repo-sweep`
 - `clean up merged branches [<branch-name>]` -> `cleanup-merged-branches`
+- `engage first-principles mode "..."` -> `first-principles-mode`
 
 Planning defaults:
 
