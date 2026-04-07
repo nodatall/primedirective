@@ -26,6 +26,7 @@ Produce the most thorough useful explanation by understanding the system at the 
 - Read broadly before drilling into file-local detail.
 - Prefer conceptual models, system logic, incentives, boundaries, and failure dynamics before implementation judgment.
 - Explain in plain language first, then add technical detail.
+- Be thorough internally and concise externally.
 - Stay read-only by default.
 - If the same request also asks for edits, debugging, refactors, or fixes, complete the analytical pass first and stop there. Wait for an explicit follow-up before changing files.
 - Use multiple candidate explanations when the answer is ambiguous. Do not anchor on the first plausible story.
@@ -47,22 +48,35 @@ Produce the most thorough useful explanation by understanding the system at the 
 4. Build 2-4 competing hypotheses when more than one explanation is plausible.
 5. Gather confirming and disconfirming evidence before choosing the best explanation.
 6. Recompose the findings into one coherent answer that starts plain and becomes more technical only as needed.
-7. Stop after the analysis pass. Do not move into implementation, patching, or task execution.
+7. Choose the smallest user-facing output shape that preserves the conclusion, confidence, and decisive evidence.
+   - Keep internal subquestions, discarded hypotheses, and intermediate reasoning private unless surfacing them will materially help the user.
+   - Prefer a compact answer over a full template when the thesis is clear.
+   - Expand only when ambiguity, confidence, or decision risk justifies it.
+8. Stop after the analysis pass. Do not move into implementation, patching, or task execution.
 
 ## Output Contract
 
-Present results in this order unless the user asks for a different shape:
+Default to a compact, conclusion-first answer.
 
-1. Plain-language thesis
-2. Mental model
-3. Competing hypotheses considered
-4. Chosen explanation and why it won
-5. Key assumptions
-6. Hidden constraints
-7. Core system logic or failure dynamics
-8. Risks or breakpoints
-9. File-backed evidence
-10. Unresolved questions
+Use this shape unless the user asks for a deep dive or the ambiguity is genuinely high:
+
+1. A short plain-language thesis
+2. The mechanism or why it happens
+3. The strongest supporting evidence
+
+Usually this should be:
+
+- one short opening paragraph
+- then 3-5 high-signal bullets or short paragraphs
+
+Formatting rules:
+
+- Headings are optional. Use them only when they reduce cognitive load.
+- Prefer inline evidence or a short closing evidence block over a large standalone evidence dump.
+- Keep competing hypotheses, assumptions, hidden constraints, risks, and unresolved questions internal by default.
+- Surface those items only when they materially change the conclusion, confidence, or next decision.
+- Do not expose the internal subquestion list unless the user asks for the reasoning structure.
+- Do not mirror every internal analysis stage as a user-facing section heading.
 
 ## Anti-Defaults
 
@@ -71,6 +85,7 @@ Present results in this order unless the user asks for a different shape:
 - Do not lead with verification minutiae unless they are central to the causal explanation.
 - Do not confuse a symptom list with a mechanism.
 - Do not present high confidence when the evidence is mixed or incomplete.
+- Do not force a long sectioned template onto every answer.
 
 ## Example Prompts
 

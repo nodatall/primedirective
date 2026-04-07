@@ -14,6 +14,18 @@ The answer should:
 - separate evidence from inference
 - stop before execution
 
+Run the full analysis internally, but do not assume the user wants to see every analysis stage.
+
+## Internal Vs Visible Work
+
+Treat the rubric as an internal working process, not a mandatory output template.
+
+- Do the full breadth pass, decomposition, and hypothesis comparison internally.
+- Show only the parts that help the user understand the answer or make the next decision.
+- Default to the shortest shape that preserves the thesis, mechanism, and decisive evidence.
+- Expand only when ambiguity, confidence, or stakes justify the extra detail.
+- Do not emit a long heading stack just because the internal process had many steps.
+
 ## Breadth Pass
 
 Start wide before going deep.
@@ -84,6 +96,14 @@ Then add:
 - the strongest evidence
 
 Do not start with jargon if a simpler explanation can carry the same meaning.
+
+Default user-facing shape:
+
+- one short thesis paragraph
+- 3-5 high-signal bullets or short paragraphs explaining the mechanism
+- compact inline citations or a short evidence close
+
+Only add explicit sections for assumptions, competing hypotheses, hidden constraints, risks, or unresolved questions when they materially affect the conclusion.
 
 ## Stop Gate
 
