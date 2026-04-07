@@ -25,6 +25,7 @@ Treat the rubric as an internal working process, not a mandatory output template
 - Default to the shortest shape that preserves the thesis, mechanism, and decisive evidence.
 - Expand only when ambiguity, confidence, or stakes justify the extra detail.
 - Do not emit a long heading stack just because the internal process had many steps.
+- Prefer a memo or argument shape over a report shape.
 
 ## Breadth Pass
 
@@ -99,11 +100,14 @@ Do not start with jargon if a simpler explanation can carry the same meaning.
 
 Default user-facing shape:
 
-- one short thesis paragraph
-- 3-5 high-signal bullets or short paragraphs explaining the mechanism
-- compact inline citations or a short evidence close
+- one short verdict paragraph
+- 4-7 high-signal causal paragraphs or bullets
+- evidence attached inline where each claim needs it
+- an optional short closing on implications or fix order when the user wants that outcome
 
 Only add explicit sections for assumptions, competing hypotheses, hidden constraints, risks, or unresolved questions when they materially affect the conclusion.
+
+The ideal reading experience should feel like a strong memo from a thoughtful engineer, not a filled-in diagnostic template.
 
 ## Stop Gate
 
