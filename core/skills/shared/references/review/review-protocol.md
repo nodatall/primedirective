@@ -342,6 +342,7 @@ Operational translation:
 - For one-shot task-based work, re-open `tasks/tasks-plan-<plan-key>.md` immediately before terminal handoff and confirm no unchecked sub-tasks remain anywhere in the file.
 - Treat this re-opened task-file check as a hard liveness gate, not as an invitation to summarize partial progress. If unchecked sub-tasks remain, return to execution immediately.
 - Treat user-visible recap patterns such as completed-item lists, passing-verify lists, "already started X", or "remaining unchecked work is Y" as terminal-style handoff attempts when they would be the last message before more execution. If unchecked sub-tasks remain, do not emit that recap; continue execution instead.
+- Treat any user-visible one-shot message before this Step 9 finalization completes as potentially terminal or stall-inducing. Do not emit mid-run progress updates; only interrupt the run early for a real blocker that requires explicit user action.
 - If all checkboxes in task list are complete, archive:
   - Create `tasks/archive/<yyyy-mm-dd>-<plan-key>/` using the local current date in ISO format (`YYYY-MM-DD`)
   - `tasks/prd-<plan-key>.md`

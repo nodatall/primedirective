@@ -68,8 +68,9 @@ Then:
 - Start at first unchecked sub-task and continue in file order.
 - If kickoff begins with only the current plan's required planning artifacts uncommitted, carry them onto the new feature branch and commit them there before the first implementation sub-task begins.
 - Continue until there are no unchecked sub-tasks left anywhere in the file; do not stop at parent-task or section boundaries.
-- Do not stop to provide an interim “progress so far” handoff when unchecked sub-tasks remain.
+- Do not emit user-visible mid-run progress updates while unchecked sub-tasks remain; keep executing silently across sub-task boundaries.
 - A clean commit boundary, milestone boundary, or partially completed checklist is not a valid stopping point.
+- Treat any user-visible one-shot message before final completion as potentially terminal for the run.
 - Only return control early when a real blocker remains unresolved after reasonable attempts to proceed, such as missing required artifacts, unrelated dirty-tree changes that need user choice before branch creation, or an external approval/dependency failure that prevents continued execution.
 - Use one worker subagent per sub-task.
 - Worker context must include:
