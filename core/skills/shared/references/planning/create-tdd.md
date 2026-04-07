@@ -65,6 +65,7 @@ If the source plan contains sections like these, preserve them in TDD under the 
 - External Source Validation
 - Migration, backfill, rollout, or rollback detail
 - Test Cases and Scenarios with technical verification content
+- Existing repo validation/tooling inventory and gaps
 
 Do not collapse concrete interface, schema, migration, or verification detail into generic prose.
 When the plan involves agents, secrets, untrusted input, or outbound actions, make those constraints explicit in the existing `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` sections rather than inventing standalone security-only headings.
@@ -78,14 +79,18 @@ When the plan involves agents, secrets, untrusted input, or outbound actions, ma
 5. Convert unresolved ambiguity into explicit defaults before finalizing.
 6. Do not include an `Open technical questions` section.
 7. Ensure verification strategy is concrete enough to drive task `verify` steps later.
-8. Keep the section order stable so the plain-language summary is the first substantive section a human or agent reads.
-9. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
-10. If `--deep-research` is active, TDD is the primary home for research-backed technical recommendations and rationale.
-11. When `--deep-research` is active, treat the first TDD draft as a staging artifact for research review, then update it with the adopted findings before tasks-plan generation.
-12. When repo-local implementations or tests already provide a good pattern, name them in the relevant design sections so execution can follow an existing local convention.
-13. When the plan breaks into executable slices, make clear which slices are expected to use a failing-test-first red/green loop and where a test-first exception is likely because the work is not practically testable first.
-14. When the plan touches agents, secrets, untrusted input, or outbound actions, enrich `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` with the concrete trust and approval constraints that execution and review must enforce.
-15. Do not add standalone `Security Trust Boundaries` or `Agent Safety Constraints` sections; enrich the existing section set only when those concerns are relevant.
+8. In `Current Technical Diagnosis`, record the repo's current validation surface and notable gaps: lint, format, typecheck, test, build, CI, and git hooks, as applicable to the stack.
+9. In `Verification and Test Strategy`, name the concrete repo commands or workflows expected to enforce the work. If those commands do not exist yet, say so explicitly and describe the bootstrap that must land first.
+10. Treat local git-hook integration as optional and stack-specific, not a required outcome. If the repo already has another hook mechanism or CI is the right enforcement path, design around that instead of forcing a new hook layer in.
+11. When missing validation tooling is in scope, describe the config files, scripts, CI wiring, and developer workflow impact needed to make those checks real.
+12. Keep the section order stable so the plain-language summary is the first substantive section a human or agent reads.
+13. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
+14. If `--deep-research` is active, TDD is the primary home for research-backed technical recommendations and rationale.
+15. When `--deep-research` is active, treat the first TDD draft as a staging artifact for research review, then update it with the adopted findings before tasks-plan generation.
+16. When repo-local implementations or tests already provide a good pattern, name them in the relevant design sections so execution can follow an existing local convention.
+17. When the plan breaks into executable slices, make clear which slices are expected to use a failing-test-first red/green loop and where a test-first exception is likely because the work is not practically testable first.
+18. When the plan touches agents, secrets, untrusted input, or outbound actions, enrich `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` with the concrete trust and approval constraints that execution and review must enforce.
+19. Do not add standalone `Security Trust Boundaries` or `Agent Safety Constraints` sections; enrich the existing section set only when those concerns are relevant.
 
 ## Build gate reminder
 

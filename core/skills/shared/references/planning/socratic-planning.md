@@ -65,6 +65,8 @@ Rules:
 - If a bucket is implicit, extract it and restate it plainly.
 - If a bucket is missing, ask the smallest clarifying question needed or choose an explicit default.
 - Use this intake shape to drive the rest of the planning conversation; do not let important request context remain scattered or unstated.
+- Early in intake, inspect the repo's current validation surface: build manifests, scripts or task runners, CI workflows, lint or format configs, typecheck or build configs, and any git hook setup.
+- Treat missing validation/tooling as planning input, not an implementation surprise. If the repo lacks meaningful checks for its stack, lock that fact into `Context` or `Constraints` and decide whether bootstrap work belongs in scope.
 
 ## Source-Plan Intake Rules
 
@@ -98,6 +100,7 @@ Ask only targeted questions that expose:
 - missing acceptance or verification coverage
 - missing frontend design direction or frontend quality criteria for user-facing work
 - missing migration, rollout, backfill, or failure-path details
+- missing validation, formatting, typecheck, build, CI, or hook enforcement for the stack already in use
 - unclear defaults that would force implementer guesswork
 
 Do not re-walk the whole plan if the plan already covers it.
@@ -115,6 +118,12 @@ Asking at least one challenge question is required when the plan introduces any 
 - migration, rollout, backfill, rollback, or operational recovery behavior
 
 The challenge question must test an assumption that could materially change implementation, operations, or ownership. Do not spend the question on something cosmetic or already explicit.
+
+It should also probe repo hygiene when that could materially affect delivery quality, such as:
+
+- no lint, format-check, typecheck, or build command despite a sizable code-bearing change
+- no CI validation path for checks the plan expects to rely on
+- no pre-commit or pre-push enforcement when the team expects local guardrails
 
 ### Sparse-plan mode
 
@@ -186,10 +195,11 @@ When transforming a rich source plan into PRD, TDD, and tasks-plan:
 3. Preserve route, API, schema, migration, rollout, and test content.
 4. Preserve product rules, UX rules, missing-data behavior, and non-goals.
 5. Preserve concrete frontend design direction and visible quality expectations for user-facing work.
-6. Split mixed sections across PRD and TDD only when needed; do not drop any part.
-7. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
-8. If `--deep-research` is active, draft PRD and TDD first, then apply research findings to revise them before generating tasks-plan.
-9. If `--deep-research` is active, complete the evidence bar and working memo in `deep-research.md` before tasks-plan generation begins.
+6. Preserve current validation/tooling facts and any explicit decision to add missing lint, format, typecheck, build, CI, or hook enforcement.
+7. Split mixed sections across PRD and TDD only when needed; do not drop any part.
+8. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
+9. If `--deep-research` is active, draft PRD and TDD first, then apply research findings to revise them before generating tasks-plan.
+10. If `--deep-research` is active, complete the evidence bar and working memo in `deep-research.md` before tasks-plan generation begins.
 
 ## Execution Trigger Gate (Hard Stop)
 

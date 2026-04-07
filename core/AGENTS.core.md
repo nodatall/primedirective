@@ -12,6 +12,7 @@ Use these skills for workflow triggers:
 - `skills/repo-sweep/SKILL.md`
 - `skills/cleanup-merged-branches/SKILL.md`
 - `skills/first-principles-mode/SKILL.md`
+- `skills/bootstrap-repo-rules/SKILL.md`
 
 Trigger mapping:
 
@@ -23,6 +24,7 @@ Trigger mapping:
 - `begin repo review [--preserve-review-artifacts]` -> `repo-sweep`
 - `clean up merged branches [<branch-name>]` -> `cleanup-merged-branches`
 - `engage first-principles mode "..."` -> `first-principles-mode`
+- `bootstrap repo rules [--with-hooks]` -> `bootstrap-repo-rules`
 
 Planning defaults:
 
@@ -63,7 +65,10 @@ Shared references:
 - Update `tasks/tasks-plan-<plan-key>.md` after each completed sub-task in task-mode execution.
 - For ad-hoc work outside the explicit workflow commands above, task-list updates are not required unless explicitly requested.
 - For ad-hoc code changes, follow existing local implementation and test patterns before introducing a new pattern.
+- For ad-hoc code changes, inspect the repo's actual validation surface first: manifests, scripts or task runners, CI workflows, lint or format configs, typecheck or build configs, and any git hook setup.
 - For ad-hoc code changes, prefer the fastest meaningful verification for the exact slice being changed.
+- For ad-hoc code changes, when the repo already defines relevant lint, format-check, typecheck, test, or build commands for the touched surface, run them before handoff instead of relying only on spot checks.
+- If a repo has no meaningful validation surface for its stack and the user wants first-time setup, use `bootstrap repo rules [--with-hooks]` before relying on lint, format-check, typecheck, test, or build commands that do not exist yet.
 - For ad-hoc changes that are practically testable with a targeted unit, component, or narrow integration test, prefer a failing test first before implementing the change.
 - For ad-hoc frontend work, do not default to broad browser or E2E runs during normal iteration; use them only when the change touches a user-critical flow that cannot be validated well with cheaper checks, when the relevant files or repo norms already require them, or when the user explicitly asks for them.
 - If a failing-test-first loop is not practical for an ad-hoc change, say why briefly and run the best relevant verification instead.
