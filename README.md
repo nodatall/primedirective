@@ -121,6 +121,10 @@ One-command sync + PR + auto-merge for all configured repos:
 ./scripts/sync-all-automerge.sh
 ```
 
+## Alfred
+
+If you want an Alfred hotkey that shows the current `AGENTS` skill commands and pastes the selected trigger, use `scripts/install-alfred-skill-workflow.py` to install the workflow and `docs/alfred-skill-launcher.md` for the setup details.
+
 ## Recommended workflow
 
 1. Edit files under `core/`.
