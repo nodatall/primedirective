@@ -73,12 +73,17 @@ Then:
 - Treat any user-visible one-shot message before final completion as potentially terminal for the run.
 - Only return control early when a real blocker remains unresolved after reasonable attempts to proceed, such as missing required artifacts, unrelated dirty-tree changes that need user choice before branch creation, or an external approval/dependency failure that prevents continued execution.
 - Use one worker subagent per sub-task.
+- Use one fresh review subagent per review round.
 - Worker context must include:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
   - the exact sub-task block being implemented
-- Main agent owns task-list updates, review, commits, integration checks, and finalization.
+- Review subagent context must include:
+  - for `sub-task` review: `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, `tasks/tmp/plan-task-<task-id>.md` when it exists, and the exact sub-task ID being reviewed
+  - for `full-branch` review: `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, plus any still-relevant temp sub-task contract that remains available and materially informs the branch-wide review
+- Review subagents are siblings of the worker subagent. Do not have the worker spawn or own its own reviewer.
+- Main agent owns task-list updates, review orchestration, review decisions, commits, integration checks, and finalization.
 - No pauses between sub-tasks.
 - Run finalization once after all sub-tasks complete.
 - If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs and review logs, plus the final full-branch review log.

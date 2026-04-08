@@ -46,7 +46,7 @@ Execution behavior:
 
 - `execute-task` requires PRD + TDD + tasks-plan before coding starts.
 - Standard `begin task ...` execution is single-agent.
-- `begin one-shot ...` uses one sequential worker subagent per sub-task across the entire remaining unchecked task file, with the main agent owning review, integration, task updates, and commits.
+- `begin one-shot ...` uses one sequential worker subagent per sub-task across the entire remaining unchecked task file, plus one fresh review subagent per review round. The main agent owns orchestration, integration, review decisions, task updates, and commits.
 - One-shot execution must continue until the remaining unchecked task file is fully complete and finalized; a clean intermediate commit boundary is not a valid stopping point.
 - In one-shot mode, do not emit user-visible mid-run progress updates while unchecked sub-tasks remain. Keep executing silently until final completion/finalization or a real blocker because any user-visible one-shot message may be treated as the run's terminal output.
 - In one-shot mode, do not surface internal worker handoffs or emit checkpoint recaps such as completed-item lists, passing-verify lists, "already started X", or "remaining work is Y" while unchecked sub-tasks remain; those are invalid stop-points even if they say the run is not finished.

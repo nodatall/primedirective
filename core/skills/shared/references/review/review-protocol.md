@@ -47,6 +47,28 @@ Default scope rules:
 - End-of-one-shot final review: `full-branch`
 - Explicit `begin review` and `begin review <task-id>`: `full-branch`
 
+## Review agent topology
+
+When subagents are available, execute each review round in one fresh dedicated review subagent/thread.
+
+- The fresh review subagent owns the prompt sequence for that review round.
+- The review round is the unit of isolation. Do not split Prompt A, Prompt B, Prompt C, and so on into separate threads.
+- During one-shot execution, the main agent must spawn the review subagent after the implementation worker returns.
+- Review subagents are siblings of implementation workers. Do not have a worker spawn, direct, or review itself through its own child agent.
+- For task-based `sub-task` review rounds, pass the review subagent:
+  - `tasks/prd-<plan-key>.md`
+  - `tasks/tdd-<plan-key>.md`
+  - `tasks/tasks-plan-<plan-key>.md`
+  - `tasks/tmp/plan-task-<task-id>.md` when it exists
+  - the exact sub-task ID and the current `sub-task` review scope
+- For task-based `full-branch` review rounds, pass the review subagent:
+  - `tasks/prd-<plan-key>.md`
+  - `tasks/tdd-<plan-key>.md`
+  - `tasks/tasks-plan-<plan-key>.md`
+  - any still-relevant `tasks/tmp/plan-task-<task-id>.md` file that remains available and materially informs branch-wide review
+  - the current `full-branch` review scope
+- The main agent still owns review orchestration, review-log updates, decisions about findings, fixes, tests, task-list updates, and commits.
+
 ## Artifact preservation flag
 
 Supported trigger suffix:
@@ -317,6 +339,7 @@ For `begin review` and `begin review <task-id>`:
 For standard task execution and one-shot execution:
 
 - After each completed sub-task and before its commit, run one review round in `sub-task` scope.
+- When subagents are available, execute that `sub-task` review round in one fresh review subagent spawned by the main agent after the worker returns.
 - Review only the current sub-task delta against `HEAD`, not the entire branch history.
 - In one-shot execution, do not run Prompt G browser/visual verification during these per-sub-task rounds; record Prompt G as deferred to the final `full-branch` review.
 - Apply fixes and rerun relevant tests before creating the sub-task commit.
@@ -325,6 +348,7 @@ For standard task execution and one-shot execution:
 For one-shot execution only:
 
 - After all sub-tasks are complete and before finalization, run one additional review round in `full-branch` scope.
+- When subagents are available, execute that final `full-branch` review round in one fresh review subagent spawned by the main agent.
 - This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
 - If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.
 - Keep the final full-branch review log when `--preserve-review-artifacts` is active.

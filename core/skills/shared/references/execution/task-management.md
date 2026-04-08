@@ -22,6 +22,7 @@ Guidelines for managing task lists in markdown files.
 ## One-shot mode
 
 - One-shot mode is a sequential worker-subagent loop.
+- One-shot review runs use one fresh review subagent per review round.
 - One-shot execution scope is the entire unchecked remainder of `tasks/tasks-plan-<plan-key>.md`, not just the current parent task, milestone, or section.
 - If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, move them onto the new feature branch and commit them before the first implementation sub-task.
 - For each sub-task:
@@ -33,14 +34,15 @@ Guidelines for managing task lists in markdown files.
      - `tasks/tasks-plan-<plan-key>.md`
      - the exact sub-task block
   4. Worker implements one sub-task only and returns control.
-  5. Main agent reviews and integrates the result.
-  6. Main agent runs one automatic `sub-task` review round using the active review prompt profile and relevant tests. In one-shot mode, defer Prompt G frontend/browser verification to the final branch-wide review.
-  7. Main agent marks the checklist complete and creates the commit.
+  5. Main agent integrates the result and spawns one fresh review subagent for the current review round, passing `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, `tasks/tmp/plan-task-<task-id>.md` when it exists, and the exact sub-task ID for `sub-task` review.
+  6. Review subagent runs one automatic `sub-task` review round using the active review prompt profile. In one-shot mode, defer Prompt G frontend/browser verification to the final branch-wide review.
+  7. Main agent applies review findings, reruns relevant tests, marks the checklist complete, and creates the commit.
   8. Main agent immediately re-opens `tasks/tasks-plan-<plan-key>.md` after that commit and re-scans for the next unchecked sub-task in file order.
   9. If another unchecked sub-task exists, main agent starts it immediately instead of producing a terminal-style handoff.
-  10. After the final sub-task, main agent runs one additional automatic `full-branch` review round before finalization. This final round owns Prompt G frontend/browser verification for one-shot frontend work.
+  10. After the final sub-task, main agent spawns one additional fresh review subagent for the automatic `full-branch` review round before finalization, passing `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, and any still-relevant temp sub-task contract that remains available. This final round owns Prompt G frontend/browser verification for one-shot frontend work.
 
 - Do not run sub-task workers in parallel. One-shot execution is strictly sequential.
+- Do not have a worker subagent spawn or own its own reviewer. Review subagents are siblings spawned by the main agent after the worker returns.
 - Do not stop one-shot execution after completing a parent task such as `1.0` or at any section boundary while unchecked sub-tasks remain later in the file.
 - Do not end the run on an intermediate checkpoint just because the branch is in a clean, committable state.
 - Do not present “work is in progress, not finished” as the terminal outcome of a one-shot unless a real blocker prevented continuation.
@@ -106,8 +108,8 @@ Rules:
 5. Keep checklist status accurate for sub-task and parent tasks.
 6. Keep `Relevant Files` accurate.
 7. In standard mode, pause after each sub-task for approval.
-8. In one-shot mode, continue automatically after main-agent review + commit completion.
-9. In one-shot mode, review each completed sub-task in `sub-task` scope, defer Prompt G frontend/browser verification during those rounds, then run one final `full-branch` review after all sub-tasks complete.
+8. In one-shot mode, continue automatically after main-agent integration, review, and commit completion.
+9. In one-shot mode, spawn one fresh review subagent for each completed sub-task review in `sub-task` scope, defer Prompt G frontend/browser verification during those rounds, then spawn one final fresh review subagent for the `full-branch` review after all sub-tasks complete.
 10. When all tasks complete, archive artifacts under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` before final PR handoff.
 11. In one-shot mode, do not pause or summarize as complete merely because the next remaining work starts under a new parent task number like `2.0` or `3.0`.
 12. If `--preserve-review-artifacts` is present, keep `tasks/tmp/` plan and review files created during execution and list them in the final handoff.
