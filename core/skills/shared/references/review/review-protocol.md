@@ -6,12 +6,15 @@ Mandatory review behavior for task execution and explicit review commands.
 
 ```text
 Please fetch the latest `origin/main` from github.
-We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. Please create and switch to a new branch from `origin/main`. If the only uncommitted changes are those required planning artifacts for this plan, carry them onto the new branch and commit them there before implementation starts.
+We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. If local `main` and `origin/main` differ in either direction, stop and ask before creating the feature branch. Otherwise, please create and switch to a new branch from `origin/main`. If the only uncommitted changes are those required planning artifacts for this plan, carry them onto the new branch and commit them there before implementation starts.
 ```
 
 Operational translation:
 
 - `git fetch origin main`
+- Compare local `main` and `origin/main` after fetch.
+- If local `main` is missing, continue from `origin/main`.
+- If local `main` and `origin/main` differ in either direction, stop and ask before creating branch.
 - If the working tree is clean, create/switch the feature branch from `origin/main`.
 - If the only dirty files are `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` for the current plan, create/switch the feature branch from `origin/main`, carry those files onto the branch, and commit them before implementation starts.
 - If the working tree contains unrelated changes, stop and ask before creating branch.
