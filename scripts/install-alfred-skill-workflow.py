@@ -5,12 +5,13 @@ import shlex
 import uuid
 import zipfile
 from pathlib import Path
+from typing import Optional
 
 
 BUNDLE_ID = "com.fromdarkness.primedirective.skills"
 WORKFLOW_NAME = "Prime Directive Skills"
 WORKFLOW_DESCRIPTION = (
-    "Browse Prime Directive skill commands from AGENTS and paste them into "
+    "Browse Prime Directive Codex skills and presets and paste them into "
     "the frontmost app."
 )
 WORKFLOW_VERSION = "0.1.0"
@@ -37,12 +38,12 @@ def export_dir() -> Path:
 
 def script_command(repo_root: Path) -> str:
     router = repo_root / "scripts" / "alfred-skill-router.py"
-    agents_file = repo_root / "core" / "AGENTS.core.md"
-    skills_dir = repo_root / "core" / "skills"
+    skills_dir = repo_root / "skills"
+    presets_file = skills_dir / "presets.json"
     return (
         f"/usr/bin/python3 {shlex.quote(str(router))} "
-        f"--agents-file {shlex.quote(str(agents_file))} "
         f"--skills-dir {shlex.quote(str(skills_dir))} "
+        f"--presets-file {shlex.quote(str(presets_file))} "
         '"$1"'
     )
 
@@ -103,11 +104,11 @@ def build_plist(repo_root: Path) -> dict:
                     "queuedelayimmediatelyinitially": True,
                     "queuedelaymode": 0,
                     "queuemode": 1,
-                    "runningsubtext": "Loading skill commands...",
+                    "runningsubtext": "Loading skills and presets...",
                     "script": script_command(repo_root),
                     "scriptargtype": 1,
                     "scriptfile": "",
-                    "subtext": "Filter and paste a Prime Directive skill command",
+                    "subtext": "Filter and paste a Prime Directive skill or preset",
                     "title": "Prime Directive skills",
                     "type": 0,
                     "withspace": True,
@@ -131,9 +132,9 @@ def build_plist(repo_root: Path) -> dict:
         "readme": (
             "# Prime Directive Skills\n\n"
             "Hotkey: command + option + v\n\n"
-            "This opens a list of the AGENTS skill commands from the current "
+            "This opens a list of the Codex skills and presets from the current "
             "Prime Directive repo.\n\n"
-            "Return: paste the selected command.\n"
+            "Return: paste the selected skill invocation.\n"
             "Command + 1 through Command + 9: paste the visible result in that slot."
         ),
         "uidata": {
@@ -148,7 +149,7 @@ def build_plist(repo_root: Path) -> dict:
     }
 
 
-def find_existing_workflow_dir(workflows_dir: Path) -> Path | None:
+def find_existing_workflow_dir(workflows_dir: Path) -> Optional[Path]:
     for info_path in workflows_dir.glob("user.workflow.*/info.plist"):
         try:
             data = plistlib.loads(info_path.read_bytes())

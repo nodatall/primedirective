@@ -1,0 +1,40 @@
+{
+  "presets": [
+    {
+      "skill": "plan-task",
+      "title": "Plan Task: Deep Research",
+      "subtitle": "Preset for research-backed planning",
+      "paste": "$plan-task --deep-research"
+    },
+    {
+      "skill": "plan-task",
+      "title": "Plan Task: Preserve Artifacts",
+      "subtitle": "Preset that keeps planning artifacts",
+      "paste": "$plan-task --preserve-planning-artifacts"
+    },
+    {
+      "skill": "execute-task",
+      "title": "Execute Task: Preserve Review Artifacts",
+      "subtitle": "Preset that keeps review artifacts",
+      "paste": "$execute-task --preserve-review-artifacts"
+    },
+    {
+      "skill": "review-chain",
+      "title": "Review Chain: Preserve Artifacts",
+      "subtitle": "Preset that keeps review artifacts",
+      "paste": "$review-chain --preserve-review-artifacts"
+    },
+    {
+      "skill": "repo-sweep",
+      "title": "Repo Sweep: Preserve Artifacts",
+      "subtitle": "Preset that keeps sweep artifacts",
+      "paste": "$repo-sweep --preserve-review-artifacts"
+    },
+    {
+      "skill": "bootstrap-repo-rules",
+      "title": "Bootstrap Repo Rules: With Hooks",
+      "subtitle": "Preset that includes local hook wiring",
+      "paste": "$bootstrap-repo-rules --with-hooks"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-name: validate-instructions
+name: validate-plugin
 
 on:
   pull_request:
@@ -10,5 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate consumer sync
-        run: ./scripts/validate.sh
+      - name: Validate Alfred router output
+        run: python3 scripts/alfred-skill-router.py --format list
+      - name: Validate Codex installer idempotence
+        run: |
+          export HOME="$RUNNER_TEMP/home"
+          ./scripts/install-codex-plugin.sh
+          cp "$HOME/.agents/plugins/marketplace.json" "$RUNNER_TEMP/first.json"
+          ./scripts/install-codex-plugin.sh
+          diff -u "$RUNNER_TEMP/first.json" "$HOME/.agents/plugins/marketplace.json"

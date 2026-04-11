@@ -1,0 +1,30 @@
+{
+  "name": "prime-directive",
+  "version": "0.1.0",
+  "description": "Reusable workflow skills for Codex task planning, execution, review, and repo operations.",
+  "author": {
+    "name": "Prime Directive"
+  },
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "skills",
+    "workflow",
+    "planning",
+    "review"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Prime Directive",
+    "shortDescription": "Workflow skills for planning, execution, review, and repo ops",
+    "longDescription": "Install Prime Directive as a local Codex plugin to expose reusable workflow skills from a single canonical skills tree.",
+    "developerName": "Prime Directive",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "Use Prime Directive skills for planning, execution, review, and repo maintenance"
+    ]
+  }
+}

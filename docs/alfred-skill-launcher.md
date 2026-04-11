@@ -1,13 +1,13 @@
 # Alfred Skill Launcher
 
-Use Alfred to open a searchable picker of the skill trigger commands defined in `AGENTS`, then paste the selected command into the frontmost app.
+Use Alfred to open a searchable picker of Prime Directive Codex skills and presets, then paste the selected invocation into the frontmost app.
 
 The launcher is backed by `scripts/alfred-skill-router.py`, which reads:
 
-- `AGENTS.md` and `skills/*` when run from a synced consumer repo
-- `core/AGENTS.core.md` and `core/skills/*` when run from this source repo
+- `skills/*/SKILL.md` for skill discovery
+- `skills/presets.json` for optional Alfred presets
 
-If those files change, Alfred automatically reflects the new command list the next time the workflow runs.
+If those files change, Alfred reflects the new list the next time the workflow runs.
 
 ## Alfred setup
 
@@ -38,8 +38,8 @@ Placeholder Subtext: Filter and paste a skill command
 That gives you:
 
 - hotkey opens the skill picker
-- typing filters the command list
-- `Return` pastes the selected command template
+- typing filters skills and presets
+- `Return` pastes the selected `$skill-name` or `$skill-name <modifier>` text
 - `cmd + 1` through `cmd + 9` picks and pastes the visible result in that slot, just like Alfred's other result lists
 
 ## Terminal check

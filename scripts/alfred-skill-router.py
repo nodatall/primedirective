@@ -2,39 +2,25 @@
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
-
-
-TRIGGER_LINE_RE = re.compile(r"^- `(.+?)` -> `(.+?)`$")
-OPTIONAL_SEGMENT_RE = re.compile(r"\s*\[[^\]]+\]")
-PLACEHOLDER_SEGMENT_RE = re.compile(r'\s*"[^"]*"\s*|\s*<[^>]+>')
+from typing import Optional
 
 
 def parse_args() -> argparse.Namespace:
-    script_path = Path(__file__).resolve()
-    repo_root = script_path.parent.parent
-    default_agents_file = repo_root / "AGENTS.md"
-    if not default_agents_file.exists():
-        default_agents_file = repo_root / "core" / "AGENTS.core.md"
-
-    default_skills_dir = repo_root / "skills"
-    if not default_skills_dir.exists():
-        default_skills_dir = repo_root / "core" / "skills"
-
+    repo_root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(
-        description="Emit Alfred Script Filter JSON for Prime Directive skills."
-    )
-    parser.add_argument(
-        "--agents-file",
-        default=str(default_agents_file),
-        help="Path to the AGENTS markdown file to parse.",
+        description="Emit Alfred Script Filter JSON for Prime Directive skills and presets."
     )
     parser.add_argument(
         "--skills-dir",
-        default=str(default_skills_dir),
-        help="Path to the skills directory.",
+        default=str(repo_root / "skills"),
+        help="Path to the root skills directory.",
+    )
+    parser.add_argument(
+        "--presets-file",
+        default=str(repo_root / "skills" / "presets.json"),
+        help="Path to optional Alfred preset metadata.",
     )
     parser.add_argument(
         "--format",
@@ -46,7 +32,7 @@ def parse_args() -> argparse.Namespace:
         "query",
         nargs="?",
         default="",
-        help="Optional Alfred query string. Alfred performs the filtering.",
+        help="Optional Alfred query string. Alfred performs filtering.",
     )
     return parser.parse_args()
 
@@ -73,46 +59,6 @@ def humanize_skill(skill_name: str) -> str:
     return skill_name.replace("-", " ").title()
 
 
-def load_skill_meta(skill_path: Path, skill_name: str) -> dict[str, str]:
-    meta = {
-        "name": skill_name,
-        "title": humanize_skill(skill_name),
-        "description": "",
-        "path": str(skill_path),
-    }
-
-    if not skill_path.exists():
-        return meta
-
-    text = skill_path.read_text(encoding="utf-8")
-    front_matter = parse_front_matter(text)
-    meta["name"] = front_matter.get("name", skill_name)
-    meta["description"] = front_matter.get("description", "")
-    return meta
-
-
-def extract_triggers(agents_file: Path, skills_dir: Path) -> list[dict[str, str]]:
-    items = []
-    for line in agents_file.read_text(encoding="utf-8").splitlines():
-        match = TRIGGER_LINE_RE.match(line.strip())
-        if not match:
-            continue
-
-        command_template, skill_name = match.groups()
-        skill_path = skills_dir / skill_name / "SKILL.md"
-        skill_meta = load_skill_meta(skill_path, skill_name)
-        items.append(
-            {
-                "command_template": command_template,
-                "skill_name": skill_meta["name"],
-                "skill_title": skill_meta["title"],
-                "description": skill_meta["description"],
-                "skill_path": skill_meta["path"],
-            }
-        )
-    return items
-
-
 def shorten(text: str, limit: int = 160) -> str:
     compact = " ".join(text.split())
     if len(compact) <= limit:
@@ -120,86 +66,132 @@ def shorten(text: str, limit: int = 160) -> str:
     return compact[: limit - 3].rstrip() + "..."
 
 
-def paste_command(command_template: str) -> str:
-    command = OPTIONAL_SEGMENT_RE.sub("", command_template)
-    command = PLACEHOLDER_SEGMENT_RE.sub(" ", command)
-    command = " ".join(command.split())
-    while command.endswith((" in", " with", " from", " on")):
-        command = command.rsplit(" ", 1)[0]
-    return command
+def load_skill_meta(skill_dir: Path) -> Optional[dict[str, str]]:
+    skill_path = skill_dir / "SKILL.md"
+    if not skill_path.exists():
+        return None
+
+    text = skill_path.read_text(encoding="utf-8")
+    front_matter = parse_front_matter(text)
+    skill_name = front_matter.get("name", skill_dir.name)
+    return {
+        "kind": "skill",
+        "skill": skill_name,
+        "title": humanize_skill(skill_name),
+        "subtitle": shorten(front_matter.get("description", "")) or "Skill",
+        "paste": f"${skill_name}",
+        "match": " ".join(
+            filter(
+                None,
+                [
+                    skill_name,
+                    humanize_skill(skill_name),
+                    front_matter.get("description", ""),
+                    str(skill_path),
+                ],
+            )
+        ),
+    }
 
 
-def build_subtitle(item: dict[str, str]) -> str:
-    parts = [item["command_template"]]
-    if item["description"]:
-        parts.append(shorten(item["description"]))
-    return " | ".join(parts)
+def load_skills(skills_dir: Path) -> list[dict[str, str]]:
+    items = []
+    for child in sorted(skills_dir.iterdir()):
+        if not child.is_dir() or child.name.startswith("."):
+            continue
+        skill = load_skill_meta(child)
+        if skill is not None:
+            items.append(skill)
+    return items
 
 
-def build_match(item: dict[str, str]) -> str:
-    return " ".join(
-        filter(
-            None,
-            [
-                item["skill_name"],
-                item["skill_title"],
-                item["command_template"],
-                item["description"],
-            ],
+def load_presets(presets_file: Path, skills: dict[str, dict[str, str]]) -> list[dict[str, str]]:
+    if not presets_file.exists():
+        return []
+
+    data = json.loads(presets_file.read_text(encoding="utf-8"))
+    raw_presets = data.get("presets", [])
+    presets = []
+    for preset in raw_presets:
+        if not isinstance(preset, dict):
+            continue
+        skill_name = preset.get("skill")
+        paste = preset.get("paste")
+        if not isinstance(skill_name, str) or not isinstance(paste, str):
+            continue
+        if skill_name not in skills:
+            continue
+        base_skill = skills[skill_name]
+        title = preset.get("title") or f"{base_skill['title']} Preset"
+        subtitle = preset.get("subtitle") or "Preset"
+        presets.append(
+            {
+                "kind": "preset",
+                "skill": skill_name,
+                "title": title,
+                "subtitle": subtitle,
+                "paste": paste,
+                "match": " ".join(
+                    filter(
+                        None,
+                        [
+                            title,
+                            subtitle,
+                            paste,
+                            skill_name,
+                            base_skill.get("subtitle", ""),
+                        ],
+                    )
+                ),
+            }
         )
-    )
+    return presets
 
 
 def build_alfred_items(items: list[dict[str, str]]) -> dict[str, list[dict[str, object]]]:
     alfred_items = []
     for index, item in enumerate(items, start=1):
-        command_template = item["command_template"]
-        skill_path = item["skill_path"]
-        paste_text = paste_command(command_template)
+        subtitle = f"{item['kind'].title()} | {item['subtitle']}"
         alfred_items.append(
             {
-                "uid": f"{index}:{item['skill_name']}",
-                "title": paste_text,
-                "subtitle": build_subtitle(item),
-                "arg": paste_text,
-                "match": build_match(item),
+                "uid": f"{index}:{item['kind']}:{item['skill']}",
+                "title": item["paste"],
+                "subtitle": subtitle,
+                "arg": item["paste"],
+                "match": item["match"],
                 "text": {
-                    "copy": paste_text,
-                    "largetype": paste_text,
+                    "copy": item["paste"],
+                    "largetype": item["paste"],
                 },
                 "variables": {
-                    "skill": item["skill_name"],
-                    "skill_path": skill_path,
-                    "command_template": command_template,
-                    "paste_text": paste_text,
+                    "kind": item["kind"],
+                    "skill": item["skill"],
+                    "paste_text": item["paste"],
                 },
             }
         )
-
     return {"items": alfred_items}
 
 
 def render_list(items: list[dict[str, str]]) -> str:
-    lines = []
-    for item in items:
-        lines.append(f"{item['skill_name']}\t{item['command_template']}")
-    return "\n".join(lines)
+    return "\n".join(
+        f"{item['kind']}\t{item['skill']}\t{item['paste']}\t{item['subtitle']}" for item in items
+    )
 
 
 def main() -> int:
     args = parse_args()
-    agents_file = Path(args.agents_file).resolve()
     skills_dir = Path(args.skills_dir).resolve()
-
-    if not agents_file.exists():
-        print(f"AGENTS file not found: {agents_file}", file=sys.stderr)
-        return 1
+    presets_file = Path(args.presets_file).resolve()
 
     if not skills_dir.exists():
         print(f"Skills directory not found: {skills_dir}", file=sys.stderr)
         return 1
 
-    items = extract_triggers(agents_file, skills_dir)
+    skill_items = load_skills(skills_dir)
+    skill_map = {item["skill"]: item for item in skill_items}
+    items = skill_items + load_presets(presets_file, skill_map)
+
     if args.format == "list":
         print(render_list(items))
         return 0

@@ -1,138 +1,118 @@
 # Prime Directive
 
-Shared source-of-truth for agent instruction files across repos.
+Prime Directive is a Codex plugin source repo that ships reusable workflow skills from a single canonical `skills/` tree.
 
-## What this manages
+The repo is Codex-first:
 
-- `AGENTS.md`
-- `CLAUDE.md`
-- `skills/**`
-
-for each consumer repo listed in `repos/<name>/repo.path`.
+- install it globally as a local Codex plugin
+- use Alfred as an optional launcher for skills and presets
+- treat this checkout as the only source of truth for skill authoring
 
 ## Layout
 
-- `core/` shared canonical content
-- `core/skills/` shared workflow skills and references
-- `repos/<name>/overlay/` local-only repo-specific overrides (gitignored)
-- `templates/` optional starter template(s)
-- `scripts/add-repo.sh` register a consumer repo in `repos/`
-- `scripts/sync-repo.sh` render one consumer
-- `scripts/sync-all.sh` render all consumers
-- `scripts/validate.sh` CI-style sync check
-- `scripts/sync-open-prs.sh` sync, commit, and open PRs in consumer repos
-- `scripts/sync-all-automerge.sh` one-command sync + PR + auto-merge for all repos
+- `.codex-plugin/plugin.json` Codex plugin metadata
+- `skills/` canonical skills and shared references
+- `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
+- `scripts/install-alfred-skill-workflow.py` Alfred workflow installer/exporter
+- `scripts/alfred-skill-router.py` Alfred data source for skills and presets
+- `docs/alfred-skill-launcher.md` Alfred setup and behavior details
 
-## Local-only config
+## Install For Codex
 
-- `repos/` is intentionally ignored by git and should not be pushed.
-- Each machine should create its own `repos/<name>/repo.path` and optional overlays.
+Run from this repository root:
 
-## Setup
+```bash
+./scripts/install-codex-plugin.sh
+```
 
-Recommended workspace layout (siblings under one parent folder):
+What it does:
+
+- creates `~/.agents/plugins/marketplace.json` when missing
+- adds or updates one local `prime-directive` plugin entry that points at this checkout
+- preserves other marketplace entries
+
+Update flow:
+
+1. Pull the latest changes in this repo.
+2. Re-run `./scripts/install-codex-plugin.sh`.
+3. Restart Codex if the updated skills do not appear immediately.
+
+## Install For Alfred
+
+Install or refresh the workflow:
+
+```bash
+python3 scripts/install-alfred-skill-workflow.py
+```
+
+The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and pastes Codex-native invocation text such as:
+
+- `$plan-task`
+- `$plan-task --deep-research`
+- `$execute-task --preserve-review-artifacts`
+
+Modifiers are plain text owned by the skill conventions. Alfred does not parse them as platform flags.
+
+## Install For Claude
+
+Claude is documented as a secondary manual install path only. This migration does not automate Claude setup.
+
+To expose the same skills globally for Claude:
+
+1. Create `~/.claude/skills` if it does not exist.
+2. Copy or symlink this repo's `skills/` directory into `~/.claude/skills/prime-directive`.
+3. Re-copy or refresh that link after pulling updates from this repo.
+
+Example with a symlink:
+
+```bash
+mkdir -p ~/.claude/skills
+ln -sfn /absolute/path/to/primedirective/skills ~/.claude/skills/prime-directive
+```
+
+If your Claude setup expects a different global skills location, adapt the destination path but keep this repo's `skills/` tree as the source of truth.
+
+## Skill Authoring
+
+Each skill lives in `skills/<skill-name>/SKILL.md`.
+
+Conventions:
+
+- keep the front matter `name` stable; that is the public identifier
+- keep `description` concise and invocation-oriented
+- use `skills/...` paths for internal references
+- keep shared non-invokable references under `skills/shared/`
+
+Codex invocation is explicit:
 
 ```text
-<workspace-root>/
-  primedirective/
-  repo-a/
-  repo-b/
+$plan-task
+$review-chain
+$execute-task
 ```
 
-Run setup from `primedirective/`:
+## Presets And Modifiers
 
-1. Register each consumer repo:
+Alfred presets are defined in `skills/presets.json`.
+
+Each preset should provide:
+
+- `skill` stable skill identifier
+- `title` Alfred-visible label
+- `subtitle` short explanation
+- `paste` exact text Alfred should paste
+
+Preset text should stay Codex-native and explicit. Use modifier conventions like `--deep-research` or `--preserve-review-artifacts` as skill-level textual contracts, not platform-level flags.
+
+## Verification
+
+Useful local checks:
 
 ```bash
-./scripts/add-repo.sh --repo-path ../repo-a
-./scripts/add-repo.sh --repo-path ../repo-b
+python3 scripts/alfred-skill-router.py --format list
+./scripts/install-codex-plugin.sh
+HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
+HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
 ```
 
-2. Sync generated files into all configured repos:
-
-```bash
-./scripts/sync-all.sh
-```
-
-3. Optional one-command PR flow (sync + PR + auto-merge):
-
-```bash
-./scripts/sync-all-automerge.sh
-```
-
-## Overlay behavior
-
-For root files:
-
-1. `AGENTS.md` supports overlays:
-   - `overlay/AGENTS.full.md` fully replaces core.
-   - `overlay/AGENTS.append.md` appends to core.
-2. `CLAUDE.md` is always generated as an exact copy of `AGENTS.md` across all repos.
-
-For skills:
-
-- `core/skills/**` is used by default.
-- If `overlay/skills/**` contains the same relative file, overlay fully overrides that file.
-- Additional files under `overlay/skills/**` are copied as additive files.
-
-## Commands
-
-Run commands from the repository root.
-
-Sync one repo:
-
-```bash
-./scripts/sync-repo.sh --repo-name <repo-name>
-```
-
-Add/register one repo:
-
-```bash
-./scripts/add-repo.sh --repo-path <path-to-repo> [--repo-name <name>]
-```
-
-Sync all repos:
-
-```bash
-./scripts/sync-all.sh
-```
-
-Validate all repos are current:
-
-```bash
-./scripts/validate.sh
-```
-
-Sync and open PRs for all configured repos:
-
-```bash
-./scripts/sync-open-prs.sh
-```
-
-Sync and open PRs for one repo:
-
-```bash
-./scripts/sync-open-prs.sh --repo-name <repo-name>
-```
-
-One-command sync + PR + auto-merge for all configured repos:
-
-```bash
-./scripts/sync-all-automerge.sh
-```
-
-## Alfred
-
-If you want an Alfred hotkey that shows the current `AGENTS` skill commands and pastes the selected trigger, use `scripts/install-alfred-skill-workflow.py` to install the workflow and `docs/alfred-skill-launcher.md` for the setup details.
-
-## Recommended workflow
-
-1. Edit files under `core/`.
-2. Add repo-specific deltas only in `repos/<name>/overlay/`.
-3. Run `scripts/sync-all.sh`.
-4. Commit changes in consumer repos.
-5. Run `scripts/validate.sh` in CI to prevent drift.
-
-## Migration note
-
-This repo now hard-cuts to `skills/**` publishing. During sync, previously generated legacy `rules/*.md` files are removed from consumer repos.
+The installer is expected to be idempotent, and the Alfred router should list both base skills and configured presets.
