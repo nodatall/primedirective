@@ -10,14 +10,14 @@ This mode is not satisfied by a token burst of a few searches. Treat `--deep-res
 
 Treat this as a current-state research task, not a timeless brainstorming task. The prompt and memo must stay anchored to the actual run date and the project's concrete stack, constraints, and risk areas.
 
-## Accepted trigger suffixes
+## Accepted activation suffixes
 
 - `--deep-research`
 - `--preserve-planning-artifacts`
 
-Planning trigger form:
+Planning activation form:
 
-- `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]`
+- `$plan-work [--deep-research] [--preserve-planning-artifacts]` with the source plan in the same request
 
 ## When to run
 

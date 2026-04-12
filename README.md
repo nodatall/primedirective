@@ -29,12 +29,14 @@ What it does:
 
 - creates `~/.agents/plugins/marketplace.json` when missing
 - adds or updates one local `prime-directive` plugin entry that points at this checkout
+- enables `prime-directive@local-marketplace` in `~/.codex/config.toml`
+- symlinks each repo skill into `~/.codex/skills/` for Codex builds that read local skills directly
 - preserves other marketplace entries
 
 Update flow:
 
 1. Pull the latest changes in this repo.
-2. Re-run `./scripts/install-codex-plugin.sh`.
+2. Re-run `./scripts/install-codex-plugin.sh` if you added, renamed, or removed skills.
 3. Restart Codex if the updated skills do not appear immediately.
 
 ## Install For Alfred
@@ -47,8 +49,8 @@ python3 scripts/install-alfred-skill-workflow.py
 
 The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and pastes Codex-native invocation text such as:
 
-- `$plan-task`
-- `$plan-task --deep-research`
+- `$plan-work`
+- `$plan-work --deep-research`
 - `$execute-task --preserve-review-artifacts`
 
 Modifiers are plain text owned by the skill conventions. Alfred does not parse them as platform flags.
@@ -86,7 +88,7 @@ Conventions:
 Codex invocation is explicit:
 
 ```text
-$plan-task
+$plan-work
 $review-chain
 $execute-task
 ```

@@ -45,7 +45,7 @@ Default scope rules:
 - Standard task execution review: `sub-task`
 - One-shot per-sub-task automatic review: `sub-task`
 - End-of-one-shot final review: `full-branch`
-- Explicit `begin review` and `begin review <task-id>`: `full-branch`
+- Explicit `$review-chain` review runs: `full-branch`
 
 ## Review agent topology
 
@@ -75,7 +75,7 @@ Supported trigger suffix:
 
 - `--preserve-review-artifacts`
 
-Behavior when present on `begin task ...`, `begin one-shot ...`, `begin review`, or `begin review <task-id>`:
+Behavior when present on `$execute-task` or `$review-chain`:
 
 - Keep review logs under `tasks/tmp/` after successful completion instead of deleting them.
 - For task execution modes, also keep per-sub-task temp plan docs created under `tasks/tmp/`.
@@ -267,10 +267,10 @@ Create and maintain log files:
 - One-shot final review: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
-Trigger-to-log mapping:
+Activation-to-log mapping:
 
-- `begin review <task-id> [--preserve-review-artifacts]`: use `tasks/tmp/review-task-<task-id>.md`
-- `begin review [--preserve-review-artifacts]`: use `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
+- `$review-chain` with a specific `<task-id>`: use `tasks/tmp/review-task-<task-id>.md`
+- `$review-chain` without a task ID: use `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 - One-shot final automatic full-branch review: use `tasks/tmp/review-task-final-<plan-key>.md`
 
 Round behavior:
@@ -324,9 +324,9 @@ Deletion gate:
 - Provide user-visible summary of latest round.
 - Delete review log after all required checks complete unless `--preserve-review-artifacts` is active for the parent trigger.
 
-## Branch stability for explicit review triggers
+## Branch stability for explicit review activation
 
-For `begin review` and `begin review <task-id>`:
+For `$review-chain` task or ad-hoc runs:
 
 - Do not create, rename, or switch branches.
 - Start at Prompt A.

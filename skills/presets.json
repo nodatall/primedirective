@@ -1,16 +1,16 @@
 {
   "presets": [
     {
-      "skill": "plan-task",
-      "title": "Plan Task: Deep Research",
+      "skill": "plan-work",
+      "title": "Plan Work: Deep Research",
       "subtitle": "Preset for research-backed planning",
-      "paste": "$plan-task --deep-research"
+      "paste": "$plan-work --deep-research"
     },
     {
-      "skill": "plan-task",
-      "title": "Plan Task: Preserve Artifacts",
+      "skill": "plan-work",
+      "title": "Plan Work: Preserve Artifacts",
       "subtitle": "Preset that keeps planning artifacts",
-      "paste": "$plan-task --preserve-planning-artifacts"
+      "paste": "$plan-work --preserve-planning-artifacts"
     },
     {
       "skill": "execute-task",

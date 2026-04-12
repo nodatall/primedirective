@@ -1,18 +1,19 @@
 ---
 name: bootstrap-repo-rules
-description: Use when the user requests `bootstrap repo rules [--with-hooks]` and the repo needs first-time validation tooling such as lint, format, typecheck, test or build verification, CI wiring, and optional local git-hook enforcement.
+description: Bootstrap a repo's first meaningful validation surface, including lint, format, typecheck, test, build, CI, and optional local hooks. Supports `--with-hooks`.
 ---
 
 # Bootstrap Repo Rules Skill
 
 Set up a repo's first meaningful validation surface automatically, matching the repo's actual stack instead of forcing one generic preset.
 
-## Triggers
+## Activation
 
-Accept:
+Invoke explicitly with `$bootstrap-repo-rules`.
 
-- `bootstrap repo rules`
-- `bootstrap repo rules --with-hooks`
+Supported modifier:
+
+- `--with-hooks`
 
 ## Required references
 

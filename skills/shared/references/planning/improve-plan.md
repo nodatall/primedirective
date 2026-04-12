@@ -184,7 +184,7 @@ After plan improvements are complete:
 - Stop and wait for explicit execution trigger.
 - Do not start implementation from planning review.
 
-Accepted build triggers:
+Accepted execution activations:
 
-- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+- `$execute-task` with a specific `<task-id>` and `<plan-key>`
+- `$execute-task` in one-shot mode with a specific `<plan-key>`

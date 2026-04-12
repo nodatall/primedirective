@@ -5,13 +5,13 @@ Guidelines for managing task lists in markdown files.
 ## Execution Entry Gate (Required)
 
 - This execution workflow may start only from:
-  - `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-  - `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+  - explicit `$execute-task` activation with a specific `<task-id>` and `<plan-key>`
+  - explicit `$execute-task` activation in one-shot mode with a specific `<plan-key>`
 - Execution requires:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
-- If those commands or files are missing, do not implement code.
+- If that activation context or those files are missing, do not implement code.
 
 ## Standard task mode
 

@@ -1,17 +1,19 @@
 ---
 name: repo-sweep
-description: Use when the user requests `begin repo review [--preserve-review-artifacts]` and needs a comprehensive full-repository sweep that starts with an adversarial no-edit audit plus the full normal review chain, then pauses on a hard user gate before any fixes begin.
+description: Run a full-repository sweep that starts with an adversarial no-edit audit, then the full review chain, and pauses for approval before fixes. Supports `--preserve-review-artifacts`.
 ---
 
 # Repo Sweep Skill
 
 Run a full-repository sweep that separates adversarial detection from repair. The sweep should expose production risks even when the repo "works" locally, cover the same review components and gates as the normal review chain, present a structured repo-wide report, and only then ask whether fixes should begin.
 
-## Triggers
+## Activation
 
-Accept:
+Invoke explicitly with `$repo-sweep`.
 
-- `begin repo review [--preserve-review-artifacts]`
+Supported modifier:
+
+- `--preserve-review-artifacts`
 
 ## Required references
 

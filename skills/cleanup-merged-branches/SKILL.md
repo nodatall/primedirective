@@ -1,18 +1,17 @@
 ---
 name: cleanup-merged-branches
-description: Use when the user requests `clean up merged branches [<branch-name>]` and needs safe cleanup of merged feature branches locally and on `origin` without deleting active, unmerged, or still-open work.
+description: Safely clean up merged feature branches locally and on `origin` without deleting active, unmerged, or still-open work. Optionally target a specific branch.
 ---
 
 # Cleanup Merged Branches Skill
 
 Clean up merged feature branches safely.
 
-## Trigger
+## Activation
 
-Accept:
+Invoke explicitly with `$cleanup-merged-branches`.
 
-- `clean up merged branches`
-- `clean up merged branches <branch-name>`
+The current user request may optionally name a specific branch. Without one, inspect safe merged candidates using the workflow rules below.
 
 ## Required references
 

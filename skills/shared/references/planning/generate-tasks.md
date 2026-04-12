@@ -73,7 +73,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 13. If the finalized PRD or TDD show missing validation tooling that the plan depends on, add explicit early tasks for that bootstrap work: config files, scripts or task-runner entries, CI wiring, and hook integration where appropriate.
 14. When validation tooling bootstrap is in scope, make later feature tasks depend on the new commands instead of pretending those commands already existed.
 15. Prefer repo-native enforcement in `verify` steps. Use the repo's real lint, format-check, typecheck, test, or build commands when they exist; if they do not exist yet, make the bootstrap task introduce them first.
-16. When that bootstrap is first-time repo setup, call out that the bootstrap task is executable via `bootstrap repo rules [--with-hooks]`.
+16. When that bootstrap is first-time repo setup, call out that the bootstrap task is executable via `$bootstrap-repo-rules [--with-hooks]`.
 17. Save `tasks/tasks-plan-<plan-key>.md`.
 18. Stop and wait for build trigger.
 19. If `--deep-research` is active, fold research-discovered rollout, migration, verification, and cleanup work into the task ordering and sub-task details.
@@ -88,5 +88,5 @@ If something is intentionally omitted from tasks, it must already be explicitly 
 
 Do not start coding after generating the task plan. Build starts only from:
 
-- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+- explicit `$execute-task` activation with a specific `<task-id>` and `<plan-key>`
+- explicit `$execute-task` activation in one-shot mode with a specific `<plan-key>`

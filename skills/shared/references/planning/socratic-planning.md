@@ -10,13 +10,18 @@ Run a planning conversation that strengthens the source plan and prepares three 
 
 Planning is not blank-page generation by default. Treat the user's input as source material to refine, preserve, and normalize.
 
-## Start Trigger
+## Activation Input
 
-Accepted command:
+Accepted activation:
 
-- `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]`
+- `$plan-work`
 
-The quoted payload may contain:
+Supported modifiers:
+
+- `--deep-research`
+- `--preserve-planning-artifacts`
+
+The current user request may contain:
 
 - a rough prompt
 - a partial plan
@@ -28,7 +33,7 @@ Before asking planning questions:
 
 1. Detect the current collaboration mode.
    - If the agent is currently in collaboration `Plan` mode, stop immediately.
-   - Alert the user that `start planning ...` cannot run from collaboration `Plan` mode and they must exit back to collaboration `Default` mode first.
+   - Alert the user that `$plan-work` cannot run from collaboration `Plan` mode and they must exit back to collaboration `Default` mode first.
    - Do not ask planning questions, do not generate artifacts, and do not continue the workflow.
    - This guard refers to the agent's collaboration mode, not the `rich source plan` / `sparse source prompt` intake classification below.
 2. Confirm trigger matches this workflow.
@@ -48,7 +53,7 @@ Before asking planning questions:
 Default assumption:
 
 - Treat the input as a `rich source plan` unless it is clearly sparse.
-- Treat `"<plan-from-llm>"` as the expected source shape, but continue to support sparse prompts when that is what the user provides.
+- Treat a source-plan payload as the expected shape, but continue to support sparse prompts when that is what the user provides.
 
 ## Intake Normalization (Required)
 
@@ -208,12 +213,12 @@ After planning outputs are complete:
 - Stop and wait for explicit build trigger.
 - Do not begin implementation.
 
-Accepted build triggers:
+Accepted execution activations:
 
-- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+- `$execute-task` with a specific `<task-id>` and `<plan-key>`
+- `$execute-task` in one-shot mode with a specific `<plan-key>`
 
-Legacy trigger wording with `prd-key`/`prd-id` must be rejected and corrected.
+Legacy `prd-key`/`prd-id` wording must be rejected and corrected.
 
 ## Validation Scenarios
 

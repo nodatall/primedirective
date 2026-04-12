@@ -1,19 +1,22 @@
 ---
-name: plan-task
-description: Use when the user starts planning with `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]` and needs rich-plan intake, optional staged deep research, targeted Socratic refinement, and normalization into required `prd`, `tdd`, and `tasks-plan` artifacts.
+name: plan-work
+description: Turn a source plan or request into `prd`, `tdd`, and `tasks-plan` artifacts. Supports rich-plan intake, Socratic refinement, `--deep-research`, and `--preserve-planning-artifacts`.
 ---
 
-# Plan Task Skill
+# Plan Work Skill
 
 Execute planning only. Do not write implementation code.
 
-## Trigger
+## Activation
 
-Accept only:
+Invoke explicitly with `$plan-work`.
 
-- `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]`
+Supported modifiers:
 
-The quoted input may be a sparse idea or a fully fleshed-out Codex/Claude plan. Treat rich source plans as the default case.
+- `--deep-research`
+- `--preserve-planning-artifacts`
+
+Treat the current user request as the planning payload. It may be a sparse idea or a fully fleshed-out source plan. Default to rich-plan intake unless the request is clearly sparse.
 
 ## Required references
 
@@ -59,7 +62,7 @@ Load these files before running:
 - Inspect the target repo's existing validation/tooling surface during planning: manifests, scripts or task runners, CI workflows, lint or format configs, typecheck or build configs, and git hook setup.
 - If the target repo lacks meaningful validation or formatting enforcement for its stack, make that gap explicit in PRD, TDD, and tasks-plan instead of assuming those checks exist.
 - When planned work would materially benefit from missing validation tooling, add explicit bootstrap work for the config files, scripts, CI wiring, and hook integration needed for that repo before downstream feature tasks rely on them.
-- When the missing validation/tooling should be installed as first-time repo setup, make the earliest bootstrap task executable via `bootstrap repo rules [--with-hooks]`.
+- When the missing validation/tooling should be installed as first-time repo setup, make the earliest bootstrap task executable via `$bootstrap-repo-rules [--with-hooks]`.
 - Make expected red/green ownership explicit in the generated artifacts: identify which planned sub-tasks should begin with a failing targeted test first, and note only the slices that are expected to need a justified exception.
 - With `--deep-research`, research defaults to `Tech + Delivery`: technical design, migration/rollout/rollback, security/ops, and verification strategy.
 - With `--deep-research`, live web research is mandatory and the working memo must include at least 5 substantive external primary web sources.
@@ -79,9 +82,9 @@ Prefer structured dialog questions when client supports them. Fallback to plain-
 
 ## Hard gate
 
-After planning is complete, wait for one of these implementation triggers:
+After planning is complete, wait for explicit `$execute-task` activation:
 
-- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+- standard mode with a specific `<task-id>` and `<plan-key>`
+- one-shot mode with a specific `<plan-key>`
 
 Do not start coding from planning flow.

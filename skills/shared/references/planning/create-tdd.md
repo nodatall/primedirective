@@ -96,5 +96,5 @@ When the plan involves agents, secrets, untrusted input, or outbound actions, ma
 
 Implementation starts only from:
 
-- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+- explicit `$execute-task` activation with a specific `<task-id>` and `<plan-key>`
+- explicit `$execute-task` activation in one-shot mode with a specific `<plan-key>`

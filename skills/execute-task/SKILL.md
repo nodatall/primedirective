@@ -1,6 +1,6 @@
 ---
 name: execute-task
-description: Use when the user starts implementation with `begin task <task-id> in <plan-key> [--preserve-review-artifacts]` or `begin one-shot in <plan-key> [--preserve-review-artifacts]` and needs end-to-end execution from required PRD, TDD, and tasks-plan artifacts.
+description: Execute planned work from existing `prd`, `tdd`, and `tasks-plan` artifacts. Supports standard task mode, one-shot mode, and `--preserve-review-artifacts`.
 ---
 
 # Execute Task Skill
@@ -11,12 +11,18 @@ Implement task work from the required planning artifact set:
 - `tasks/tdd-<plan-key>.md`
 - `tasks/tasks-plan-<plan-key>.md`
 
-## Triggers
+## Activation
 
-Accept:
+Invoke explicitly with `$execute-task`.
 
-- `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-- `begin one-shot in <plan-key> [--preserve-review-artifacts]`
+Required request context:
+
+- standard mode: a specific `<task-id>` and `<plan-key>`
+- one-shot mode: a specific `<plan-key>` plus a clear one-shot instruction
+
+Supported modifier:
+
+- `--preserve-review-artifacts`
 
 ## Required references
 
@@ -57,8 +63,8 @@ Load these files before running:
 
 ## Mode behavior
 
-- Standard mode (`begin task ...`): single-agent execution, pause for approval between sub-tasks.
-- One-shot mode (`begin one-shot ...`): sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, one main-agent integration plus fresh-review-subagent cycle per sub-task, defer frontend browser evidence to the final branch-wide review, then run one final full-branch review in a fresh review subagent before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
+- Standard mode: single-agent execution, pause for approval between sub-tasks.
+- One-shot mode: sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, one main-agent integration plus fresh-review-subagent cycle per sub-task, defer frontend browser evidence to the final branch-wide review, then run one final full-branch review in a fresh review subagent before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
 
 ## Execution defaults
 
@@ -70,4 +76,4 @@ Load these files before running:
 
 ## Review relationship
 
-Task execution includes automatic review rounds. Manual review runs through `review-chain` triggers (`begin review` or `begin review <task-id>`).
+Task execution includes automatic review rounds. Manual review runs through explicit `$review-chain` activation, optionally scoped to a specific `<task-id>`.

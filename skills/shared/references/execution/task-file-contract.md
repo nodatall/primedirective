@@ -1,14 +1,14 @@
 # Task File Contract
 
-Canonical path and trigger contract for planning, build, and review skills.
+Canonical path and activation contract for planning, execution, and review skills.
 
-## Accepted triggers
+## Accepted activations
 
-- Planning: `start planning "<plan-from-llm>" [--deep-research] [--preserve-planning-artifacts]`
-- Standard task execution: `begin task <task-id> in <plan-key> [--preserve-review-artifacts]`
-- One-shot execution: `begin one-shot in <plan-key> [--preserve-review-artifacts]`
-- Task review: `begin review <task-id> [--preserve-review-artifacts]`
-- Ad-hoc review (default): `begin review [--preserve-review-artifacts]`
+- Planning: `$plan-work` with the source plan or request in the same user message
+- Standard task execution: `$execute-task` with a specific `<task-id>` and `<plan-key>`
+- One-shot execution: `$execute-task` in one-shot mode with a specific `<plan-key>`
+- Task review: `$review-chain` with a specific `<task-id>`
+- Ad-hoc review (default): `$review-chain` without a task ID
 
 ## Plan key resolution
 
@@ -34,7 +34,7 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
 
-By default, planning and review temporary files are deleted after successful completion. If the trigger includes `--preserve-planning-artifacts` or `--preserve-review-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning and review temporary files are deleted after successful completion. If the activation includes `--preserve-planning-artifacts` or `--preserve-review-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 
@@ -90,4 +90,5 @@ Then:
 
 ## Legacy syntax
 
-Do not accept legacy `prd-key`/`prd-id` trigger wording. Ask the user to use `plan-key` commands.
+Do not depend on legacy `start planning`, `begin task`, `begin one-shot`, or `begin review` command phrases.
+Do not accept legacy `prd-key`/`prd-id` wording. Use explicit skill activation plus `plan-key` or `task-id` context instead.

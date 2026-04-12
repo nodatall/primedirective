@@ -1,18 +1,24 @@
 ---
 name: review-chain
-description: Use when the user requests explicit review via `begin review [--preserve-review-artifacts]` (ad-hoc default) or `begin review <task-id> [--preserve-review-artifacts]`, and run the provider-appropriate review protocol with required review logs and gates.
+description: Run explicit branch reviews with optional task scoping. Supports ad-hoc full-branch review, task-scoped review, and `--preserve-review-artifacts`.
 ---
 
 # Review Chain Skill
 
 Run explicit branch review workflows.
 
-## Triggers
+## Activation
 
-Accept:
+Invoke explicitly with `$review-chain`.
 
-- `begin review [--preserve-review-artifacts]`
-- `begin review <task-id> [--preserve-review-artifacts]`
+Request modes:
+
+- ad-hoc review: no task ID provided, review the full branch
+- task-scoped review: user provides a specific `<task-id>`
+
+Supported modifier:
+
+- `--preserve-review-artifacts`
 
 ## Required references
 

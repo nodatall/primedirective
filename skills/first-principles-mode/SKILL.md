@@ -1,6 +1,6 @@
 ---
 name: first-principles-mode
-description: Use when the user requests `engage first-principles mode "..."` and needs a breadth-first, read-only analysis pass that favors conceptual models, system logic, competing hypotheses, and plain-language synthesis before narrow technical judgment or implementation work.
+description: Run a breadth-first, read-only analysis pass that favors conceptual models, competing hypotheses, and plain-language synthesis before implementation judgment.
 ---
 
 # First-Principles Mode Skill
@@ -9,13 +9,11 @@ Run a deliberately broad, read-only analysis pass before offering implementation
 
 Load `skills/first-principles-mode/references/analysis-rubric.md` before starting.
 
-## Trigger
+## Activation
 
-Accept:
+Invoke explicitly with `$first-principles-mode`.
 
-- `engage first-principles mode "..."`
-
-Treat the quoted topic as the analysis target. Do not require the user to restate it in a second command.
+Treat the current user request as the analysis target. Do not require the user to restate it in a second command.
 
 ## Goal
 
@@ -94,6 +92,6 @@ Formatting rules:
 
 ## Example Prompts
 
-- `engage first-principles mode "Explain why this system keeps collapsing under growth"`
-- `engage first-principles mode "Read this repo and tell me what the actual product thesis is"`
-- `engage first-principles mode "Diagnose the root cause of this architecture drift; do not propose fixes yet"`
+- `$first-principles-mode Explain why this system keeps collapsing under growth`
+- `$first-principles-mode Read this repo and tell me what the actual product thesis is`
+- `$first-principles-mode Diagnose the root cause of this architecture drift; do not propose fixes yet`
