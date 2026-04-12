@@ -50,6 +50,7 @@ python3 scripts/install-alfred-skill-workflow.py
 The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and pastes Codex-native invocation text such as:
 
 - `$plan-work`
+- `$plan-work --grill`
 - `$plan-work --deep-research`
 - `$execute-task --preserve-review-artifacts`
 

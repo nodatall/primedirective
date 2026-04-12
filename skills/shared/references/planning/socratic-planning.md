@@ -18,6 +18,7 @@ Accepted activation:
 
 Supported modifiers:
 
+- `--grill`
 - `--deep-research`
 - `--preserve-planning-artifacts`
 
@@ -68,10 +69,21 @@ Rules:
 
 - Do not skip a bucket just because the user's wording is informal.
 - If a bucket is implicit, extract it and restate it plainly.
-- If a bucket is missing, ask the smallest clarifying question needed or choose an explicit default.
+- If a bucket is missing, ask the smallest clarifying question needed before choosing an explicit default, unless the user explicitly asks for a faster default-driven planning pass.
 - Use this intake shape to drive the rest of the planning conversation; do not let important request context remain scattered or unstated.
 - Early in intake, inspect the repo's current validation surface: build manifests, scripts or task runners, CI workflows, lint or format configs, typecheck or build configs, and any git hook setup.
 - Treat missing validation/tooling as planning input, not an implementation surprise. If the repo lacks meaningful checks for its stack, lock that fact into `Context` or `Constraints` and decide whether bootstrap work belongs in scope.
+
+## Decision-Complete Bar
+
+Treat a plan as decision-complete only when all of these are true:
+
+- `Goal`, `Context`, `Constraints`, and `Done when` are explicit enough to implement without guesswork
+- repo validation and tooling expectations have been checked and recorded
+- no unresolved default would materially change architecture, operations, verification, UX behavior, or ownership
+- any required challenge-question categories have been surfaced and resolved
+
+Do not mark a plan decision-complete just because the source plan is long or well-written.
 
 ## Source-Plan Intake Rules
 
@@ -95,6 +107,24 @@ For a sparse source prompt:
 
 Ask one question per turn in plain language.
 
+For each user-facing question:
+
+- give the question first
+- include a short `Recommended answer:` line
+- keep the recommendation concrete enough that the user can accept or correct it quickly
+
+When `--grill` is active:
+
+- treat each answer as a branch point
+- ask the next highest-impact dependent question before drafting artifacts
+- continue until no unresolved branch would materially change implementation, operations, verification, ownership, data shape, or visible UX behavior
+- prefer pressure on weak assumptions over comfort with an adequate-looking draft
+- do not ask repetitive or cosmetic questions just to keep the loop going
+
+Question-answerable-by-repo rule:
+
+- If the question can be answered by exploring the repo, inspect the repo instead of asking the user.
+
 ### Rich-plan mode
 
 Ask only targeted questions that expose:
@@ -110,9 +140,23 @@ Ask only targeted questions that expose:
 
 Do not re-walk the whole plan if the plan already covers it.
 
+#### Minimum question floor
+
+For any non-trivial plan, ask at least one user-facing question before document generation.
+
+For non-trivial rich source plans, ask at least two user-facing questions before document generation unless repo exploration resolves one branch without user input.
+
+The mandatory summary checkpoint does not count toward this minimum question floor.
+
+Artifact drafting gate:
+
+- Do not draft PRD, TDD, or tasks-plan until the minimum question floor has been satisfied.
+- When a challenge-question minimum applies, do not draft PRD, TDD, or tasks-plan until that challenge question has been asked and resolved.
+- When `--grill` is active, do not draft PRD, TDD, or tasks-plan while a material dependent branch remains unresolved.
+
 #### Challenge-question minimum
 
-For any non-trivial rich source plan, ask at least one targeted challenge question before document generation unless the plan is clearly small, local-only, and already decision-complete.
+For any non-trivial rich source plan that touches infrastructure, deployment, scheduling, source-of-truth, or operations, ask at least one targeted challenge question before document generation.
 
 Asking at least one challenge question is required when the plan introduces any of:
 
@@ -129,6 +173,8 @@ It should also probe repo hygiene when that could materially affect delivery qua
 - no lint, format-check, typecheck, or build command despite a sizable code-bearing change
 - no CI validation path for checks the plan expects to rely on
 - no pre-commit or pre-push enforcement when the team expects local guardrails
+
+Do not silently default through these categories.
 
 ### Sparse-plan mode
 
@@ -155,7 +201,9 @@ Rules:
 
 - Ask one follow-up if an answer is vague.
 - If the answer is still vague, choose a reasonable default and state it explicitly.
-- Do not silently default through required challenge-question categories in rich-plan mode.
+- Do not silently default through the minimum question floor or required challenge-question categories in rich-plan mode.
+- Do not draft PRD or TDD before the minimum question floor has been satisfied.
+- With `--grill`, do not stop questioning just because the plan looks coherent at a high level; stop only when the remaining unknowns are genuinely non-material.
 - Do not collapse the summary checkpoint into tasks-plan generation output.
 - End the checkpoint turn with one plain-language question asking what is wrong or missing.
 - Do not start tasks-plan generation until the checkpoint question has been answered or there is nothing left for the user to correct.
@@ -223,7 +271,8 @@ Legacy `prd-key`/`prd-id` wording must be rejected and corrected.
 ## Validation Scenarios
 
 - Rich source plan provided: ask only targeted refinement questions, including at least one challenge question when the plan changes infrastructure, operations, scheduling, or source-of-truth behavior, preserve structure, then generate PRD/TDD/tasks-plan.
-- Decision-complete plan provided: generate PRD/TDD from the locked decisions, present the three-paragraph summary checkpoint, resolve any correction, then generate tasks-plan.
+- Decision-complete plan provided: if the plan is truly trivial and local-only, generate PRD/TDD from the locked decisions, present the three-paragraph summary checkpoint, resolve any correction, then generate tasks-plan. Otherwise still satisfy the minimum question floor before document generation.
+- `--grill` requested: keep following dependent branches until no unresolved branch would materially change implementation shape, readiness criteria, verification strategy, rollout behavior, or visible UX behavior, then generate PRD/TDD/tasks-plan.
 - Deep-research planning requested: lock the intake summary first, generate initial PRD/TDD drafts, run the deep research pass to improve them, present the three-paragraph summary checkpoint from the refined decisions, then generate tasks-plan.
 - Sparse request provided: ask enough questions to reach decision completeness, then generate PRD/TDD/tasks-plan.
 - Source plan contains unresolved ambiguity: convert to explicit default or ask until resolved.

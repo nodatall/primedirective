@@ -8,6 +8,12 @@
     },
     {
       "skill": "plan-work",
+      "title": "Plan Work: Grill",
+      "subtitle": "Preset for aggressive branch-by-branch questioning",
+      "paste": "$plan-work --grill"
+    },
+    {
+      "skill": "plan-work",
       "title": "Plan Work: Preserve Artifacts",
       "subtitle": "Preset that keeps planning artifacts",
       "paste": "$plan-work --preserve-planning-artifacts"

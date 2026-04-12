@@ -1,6 +1,6 @@
 ---
 name: plan-work
-description: Turn a source plan or request into `prd`, `tdd`, and `tasks-plan` artifacts. Supports rich-plan intake, Socratic refinement, `--deep-research`, and `--preserve-planning-artifacts`.
+description: Turn a source plan or request into `prd`, `tdd`, and `tasks-plan` artifacts. Supports rich-plan intake, Socratic refinement, `--grill`, `--deep-research`, and `--preserve-planning-artifacts`.
 ---
 
 # Plan Work Skill
@@ -13,6 +13,7 @@ Invoke explicitly with `$plan-work`.
 
 Supported modifiers:
 
+- `--grill`
 - `--deep-research`
 - `--preserve-planning-artifacts`
 
@@ -39,11 +40,15 @@ Load these files before running:
 3. Run the Socratic refinement loop:
    - one question per turn
    - plain language
+   - for each question, provide a recommended answer or default
    - gap-check, contradiction-check, and assumption-check only
-   - for non-trivial rich plans touching infrastructure, deployment, scheduling, source-of-truth, or operations, ask at least one targeted challenge question before document generation
+   - for any non-trivial plan, ask at least one user-facing question before document generation
+   - for non-trivial rich plans, ask at least two user-facing questions before document generation unless repo exploration resolves one branch without user input
+   - for non-trivial rich plans touching infrastructure, deployment, scheduling, source-of-truth, or operations, at least one of those questions must be a targeted challenge question before document generation
+   - with `--grill`, keep walking materially dependent decision branches until implementation-affecting ambiguity is resolved rather than stopping at the first acceptable draft shape
    - close gaps in `Goal`, `Context`, `Constraints`, and `Done when` before document generation
    - produce a final plain-language summary that a 12-year-old could follow, in exactly three short paragraphs
-4. Generate an initial `tasks/prd-<plan-key>.md` draft using `create-prd.md`.
+4. Only after the required question floor has been satisfied and answered, generate an initial `tasks/prd-<plan-key>.md` draft using `create-prd.md`.
 5. Generate an initial `tasks/tdd-<plan-key>.md` draft using `create-tdd.md`.
 6. If `--deep-research` is present, run `deep-research.md` against the locked decisions plus the source plan and current PRD/TDD drafts, then revise PRD/TDD with the adopted findings.
 7. Present that three-paragraph summary to the user as a standalone checkpoint before task generation and ask if anything is wrong or missing.
@@ -57,9 +62,16 @@ Load these files before running:
 - Always produce all three planning artifacts.
 - Do not use lean-mode branching. Simpler work produces shorter docs naturally.
 - Do not leave `Open questions` or `Open technical questions` in final artifacts.
+- Do not treat the summary checkpoint as a substitute for the required question turns.
+- Do not draft PRD, TDD, or tasks-plan before the required question floor and any required challenge question have been satisfied.
 - Preserve substantive source-plan sections; normalize them without dropping content.
 - Make repo-local implementation or test patterns explicit in the generated artifacts when relevant examples already exist; record what should be followed instead of inventing a new pattern by default.
 - Inspect the target repo's existing validation/tooling surface during planning: manifests, scripts or task runners, CI workflows, lint or format configs, typecheck or build configs, and git hook setup.
+- If a question can be answered from the repo, inspect the repo instead of asking the user.
+- Do not silently choose material defaults before asking at least one relevant question, unless the user explicitly asks for a faster default-driven planning pass.
+- With `--grill`, bias against early convergence: ask the next material question when an answer creates a new implementation, operational, verification, data-shape, or UX branch.
+- With `--grill`, do not stop after one good answer if a dependent branch remains unresolved.
+- With `--grill`, avoid cosmetic or repetitive questioning; keep the pressure on decisions that would change design, sequencing, scope, verification, or ownership.
 - If the target repo lacks meaningful validation or formatting enforcement for its stack, make that gap explicit in PRD, TDD, and tasks-plan instead of assuming those checks exist.
 - When planned work would materially benefit from missing validation tooling, add explicit bootstrap work for the config files, scripts, CI wiring, and hook integration needed for that repo before downstream feature tasks rely on them.
 - When the missing validation/tooling should be installed as first-time repo setup, make the earliest bootstrap task executable via `$bootstrap-repo-rules [--with-hooks]`.
