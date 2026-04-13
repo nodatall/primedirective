@@ -27,6 +27,7 @@ Run this only after Socratic refinement has locked:
 - `Context`
 - `Constraints`
 - `Done when`
+- the standalone summary checkpoint, unless research later forces a material summary revision
 
 Run it after generating initial drafts of:
 
@@ -116,6 +117,7 @@ Do not send a generic "latest best practices" prompt. Research must be scoped to
    - update PRD/TDD before tasks-plan generation
    - distill the plan-specific checklist items and decisions worth carrying into this plan's execution
 19. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
+20. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation.
 
 ## Minimum evidence bar
 

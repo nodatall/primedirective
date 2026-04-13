@@ -48,14 +48,15 @@ Load these files before running:
    - with `--grill`, keep walking materially dependent decision branches until implementation-affecting ambiguity is resolved rather than stopping at the first acceptable draft shape
    - close gaps in `Goal`, `Context`, `Constraints`, and `Done when` before document generation
    - produce a final plain-language summary that a 12-year-old could follow, in exactly three short paragraphs
-4. Only after the required question floor has been satisfied and answered, generate an initial `tasks/prd-<plan-key>.md` draft using `create-prd.md`.
-5. Generate an initial `tasks/tdd-<plan-key>.md` draft using `create-tdd.md`.
-6. If `--deep-research` is present, run `deep-research.md` against the locked decisions plus the source plan and current PRD/TDD drafts, then revise PRD/TDD with the adopted findings.
-7. Present that three-paragraph summary to the user as a standalone checkpoint before task generation and ask if anything is wrong or missing.
-8. If the user corrects the summary, resolve the correction in PRD/TDD before continuing.
-9. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
-10. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo when preserved.
-11. Stop and wait for implementation trigger.
+4. Present that three-paragraph summary to the user as a standalone checkpoint before any artifact generation and ask if anything is wrong or missing.
+5. If the user corrects the summary, resolve the correction in the locked decisions before continuing.
+6. Generate an initial `tasks/prd-<plan-key>.md` draft using `create-prd.md`.
+7. Generate an initial `tasks/tdd-<plan-key>.md` draft using `create-tdd.md`.
+8. If `--deep-research` is present, run `deep-research.md` against the locked decisions plus the source plan and current PRD/TDD drafts, then revise PRD/TDD with the adopted findings.
+9. If `--deep-research` materially changes the summary's meaning, present one revised standalone summary checkpoint before continuing.
+10. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
+11. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo when preserved.
+12. Stop and wait for implementation trigger.
 
 ## Planning rules
 
@@ -63,7 +64,9 @@ Load these files before running:
 - Do not use lean-mode branching. Simpler work produces shorter docs naturally.
 - Do not leave `Open questions` or `Open technical questions` in final artifacts.
 - Do not treat the summary checkpoint as a substitute for the required question turns.
+- Make the summary checkpoint a text-only turn. Do not write files or generate artifacts in the same response as that checkpoint.
 - Do not draft PRD, TDD, or tasks-plan before the required question floor and any required challenge question have been satisfied.
+- Do not draft PRD, TDD, or tasks-plan until the checkpoint question has been answered or there is nothing left for the user to correct.
 - Preserve substantive source-plan sections; normalize them without dropping content.
 - Make repo-local implementation or test patterns explicit in the generated artifacts when relevant examples already exist; record what should be followed instead of inventing a new pattern by default.
 - Inspect the target repo's existing validation/tooling surface during planning: manifests, scripts or task runners, CI workflows, lint or format configs, typecheck or build configs, and git hook setup.

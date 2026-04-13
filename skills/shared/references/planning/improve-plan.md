@@ -57,7 +57,7 @@ Evaluate and improve:
 - Usefulness of success metrics or guardrails.
 - Quality and stability of `FR-*` requirements.
 - Whether the PRD plain-language summary is clear enough for non-technical review.
-- Whether the standalone three-paragraph summary checkpoint happened before tasks-plan generation.
+- Whether the standalone three-paragraph summary checkpoint happened as a separate text-only turn before artifact generation started.
 
 ### 3. TDD quality review
 
@@ -137,7 +137,7 @@ The improved plan must explicitly satisfy all of these:
 13. Any `--deep-research` pass includes live web research, the external-source minimum, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
 14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
 15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
-16. The user saw a separate three-paragraph plain-language checkpoint before tasks-plan drafting started.
+16. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started.
 
 ## For every issue identified
 

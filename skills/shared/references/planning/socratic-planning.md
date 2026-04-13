@@ -189,11 +189,11 @@ Ask example or failure-path questions only when they materially clarify one of t
 
 ## Socratic Output Requirements
 
-Before tasks-plan generation, produce and lock:
+Before any planning artifact generation, produce and lock:
 
 1. an intake summary with `Goal`, `Context`, `Constraints`, and `Done when`
 2. a final plain-language summary that a 12-year-old could follow, written as exactly three short paragraphs
-3. a standalone summary checkpoint turn that shows those three paragraphs before tasks-plan drafting starts
+3. a standalone, text-only summary checkpoint turn that shows those three paragraphs before any artifact drafting starts
 4. resolved decisions or explicit defaults for anything that would otherwise remain ambiguous
 5. confirmation that important source-plan content will survive normalization
 
@@ -204,9 +204,9 @@ Rules:
 - Do not silently default through the minimum question floor or required challenge-question categories in rich-plan mode.
 - Do not draft PRD or TDD before the minimum question floor has been satisfied.
 - With `--grill`, do not stop questioning just because the plan looks coherent at a high level; stop only when the remaining unknowns are genuinely non-material.
-- Do not collapse the summary checkpoint into tasks-plan generation output.
+- Do not collapse the summary checkpoint into PRD, TDD, or tasks-plan generation output.
 - End the checkpoint turn with one plain-language question asking what is wrong or missing.
-- Do not start tasks-plan generation until the checkpoint question has been answered or there is nothing left for the user to correct.
+- Do not start PRD, TDD, or tasks-plan generation until the checkpoint question has been answered or there is nothing left for the user to correct.
 - Stop when the plan is decision-complete.
 - Prefer structured dialog questions when client supports them.
 - Fallback to plain-text one-question turns when dialog is unavailable.
@@ -270,11 +270,11 @@ Legacy `prd-key`/`prd-id` wording must be rejected and corrected.
 
 ## Validation Scenarios
 
-- Rich source plan provided: ask only targeted refinement questions, including at least one challenge question when the plan changes infrastructure, operations, scheduling, or source-of-truth behavior, preserve structure, then generate PRD/TDD/tasks-plan.
-- Decision-complete plan provided: if the plan is truly trivial and local-only, generate PRD/TDD from the locked decisions, present the three-paragraph summary checkpoint, resolve any correction, then generate tasks-plan. Otherwise still satisfy the minimum question floor before document generation.
-- `--grill` requested: keep following dependent branches until no unresolved branch would materially change implementation shape, readiness criteria, verification strategy, rollout behavior, or visible UX behavior, then generate PRD/TDD/tasks-plan.
-- Deep-research planning requested: lock the intake summary first, generate initial PRD/TDD drafts, run the deep research pass to improve them, present the three-paragraph summary checkpoint from the refined decisions, then generate tasks-plan.
-- Sparse request provided: ask enough questions to reach decision completeness, then generate PRD/TDD/tasks-plan.
+- Rich source plan provided: ask only targeted refinement questions, including at least one challenge question when the plan changes infrastructure, operations, scheduling, or source-of-truth behavior, preserve structure, present the summary checkpoint, then generate PRD/TDD/tasks-plan.
+- Decision-complete plan provided: if the plan is truly trivial and local-only, present the three-paragraph summary checkpoint from the locked decisions, resolve any correction, then generate PRD/TDD and tasks-plan. Otherwise still satisfy the minimum question floor before document generation.
+- `--grill` requested: keep following dependent branches until no unresolved branch would materially change implementation shape, readiness criteria, verification strategy, rollout behavior, or visible UX behavior, then present the summary checkpoint before generating PRD/TDD/tasks-plan.
+- Deep-research planning requested: lock the intake summary first, present the three-paragraph summary checkpoint from the locked decisions, generate initial PRD/TDD drafts, run the deep research pass to improve them, and present one revised standalone checkpoint only if research materially changes the summary meaning before generating tasks-plan.
+- Sparse request provided: ask enough questions to reach decision completeness, present the summary checkpoint, then generate PRD/TDD/tasks-plan.
 - Source plan contains unresolved ambiguity: convert to explicit default or ask until resolved.
 - Source plan contains detailed route/schema/test content: preserve it during normalization.
 - No build trigger after planning: hard stop with accepted build commands only.
