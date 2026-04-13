@@ -5,8 +5,8 @@ Guidelines for managing task lists in markdown files.
 ## Execution Entry Gate (Required)
 
 - This execution workflow may start only from:
-  - explicit `$execute-task` activation with a specific `<task-id>` and `<plan-key>`
-  - explicit `$execute-task` activation in one-shot mode with a specific `<plan-key>`
+  - explicit `$execute-task` activation with a specific `<task-id>` and optional `<plan-key>` when the key can be inferred
+  - explicit `$execute-task --one-shot` activation with optional `<plan-key>` when the key can be inferred
 - Execution requires:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
@@ -16,12 +16,15 @@ Guidelines for managing task lists in markdown files.
 ## Standard task mode
 
 - Standard mode is single-agent.
+- Standard mode requires `<task-id>` and may infer `<plan-key>` when `/tasks/` contains exactly one complete planning set.
 - Work one sub-task at a time starting from the requested task scope.
 - Stop after each completed sub-task for user approval.
 
 ## One-shot mode
 
 - One-shot mode is a sequential worker-subagent loop.
+- One-shot mode is activated with `--one-shot`.
+- One-shot mode may infer `<plan-key>` when `/tasks/` contains exactly one complete planning set.
 - One-shot review runs use one fresh review subagent per review round.
 - One-shot execution scope is the entire unchecked remainder of `tasks/tasks-plan-<plan-key>.md`, not just the current parent task, milestone, or section.
 - If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, move them onto the new feature branch and commit them before the first implementation sub-task.

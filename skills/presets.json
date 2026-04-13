@@ -20,6 +20,12 @@
     },
     {
       "skill": "execute-task",
+      "title": "Execute Task: One Shot",
+      "subtitle": "Preset for running the full remaining task plan",
+      "paste": "$execute-task --one-shot"
+    },
+    {
+      "skill": "execute-task",
       "title": "Execute Task: Preserve Review Artifacts",
       "subtitle": "Preset that keeps review artifacts",
       "paste": "$execute-task --preserve-review-artifacts"

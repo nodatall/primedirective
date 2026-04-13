@@ -263,8 +263,8 @@ After planning outputs are complete:
 
 Accepted execution activations:
 
-- `$execute-task` with a specific `<task-id>` and `<plan-key>`
-- `$execute-task` in one-shot mode with a specific `<plan-key>`
+- `$execute-task` with a specific `<task-id>` and optional `<plan-key>` when it can be inferred from `/tasks/`
+- `$execute-task --one-shot` with optional `<plan-key>` when it can be inferred from `/tasks/`
 
 Legacy `prd-key`/`prd-id` wording must be rejected and corrected.
 

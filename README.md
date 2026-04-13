@@ -52,6 +52,7 @@ The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and paste
 - `$plan-work`
 - `$plan-work --grill`
 - `$plan-work --deep-research`
+- `$execute-task --one-shot`
 - `$execute-task --preserve-review-artifacts`
 
 Modifiers are plain text owned by the skill conventions. Alfred does not parse them as platform flags.

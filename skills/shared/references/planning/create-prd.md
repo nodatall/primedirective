@@ -84,5 +84,5 @@ Do not drop product-facing detail just because the source heading name differs f
 
 Implementation starts only from:
 
-- explicit `$execute-task` activation with a specific `<task-id>` and `<plan-key>`
-- explicit `$execute-task` activation in one-shot mode with a specific `<plan-key>`
+- explicit `$execute-task` activation with a specific `<task-id>` and optional `<plan-key>` when it can be inferred from `/tasks/`
+- explicit `$execute-task --one-shot` activation with optional `<plan-key>` when it can be inferred from `/tasks/`

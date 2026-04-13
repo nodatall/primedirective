@@ -5,14 +5,23 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
-- Standard task execution: `$execute-task` with a specific `<task-id>` and `<plan-key>`
-- One-shot execution: `$execute-task` in one-shot mode with a specific `<plan-key>`
+- Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`
+- One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`
 - Task review: `$review-chain` with a specific `<task-id>`
 - Ad-hoc review (default): `$review-chain` without a task ID
 
 ## Plan key resolution
 
-Use `<plan-key>` directly for both standard and one-shot execution.
+Resolve `<plan-key>` in this order for both standard and one-shot execution:
+
+1. If the activation includes an explicit `<plan-key>`, use it.
+2. Otherwise inspect `/tasks/` for complete planning sets:
+   - `tasks/prd-<plan-key>.md`
+   - `tasks/tdd-<plan-key>.md`
+   - `tasks/tasks-plan-<plan-key>.md`
+3. If exactly one `<plan-key>` has all three files, infer that key and continue.
+4. If no complete planning set exists, stop immediately and tell the user planning is incomplete.
+5. If more than one complete planning set exists, stop and ask for an explicit `<plan-key>`.
 
 Resolve files exactly as:
 
@@ -57,14 +66,16 @@ Then:
 
 ### Standard mode
 
-- Requires `<task-id>` and `<plan-key>`.
+- Requires `<task-id>`.
+- `<plan-key>` may be explicit or inferred through the resolution rules above.
 - Executes the requested task/sub-task in the main agent.
 - Pause for user confirmation between sub-tasks.
 - If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs and review logs.
 
 ### One-shot mode
 
-- Requires `<plan-key>`.
+- Requires `--one-shot`.
+- `<plan-key>` may be explicit or inferred through the resolution rules above.
 - Start at first unchecked sub-task and continue in file order.
 - If kickoff begins with only the current plan's required planning artifacts uncommitted, carry them onto the new feature branch and commit them there before the first implementation sub-task begins.
 - Continue until there are no unchecked sub-tasks left anywhere in the file; do not stop at parent-task or section boundaries.

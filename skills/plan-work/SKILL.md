@@ -99,7 +99,7 @@ Prefer structured dialog questions when client supports them. Fallback to plain-
 
 After planning is complete, wait for explicit `$execute-task` activation:
 
-- standard mode with a specific `<task-id>` and `<plan-key>`
-- one-shot mode with a specific `<plan-key>`
+- standard mode with a specific `<task-id>` and optional `<plan-key>` when it can be inferred from `/tasks/`
+- one-shot mode with `--one-shot` and optional `<plan-key>` when it can be inferred from `/tasks/`
 
 Do not start coding from planning flow.

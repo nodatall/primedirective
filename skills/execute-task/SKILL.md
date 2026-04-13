@@ -1,6 +1,6 @@
 ---
 name: execute-task
-description: Execute planned work from existing `prd`, `tdd`, and `tasks-plan` artifacts. Supports standard task mode, one-shot mode, and `--preserve-review-artifacts`.
+description: Execute planned work from existing `prd`, `tdd`, and `tasks-plan` artifacts. Supports standard task mode, `--one-shot`, and `--preserve-review-artifacts`.
 ---
 
 # Execute Task Skill
@@ -17,12 +17,20 @@ Invoke explicitly with `$execute-task`.
 
 Required request context:
 
-- standard mode: a specific `<task-id>` and `<plan-key>`
-- one-shot mode: a specific `<plan-key>` plus a clear one-shot instruction
+- standard mode: a specific `<task-id>` plus `<plan-key>` when it cannot be inferred
+- one-shot mode: `--one-shot` plus `<plan-key>` when it cannot be inferred
 
-Supported modifier:
+Supported modifiers:
 
+- `--one-shot`
 - `--preserve-review-artifacts`
+
+Activation examples:
+
+- Standard mode with explicit key: `$execute-task task-id=<task-id> plan-key=<plan-key>`
+- Standard mode with inferred key: `$execute-task task-id=<task-id>`
+- One-shot with explicit key: `$execute-task --one-shot plan-key=<plan-key>`
+- One-shot with inferred key: `$execute-task --one-shot`
 
 ## Required references
 
