@@ -118,10 +118,11 @@ Rules:
 12. If `--preserve-review-artifacts` is present, keep `tasks/tmp/` plan and review files created during execution and list them in the final handoff.
 13. Before producing a terminal handoff in one-shot mode, re-open the task file and verify there are no remaining unchecked sub-tasks.
 14. In one-shot mode, the only valid terminal outcomes are:
-    - all remaining unchecked sub-tasks completed, reviewed, finalized, and handed off
+    - all remaining unchecked sub-tasks completed, reviewed, finalized, the feature branch pushed, the PR opened, and then handed off with the PR URL
     - execution blocked by an unresolved issue that is explicitly described, with the exact next required user action
 15. Before any user-visible one-shot completion message, run a liveness check against `tasks/tasks-plan-<plan-key>.md`: if any `- [ ]` entry remains, do not hand off and do not summarize as a stopping point.
 16. Do not emit a one-shot progress update between sub-tasks. Keep executing silently unless a real blocker requires a user-visible interruption.
 17. Treat a recap shaped like `completed items + passing verifies + already started next task + remaining unchecked work` as a terminal-style handoff attempt. Suppress it and continue execution.
 18. Assume any user-visible one-shot message before Step 9 finalization may end or stall the run, so intermediate status reporting is forbidden.
 19. Before final handoff, run the relevant repo-defined validation commands for the touched surface when they exist, such as lint, format-check, typecheck, test, and build. If the current plan added that tooling, use the newly introduced commands and mention any commands that remain intentionally absent.
+20. Treat branch publication and PR creation as explicit finalization work, not implied behavior. If the environment supports native PR actions, use them; otherwise push with git and open the PR with a concrete provider CLI.

@@ -366,6 +366,7 @@ Operational translation:
 - `git rebase origin/main`
 - Resolve conflicts and rerun relevant tests.
 - For task-based work, update checklist and relevant files.
+- Confirm the current branch is a dedicated feature branch, not `main`.
 - For one-shot task-based work, re-open `tasks/tasks-plan-<plan-key>.md` immediately before terminal handoff and confirm no unchecked sub-tasks remain anywhere in the file.
 - Treat this re-opened task-file check as a hard liveness gate, not as an invitation to summarize partial progress. If unchecked sub-tasks remain, return to execution immediately.
 - Treat user-visible recap patterns such as completed-item lists, passing-verify lists, "already started X", or "remaining unchecked work is Y" as terminal-style handoff attempts when they would be the last message before more execution. If unchecked sub-tasks remain, do not emit that recap; continue execution instead.
@@ -375,7 +376,10 @@ Operational translation:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
-- Open PR with summary, test evidence, and known risks/follow-ups.
+- Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`.
+- Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`.
+- Include summary, test evidence, and known risks/follow-ups in the PR body.
+- Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation.
 - Only after these steps may one-shot execution produce its terminal completion handoff.
 
 ## Step 10: Post-Merge Branch Cleanup
