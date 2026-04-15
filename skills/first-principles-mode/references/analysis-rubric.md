@@ -1,6 +1,6 @@
 # Analysis Rubric
 
-Use this rubric to make the analysis broader, more faithful, and more mechanism-driven than a normal high-effort answer.
+Use this rubric to make the analysis deeper, broader, and more faithful than a normal high-effort answer.
 
 ## Core Standard
 
@@ -8,10 +8,13 @@ Optimize for explanation quality, not just answer length.
 
 The answer should:
 
+- widen the search space before converging
 - explain how the system works
 - identify why the observed behavior emerges
-- compare plausible explanations before settling
-- separate evidence from inference
+- compare materially different plausible explanations or approaches before settling
+- separate evidence from inference and synthesis
+- try to falsify the leading view before finalizing it
+- report material uncertainty honestly
 - stop before execution
 
 Run the full analysis internally, but do not assume the user wants to see every analysis stage.
@@ -26,6 +29,7 @@ Treat the rubric as an internal working process, not a mandatory output template
 - Expand only when ambiguity, confidence, or stakes justify the extra detail.
 - Do not emit a long heading stack just because the internal process had many steps.
 - Prefer a memo or argument shape over a report shape.
+- Do not mistake a polished visible answer for a sufficiently deep internal search.
 
 ## Breadth Pass
 
@@ -40,6 +44,12 @@ Survey the smallest set of materials that reveals the shape of the whole system:
 - CI, deploy, or operational wiring if the question touches growth, failures, or reliability
 
 Do not spend most of the time inside one file until the broader map is clear.
+
+Infer the problem shape before committing to a reasoning frame.
+
+- Determine whether the task is mainly diagnostic, explanatory, comparative, design-oriented, or something else.
+- Let the evidence refine the framing if the initial user framing appears incomplete or misleading.
+- Use the smallest analysis frame that still captures the real mechanism.
 
 ## Internal Decomposition
 
@@ -60,7 +70,7 @@ Only ask the user a follow-up question when the ambiguity is material and cannot
 
 Do not settle on the first plausible explanation.
 
-When the prompt is diagnostic or interpretive:
+When more than one answer is plausible:
 
 - generate 2-4 candidate explanations
 - collect evidence that supports or weakens each one
@@ -68,6 +78,12 @@ When the prompt is diagnostic or interpretive:
 - say when the evidence is mixed
 
 If one explanation wins because it fits the code but not the docs, say so.
+
+Candidate explanations should be materially different.
+
+- Do not count cosmetic reformulations of the same story as distinct hypotheses.
+- Prefer alternatives that would change the conclusion, decision, or recommended next step.
+- If the correct answer is likely simple and singular, say so instead of manufacturing extra branches.
 
 ## Evidence Standard
 
@@ -86,6 +102,14 @@ Mark the difference between:
 - inference: what that likely means
 - synthesis: the best combined explanation
 
+Run at least one explicit disconfirmation pass.
+
+- Ask what evidence would weaken the current best view.
+- Look for hidden constraints, incentives, or boundary conditions that the leading explanation may be skipping.
+- If the prompt is about finding alternatives, look for options that change the shape of the problem rather than merely tuning the current approach.
+
+Use reasoning effort for search and comparison first, not for elaborating one early theory.
+
 ## Plain-Language First
 
 Lead with a short explanation a non-specialist could follow.
@@ -103,11 +127,24 @@ Default user-facing shape:
 - one short verdict paragraph
 - 4-7 high-signal causal paragraphs or bullets
 - evidence attached inline where each claim needs it
+- a brief confidence or uncertainty note when it materially affects the answer
 - an optional short closing on implications or fix order when the user wants that outcome
 
 Only add explicit sections for assumptions, competing hypotheses, hidden constraints, risks, or unresolved questions when they materially affect the conclusion.
 
 The ideal reading experience should feel like a strong memo from a thoughtful engineer, not a filled-in diagnostic template.
+
+## Anti-Patterns
+
+Watch for these failure modes:
+
+- broad-sounding language without a real breadth pass
+- polished prose that never tested alternatives
+- multiple hypotheses that are really the same idea wearing different words
+- excessive detail that does not change the conclusion
+- overstated confidence from partial evidence
+- staying trapped inside the initial framing when the deeper issue is elsewhere
+- answering with symptoms, preferences, or implementation details instead of mechanism
 
 ## Stop Gate
 
