@@ -110,7 +110,7 @@ Final review exception:
 6. Before coding, search the repo for similar implementations, tests, and validation commands or config, record the chosen local pattern in `reference_patterns`, and justify any decision to introduce a new pattern instead of following the existing one.
 7. Default to a red/green loop for code-bearing, practically testable slices: add or update the targeted test first, run the failure-first command, then implement. Only skip that order when the recorded `test_first_plan` exception makes the reason explicit.
 8. Update the contract when implementation or review reveals a better-scoped slice, a better local pattern, or a missing verification step.
-9. Delete temp plan docs only after they are no longer needed for review: after the standard sub-task review completes, or after the final full-branch review completes in one-shot mode, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
+9. Delete temp plan docs only after they are no longer needed for review and any requested harness drift check has completed: after the standard sub-task review completes, or after the final full-branch review and drift report complete in one-shot mode, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
 
 ## Pre-coding contract critique
 
@@ -159,7 +159,7 @@ Rules:
 
 1. Create `tasks/archive/<yyyy-mm-dd>-<plan-key>/` if missing, using the local current date in ISO format (`YYYY-MM-DD`).
 2. Move all three required files after final completion is confirmed.
-3. Perform cleanup before opening the final task-based PR.
+3. Perform cleanup before opening the final task-based PR, except when `--check-harness-drift` is active; in that case, run final review, generate the drift report while artifacts are still available, then perform cleanup before the final handoff or PR.
 
 ## AI Instructions
 
@@ -185,4 +185,4 @@ Rules:
 18. Assume any user-visible one-shot message before Step 9 finalization may end or stall the run, so intermediate status reporting is forbidden.
 19. Before final handoff, run the relevant repo-defined validation commands for the touched surface when they exist, such as lint, format-check, typecheck, test, and build. In one-shot mode, this final validation is where deferred broad checks should happen. If the current plan added that tooling, use the newly introduced commands and mention any commands that remain intentionally absent.
 20. Treat branch publication and PR creation as explicit finalization work, not implied behavior. If the environment supports native PR actions, use them; otherwise push with git and open the PR with a concrete provider CLI.
-21. For substantial one-shot runs, include a short harness load-bearing note in the final handoff: which contract, review, browser, or production-readiness checks caught real issues; which were not applicable; and whether a lighter or heavier harness would be appropriate for similar future work. Do not create a separate artifact unless the user asked for preserved review artifacts.
+21. For substantial one-shot runs, and for any run with `--check-harness-drift`, include the compact harness drift check from `skills/shared/references/harness-drift.md` in the final handoff. When `--check-harness-drift` is active, keep planning artifacts, sub-task contracts, review logs, and relevant temp files available until the drift report is generated, then run normal cleanup unless preservation was requested. Do not create a separate artifact unless the user asked for preserved review artifacts.

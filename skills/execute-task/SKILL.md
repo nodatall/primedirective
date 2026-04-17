@@ -1,6 +1,6 @@
 ---
 name: execute-task
-description: Execute planned work from existing `prd`, `tdd`, and `tasks-plan` artifacts. Supports standard task mode, `--one-shot`, `--stay-on-current-branch`, and `--preserve-review-artifacts`.
+description: Execute planned work from existing `prd`, `tdd`, and `tasks-plan` artifacts. Supports standard task mode, `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, and `--preserve-review-artifacts`.
 ---
 
 # Execute Task Skill
@@ -24,6 +24,7 @@ Supported modifiers:
 
 - `--one-shot`
 - `--stay-on-current-branch`
+- `--check-harness-drift`
 - `--preserve-review-artifacts`
 
 Activation examples:
@@ -34,6 +35,7 @@ Activation examples:
 - One-shot with explicit key: `$execute-task --one-shot plan-key=<plan-key>`
 - One-shot with inferred key: `$execute-task --one-shot`
 - One-shot on the current branch: `$execute-task --one-shot --stay-on-current-branch plan-key=<plan-key>`
+- One-shot with harness drift check: `$execute-task --one-shot --check-harness-drift plan-key=<plan-key>`
 
 ## Required references
 
@@ -43,6 +45,7 @@ Load these files before running:
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
+- `skills/shared/references/harness-drift.md`
 
 ## Workflow
 
@@ -85,11 +88,12 @@ Load these files before running:
 
 - Treat a failing-test-first red/green loop as the default for code-bearing, practically testable slices.
 - A test-first exception is allowed only when a failing-first loop is not practical for that exact slice; record the exception reason in `tasks/tmp/plan-task-<task-id>.md` before implementation starts.
-- New contract critique, acceptance checks, and review calibration are agent-owned. Do not add mandatory human approval steps or extra user-facing checkpoints to use them.
+- New contract critique, acceptance checks, review calibration, and harness drift checks are agent-owned. Do not add mandatory human approval steps or extra user-facing checkpoints to use them.
 - Before coding, search the repo for similar implementations and tests, follow an existing local pattern when it is a good fit, and record why any new pattern or deviation is necessary.
 - Before coding, inspect the repo's actual validation commands and config rather than assuming standard names exist.
 - During one-shot execution, prefer concise command output: use `git diff --stat`, `git diff --name-only`, and targeted hunk reads before large full-diff dumps; only print broad diffs when they are needed for a concrete decision or final review.
 - During one-shot execution, do not pass full PRD, TDD, and task-plan files to every worker by default. The main agent owns full-plan coherence and gives workers compact implementation packets; workers open full artifacts only through the escape hatches in `task-management.md`.
+- When `--check-harness-drift` is present, keep planning artifacts, sub-task contracts, review logs, and relevant temp files available through final review and drift-report generation. Include the compact drift report from `harness-drift.md` in the final handoff, then run normal cleanup unless `--preserve-review-artifacts` is also present or the user explicitly asks to keep artifacts.
 - Do not invent lint, format, hook, or similar repo tooling mid-execution unless the planned task explicitly includes introducing that tooling or the user asks for it.
 
 ## Review relationship

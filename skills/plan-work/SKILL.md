@@ -32,6 +32,7 @@ Load these files before running:
 - `skills/shared/references/planning/generate-tasks.md`
 - `skills/shared/references/planning/improve-plan.md`
 - `skills/shared/references/execution/task-file-contract.md`
+- `skills/shared/references/harness-drift.md`
 
 ## Workflow
 
@@ -68,6 +69,7 @@ Load these files before running:
 - With `--direct`, skip the planning question loop, minimum question floors, challenge-question requirement, and standalone summary checkpoint. Ask only when the core objective is missing, contradictory, or impossible to infer without likely changing implementation shape.
 - With `--direct`, write a concise `Source Interpretation` or assumptions note into the generated artifacts instead of stopping for low-impact clarification.
 - With `--from-thread`, preserve the important plan decisions already discussed in the current conversation and treat them as source material.
+- If prior harness drift notes are present in the source material, preserved artifacts, or archived handoffs, use them as calibration input for task granularity and verification expectations. Do not run a drift audit during planning and do not add user checkpoints because of drift notes.
 - Do not use lean-mode branching. Simpler work produces shorter docs naturally.
 - Do not leave `Open questions` or `Open technical questions` in final artifacts.
 - When `--direct` is not present, do not treat the summary checkpoint as a substitute for the required question turns.

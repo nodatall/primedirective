@@ -332,6 +332,7 @@ Per prompt entry include:
 - concrete findings
 - fixes made
 - tests run
+- `harness_lift` entries only when a harness component changed implementation, caught a real issue, prevented likely drift, or provided meaningful confidence not available from cheaper checks
 - applicability when prompt is optional
 
 Scope metadata rules:
@@ -350,7 +351,7 @@ Completion gates:
 Deletion gate:
 
 - Provide user-visible summary of latest round.
-- Delete review log after all required checks complete unless `--preserve-review-artifacts` is active for the parent trigger.
+- Delete review log after all required checks and any requested harness drift report complete unless `--preserve-review-artifacts` is active for the parent trigger.
 
 ## Branch stability for explicit review activation
 
@@ -370,7 +371,7 @@ For standard task execution:
 - When subagents are available, execute that `sub-task` review round in one fresh review subagent spawned by the main agent after implementation completes.
 - Review only the current sub-task delta against `HEAD`, not the entire branch history.
 - Apply fixes and rerun relevant tests before creating the sub-task commit.
-- Delete sub-task review logs and temp plan docs after successful completion unless `--preserve-review-artifacts` is active.
+- Delete sub-task review logs and temp plan docs after successful completion unless `--preserve-review-artifacts` is active or `--check-harness-drift` still needs them for final reporting.
 
 For one-shot execution only:
 
@@ -382,7 +383,7 @@ For one-shot execution only:
 - Start final review scope discovery with concise commands such as `git diff --stat`, `git diff --name-only`, and targeted hunk reads. Do not re-dump every large diff or replay every historical focused test unless evidence is missing, stale, or contradicted.
 - Review the focused verification evidence recorded during the implementation loop, then run the strongest practical broad validation needed for final confidence.
 - If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.
-- Keep the final full-branch review log when `--preserve-review-artifacts` is active.
+- Keep the final full-branch review log until any requested harness drift report is generated. Keep it afterward only when `--preserve-review-artifacts` is active.
 - Do not issue a terminal user handoff before this final full-branch review and Step 9 finalization are complete, unless a real blocker prevents continuation.
 
 ## Step 9: Finalization

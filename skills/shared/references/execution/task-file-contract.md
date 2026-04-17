@@ -5,10 +5,10 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
-- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread
+- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--check-harness-drift` and/or `--preserve-artifacts`
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
-- Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch`
-- One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch`
+- Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
+- One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
 - Task review: `$review-chain` with a specific `<task-id>`
 - Ad-hoc review (default): `$review-chain` without a task ID
 
@@ -22,6 +22,18 @@ When present:
 - Do not create, switch, or rename branches during kickoff.
 - Do not use this mode on `main`, `master`, a resolved local base branch, or detached `HEAD`; stop and ask if that is the current state.
 - Do not skip execution gates, review rounds, commits, final rebase, push, or PR creation, except for the `$plan-and-execute` existing non-base branch no-PR terminal behavior documented in the review protocol.
+
+## Harness drift modifier
+
+`--check-harness-drift` is valid with `$execute-task` and `$plan-and-execute`.
+
+When present:
+
+- Run the compact harness drift check from `skills/shared/references/harness-drift.md` during final handoff.
+- Keep planning artifacts, sub-task contracts, review logs, and relevant temp files available until the drift report is generated.
+- After the report is generated, run normal cleanup and archive behavior.
+- Do not add mandatory human approval steps, extra user-facing checkpoints, or standalone artifacts unless preservation was requested.
+- If evidence is missing because the run failed before artifact creation or a prior cleanup already removed files, report the evidence gap instead of guessing.
 
 ## Plan key resolution
 

@@ -1,6 +1,6 @@
 ---
 name: plan-and-execute
-description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--preserve-artifacts`.
+description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--check-harness-drift` and `--preserve-artifacts`.
 ---
 
 # Plan And Execute Skill
@@ -11,8 +11,9 @@ Turn the plan already discussed in the current thread into normal planning artif
 
 Invoke explicitly with `$plan-and-execute`.
 
-Supported modifier:
+Supported modifiers:
 
+- `--check-harness-drift`
 - `--preserve-artifacts`
 
 ## Required references
@@ -24,6 +25,8 @@ Load these files before running:
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/review/review-protocol.md`
+- `skills/shared/references/review/review-calibration.md`
+- `skills/shared/references/harness-drift.md`
 
 ## Workflow
 
@@ -46,8 +49,9 @@ Load these files before running:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default
    - if the skill created a branch from main/base, use normal branch execution and open a PR at the end
    - use compact worker packets, focused validation per sub-task, no per-sub-task review chains, and one final full-branch review
-6. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion.
-7. If `--preserve-artifacts` is present, keep temp planning and review artifacts and list them in the final handoff.
+6. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include that report in the final handoff, then continue normal cleanup unless `--preserve-artifacts` is present.
+7. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
+8. If `--preserve-artifacts` is present, keep temp planning and review artifacts and list them in the final handoff.
 
 ## Branch and PR rules
 
