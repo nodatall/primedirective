@@ -37,6 +37,8 @@ Load these files before running:
    - If the agent is currently in collaboration `Plan` mode, alert the user to exit back to collaboration `Default` mode and stop immediately.
    - Do not ask planning questions or generate artifacts while that mode guard is active.
 2. Intake the source material, classify it as rich source plan or sparse source prompt, and normalize it into `Goal`, `Context`, `Constraints`, and `Done when`.
+   - For sparse prompts, first expand the prompt into a short practical working interpretation: what is being built or changed, who or what it serves, the main workflow or behavior, and what would count as a complete first pass.
+   - Keep sparse-prompt expansion outcome-focused. Do not turn it into extra planning ceremony or a product-management template.
 3. Run the Socratic refinement loop:
    - one question per turn
    - plain language
@@ -68,6 +70,10 @@ Load these files before running:
 - Do not draft PRD, TDD, or tasks-plan before the required question floor and any required challenge question have been satisfied.
 - Do not draft PRD, TDD, or tasks-plan until the checkpoint question has been answered or there is nothing left for the user to correct.
 - Preserve substantive source-plan sections; normalize them without dropping content.
+- For sparse prompts, be willing to infer a fuller product/work direction, but keep the inference short and easy for the user to correct before artifact generation.
+- Be precise about required behavior, constraints, source-of-truth decisions, and verification expectations.
+- Do not invent exact low-level implementation details such as APIs, schemas, classes, algorithms, routes, file names, or helper boundaries unless source material or repo inspection supports them.
+- When a technical detail is plausible but not evidence-backed, mark it as an assumption or defer it to the `$execute-task` per-sub-task contract.
 - Make repo-local implementation or test patterns explicit in the generated artifacts when relevant examples already exist; record what should be followed instead of inventing a new pattern by default.
 - Inspect the target repo's existing validation/tooling surface during planning: manifests, scripts or task runners, CI workflows, lint or format configs, typecheck or build configs, and git hook setup.
 - If a question can be answered from the repo, inspect the repo instead of asking the user.

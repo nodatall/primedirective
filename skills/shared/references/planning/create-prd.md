@@ -70,6 +70,7 @@ Do not drop product-facing detail just because the source heading name differs f
 
 1. Do not start implementation while creating PRD.
 2. Keep PRD product-focused (`what` and `why`), but preserve detailed product constraints when they matter.
+   - For sparse prompts, the PRD may infer a fuller product or work direction, but keep that inference concise and grounded in the locked intake decisions.
 3. Use stable `FR-*` IDs for meaningful product requirements.
 4. Map acceptance criteria back to the relevant `FR-*` requirements.
 5. Convert unresolved ambiguity into explicit defaults before finalizing.

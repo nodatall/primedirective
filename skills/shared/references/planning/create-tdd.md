@@ -76,6 +76,9 @@ When the plan involves agents, secrets, untrusted input, or outbound actions, ma
 2. Keep TDD aligned with PRD scope and acceptance criteria.
 3. Use stable `TDR-*` IDs for meaningful technical obligations.
 4. Preserve interface examples and type-shape examples when they matter to implementation.
+   - Preserve exact technical detail when it comes from source material or repo inspection.
+   - Do not invent exact APIs, schemas, classes, algorithms, routes, file names, or helper boundaries to fill gaps.
+   - Mark plausible but unproven technical direction as an assumption or defer it to the `$execute-task` per-sub-task contract.
 5. Convert unresolved ambiguity into explicit defaults before finalizing.
 6. Do not include an `Open technical questions` section.
 7. Ensure verification strategy is concrete enough to drive task `verify` steps later.

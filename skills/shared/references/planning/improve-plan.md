@@ -86,9 +86,18 @@ Evaluate and improve:
 - Missing failure-path or cleanup work.
 - Whether `output`, `verify`, and `done_when` are concrete enough for implementation.
 - Whether each sub-task is narrow enough to support a pre-coding contract and a meaningful review pass without bundling unrelated work together.
-- For frontend-facing work, whether tasks name the affected screens, states, flows, and visible quality bar instead of leaving design intent implicit.
+- For frontend-facing work, whether tasks name the affected screens, states, and flows instead of leaving design intent implicit.
 
-### 5. Verification coverage review
+### 5. Premature specificity review
+
+Evaluate and improve:
+
+- Whether PRD or TDD invented exact APIs, schemas, classes, algorithms, routes, file names, helper boundaries, or test locations without support from source material or repo inspection.
+- Whether task-plan `output` fields name precise files only when they are known or strongly supported.
+- Whether unsupported technical specifics should be moved into assumptions, softened into high-level constraints, or deferred to `tasks/tmp/plan-task-<task-id>.md` during `$execute-task`.
+- Whether the plan remains precise about behavior, constraints, source-of-truth decisions, and verification expectations after unsupported low-level detail is removed.
+
+### 6. Verification coverage review
 
 Evaluate and improve:
 
@@ -99,7 +108,7 @@ Evaluate and improve:
 - Gaps in migration/backfill/rollback validation.
 - For frontend-facing work, whether browser-based verification covers the changed states, responsive breakpoints, and obvious visual regressions.
 
-### 6. Research integration review
+### 7. Research integration review
 
 Evaluate and improve when `--deep-research` was used:
 
@@ -138,6 +147,7 @@ The improved plan must explicitly satisfy all of these:
 14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
 15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
 16. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started.
+17. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
 
 ## For every issue identified
 

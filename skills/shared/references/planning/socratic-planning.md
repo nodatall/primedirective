@@ -98,10 +98,13 @@ For a rich source plan:
 
 For a sparse source prompt:
 
-1. Ask enough targeted questions to reach decision completeness.
-2. Build the same final artifact set.
-3. Do not use a separate lean-mode contract.
-4. Use `Goal`, `Context`, `Constraints`, and `Done when` as the minimum intake structure.
+1. Expand the prompt into a short practical working interpretation before asking questions.
+2. Cover what is being built or changed, who or what it serves, the main workflow or behavior, and what would count as a complete first pass.
+3. Keep the expansion lightweight and outcome-focused; do not add a scope ladder, extra product-management template, or unrelated sections.
+4. Ask enough targeted questions to reach decision completeness.
+5. Build the same final artifact set.
+6. Do not use a separate lean-mode contract.
+7. Use `Goal`, `Context`, `Constraints`, and `Done when` as the minimum intake structure.
 
 ## Conversational Question Loop
 
@@ -178,12 +181,14 @@ Do not silently default through these categories.
 
 ### Sparse-plan mode
 
-Use this simple loop:
+Start with a short working interpretation, then use this simple loop:
 
 1. Goal
 2. Context
 3. Constraints
 4. Done when
+
+The working interpretation should make a sparse prompt less underpowered, not more ceremonial. Keep it short, call out only material assumptions, and ask the user to correct anything that would change the plan.
 
 Ask example or failure-path questions only when they materially clarify one of those four buckets or change implementation behavior.
 
@@ -247,12 +252,19 @@ When transforming a rich source plan into PRD, TDD, and tasks-plan:
 2. Do not collapse detailed sections into vague summaries.
 3. Preserve route, API, schema, migration, rollout, and test content.
 4. Preserve product rules, UX rules, missing-data behavior, and non-goals.
-5. Preserve concrete frontend design direction and visible quality expectations for user-facing work.
+5. Preserve concrete frontend design direction and observable UI expectations for user-facing work.
 6. Preserve current validation/tooling facts and any explicit decision to add missing lint, format, typecheck, build, CI, or hook enforcement.
 7. Split mixed sections across PRD and TDD only when needed; do not drop any part.
 8. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
 9. If `--deep-research` is active, draft PRD and TDD first, then apply research findings to revise them before generating tasks-plan.
 10. If `--deep-research` is active, complete the evidence bar and working memo in `deep-research.md` before tasks-plan generation begins.
+
+When transforming a sparse prompt into PRD, TDD, and tasks-plan:
+
+1. Expand the prompt enough to avoid an under-scoped plan, but keep the interpretation compact and correctable.
+2. Be ambitious about coherent user-visible behavior and completeness of the first pass.
+3. Do not invent low-level implementation details solely to make the plan look complete.
+4. Put unsupported technical specifics into assumptions or defer them to the execution-time sub-task contract.
 
 ## Execution Trigger Gate (Hard Stop)
 
