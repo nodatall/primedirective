@@ -5,6 +5,7 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
+- Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
 - Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`
 - One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`
 - Task review: `$review-chain` with a specific `<task-id>`
@@ -12,7 +13,7 @@ Canonical path and activation contract for planning, execution, and review skill
 
 ## Plan key resolution
 
-Resolve `<plan-key>` in this order for both standard and one-shot execution:
+Resolve `<plan-key>` in this order for plan refinement, standard execution, and one-shot execution:
 
 1. If the activation includes an explicit `<plan-key>`, use it.
 2. Otherwise inspect `/tasks/` for complete planning sets:
@@ -32,6 +33,7 @@ Resolve files exactly as:
 ## Temporary workflow files
 
 - Planning research memo: `tasks/tmp/research-plan-<plan-key>.md`
+- Plan refinement log: `tasks/tmp/plan-refine-<plan-key>.md`
 - Per-sub-task plan doc: `tasks/tmp/plan-task-<task-id>.md`
 - Task review log: `tasks/tmp/review-task-<task-id>.md`
 - One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
@@ -43,7 +45,7 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
 
-By default, planning and review temporary files are deleted after successful completion. If the activation includes `--preserve-planning-artifacts` or `--preserve-review-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning, refinement, and review temporary files are deleted after successful completion. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, or `--preserve-review-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 
@@ -71,6 +73,19 @@ Then:
 - Executes the requested task/sub-task in the main agent.
 - Pause for user confirmation between sub-tasks.
 - If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs and review logs.
+
+### Plan refinement mode
+
+- Requires a complete planning artifact set.
+- `<plan-key>` may be explicit or inferred through the resolution rules above.
+- Edits only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md`.
+- Defaults to 8 refinement rounds and treats 8 as the hard maximum; higher requested values are capped at 8 and noted in the final summary.
+- Uses `tasks/tmp/plan-refine-<plan-key>.md` as the temporary refinement log.
+- Uses one fresh read-only reviewer subagent per refinement round.
+- The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and the final user summary.
+- If fresh reviewer subagents cannot be spawned, stop immediately instead of falling back to local self-review.
+- Deletes the refinement log after successful completion unless `--preserve-refine-artifacts` is present.
+- Keeps the refinement log when the run stops with unresolved blockers, material findings, missing artifacts, max rounds, or repeated/contradictory churn.
 
 ### One-shot mode
 

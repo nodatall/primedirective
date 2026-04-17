@@ -19,6 +19,18 @@
       "paste": "$plan-work --preserve-planning-artifacts"
     },
     {
+      "skill": "plan-refine",
+      "title": "Plan Refine: Max Rounds",
+      "subtitle": "Preset for the full 8-round refinement cap",
+      "paste": "$plan-refine --max-rounds=8"
+    },
+    {
+      "skill": "plan-refine",
+      "title": "Plan Refine: Preserve Artifacts",
+      "subtitle": "Preset that keeps refinement artifacts",
+      "paste": "$plan-refine --preserve-refine-artifacts"
+    },
+    {
       "skill": "execute-task",
       "title": "Execute Task: One Shot",
       "subtitle": "Preset for running the full remaining task plan",

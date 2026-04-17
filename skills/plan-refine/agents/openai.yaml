@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Refine"
+  short_description: "Iterate on PRD, TDD, and task plans"
+  default_prompt: "Use $plan-refine to run a bounded refinement loop over existing planning artifacts."

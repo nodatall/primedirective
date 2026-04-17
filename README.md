@@ -52,6 +52,7 @@ The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and paste
 - `$plan-work`
 - `$plan-work --grill`
 - `$plan-work --deep-research`
+- `$plan-refine --max-rounds=8`
 - `$execute-task --one-shot`
 - `$execute-task --preserve-review-artifacts`
 
@@ -91,6 +92,7 @@ Codex invocation is explicit:
 
 ```text
 $plan-work
+$plan-refine
 $review-chain
 $execute-task
 ```
