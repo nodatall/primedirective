@@ -33,6 +33,7 @@ Do not use this skill to force a redesign when the task is backend-only or when 
    - the primary user action or flow
    - the intended visual direction
    - anti-goals to avoid generic output
+   - acceptance checks for the primary interaction and changed states
    - what browser evidence will be captured in review
 3. Build the smallest reviewable slice first:
    - foundation before flourish

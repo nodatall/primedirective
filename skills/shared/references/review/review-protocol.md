@@ -2,6 +2,8 @@
 
 Mandatory review behavior for task execution and explicit review commands.
 
+Use `skills/shared/references/review/review-calibration.md` as calibration context for task-based review rounds. The calibration examples are guidance for reviewer judgment; they do not add user-facing approval steps.
+
 ## Step 1: Kickoff (task execution only)
 
 Default branch-creation kickoff:
@@ -54,6 +56,7 @@ For task-based execution or task-scoped review, evaluate changes against:
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
 Also verify, when `tasks/tmp/plan-task-<task-id>.md` exists, that the implementation followed the recorded local reference pattern, used a failing-test-first loop when practical, and justified any exception or trust-boundary handling recorded there.
+Use the contract's `acceptance_checks` as the reviewer-facing behavior list. Treat missing, vague, or unexercised acceptance checks as a review issue when they affect confidence in the slice.
 
 ## Review scopes
 
@@ -65,7 +68,6 @@ Use one of these scopes for each review round:
 Default scope rules:
 
 - Standard task execution review: `sub-task`
-- One-shot per-sub-task automatic review: `sub-task`
 - End-of-one-shot final review: `full-branch`
 - Explicit `$review-chain` review runs: `full-branch`
 
@@ -75,7 +77,7 @@ When subagents are available, execute each review round in one fresh dedicated r
 
 - The fresh review subagent owns the prompt sequence for that review round.
 - The review round is the unit of isolation. Do not split Prompt A, Prompt B, Prompt C, and so on into separate threads.
-- During one-shot execution, the main agent must spawn the review subagent after the implementation worker returns.
+- During one-shot execution, the main agent must spawn the review subagent after all implementation workers return.
 - Review subagents are siblings of implementation workers. Do not have a worker spawn, direct, or review itself through its own child agent.
 - For task-based `sub-task` review rounds, pass the review subagent:
   - `tasks/prd-<plan-key>.md`
@@ -128,6 +130,8 @@ Every applicable review round must explicitly verify:
 - whether any skipped red/green loop has a recorded and justified exception in the sub-task contract
 - whether an existing repo-local implementation or test pattern was followed when one existed
 - whether any newly introduced pattern or deliberate deviation is justified by the actual slice constraints
+- whether the contract's acceptance checks were exercised with meaningful evidence, not just asserted
+- whether the core user or system interaction is actually wired end-to-end rather than display-only, stubbed, or mocked away
 - whether any recorded `trust_boundary_notes` are still true in the implemented change
 
 ## Prompts A-I
@@ -212,7 +216,6 @@ Required When:
 Any change affects UI, layout, styling, interaction flows, responsive behavior, animations, or rendered content.
 Default Scope Rule:
 Require this prompt for frontend-facing `full-branch` review rounds and for explicit review runs that cover frontend work.
-For one-shot automatic `sub-task` review rounds, defer this prompt to the final `full-branch` review and record it as `not applicable` with a note that visual verification is pending the branch-wide pass.
 Action:
 Use Playwright MCP by default to open the changed UI, exercise the affected flows, resize for relevant breakpoints, and capture screenshots of all changed screens and states.
 When motion, timing, or multi-step interaction matters, also capture video or trace evidence using the Playwright CLI workflow.
@@ -251,6 +254,9 @@ Goal: Confirm the work is complete, solves the original problem, and has no sile
 Ask:
 Does this actually work based on executed verification?
 Does it solve the original problem end-to-end or only part of it?
+Are the core interactions and state transitions real, or is anything display-only, stubbed, mocked away, or disconnected from persistence/API/runtime behavior?
+Can a realistic user complete the primary workflow without hidden setup knowledge?
+Do UI, API, database, CLI, logs, or other relevant system states agree after the interaction?
 Was anything skipped, deferred, or left implicit?
 What assumptions remain and should be documented?
 What is most likely to break in production?
@@ -275,9 +281,9 @@ Rules:
 - Do not mark prompts complete retroactively from one combined pass.
 - If a prompt is outside the active prompt profile, mark it `not applicable` with a short reason rather than leaving it incomplete.
 - Compare the implementation against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists; treat unexplained contract drift as a finding.
-- When the task contract exists, verify `reference_patterns`, `test_first_plan`, and any `trust_boundary_notes` against the actual implementation and recorded verification evidence.
+- When the task contract exists, verify `acceptance_checks`, `reference_patterns`, `test_first_plan`, and any `trust_boundary_notes` against the actual implementation and recorded verification evidence.
+- Use the calibration examples in `review-calibration.md` to stay skeptical of superficial approvals, especially when a feature renders but does not deliver the promised interaction.
 - Prompt G is required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior.
-- Exception: during one-shot automatic `sub-task` review rounds, mark Prompt G `not applicable` with a note that visual verification is deferred to the final `full-branch` review.
 - Otherwise mark Prompt G `not applicable` with a reason.
 - Prompt H is required for deploy-bound work, for changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability, and for any change touching agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise mark it `not applicable` with a reason.
 
@@ -358,18 +364,18 @@ For `$review-chain` task or ad-hoc runs:
 
 ## Automatic review behavior during execution
 
-For standard task execution and one-shot execution:
+For standard task execution:
 
 - After each completed sub-task and before its commit, run one review round in `sub-task` scope.
-- When subagents are available, execute that `sub-task` review round in one fresh review subagent spawned by the main agent after the worker returns.
+- When subagents are available, execute that `sub-task` review round in one fresh review subagent spawned by the main agent after implementation completes.
 - Review only the current sub-task delta against `HEAD`, not the entire branch history.
-- In one-shot execution, do not run Prompt G browser/visual verification during these per-sub-task rounds; record Prompt G as deferred to the final `full-branch` review.
 - Apply fixes and rerun relevant tests before creating the sub-task commit.
 - Delete sub-task review logs and temp plan docs after successful completion unless `--preserve-review-artifacts` is active.
 
 For one-shot execution only:
 
-- After all sub-tasks are complete and before finalization, run one additional review round in `full-branch` scope.
+- Do not run automatic per-sub-task review chains.
+- After all sub-tasks are complete and before finalization, run one review round in `full-branch` scope.
 - When subagents are available, execute that final `full-branch` review round in one fresh review subagent spawned by the main agent.
 - This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
 - If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.

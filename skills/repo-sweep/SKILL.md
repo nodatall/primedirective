@@ -20,6 +20,7 @@ Supported modifier:
 Load these files before running:
 
 - `skills/shared/references/review/review-protocol.md`
+- `skills/shared/references/review/review-calibration.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
 
 ## Scope

@@ -42,6 +42,7 @@ Load these files before running:
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/review/review-protocol.md`
+- `skills/shared/references/review/review-calibration.md`
 
 ## Workflow
 
@@ -50,16 +51,17 @@ Load these files before running:
 3. Run kickoff branch setup from `review-protocol.md` Step 1 rules. By default, create/switch to a new feature branch and carry/commit the required planning artifacts there when they are the only uncommitted kickoff files. If `--stay-on-current-branch` is present, keep the current non-base branch and apply the current-branch kickoff rules instead.
 4. Execute according to mode:
    - Standard mode: implement the requested task/sub-task in the main agent.
-   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent spawns one worker subagent, waits for completion, integrates the result, spawns one fresh review subagent for that review round with PRD, TDD, tasks-plan, the temp sub-task contract when it exists, and the exact review scope, applies findings, and owns task updates and commit before moving to the next sub-task.
+   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent spawns one worker subagent, waits for completion, integrates the result, owns task updates and commit, and moves directly to the next sub-task. Do not run per-sub-task review chains in one-shot mode; run one final `full-branch` review after all sub-tasks are complete.
 5. For each completed sub-task:
   - create/update `tasks/tmp/plan-task-<task-id>.md` with the sub-task contract before coding, then keep it current as implementation and review findings refine the slice
   - identify repo-local implementation, test, and validation reference patterns before coding, record the chosen pattern in the sub-task contract, and justify any deliberate deviation
+  - for high-risk slices, run the agent-owned pre-coding contract critique from `task-management.md` and tighten the contract before implementation starts
   - write or update the targeted test first when the slice is practically testable
   - run the targeted test command and confirm the intended failure before implementation begins
   - implement the change using PRD + TDD + tasks-plan + exact sub-task block + the chosen local pattern
   - rerun the targeted verification until the slice passes, then expand to any additional relevant repo-defined checks for the touched surface such as lint, format-check, typecheck, test, or build
-  - run one `sub-task` review round automatically using the active prompt profile from `review-protocol.md`, in a fresh review subagent when subagents are available; in one-shot mode, defer Prompt G to the final `full-branch` review
-  - apply fixes from review findings and rerun relevant tests
+  - in standard mode, run one `sub-task` review round automatically using the active prompt profile from `review-protocol.md`, in a fresh review subagent when subagents are available
+  - in standard mode, apply fixes from review findings and rerun relevant tests
   - keep temp review artifacts under `tasks/tmp/` when `--preserve-review-artifacts` is enabled; otherwise clean them up per protocol
   - mark checklist updates in `tasks/tasks-plan-<plan-key>.md`
   - create a dedicated commit for the sub-task
@@ -75,16 +77,17 @@ Load these files before running:
 ## Mode behavior
 
 - Standard mode: single-agent execution, pause for approval between sub-tasks.
-- One-shot mode: sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, one main-agent integration plus fresh-review-subagent cycle per sub-task, defer frontend browser evidence to the final branch-wide review, then run one final full-branch review in a fresh review subagent before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
+- One-shot mode: sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, no per-sub-task review chains, then one final full-branch review in a fresh review subagent before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
 
 ## Execution defaults
 
 - Treat a failing-test-first red/green loop as the default for code-bearing, practically testable slices.
 - A test-first exception is allowed only when a failing-first loop is not practical for that exact slice; record the exception reason in `tasks/tmp/plan-task-<task-id>.md` before implementation starts.
+- New contract critique, acceptance checks, and review calibration are agent-owned. Do not add mandatory human approval steps or extra user-facing checkpoints to use them.
 - Before coding, search the repo for similar implementations and tests, follow an existing local pattern when it is a good fit, and record why any new pattern or deviation is necessary.
 - Before coding, inspect the repo's actual validation commands and config rather than assuming standard names exist.
 - Do not invent lint, format, hook, or similar repo tooling mid-execution unless the planned task explicitly includes introducing that tooling or the user asks for it.
 
 ## Review relationship
 
-Task execution includes automatic review rounds. Manual review runs through explicit `$review-chain` activation, optionally scoped to a specific `<task-id>`.
+Task execution includes automatic review rounds. Standard mode reviews each completed sub-task before commit. One-shot mode skips per-sub-task review chains and runs one final `full-branch` review after all implementation sub-tasks complete. Manual review runs through explicit `$review-chain` activation, optionally scoped to a specific `<task-id>`.

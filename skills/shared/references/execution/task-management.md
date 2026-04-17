@@ -26,27 +26,26 @@ Guidelines for managing task lists in markdown files.
 - One-shot mode is a sequential worker-subagent loop.
 - One-shot mode is activated with `--one-shot`.
 - One-shot mode may infer `<plan-key>` when `/tasks/` contains exactly one complete planning set.
-- One-shot review runs use one fresh review subagent per review round.
+- One-shot review runs once at the end in a fresh `full-branch` review subagent.
 - One-shot execution scope is the entire unchecked remainder of `tasks/tasks-plan-<plan-key>.md`, not just the current parent task, milestone, or section.
 - If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, commit them on the active execution branch before the first implementation sub-task.
 - For each sub-task:
   1. Main agent selects the next unchecked sub-task in file order.
-  2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` as the sub-task contract before coding starts, including reference pattern choice, test-first plan, and any required trust-boundary notes.
+  2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` as the sub-task contract before coding starts, including acceptance checks, reference pattern choice, test-first plan, and any required trust-boundary notes.
   3. Main agent spawns one worker subagent with:
      - `tasks/prd-<plan-key>.md`
      - `tasks/tdd-<plan-key>.md`
      - `tasks/tasks-plan-<plan-key>.md`
+     - `tasks/tmp/plan-task-<task-id>.md`
      - the exact sub-task block
   4. Worker implements one sub-task only and returns control.
-  5. Main agent integrates the result and spawns one fresh review subagent for the current review round, passing `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, `tasks/tmp/plan-task-<task-id>.md` when it exists, and the exact sub-task ID for `sub-task` review.
-  6. Review subagent runs one automatic `sub-task` review round using the active review prompt profile. In one-shot mode, defer Prompt G frontend/browser verification to the final branch-wide review.
-  7. Main agent applies review findings, reruns relevant tests, marks the checklist complete, and creates the commit.
-  8. Main agent immediately re-opens `tasks/tasks-plan-<plan-key>.md` after that commit and re-scans for the next unchecked sub-task in file order.
-  9. If another unchecked sub-task exists, main agent starts it immediately instead of producing a terminal-style handoff.
-  10. After the final sub-task, main agent spawns one additional fresh review subagent for the automatic `full-branch` review round before finalization, passing `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, and any still-relevant temp sub-task contract that remains available. This final round owns Prompt G frontend/browser verification for one-shot frontend work.
+  5. Main agent integrates the result, reruns relevant tests, marks the checklist complete, and creates the commit.
+  6. Main agent immediately re-opens `tasks/tasks-plan-<plan-key>.md` after that commit and re-scans for the next unchecked sub-task in file order.
+  7. If another unchecked sub-task exists, main agent starts it immediately instead of producing a terminal-style handoff.
+  8. After the final sub-task, main agent spawns one fresh review subagent for the automatic `full-branch` review round before finalization, passing `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, and any still-relevant temp sub-task contract that remains available. This final round owns Prompt G frontend/browser verification for one-shot frontend work.
 
 - Do not run sub-task workers in parallel. One-shot execution is strictly sequential.
-- Do not have a worker subagent spawn or own its own reviewer. Review subagents are siblings spawned by the main agent after the worker returns.
+- Do not have a worker subagent spawn or own its own reviewer. The final review subagent is a sibling spawned by the main agent after all workers return.
 - Do not stop one-shot execution after completing a parent task such as `1.0` or at any section boundary while unchecked sub-tasks remain later in the file.
 - Do not end the run on an intermediate checkpoint just because the branch is in a clean, committable state.
 - Do not present “work is in progress, not finished” as the terminal outcome of a one-shot unless a real blocker prevented continuation.
@@ -63,6 +62,7 @@ Guidelines for managing task lists in markdown files.
    - goal: what this slice changes
    - in_scope / out_of_scope: what is and is not part of this slice
    - surfaces: files, routes, screens, or jobs expected to change
+   - acceptance_checks: concrete behaviors the reviewer must verify, including at least one user-visible or system-visible success path and any relevant failure path, edge case, or state transition
    - reference_patterns: repo-local paths or symbols for the implementation, test, and validation examples being followed; record `none found` only after searching, and justify any deliberate deviation from the closest usable pattern
    - test_first_plan: the targeted test to add or update first and the exact command expected to fail before implementation; if failing-first is not practical, record the exception reason here before coding starts
    - verify: the exact checks that will prove the slice works
@@ -74,7 +74,29 @@ Guidelines for managing task lists in markdown files.
 6. Before coding, search the repo for similar implementations, tests, and validation commands or config, record the chosen local pattern in `reference_patterns`, and justify any decision to introduce a new pattern instead of following the existing one.
 7. Default to a red/green loop for code-bearing, practically testable slices: add or update the targeted test first, run the failure-first command, then implement. Only skip that order when the recorded `test_first_plan` exception makes the reason explicit.
 8. Update the contract when implementation or review reveals a better-scoped slice, a better local pattern, or a missing verification step.
-9. Delete temp plan doc only after review completion for that sub-task, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
+9. Delete temp plan docs only after they are no longer needed for review: after the standard sub-task review completes, or after the final full-branch review completes in one-shot mode, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
+
+## Pre-coding contract critique
+
+Run this critique before coding for high-risk slices. This is agent-owned work inside the existing execution flow; do not add a mandatory human approval step or extra user-facing checkpoint.
+
+Trigger the critique when the sub-task is any of:
+
+- frontend-facing or product-workflow-facing
+- agent, tool-use, private-data, secret, untrusted-input, or outbound-action work
+- auth, authorization, billing, security, migration, backfill, rollback, production-readiness, or source-of-truth work
+- a one-shot slice whose `acceptance_checks`, `verify`, or `done_when` are broad, manual, vague, or mostly visual
+
+Critique the contract before implementation starts:
+
+1. Does it name the real behavior to be delivered, not just files to edit?
+2. Are `acceptance_checks` concrete enough for a reviewer to exercise without extra investigation?
+3. Can the checks catch display-only UI, stubbed integrations, mocked-away logic, or state that does not persist?
+4. Does the contract avoid over-specifying helpers, file layout, schemas, or APIs before repo inspection supports them?
+5. Does `verify` include the strongest practical automated check and any required browser, API, CLI, database, or log evidence?
+6. Are failure paths, edge cases, trust boundaries, and state transitions explicit when they materially affect correctness?
+
+If the answer to any item is no, tighten `tasks/tmp/plan-task-<task-id>.md` before coding. Ask the user only when the missing decision would change product intent, external behavior, or stakeholder scope.
 
 ## Completion protocol
 
@@ -112,8 +134,8 @@ Rules:
 5. Keep checklist status accurate for sub-task and parent tasks.
 6. Keep `Relevant Files` accurate.
 7. In standard mode, pause after each sub-task for approval.
-8. In one-shot mode, continue automatically after main-agent integration, review, and commit completion.
-9. In one-shot mode, spawn one fresh review subagent for each completed sub-task review in `sub-task` scope, defer Prompt G frontend/browser verification during those rounds, then spawn one final fresh review subagent for the `full-branch` review after all sub-tasks complete.
+8. In one-shot mode, continue automatically after main-agent integration, verification, and commit completion for each sub-task.
+9. In one-shot mode, do not run per-sub-task review chains. Spawn one fresh review subagent for the final `full-branch` review after all sub-tasks complete.
 10. When all tasks complete, archive artifacts under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` before final PR handoff.
 11. In one-shot mode, do not pause or summarize as complete merely because the next remaining work starts under a new parent task number like `2.0` or `3.0`.
 12. If `--preserve-review-artifacts` is present, keep `tasks/tmp/` plan and review files created during execution and list them in the final handoff.
@@ -127,3 +149,4 @@ Rules:
 18. Assume any user-visible one-shot message before Step 9 finalization may end or stall the run, so intermediate status reporting is forbidden.
 19. Before final handoff, run the relevant repo-defined validation commands for the touched surface when they exist, such as lint, format-check, typecheck, test, and build. If the current plan added that tooling, use the newly introduced commands and mention any commands that remain intentionally absent.
 20. Treat branch publication and PR creation as explicit finalization work, not implied behavior. If the environment supports native PR actions, use them; otherwise push with git and open the PR with a concrete provider CLI.
+21. For substantial one-shot runs, include a short harness load-bearing note in the final handoff: which contract, review, browser, or production-readiness checks caught real issues; which were not applicable; and whether a lighter or heavier harness would be appropriate for similar future work. Do not create a separate artifact unless the user asked for preserved review artifacts.
