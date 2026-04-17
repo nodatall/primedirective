@@ -54,6 +54,7 @@ The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and paste
 - `$plan-work --deep-research`
 - `$plan-refine --max-rounds=8`
 - `$execute-task --one-shot`
+- `$execute-task --stay-on-current-branch`
 - `$execute-task --preserve-review-artifacts`
 
 Modifiers are plain text owned by the skill conventions. Alfred does not parse them as platform flags.
@@ -108,7 +109,7 @@ Each preset should provide:
 - `subtitle` short explanation
 - `paste` exact text Alfred should paste
 
-Preset text should stay Codex-native and explicit. Use modifier conventions like `--deep-research` or `--preserve-review-artifacts` as skill-level textual contracts, not platform-level flags.
+Preset text should stay Codex-native and explicit. Use modifier conventions like `--deep-research`, `--stay-on-current-branch`, or `--preserve-review-artifacts` as skill-level textual contracts, not platform-level flags.
 
 ## Verification
 

@@ -1,6 +1,6 @@
 ---
 name: execute-task
-description: Execute planned work from existing `prd`, `tdd`, and `tasks-plan` artifacts. Supports standard task mode, `--one-shot`, and `--preserve-review-artifacts`.
+description: Execute planned work from existing `prd`, `tdd`, and `tasks-plan` artifacts. Supports standard task mode, `--one-shot`, `--stay-on-current-branch`, and `--preserve-review-artifacts`.
 ---
 
 # Execute Task Skill
@@ -23,14 +23,17 @@ Required request context:
 Supported modifiers:
 
 - `--one-shot`
+- `--stay-on-current-branch`
 - `--preserve-review-artifacts`
 
 Activation examples:
 
 - Standard mode with explicit key: `$execute-task task-id=<task-id> plan-key=<plan-key>`
 - Standard mode with inferred key: `$execute-task task-id=<task-id>`
+- Standard mode on the current branch: `$execute-task --stay-on-current-branch task-id=<task-id> plan-key=<plan-key>`
 - One-shot with explicit key: `$execute-task --one-shot plan-key=<plan-key>`
 - One-shot with inferred key: `$execute-task --one-shot`
+- One-shot on the current branch: `$execute-task --one-shot --stay-on-current-branch plan-key=<plan-key>`
 
 ## Required references
 
@@ -44,7 +47,7 @@ Load these files before running:
 
 1. Resolve artifact files from trigger using `task-file-contract.md`.
 2. Require PRD, TDD, and tasks-plan before doing any execution work.
-3. Run kickoff branch setup from `review-protocol.md` Step 1 rules, carrying and committing the required planning artifacts on the new branch when they are the only uncommitted kickoff files.
+3. Run kickoff branch setup from `review-protocol.md` Step 1 rules. By default, create/switch to a new feature branch and carry/commit the required planning artifacts there when they are the only uncommitted kickoff files. If `--stay-on-current-branch` is present, keep the current non-base branch and apply the current-branch kickoff rules instead.
 4. Execute according to mode:
    - Standard mode: implement the requested task/sub-task in the main agent.
    - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent spawns one worker subagent, waits for completion, integrates the result, spawns one fresh review subagent for that review round with PRD, TDD, tasks-plan, the temp sub-task contract when it exists, and the exact review scope, applies findings, and owns task updates and commit before moving to the next sub-task.

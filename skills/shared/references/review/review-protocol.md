@@ -4,12 +4,21 @@ Mandatory review behavior for task execution and explicit review commands.
 
 ## Step 1: Kickoff (task execution only)
 
+Default branch-creation kickoff:
+
 ```text
 Please fetch the latest `origin/main` from github.
 We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. If local `main` and `origin/main` differ in either direction, stop and ask before creating the feature branch. Otherwise, please create and switch to a new branch from `origin/main`. If the only uncommitted changes are those required planning artifacts for this plan, carry them onto the new branch and commit them there before implementation starts.
 ```
 
-Operational translation:
+Current-branch kickoff when `$execute-task` includes `--stay-on-current-branch`:
+
+```text
+Please fetch the latest `origin/main` from github.
+We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. Keep the current branch. Do not create, switch, or rename branches. If the current branch is `main`, `master`, the resolved local base branch, or detached `HEAD`, stop and ask before implementation starts. If the only uncommitted changes are those required planning artifacts for this plan, commit them on the current branch before implementation starts.
+```
+
+Default branch-creation operational translation:
 
 - `git fetch origin main`
 - Compare local `main` and `origin/main` after fetch.
@@ -20,6 +29,19 @@ Operational translation:
 - If the working tree contains unrelated changes, stop and ask before creating branch.
 - Create/switch `nodatall/<short-task-name>` from `origin/main`.
 - If `main` is checked out elsewhere in another worktree, create branch directly from `origin/main`.
+
+Current-branch operational translation:
+
+- `git fetch origin main`
+- Identify the current branch with `git branch --show-current`.
+- Stop and ask if the current checkout is detached `HEAD`.
+- Stop and ask if the current branch is `main`, `master`, or the resolved local base branch.
+- Keep the current branch. Do not create, switch, or rename branches.
+- Skip the local-`main` versus `origin/main` divergence gate because no new branch is being created from main.
+- If the working tree is clean, continue on the current branch.
+- If the only dirty files are `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` for the current plan, commit them on the current branch before implementation starts.
+- If other dirty files exist, inspect them before editing. Continue only when they are clearly current task work on the active branch; otherwise stop and ask before editing overlapping files.
+- Full-branch reviews and finalization still use `origin/main` as the branch base.
 
 ## Review context for task-based work
 

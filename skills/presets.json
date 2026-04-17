@@ -38,6 +38,12 @@
     },
     {
       "skill": "execute-task",
+      "title": "Execute Task: Stay Current Branch",
+      "subtitle": "Preset that keeps the current feature branch",
+      "paste": "$execute-task --stay-on-current-branch"
+    },
+    {
+      "skill": "execute-task",
       "title": "Execute Task: Preserve Review Artifacts",
       "subtitle": "Preset that keeps review artifacts",
       "paste": "$execute-task --preserve-review-artifacts"

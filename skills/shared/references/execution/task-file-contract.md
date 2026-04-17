@@ -6,10 +6,21 @@ Canonical path and activation contract for planning, execution, and review skill
 
 - Planning: `$plan-work` with the source plan or request in the same user message
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
-- Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`
-- One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`
+- Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch`
+- One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch`
 - Task review: `$review-chain` with a specific `<task-id>`
 - Ad-hoc review (default): `$review-chain` without a task ID
+
+## Execution branch modifier
+
+`--stay-on-current-branch` is valid only with `$execute-task`, in standard or one-shot mode.
+
+When present:
+
+- Keep the current non-base branch instead of creating/switching to a new branch from `origin/main`.
+- Do not create, switch, or rename branches during kickoff.
+- Do not use this mode on `main`, `master`, a resolved local base branch, or detached `HEAD`; stop and ask if that is the current state.
+- Do not skip execution gates, review rounds, commits, final rebase, push, or PR creation.
 
 ## Plan key resolution
 
@@ -72,6 +83,7 @@ Then:
 - `<plan-key>` may be explicit or inferred through the resolution rules above.
 - Executes the requested task/sub-task in the main agent.
 - Pause for user confirmation between sub-tasks.
+- If `--stay-on-current-branch` is present, keep the current non-base branch during kickoff.
 - If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs and review logs.
 
 ### Plan refinement mode
@@ -92,7 +104,8 @@ Then:
 - Requires `--one-shot`.
 - `<plan-key>` may be explicit or inferred through the resolution rules above.
 - Start at first unchecked sub-task and continue in file order.
-- If kickoff begins with only the current plan's required planning artifacts uncommitted, carry them onto the new feature branch and commit them there before the first implementation sub-task begins.
+- If `--stay-on-current-branch` is present, keep the current non-base branch during kickoff.
+- If kickoff begins with only the current plan's required planning artifacts uncommitted, commit them on the active execution branch before the first implementation sub-task begins.
 - Continue until there are no unchecked sub-tasks left anywhere in the file; do not stop at parent-task or section boundaries.
 - Do not emit user-visible mid-run progress updates while unchecked sub-tasks remain; keep executing silently across sub-task boundaries.
 - A clean commit boundary, milestone boundary, or partially completed checklist is not a valid stopping point.

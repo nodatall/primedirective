@@ -7,6 +7,7 @@ Guidelines for managing task lists in markdown files.
 - This execution workflow may start only from:
   - explicit `$execute-task` activation with a specific `<task-id>` and optional `<plan-key>` when the key can be inferred
   - explicit `$execute-task --one-shot` activation with optional `<plan-key>` when the key can be inferred
+  - either execution activation may include `--stay-on-current-branch`
 - Execution requires:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
@@ -27,7 +28,7 @@ Guidelines for managing task lists in markdown files.
 - One-shot mode may infer `<plan-key>` when `/tasks/` contains exactly one complete planning set.
 - One-shot review runs use one fresh review subagent per review round.
 - One-shot execution scope is the entire unchecked remainder of `tasks/tasks-plan-<plan-key>.md`, not just the current parent task, milestone, or section.
-- If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, move them onto the new feature branch and commit them before the first implementation sub-task.
+- If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, commit them on the active execution branch before the first implementation sub-task.
 - For each sub-task:
   1. Main agent selects the next unchecked sub-task in file order.
   2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` as the sub-task contract before coding starts, including reference pattern choice, test-first plan, and any required trust-boundary notes.
@@ -104,8 +105,8 @@ Rules:
 
 ## AI Instructions
 
-1. Before first sub-task, create/switch to dedicated feature branch if not already on one.
-2. If kickoff dirtiness is only the current plan's required planning artifacts, carry them onto the feature branch and commit them before implementation commits begin.
+1. Before first sub-task, create/switch to a dedicated feature branch if not already on one. If `--stay-on-current-branch` is present, keep the current non-base branch and do not create, switch, or rename branches.
+2. If kickoff dirtiness is only the current plan's required planning artifacts, commit them on the active execution branch before implementation commits begin.
 3. Regularly update task list after significant work.
 4. Create one dedicated commit per completed sub-task.
 5. Keep checklist status accurate for sub-task and parent tasks.
