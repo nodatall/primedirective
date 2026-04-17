@@ -51,15 +51,17 @@ Load these files before running:
 3. Run kickoff branch setup from `review-protocol.md` Step 1 rules. By default, create/switch to a new feature branch and carry/commit the required planning artifacts there when they are the only uncommitted kickoff files. If `--stay-on-current-branch` is present, keep the current non-base branch and apply the current-branch kickoff rules instead.
 4. Execute according to mode:
    - Standard mode: implement the requested task/sub-task in the main agent.
-   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent spawns one worker subagent, waits for completion, integrates the result, owns task updates and commit, and moves directly to the next sub-task. Do not run per-sub-task review chains in one-shot mode; run one final `full-branch` review after all sub-tasks are complete.
+   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent reads the full planning context, creates a compact implementation packet from `tasks/tmp/plan-task-<task-id>.md`, spawns one worker subagent with that packet, waits for completion, integrates the result, owns task updates and commit, and moves directly to the next sub-task. Do not run per-sub-task review chains in one-shot mode; run one final `full-branch` review after all sub-tasks are complete.
 5. For each completed sub-task:
   - create/update `tasks/tmp/plan-task-<task-id>.md` with the sub-task contract before coding, then keep it current as implementation and review findings refine the slice
   - identify repo-local implementation, test, and validation reference patterns before coding, record the chosen pattern in the sub-task contract, and justify any deliberate deviation
   - for high-risk slices, run the agent-owned pre-coding contract critique from `task-management.md` and tighten the contract before implementation starts
   - write or update the targeted test first when the slice is practically testable
   - run the targeted test command and confirm the intended failure before implementation begins
-  - implement the change using PRD + TDD + tasks-plan + exact sub-task block + the chosen local pattern
-  - rerun the targeted verification until the slice passes, then expand to any additional relevant repo-defined checks for the touched surface such as lint, format-check, typecheck, test, or build
+  - implement the change using PRD + TDD + tasks-plan + exact sub-task block + the chosen local pattern in standard mode, or using the compact implementation packet from `task-management.md` in one-shot mode
+  - rerun the targeted verification until the slice passes
+  - in standard mode, expand to any additional relevant repo-defined checks for the touched surface such as lint, format-check, typecheck, test, or build
+  - in one-shot mode, follow the focused-validation cadence from `task-management.md`: run the narrow check needed for the current slice, defer broader checks to parent-section boundaries or finalization unless the slice touches shared behavior, exposes collateral risk, or the focused check fails in a way that requires broader diagnosis
   - in standard mode, run one `sub-task` review round automatically using the active prompt profile from `review-protocol.md`, in a fresh review subagent when subagents are available
   - in standard mode, apply fixes from review findings and rerun relevant tests
   - keep temp review artifacts under `tasks/tmp/` when `--preserve-review-artifacts` is enabled; otherwise clean them up per protocol
@@ -77,7 +79,7 @@ Load these files before running:
 ## Mode behavior
 
 - Standard mode: single-agent execution, pause for approval between sub-tasks.
-- One-shot mode: sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, no per-sub-task review chains, then one final full-branch review in a fresh review subagent before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
+- One-shot mode: sequential worker-subagent loop across the entire remaining unchecked task file, no approval pauses between sub-tasks, focused validation per sub-task, no per-sub-task review chains, then one final full-branch review in a fresh review subagent before finalization. The run is terminal only after finalization or an explicit unresolved blocker.
 
 ## Execution defaults
 
@@ -86,6 +88,8 @@ Load these files before running:
 - New contract critique, acceptance checks, and review calibration are agent-owned. Do not add mandatory human approval steps or extra user-facing checkpoints to use them.
 - Before coding, search the repo for similar implementations and tests, follow an existing local pattern when it is a good fit, and record why any new pattern or deviation is necessary.
 - Before coding, inspect the repo's actual validation commands and config rather than assuming standard names exist.
+- During one-shot execution, prefer concise command output: use `git diff --stat`, `git diff --name-only`, and targeted hunk reads before large full-diff dumps; only print broad diffs when they are needed for a concrete decision or final review.
+- During one-shot execution, do not pass full PRD, TDD, and task-plan files to every worker by default. The main agent owns full-plan coherence and gives workers compact implementation packets; workers open full artifacts only through the escape hatches in `task-management.md`.
 - Do not invent lint, format, hook, or similar repo tooling mid-execution unless the planned task explicitly includes introducing that tooling or the user asks for it.
 
 ## Review relationship

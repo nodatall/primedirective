@@ -114,12 +114,14 @@ Then:
 - Use one worker subagent per sub-task.
 - Do not run per-sub-task review chains.
 - Use one fresh review subagent for the final `full-branch` review round.
-- Worker context must include:
-  - `tasks/prd-<plan-key>.md`
-  - `tasks/tdd-<plan-key>.md`
-  - `tasks/tasks-plan-<plan-key>.md`
-  - `tasks/tmp/plan-task-<task-id>.md`
-  - the exact sub-task block being implemented
+- Main agent owns full PRD, TDD, and task-plan context across the run.
+- One-shot worker context should be compact by default and must include:
+  - `plan_key` and `task_id`
+  - the exact sub-task block or a faithful concise copy of it
+  - the compact implementation packet from `tasks/tmp/plan-task-<task-id>.md`
+  - PRD/TDD anchors such as `covers_prd` / `covers_tdd` when present, not full artifact text by default
+  - relevant file paths, symbols, reference patterns, acceptance checks, and focused verification command
+- One-shot workers may open full PRD, TDD, or task-plan files only when the compact packet is insufficient, contradictory, or the slice touches product intent, trust boundaries, public contracts, data shape, architecture, or cross-task assumptions.
 - Review subagent context must include:
   - for the final `full-branch` review: `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, plus any still-relevant temp sub-task contract that remains available and materially informs the branch-wide review
 - Review subagents are siblings of the worker subagent. Do not have the worker spawn or own its own reviewer.

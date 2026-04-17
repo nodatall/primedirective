@@ -378,6 +378,9 @@ For one-shot execution only:
 - After all sub-tasks are complete and before finalization, run one review round in `full-branch` scope.
 - When subagents are available, execute that final `full-branch` review round in one fresh review subagent spawned by the main agent.
 - This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
+- Unlike one-shot worker handoffs, final review must receive full PRD, TDD, task plan, and still-relevant temp contracts so it can check global intent, cross-task coherence, and accepted risks.
+- Start final review scope discovery with concise commands such as `git diff --stat`, `git diff --name-only`, and targeted hunk reads. Do not re-dump every large diff or replay every historical focused test unless evidence is missing, stale, or contradicted.
+- Review the focused verification evidence recorded during the implementation loop, then run the strongest practical broad validation needed for final confidence.
 - If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.
 - Keep the final full-branch review log when `--preserve-review-artifacts` is active.
 - Do not issue a terminal user handoff before this final full-branch review and Step 9 finalization are complete, unless a real blocker prevents continuation.
