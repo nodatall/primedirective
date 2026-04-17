@@ -5,6 +5,7 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
+- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
 - Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch`
 - One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch`
@@ -20,7 +21,7 @@ When present:
 - Keep the current non-base branch instead of creating/switching to a new branch from `origin/main`.
 - Do not create, switch, or rename branches during kickoff.
 - Do not use this mode on `main`, `master`, a resolved local base branch, or detached `HEAD`; stop and ask if that is the current state.
-- Do not skip execution gates, review rounds, commits, final rebase, push, or PR creation.
+- Do not skip execution gates, review rounds, commits, final rebase, push, or PR creation, except for the `$plan-and-execute` existing non-base branch no-PR terminal behavior documented in the review protocol.
 
 ## Plan key resolution
 
@@ -56,7 +57,7 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
 
-By default, planning, refinement, and review temporary files are deleted after successful completion. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, or `--preserve-review-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning, refinement, and review temporary files are deleted after successful completion. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 

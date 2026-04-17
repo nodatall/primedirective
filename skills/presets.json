@@ -31,6 +31,18 @@
       "paste": "$plan-refine --preserve-refine-artifacts"
     },
     {
+      "skill": "plan-and-execute",
+      "title": "Plan And Execute",
+      "subtitle": "Create planning docs from this thread and execute one-shot",
+      "paste": "$plan-and-execute"
+    },
+    {
+      "skill": "plan-and-execute",
+      "title": "Plan And Execute: Preserve Artifacts",
+      "subtitle": "Preset that keeps temp planning and review artifacts",
+      "paste": "$plan-and-execute --preserve-artifacts"
+    },
+    {
       "skill": "execute-task",
       "title": "Execute Task: One Shot",
       "subtitle": "Preset for running the full remaining task plan",

@@ -16,8 +16,9 @@ Run this for every completed planning flow after PRD structure is locked. When `
 - `tasks/prd-<plan-key>.md`
 - source plan or source prompt
 - locked decisions from Socratic refinement
+- direct source interpretation and assumptions when `--direct` is active
 - deep-research findings when `--deep-research` is active and available during finalization
-- finalized three-paragraph plain-language summary from the summary checkpoint
+- finalized three-paragraph plain-language summary from the summary checkpoint, or direct source interpretation and assumptions when `--direct` is active
 
 ## Output
 
@@ -48,6 +49,7 @@ Run this for every completed planning flow after PRD structure is locked. When `
 - Must be understandable to a 12-year-old.
 - Explain the technical approach in concrete, plain language.
 - Preserve the same core meaning as the Socratic plain-language summary.
+- When `--direct` is active, preserve the same core meaning as the direct source interpretation.
 - Use it to sanity-check that the design still matches the product intent.
 - Keep the same three-paragraph structure unless a paragraph is genuinely empty after normalization.
 
@@ -94,6 +96,7 @@ When the plan involves agents, secrets, untrusted input, or outbound actions, ma
 17. When the plan breaks into executable slices, make clear which slices are expected to use a failing-test-first red/green loop and where a test-first exception is likely because the work is not practically testable first.
 18. When the plan touches agents, secrets, untrusted input, or outbound actions, enrich `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` with the concrete trust and approval constraints that execution and review must enforce.
 19. Do not add standalone `Security Trust Boundaries` or `Agent Safety Constraints` sections; enrich the existing section set only when those concerns are relevant.
+20. When `--direct` is active, record concise assumptions in the relevant existing sections and defer unsupported exact implementation choices to `$execute-task` sub-task contracts.
 
 ## Build gate reminder
 

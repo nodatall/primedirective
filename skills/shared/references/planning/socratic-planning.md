@@ -15,9 +15,12 @@ Planning is not blank-page generation by default. Treat the user's input as sour
 Accepted activation:
 
 - `$plan-work`
+- `$plan-work --from-thread --direct`
 
 Supported modifiers:
 
+- `--from-thread`
+- `--direct`
 - `--grill`
 - `--deep-research`
 - `--preserve-planning-artifacts`
@@ -27,6 +30,7 @@ The current user request may contain:
 - a rough prompt
 - a partial plan
 - a rich Codex/Claude plan that already includes product, design, test, and execution detail
+- when `--from-thread` is present, the current conversation above the trigger
 
 ## Preflight (Required)
 
@@ -81,7 +85,7 @@ Treat a plan as decision-complete only when all of these are true:
 - `Goal`, `Context`, `Constraints`, and `Done when` are explicit enough to implement without guesswork
 - repo validation and tooling expectations have been checked and recorded
 - no unresolved default would materially change architecture, operations, verification, UX behavior, or ownership
-- any required challenge-question categories have been surfaced and resolved
+- any required challenge-question categories have been surfaced and resolved, or `--direct` is active and the relevant assumption is recorded in the artifacts
 
 Do not mark a plan decision-complete just because the source plan is long or well-written.
 
@@ -107,6 +111,8 @@ For a sparse source prompt:
 7. Use `Goal`, `Context`, `Constraints`, and `Done when` as the minimum intake structure.
 
 ## Conversational Question Loop
+
+Skip this loop when `--direct` is present. In direct mode, ask only when the core objective is missing, contradictory, or unsafe to infer without likely changing implementation shape.
 
 Ask one question per turn in plain language.
 
@@ -145,6 +151,8 @@ Do not re-walk the whole plan if the plan already covers it.
 
 #### Minimum question floor
 
+This section applies only when `--direct` is not present.
+
 For any non-trivial plan, ask at least one user-facing question before document generation.
 
 For non-trivial rich source plans, ask at least two user-facing questions before document generation unless repo exploration resolves one branch without user input.
@@ -158,6 +166,8 @@ Artifact drafting gate:
 - When `--grill` is active, do not draft PRD, TDD, or tasks-plan while a material dependent branch remains unresolved.
 
 #### Challenge-question minimum
+
+This section applies only when `--direct` is not present.
 
 For any non-trivial rich source plan that touches infrastructure, deployment, scheduling, source-of-truth, or operations, ask at least one targeted challenge question before document generation.
 
@@ -194,7 +204,16 @@ Ask example or failure-path questions only when they materially clarify one of t
 
 ## Socratic Output Requirements
 
-Before any planning artifact generation, produce and lock:
+When `--direct` is present, replace the Socratic output requirements with a direct intake lock:
+
+1. normalize the source thread or source plan into `Goal`, `Context`, `Constraints`, and `Done when`
+2. record explicit defaults and assumptions directly in the generated artifacts
+3. do not require minimum question floors, challenge questions, or a standalone summary checkpoint
+4. stop only for true blockers where the core objective is missing, contradictory, or unsafe to infer
+5. preserve important source-plan content through PRD, TDD, and tasks-plan generation
+
+When `--direct` is not present, before any planning artifact generation, produce and lock:
+
 
 1. an intake summary with `Goal`, `Context`, `Constraints`, and `Done when`
 2. a final plain-language summary that a 12-year-old could follow, written as exactly three short paragraphs
@@ -206,12 +225,12 @@ Rules:
 
 - Ask one follow-up if an answer is vague.
 - If the answer is still vague, choose a reasonable default and state it explicitly.
-- Do not silently default through the minimum question floor or required challenge-question categories in rich-plan mode.
-- Do not draft PRD or TDD before the minimum question floor has been satisfied.
+- When `--direct` is not present, do not silently default through the minimum question floor or required challenge-question categories in rich-plan mode.
+- When `--direct` is not present, do not draft PRD or TDD before the minimum question floor has been satisfied.
 - With `--grill`, do not stop questioning just because the plan looks coherent at a high level; stop only when the remaining unknowns are genuinely non-material.
-- Do not collapse the summary checkpoint into PRD, TDD, or tasks-plan generation output.
-- End the checkpoint turn with one plain-language question asking what is wrong or missing.
-- Do not start PRD, TDD, or tasks-plan generation until the checkpoint question has been answered or there is nothing left for the user to correct.
+- When `--direct` is not present, do not collapse the summary checkpoint into PRD, TDD, or tasks-plan generation output.
+- When `--direct` is not present, end the checkpoint turn with one plain-language question asking what is wrong or missing.
+- When `--direct` is not present, do not start PRD, TDD, or tasks-plan generation until the checkpoint question has been answered or there is nothing left for the user to correct.
 - Stop when the plan is decision-complete.
 - Prefer structured dialog questions when client supports them.
 - Fallback to plain-text one-question turns when dialog is unavailable.
@@ -270,8 +289,8 @@ When transforming a sparse prompt into PRD, TDD, and tasks-plan:
 
 After planning outputs are complete:
 
-- Stop and wait for explicit build trigger.
-- Do not begin implementation.
+- Stop and wait for explicit build trigger unless an orchestration skill such as `$plan-and-execute` explicitly owns continued execution.
+- Do not begin implementation from standalone planning flow.
 
 Accepted execution activations:
 
@@ -287,6 +306,7 @@ Legacy `prd-key`/`prd-id` wording must be rejected and corrected.
 - `--grill` requested: keep following dependent branches until no unresolved branch would materially change implementation shape, readiness criteria, verification strategy, rollout behavior, or visible UX behavior, then present the summary checkpoint before generating PRD/TDD/tasks-plan.
 - Deep-research planning requested: lock the intake summary first, present the three-paragraph summary checkpoint from the locked decisions, generate initial PRD/TDD drafts, run the deep research pass to improve them, and present one revised standalone checkpoint only if research materially changes the summary meaning before generating tasks-plan.
 - Sparse request provided: ask enough questions to reach decision completeness, present the summary checkpoint, then generate PRD/TDD/tasks-plan.
+- Direct from-thread request provided: skip questions and checkpoint gates, generate PRD/TDD/tasks-plan from the thread plan, write assumptions into the artifacts, and stop only for true blockers.
 - Source plan contains unresolved ambiguity: convert to explicit default or ask until resolved.
 - Source plan contains detailed route/schema/test content: preserve it during normalization.
 - No build trigger after planning: hard stop with accepted build commands only.

@@ -57,7 +57,7 @@ Evaluate and improve:
 - Usefulness of success metrics or guardrails.
 - Quality and stability of `FR-*` requirements.
 - Whether the PRD plain-language summary is clear enough for non-technical review.
-- Whether the standalone three-paragraph summary checkpoint happened as a separate text-only turn before artifact generation started.
+- Whether the standalone three-paragraph summary checkpoint happened as a separate text-only turn before artifact generation started, unless `--direct` was active.
 
 ### 3. TDD quality review
 
@@ -72,7 +72,7 @@ Evaluate and improve:
 - Presence of migration, rollout, backfill, rollback, and failure-mode detail when relevant.
 - Presence of operational readiness detail when production behavior changes.
 - Whether the TDD plain-language summary is clear enough for non-technical review.
-- Whether the checkpoint summary meaning survived into both PRD and TDD without drift.
+- Whether the checkpoint summary meaning, or direct source interpretation when `--direct` was active, survived into both PRD and TDD without drift.
 - Whether deep-research findings were reflected in the technical design when `--deep-research` was used.
 
 ### 4. Task-plan quality review
@@ -146,7 +146,7 @@ The improved plan must explicitly satisfy all of these:
 13. Any `--deep-research` pass includes live web research, the external-source minimum, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
 14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
 15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
-16. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started.
+16. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
 17. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
 
 ## For every issue identified

@@ -388,7 +388,7 @@ For one-shot execution only:
 ## Step 9: Finalization
 
 ```text
-Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the PRD, TDD, and task plan into `tasks/archive/<yyyy-mm-dd>-<plan-key>/`, then open a pull request. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
+Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the PRD, TDD, and task plan into `tasks/archive/<yyyy-mm-dd>-<plan-key>/`, then open a pull request unless the `$plan-and-execute` existing non-base branch exception applies. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
 ```
 
 Operational translation:
@@ -407,11 +407,12 @@ Operational translation:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
-- Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`.
-- Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`.
+- Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`, unless the `$plan-and-execute` existing non-base branch exception applies.
+- Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`, unless the `$plan-and-execute` existing non-base branch exception applies.
+- Exception: `$plan-and-execute` does not open a PR by default when it started on an existing non-base branch. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL.
 - Include summary, test evidence, and known risks/follow-ups in the PR body.
-- Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation.
-- Only after these steps may one-shot execution produce its terminal completion handoff.
+- Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation or the `$plan-and-execute` existing non-base branch exception applies.
+- Only after these steps, or the documented `$plan-and-execute` existing non-base branch exception path, may one-shot execution produce its terminal completion handoff.
 
 ## Step 10: Post-Merge Branch Cleanup
 

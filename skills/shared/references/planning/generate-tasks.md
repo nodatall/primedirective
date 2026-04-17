@@ -15,6 +15,7 @@ Required:
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - locked planning decisions and defaults
+- direct source interpretation and assumptions when `--direct` is active
 - deep-research findings when `--deep-research` is active, already applied to finalized PRD/TDD
 
 Tasks must be generated from finalized PRD and TDD, not directly from the raw source plan.
@@ -92,3 +93,4 @@ Do not start coding after generating the task plan. Build starts only from:
 
 - explicit `$execute-task` activation with a specific `<task-id>` and optional `<plan-key>` when it can be inferred from `/tasks/`
 - explicit `$execute-task --one-shot` activation with optional `<plan-key>` when it can be inferred from `/tasks/`
+- an orchestration skill such as `$plan-and-execute` that explicitly owns continued execution

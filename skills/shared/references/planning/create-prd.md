@@ -15,8 +15,9 @@ Run this for every completed planning flow after decisions are locked. When `--d
 - `<plan-key>`
 - source plan or source prompt
 - locked decisions from Socratic refinement
+- direct source interpretation and assumptions when `--direct` is active
 - deep-research findings when `--deep-research` is active and available during finalization
-- finalized three-paragraph plain-language summary from the summary checkpoint
+- finalized three-paragraph plain-language summary from the summary checkpoint, or direct source interpretation and assumptions when `--direct` is active
 
 ## Output
 
@@ -47,6 +48,7 @@ Run this for every completed planning flow after decisions are locked. When `--d
 - Keep it concrete and plain.
 - Use it to sanity-check that the document still matches the actual intent.
 - Preserve the same core meaning as the Socratic plain-language summary.
+- When `--direct` is active, preserve the same core meaning as the direct source interpretation.
 - Keep the same three-paragraph structure unless a paragraph is genuinely empty after normalization.
 
 ## Mapping rules
@@ -80,6 +82,7 @@ Do not drop product-facing detail just because the source heading name differs f
 9. Keep the section order stable so the plain-language summary is the first substantive section a human or agent reads.
 10. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
 11. When `--deep-research` is active, treat the first PRD draft as a staging artifact for research review, then update it only with adopted product-facing findings before tasks-plan generation.
+12. When `--direct` is active, include a concise `Source Interpretation / Assumptions` note in the closest relevant section instead of stopping for low-impact clarification.
 
 ## Build gate reminder
 

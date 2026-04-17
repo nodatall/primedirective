@@ -53,6 +53,7 @@ The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and paste
 - `$plan-work --grill`
 - `$plan-work --deep-research`
 - `$plan-refine --max-rounds=8`
+- `$plan-and-execute`
 - `$execute-task --one-shot`
 - `$execute-task --stay-on-current-branch`
 - `$execute-task --preserve-review-artifacts`
@@ -94,6 +95,7 @@ Codex invocation is explicit:
 ```text
 $plan-work
 $plan-refine
+$plan-and-execute
 $review-chain
 $execute-task
 ```
@@ -109,7 +111,7 @@ Each preset should provide:
 - `subtitle` short explanation
 - `paste` exact text Alfred should paste
 
-Preset text should stay Codex-native and explicit. Use modifier conventions like `--deep-research`, `--stay-on-current-branch`, or `--preserve-review-artifacts` as skill-level textual contracts, not platform-level flags.
+Preset text should stay Codex-native and explicit. Use modifier conventions like `--deep-research`, `--preserve-artifacts`, `--stay-on-current-branch`, or `--preserve-review-artifacts` as skill-level textual contracts, not platform-level flags.
 
 ## Verification
 
