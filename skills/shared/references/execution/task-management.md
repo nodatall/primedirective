@@ -177,7 +177,7 @@ Rules:
 12. If `--preserve-review-artifacts` is present, keep `tasks/tmp/` plan and review files created during execution and list them in the final handoff.
 13. Before producing a terminal handoff in one-shot mode, re-open the task file and verify there are no remaining unchecked sub-tasks.
 14. In one-shot mode, the only valid terminal outcomes are:
-    - all remaining unchecked sub-tasks completed, reviewed, finalized, the feature branch pushed, the PR opened, and then handed off with the PR URL
+    - all remaining unchecked sub-tasks completed, reviewed, finalized, and then handed off after PR creation, or after the documented `$plan-and-execute` existing non-base branch no-PR exception path
     - execution blocked by an unresolved issue that is explicitly described, with the exact next required user action
 15. Before any user-visible one-shot completion message, run a liveness check against `tasks/tasks-plan-<plan-key>.md`: if any `- [ ]` entry remains, do not hand off and do not summarize as a stopping point.
 16. Do not emit a one-shot progress update between sub-tasks. Keep executing silently unless a real blocker requires a user-visible interruption.

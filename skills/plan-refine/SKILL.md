@@ -68,7 +68,10 @@ Load these files before running:
    - The reviewer subagent must not edit files.
    - The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and final user summary.
    - If fresh reviewer subagents cannot be spawned, stop immediately and tell the user this workflow requires subagents.
-7. For each round from 1 through `--max-rounds`:
+7. Before starting reviewer rounds, set the effective max round count.
+   - Use the requested `--max-rounds=<n>` when `n` is 8 or lower.
+   - If the requested `--max-rounds` is greater than 8, set the effective max round count to 8 and record that cap in the refinement log.
+8. For each round from 1 through the effective max round count:
    - Start from the current PRD, TDD, and tasks-plan.
    - Send the reviewer subagent the current PRD, TDD, tasks-plan, plan key, round number, and this skill's critique standard.
    - Ask the reviewer subagent to run a fresh first-principles critique using the analysis rubric plus the audit checks in `improve-plan.md`.
@@ -92,9 +95,8 @@ Load these files before running:
    - Preserve useful source-plan substance. Do not remove scope just because it is hard.
    - Re-run the required audit checks from `improve-plan.md` after edits.
    - Append the round findings, fixes, and stop decision to `tasks/tmp/plan-refine-<plan-key>.md`.
-8. Stop early when a fresh reviewer round finds no `blocker` or `material` issues.
-9. Stop early and report churn when a round repeats the same finding without a stronger fix, reverses a prior fix without new evidence, or only produces local wording edits after the previous round already satisfied the fixed stop rule.
-10. If the requested `--max-rounds` is greater than 8, set the effective round cap to 8 and record that cap in the refinement log.
+9. Stop early when a fresh reviewer round finds no `blocker` or `material` issues.
+10. Stop early and report churn when a round repeats the same finding without a stronger fix, reverses a prior fix without new evidence, or only produces local wording edits after the previous round already satisfied the fixed stop rule.
 11. If the effective max round count is reached while `blocker` or `material` findings remain, stop and report that the plan is not ready for execution.
     - Keep the refinement log even without `--preserve-refine-artifacts`.
     - Include the last round's remaining blocker/material findings in the final response.
