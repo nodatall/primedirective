@@ -5,7 +5,7 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
-- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--check-harness-drift` and/or `--preserve-artifacts`
+- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--plan-refine`, `--check-harness-drift`, and/or `--preserve-artifacts`
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
 - Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
 - One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
@@ -34,6 +34,22 @@ When present:
 - After the report is generated, run normal cleanup and archive behavior.
 - Do not add mandatory human approval steps, extra user-facing checkpoints, or standalone artifacts unless preservation was requested.
 - If evidence is missing because the run failed before artifact creation or a prior cleanup already removed files, report the evidence gap instead of guessing.
+
+## Plan-and-execute refinement modifier
+
+`--plan-refine` is valid with `$plan-and-execute`.
+
+When present:
+
+- Run `$plan-refine plan-key=<plan-key>` after PRD, TDD, and tasks-plan generation and before `$execute-task --one-shot`.
+- Use the generated plan key explicitly; do not infer across multiple planning sets.
+- Use `$plan-refine`'s normal default round cap, fresh reviewer rounds, and artifact-editing rules.
+- Treat refinement as an automatic repair pass, not a separate readiness gate.
+- Apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution.
+- If the loop reaches max rounds or churn, choose the safest concrete artifact fix available, record the accepted assumption or residual risk, and continue.
+- Ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default.
+- Continue into execution with the refined artifacts.
+- If `$plan-and-execute --preserve-artifacts` is also present, keep the refinement log with the other temp artifacts and surface its path in the final summary.
 
 ## Plan key resolution
 

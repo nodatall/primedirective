@@ -1,6 +1,6 @@
 ---
 name: plan-and-execute
-description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--check-harness-drift` and `--preserve-artifacts`.
+description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, optionally refine the plan, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--plan-refine`, `--check-harness-drift`, and `--preserve-artifacts`.
 ---
 
 # Plan And Execute Skill
@@ -13,6 +13,7 @@ Invoke explicitly with `$plan-and-execute`.
 
 Supported modifiers:
 
+- `--plan-refine`
 - `--check-harness-drift`
 - `--preserve-artifacts`
 
@@ -21,6 +22,7 @@ Supported modifiers:
 Load these files before running:
 
 - `skills/plan-work/SKILL.md`
+- `skills/plan-refine/SKILL.md`
 - `skills/execute-task/SKILL.md`
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
@@ -45,13 +47,21 @@ Load these files before running:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`
    - `tasks/tasks-plan-<plan-key>.md`
-5. Execute the generated plan in one-shot mode:
+5. If `--plan-refine` is present, run the `$plan-refine plan-key=<plan-key>` improvement loop before execution:
+   - use the generated plan key explicitly
+   - use `$plan-refine`'s normal default round cap, fresh reviewer rounds, and artifact-editing rules
+   - keep the refinement log when `--preserve-artifacts` is present; otherwise use normal `$plan-refine` cleanup behavior
+   - apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution
+   - if the loop reaches max rounds or churn, choose the safest concrete artifact fix available, record the accepted assumption or residual risk, and continue
+   - ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default
+   - continue into execution with the refined artifacts
+6. Execute the generated or refined plan in one-shot mode:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default
    - if the skill created a branch from main/base, use normal branch execution and open a PR at the end
    - use compact worker packets, focused validation per sub-task, no per-sub-task review chains, and one final full-branch review
-6. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include that report in the final handoff, then continue normal cleanup unless `--preserve-artifacts` is present.
-7. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
-8. If `--preserve-artifacts` is present, keep temp planning and review artifacts and list them in the final handoff.
+7. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include that report in the final handoff, then continue normal cleanup unless `--preserve-artifacts` is present.
+8. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
+9. If `--preserve-artifacts` is present, keep temp planning, refinement, and review artifacts and list them in the final handoff.
 
 ## Branch and PR rules
 
