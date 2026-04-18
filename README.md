@@ -5,17 +5,30 @@ Prime Directive is a Codex plugin source repo that ships reusable workflow skill
 The repo is Codex-first:
 
 - install it globally as a local Codex plugin
-- use Alfred as an optional launcher for skills and presets
 - treat this checkout as the only source of truth for skill authoring
+
+## Skill Invocations
+
+All skills use explicit Codex-native `$skill-name` invocation text.
+
+| Skill | Invocation | Modifiers and request options |
+| --- | --- | --- |
+| `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
+| `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
+| `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
+| `first-principles-mode` | `$first-principles-mode` | None |
+| `frontend-design-improve` | `$frontend-design-improve` | None |
+| `plan-and-execute` | `$plan-and-execute` | `--check-harness-drift`, `--preserve-artifacts` |
+| `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
+| `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
+| `repo-sweep` | `$repo-sweep` | `--preserve-review-artifacts` |
+| `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
 
 ## Layout
 
 - `.codex-plugin/plugin.json` Codex plugin metadata
 - `skills/` canonical skills and shared references
 - `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
-- `scripts/install-alfred-skill-workflow.py` Alfred workflow installer/exporter
-- `scripts/alfred-skill-router.py` Alfred data source for skills and presets
-- `docs/alfred-skill-launcher.md` Alfred setup and behavior details
 
 ## Install For Codex
 
@@ -38,27 +51,6 @@ Update flow:
 1. Pull the latest changes in this repo.
 2. Re-run `./scripts/install-codex-plugin.sh` if you added, renamed, or removed skills.
 3. Restart Codex if the updated skills do not appear immediately.
-
-## Install For Alfred
-
-Install or refresh the workflow:
-
-```bash
-python3 scripts/install-alfred-skill-workflow.py
-```
-
-The Alfred picker reads `skills/*/SKILL.md` plus `skills/presets.json` and pastes Codex-native invocation text such as:
-
-- `$plan-work`
-- `$plan-work --grill`
-- `$plan-work --deep-research`
-- `$plan-refine --max-rounds=8`
-- `$plan-and-execute`
-- `$execute-task --one-shot`
-- `$execute-task --stay-on-current-branch`
-- `$execute-task --preserve-review-artifacts`
-
-Modifiers are plain text owned by the skill conventions. Alfred does not parse them as platform flags.
 
 ## Install For Claude
 
@@ -90,38 +82,16 @@ Conventions:
 - use `skills/...` paths for internal references
 - keep shared non-invokable references under `skills/shared/`
 
-Codex invocation is explicit:
-
-```text
-$plan-work
-$plan-refine
-$plan-and-execute
-$review-chain
-$execute-task
-```
-
-## Presets And Modifiers
-
-Alfred presets are defined in `skills/presets.json`.
-
-Each preset should provide:
-
-- `skill` stable skill identifier
-- `title` Alfred-visible label
-- `subtitle` short explanation
-- `paste` exact text Alfred should paste
-
-Preset text should stay Codex-native and explicit. Use modifier conventions like `--deep-research`, `--preserve-artifacts`, `--stay-on-current-branch`, or `--preserve-review-artifacts` as skill-level textual contracts, not platform-level flags.
+Codex invocation is explicit; keep the complete list in `Skill Invocations` current when adding, renaming, or removing skills.
 
 ## Verification
 
 Useful local checks:
 
 ```bash
-python3 scripts/alfred-skill-router.py --format list
 ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
 ```
 
-The installer is expected to be idempotent, and the Alfred router should list both base skills and configured presets.
+The installer is expected to be idempotent.
