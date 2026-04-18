@@ -44,10 +44,29 @@ During `$plan-work`, do not run a drift audit. If prior drift notes are present 
 
 ## Output shape
 
-Keep the output short. Prefer this shape:
+Keep the output short. The terminal user-facing handoff must include the actual
+compact report inline under a visible `Harness Drift Check` heading. It is not
+enough to say that a drift report was written, archived, or available at a path.
+If a full artifact exists, mention its path only after the inline summary.
+
+Start with a one-line verdict:
+
+- `Verdict: Still load-bearing` when one or more harness components caught,
+  prevented, or clarified real risk.
+- `Verdict: Maybe conditional` when the evidence suggests a narrower default
+  should be tested next, but no removal is justified.
+- `Verdict: No material harness drift found` when the check ran and produced no
+  action-worthy simplification or removal evidence.
+- `Verdict: Evidence-limited` when required artifacts were missing or cleaned
+  up before inspection.
+
+Then include only the non-empty sections needed to support the verdict. Prefer
+this shape:
 
 ```markdown
 ## Harness Drift Check
+
+Verdict: <Still load-bearing | Maybe conditional | No material harness drift found | Evidence-limited>
 
 Still load-bearing:
 - <component>: <evidence that it caught or prevented a real issue>
@@ -65,7 +84,8 @@ Evidence gap:
 - <what was not preserved or not measured>
 ```
 
-Omit empty sections except `Evidence gap` when evidence is missing.
+Omit empty sections except `Evidence gap` when evidence is missing. When no
+section has bullets, keep the verdict and add one sentence explaining why.
 
 ## Harness lift entries
 
