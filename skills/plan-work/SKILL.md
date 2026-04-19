@@ -58,7 +58,7 @@ Load these files before running:
 6. Generate an initial `tasks/prd-<plan-key>.md` draft using `create-prd.md`.
 7. Generate an initial `tasks/tdd-<plan-key>.md` draft using `create-tdd.md`.
 8. If `--deep-research` is present, run `deep-research.md` against the locked decisions plus the source plan and current PRD/TDD drafts, then revise PRD/TDD with the adopted findings.
-9. If `--deep-research` materially changes the summary's meaning, present one revised standalone summary checkpoint before continuing.
+9. If `--deep-research` materially changes the summary's meaning, present one revised standalone summary checkpoint before continuing, unless `--direct` is present.
 10. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
 11. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo when preserved.
 12. Stop and wait for implementation trigger.

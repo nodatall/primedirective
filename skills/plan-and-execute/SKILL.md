@@ -1,6 +1,6 @@
 ---
 name: plan-and-execute
-description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, optionally refine the plan, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--plan-refine`, `--check-harness-drift`, and `--preserve-artifacts`.
+description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, optionally deepen or refine the plan, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--deep-research`, `--plan-refine`, `--check-harness-drift`, and `--preserve-artifacts`.
 ---
 
 # Plan And Execute Skill
@@ -13,6 +13,7 @@ Invoke explicitly with `$plan-and-execute`.
 
 Supported modifiers:
 
+- `--deep-research`
 - `--plan-refine`
 - `--check-harness-drift`
 - `--preserve-artifacts`
@@ -24,6 +25,7 @@ Load these files before running:
 - `skills/plan-work/SKILL.md`
 - `skills/plan-refine/SKILL.md`
 - `skills/execute-task/SKILL.md`
+- `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/review/review-protocol.md`
@@ -38,11 +40,13 @@ Load these files before running:
    - If currently on `main`, `master`, or the resolved local base branch, fetch `origin/main`, verify local main and `origin/main` do not diverge, then create a new feature branch from `origin/main`.
    - If detached `HEAD`, stop and ask.
    - If the worktree has unrelated or dangerous overlapping changes, stop and ask.
-3. Generate planning artifacts using `$plan-work --from-thread --direct` behavior:
+3. Generate planning artifacts using `$plan-work --from-thread --direct` behavior, adding `--deep-research` when that modifier is present:
    - no Socratic question loop
    - no summary checkpoint gate
    - ask only for a true blocker where the core objective is missing, contradictory, or unsafe to infer
    - write assumptions into the artifacts instead of stopping for low-impact clarification
+   - with `--deep-research`, run the normal `plan-work` research pass after initial PRD/TDD drafting and before tasks-plan generation, then adopt findings into PRD, TDD, and task sequencing before execution
+   - with `--deep-research`, do not add a user-facing revised-summary checkpoint or any extra approval pause before execution; keep going unless live web research is unavailable or the research exposes a true blocker that is unsafe, contradictory, or impossible to default
 4. Require all three artifacts before execution:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`

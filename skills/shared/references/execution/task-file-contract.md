@@ -5,7 +5,7 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
-- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--plan-refine`, `--check-harness-drift`, and/or `--preserve-artifacts`
+- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--deep-research`, `--plan-refine`, `--check-harness-drift`, and/or `--preserve-artifacts`
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
 - Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
 - One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
@@ -50,6 +50,19 @@ When present:
 - Ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default.
 - Continue into execution with the refined artifacts.
 - If `$plan-and-execute --preserve-artifacts` is also present, keep the refinement log with the other temp artifacts and surface its path in the final summary.
+
+## Plan-and-execute deep research modifier
+
+`--deep-research` is valid with `$plan-and-execute`.
+
+When present:
+
+- Compose `$plan-work --from-thread --direct --deep-research` during the planning phase.
+- Run the normal deep-research pass after initial PRD/TDD drafting and before tasks-plan generation.
+- Apply adopted findings back into PRD, TDD, and tasks-plan sequencing before execution begins.
+- Do not add a revised-summary checkpoint, planning approval gate, or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
+- Stop only when live web research is unavailable or the research reveals a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
+- If `$plan-and-execute --preserve-artifacts` is also present, keep the research memo with the other temp artifacts and surface its path in the final summary.
 
 ## Plan key resolution
 
