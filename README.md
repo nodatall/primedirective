@@ -29,6 +29,7 @@ All skills use explicit Codex-native `$skill-name` invocation text.
 - `.codex-plugin/plugin.json` Codex plugin metadata
 - `skills/` canonical skills and shared references
 - `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
+- `scripts/install-claude-skills.sh` idempotent Claude skills installer
 
 ## Install For Codex
 
@@ -54,22 +55,26 @@ Update flow:
 
 ## Install For Claude
 
-Claude is documented as a secondary manual install path only. This migration does not automate Claude setup.
-
-To expose the same skills globally for Claude:
-
-1. Create `~/.claude/skills` if it does not exist.
-2. Copy or symlink this repo's `skills/` directory into `~/.claude/skills/prime-directive`.
-3. Re-copy or refresh that link after pulling updates from this repo.
-
-Example with a symlink:
+Run from this repository root:
 
 ```bash
-mkdir -p ~/.claude/skills
-ln -sfn /absolute/path/to/primedirective/skills ~/.claude/skills/prime-directive
+./scripts/install-claude-skills.sh
 ```
 
-If your Claude setup expects a different global skills location, adapt the destination path but keep this repo's `skills/` tree as the source of truth.
+What it does:
+
+- creates `~/.claude/skills` when missing
+- symlinks each repo skill into `~/.claude/skills/<skill-name>`
+- skips existing non-symlink skill directories instead of overwriting them
+- preserves other Claude config and plugin state
+
+Set `CLAUDE_SKILLS_DIR=/custom/path` if your Claude setup expects a different global skills location.
+
+Update flow:
+
+1. Pull the latest changes in this repo.
+2. Re-run `./scripts/install-claude-skills.sh`.
+3. Restart Claude or open a fresh Claude session if the updated skills do not appear immediately.
 
 ## Skill Authoring
 
@@ -92,6 +97,8 @@ Useful local checks:
 ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
+HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
+HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 ```
 
-The installer is expected to be idempotent.
+The installers are expected to be idempotent.
