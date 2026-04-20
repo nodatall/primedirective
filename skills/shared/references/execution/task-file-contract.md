@@ -5,7 +5,7 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
-- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--deep-research`, `--plan-refine`, `--check-harness-drift`, and/or `--preserve-artifacts`
+- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--deep-research`, `--refine-plan`, `--check-harness-drift`, and/or `--preserve-artifacts`
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
 - Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
 - One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
@@ -37,7 +37,7 @@ When present:
 
 ## Plan-and-execute refinement modifier
 
-`--plan-refine` is valid with `$plan-and-execute`.
+`--refine-plan` is valid with `$plan-and-execute`.
 
 When present:
 

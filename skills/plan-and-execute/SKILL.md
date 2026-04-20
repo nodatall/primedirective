@@ -1,6 +1,6 @@
 ---
 name: plan-and-execute
-description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, optionally deepen or refine the plan, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--deep-research`, `--plan-refine`, `--check-harness-drift`, and `--preserve-artifacts`.
+description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, optionally deepen or refine the plan, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--deep-research`, `--refine-plan`, `--check-harness-drift`, and `--preserve-artifacts`.
 ---
 
 # Plan And Execute Skill
@@ -14,7 +14,7 @@ Invoke explicitly with `$plan-and-execute`.
 Supported modifiers:
 
 - `--deep-research`
-- `--plan-refine`
+- `--refine-plan`
 - `--check-harness-drift`
 - `--preserve-artifacts`
 
@@ -51,7 +51,7 @@ Load these files before running:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`
    - `tasks/tasks-plan-<plan-key>.md`
-5. If `--plan-refine` is present, run the `$plan-refine plan-key=<plan-key>` improvement loop before execution:
+5. If `--refine-plan` is present, run the `$plan-refine plan-key=<plan-key>` improvement loop before execution:
    - use the generated plan key explicitly
    - use `$plan-refine`'s normal default round cap, fresh reviewer rounds, and artifact-editing rules
    - keep the refinement log when `--preserve-artifacts` is present; otherwise use normal `$plan-refine` cleanup behavior
