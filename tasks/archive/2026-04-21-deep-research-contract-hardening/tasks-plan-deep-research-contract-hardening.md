@@ -78,7 +78,7 @@ Implement the deep-research core first, then update downstream audit/generation 
     - verify: `rg -n "research-backed|research memo|durable research digest|superseded|evidence_bar_met: no|final research-carry-forward" skills/plan-refine/SKILL.md skills/shared/references/execution/task-file-contract.md`
     - done_when: Refinement reads the memo or TDD digest, stops on `evidence_bar_met: no`, and records any superseding/removal of research-backed obligations.
 
-- [ ] 4.0 Validate and review the skill-contract change
+- [x] 4.0 Validate and review the skill-contract change
   - covers_prd: `FR-001`, `FR-002`, `FR-003`, `FR-004`, `FR-005`, `FR-006`, `FR-007`, `FR-008`, `FR-009`, `FR-010`
   - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`, `TDR-006`, `TDR-007`, `TDR-008`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-012`
   - [x] 4.1 Run focused text checks and installer smoke checks
@@ -87,7 +87,7 @@ Implement the deep-research core first, then update downstream audit/generation 
     - output: validation evidence
     - verify: `git diff --check && HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh && HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh`
     - done_when: Checks pass. The stale Alfred router CI step was removed because Alfred integration was intentionally removed before this task.
-  - [ ] 4.2 Run final full-branch review and archive planning artifacts
+  - [x] 4.2 Run final full-branch review and archive planning artifacts
     - covers_prd: `AC-001`, `AC-002`, `AC-003`, `AC-004`, `AC-005`, `AC-006`, `AC-007`, `AC-008`, `AC-009`
     - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`, `TDR-006`, `TDR-007`, `TDR-008`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-012`
     - output: `tasks/archive/2026-04-21-deep-research-contract-hardening/`
