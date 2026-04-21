@@ -49,7 +49,7 @@ Implement the deep-research core first, then update downstream audit/generation 
 - [ ] 2.0 Carry research evidence through downstream planning contracts
   - covers_prd: `FR-006`, `FR-007`
   - covers_tdd: `TDR-006`, `TDR-007`, `TDR-008`, `TDR-009`
-  - [ ] 2.1 Update `plan-work` and task-file cleanup rules so the research memo remains available through planning audits
+  - [x] 2.1 Update `plan-work` and task-file cleanup rules so the research memo remains available through planning audits
     - covers_prd: `FR-006`
     - covers_tdd: `TDR-006`
     - output: `skills/plan-work/SKILL.md`, `skills/shared/references/execution/task-file-contract.md`

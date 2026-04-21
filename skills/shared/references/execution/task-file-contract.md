@@ -59,9 +59,12 @@ When present:
 
 - Compose `$plan-work --from-thread --direct --deep-research` during the planning phase.
 - Run the normal deep-research pass after initial PRD/TDD drafting and before tasks-plan generation.
-- Apply adopted findings back into PRD, TDD, and tasks-plan sequencing before execution begins.
+- Apply adopted findings back into PRD, TDD, and task sequencing before execution begins.
 - Do not add a revised-summary checkpoint, planning approval gate, or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
 - Stop only when live web research is unavailable or the research reveals a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
+- Keep `tasks/tmp/research-plan-<plan-key>.md` available until `improve-plan.md` completes so downstream planning audits can inspect the memo even when preservation was not requested.
+- If `$plan-and-execute --refine-plan` is also active, keep `tasks/tmp/research-plan-<plan-key>.md` available until `plan-refine` completes.
+- After `improve-plan.md`, and after `plan-refine` when active, normal cleanup applies unless preservation was requested.
 - If `$plan-and-execute --preserve-artifacts` is also present, keep the research memo with the other temp artifacts and surface its path in the final summary.
 
 ## Plan-and-execute Pro analysis modifier
@@ -74,10 +77,10 @@ When present:
 - Run local repo reconnaissance and ChatGPT Pro browser escalation during planning through `./scripts/oracle-pro.sh`.
 - Use filtered whole-repo context for small or broad tasks and curated context for large or narrow tasks.
 - Dry-run the selected file bundle before sending it.
-- Apply locally verified Pro findings back into PRD, TDD, and tasks-plan sequencing before execution begins.
+- Apply locally verified Pro findings back into PRD, TDD, and task sequencing before execution begins.
 - Do not add a planning approval gate or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
 - Stop only when the dry-run reveals likely secrets/private data, the Pro setup/run fails in a way that blocks safe planning, or the Pro result exposes a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
-- If both `--pro-analysis` and `--deep-research` are present, run Pro analysis first for repo/task reasoning, then deep research for external source-backed technical and delivery guidance.
+- If both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, then run Pro analysis as the final adversarial planning pass before tasks-plan generation.
 
 ## Plan key resolution
 
@@ -113,7 +116,7 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
 
-By default, planning, refinement, and review temporary files are deleted after successful completion. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning, refinement, and review temporary files are deleted after successful completion. A deep-research planning memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 

@@ -60,7 +60,7 @@ Load these files before running:
 8. If `--deep-research` is present, run `deep-research.md` against the locked decisions plus the source plan and current PRD/TDD drafts, then revise PRD/TDD with the adopted findings.
 9. If `--deep-research` materially changes the summary's meaning, present one revised standalone summary checkpoint before continuing, unless `--direct` is present.
 10. Generate `tasks/tasks-plan-<plan-key>.md` using `generate-tasks.md`.
-11. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo when preserved.
+11. Run `improve-plan.md` once against the source plan plus all generated artifacts, plus the research memo whenever `--deep-research` was used.
 12. Stop and wait for implementation trigger.
 
 ## Planning rules
@@ -101,6 +101,7 @@ Load these files before running:
 - With `--deep-research`, do not begin `tasks-plan` drafting until the research memo is complete and PRD/TDD have been revised from the adopted findings.
 - `--deep-research` should influence TDD and tasks-plan first; update PRD only when product constraints or defaults materially change.
 - With `--deep-research`, end the memo with a plan-specific checklist or implementation guidance section so the adopted findings are easy to carry into execution for this plan.
+- With `--deep-research`, keep `tasks/tmp/research-plan-<plan-key>.md` available through `improve-plan.md` even when preservation was not requested; then normal cleanup applies unless the activation requested preserved planning artifacts.
 - With `--preserve-planning-artifacts`, keep `tasks/tmp/research-plan-<plan-key>.md` and mention it in the final planning summary.
 - Restore traceability from tasks to `FR-*` and `TDR-*` IDs.
 
