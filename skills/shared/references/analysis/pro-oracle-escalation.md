@@ -15,7 +15,7 @@ Use the repo wrapper, not raw Oracle commands:
 
 Resolve the script from the Prime Directive checkout, not from the target project being analyzed. When the current working directory is another repo, invoke the wrapper by its Prime Directive source path while keeping `cwd` in the target repo so `--file .` attaches the target project.
 
-The wrapper owns browser mode, model, heavy thinking, manual-login profile reuse, upload bundling, timeouts, and Oracle invocation details. If no `--file` input is provided, it defaults to `--file .`.
+The wrapper owns browser mode, model, thinking-time selection, manual-login profile reuse, upload bundling, timeouts, local temp cleanup, and Oracle invocation details. If no `--file` input is provided, it defaults to `--file .`.
 
 First-time setup is:
 
@@ -26,6 +26,8 @@ First-time setup is:
 This opens or reuses the persistent Oracle browser profile. The user may need to sign in to ChatGPT in that browser once. After setup, normal Pro runs should reuse the same profile.
 
 Setup intentionally skips thinking-time UI selection because it is only a login/profile check. Normal dry-run, run, and render actions use extended thinking by default because the ChatGPT Pro picker may expose only Standard and Extended. Use `ORACLE_PRO_THINKING=heavy` only when that option exists, or rerun with `ORACLE_PRO_THINKING=off` if the thinking-time control is unavailable.
+
+For setup, dry-run, run, and render actions, the wrapper gives Oracle a private `TMPDIR` and deletes it after Oracle exits. This removes local `attachments-bundle.txt` files created for browser uploads. Set `ORACLE_PRO_KEEP_TMP=1` only when debugging the generated bundle locally.
 
 If setup reports a duplicate running setup session, reattach through the wrapper:
 

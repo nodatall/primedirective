@@ -23,6 +23,7 @@ Defaults can be overridden with:
   ORACLE_PRO_BROWSER_TIMEOUT        default: 3600s
   ORACLE_PRO_PROFILE_DIR            default: ~/.oracle/browser-profile
   ORACLE_PRO_BUNDLE_FILES           default: 1
+  ORACLE_PRO_KEEP_TMP               default: 0; set 1 to keep wrapper temp files
   ORACLE_BIN                        default: oracle if installed, else npx -y @steipete/oracle
 
 If no --file/--include/--path input is provided, the wrapper defaults to --file .
@@ -94,11 +95,28 @@ append_thinking_if_enabled() {
   esac
 }
 
+run_with_private_tmpdir() {
+  local base_tmp="${TMPDIR:-/tmp}"
+  local run_tmpdir
+  run_tmpdir="$(mktemp -d "${base_tmp%/}/oracle-pro.XXXXXX")"
+  local status=0
+
+  TMPDIR="$run_tmpdir" "${CMD[@]}" || status=$?
+
+  if [[ "${ORACLE_PRO_KEEP_TMP:-0}" == "1" ]]; then
+    echo "Kept Oracle Pro temp directory: $run_tmpdir" >&2
+  else
+    rm -rf "$run_tmpdir"
+  fi
+
+  return "$status"
+}
+
 case "$action" in
   setup)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --browser-keep-browser --browser-model-strategy current --slug "${SETUP_SESSION_ID}" -p "Prime Directive Oracle Pro setup check. Reply with OK when this message is received.")
     CMD+=("$@")
-    exec "${CMD[@]}"
+    run_with_private_tmpdir
     ;;
   session)
     session_id="${1:-$SETUP_SESSION_ID}"
@@ -115,28 +133,28 @@ case "$action" in
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
-    exec "${CMD[@]}"
+    run_with_private_tmpdir
     ;;
   dry-run-json)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --dry-run json --files-report)
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
-    exec "${CMD[@]}"
+    run_with_private_tmpdir
     ;;
   run)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}")
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
-    exec "${CMD[@]}"
+    run_with_private_tmpdir
     ;;
   render)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --render --copy-markdown)
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
-    exec "${CMD[@]}"
+    run_with_private_tmpdir
     ;;
   -h|--help|help)
     usage
