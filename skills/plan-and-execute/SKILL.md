@@ -30,6 +30,7 @@ Load these files before running:
 - `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
+- `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
 - `skills/shared/references/harness-drift.md`
@@ -37,6 +38,7 @@ Load these files before running:
 ## Workflow
 
 1. Treat the current conversation above the trigger as the source plan.
+   - Follow `reasoning-budget.md` for every phase and subagent: strongest appropriate reasoning for planning/refinement/deep-research/final review, strong reasoning for implementation workers, and medium/standard reasoning for mechanical chores.
 2. Inspect branch state before creating artifacts.
    - If currently on a non-base branch, stay on that branch.
    - If currently on `main`, `master`, or the resolved local base branch, fetch `origin/main`, verify local main and `origin/main` do not diverge, then create a new feature branch from `origin/main`.

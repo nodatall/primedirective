@@ -43,6 +43,7 @@ Load these files before running:
 
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
+- `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
 - `skills/shared/references/harness-drift.md`
@@ -86,6 +87,7 @@ Load these files before running:
 
 ## Execution defaults
 
+- Follow `reasoning-budget.md`: standard-mode implementation uses the current execution agent's appropriate implementation tier, one-shot implementation workers use strong reasoning, final review subagents use the strongest appropriate reasoning tier, and mechanical chores use medium/standard reasoning.
 - Treat a failing-test-first red/green loop as the default for code-bearing, practically testable slices.
 - A test-first exception is allowed only when a failing-first loop is not practical for that exact slice; record the exception reason in `tasks/tmp/plan-task-<task-id>.md` before implementation starts.
 - New contract critique, acceptance checks, review calibration, and harness drift checks are agent-owned. Do not add mandatory human approval steps or extra user-facing checkpoints to use them.

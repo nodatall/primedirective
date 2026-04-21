@@ -159,6 +159,7 @@ Then:
 - Requires a complete planning artifact set.
 - `<plan-key>` may be explicit or inferred through the resolution rules above.
 - Edits only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md`.
+- Follows `skills/shared/references/reasoning-budget.md`: reviewer subagents use the strongest appropriate reasoning tier for the selected model family or budget.
 - Defaults to 8 refinement rounds and treats 8 as the hard maximum; higher requested values are capped at 8 and noted in the final summary.
 - Uses `tasks/tmp/plan-refine-<plan-key>.md` as the temporary refinement log.
 - Uses one fresh read-only reviewer subagent per refinement round.
@@ -176,6 +177,7 @@ Then:
 
 - Requires `--one-shot`.
 - `<plan-key>` may be explicit or inferred through the resolution rules above.
+- Follows `skills/shared/references/reasoning-budget.md`: implementation workers use strong reasoning, final review uses the strongest appropriate reasoning tier, and mechanical chores use medium/standard reasoning.
 - Start at first unchecked sub-task and continue in file order.
 - If `--stay-on-current-branch` is present, keep the current non-base branch during kickoff.
 - If kickoff begins with only the current plan's required planning artifacts uncommitted, commit them on the active execution branch before the first implementation sub-task begins.

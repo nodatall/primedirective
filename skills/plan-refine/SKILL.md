@@ -50,6 +50,7 @@ Load these files before running:
 - `skills/shared/references/planning/improve-plan.md`
 - `skills/first-principles-mode/SKILL.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
+- `skills/shared/references/reasoning-budget.md`
 
 ## Workflow
 
@@ -71,6 +72,7 @@ Load these files before running:
 6. Create a temporary refinement log at `tasks/tmp/plan-refine-<plan-key>.md`.
 7. Treat invocation of `$plan-refine` as an explicit request to delegate every critique round to a fresh reviewer subagent.
    - Spawn one fresh read-only reviewer subagent per round.
+   - Request the strongest appropriate reasoning tier for each reviewer round, following `reasoning-budget.md`.
    - The reviewer subagent must not edit files.
    - The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and final user summary.
    - If fresh reviewer subagents cannot be spawned, stop immediately and tell the user this workflow requires subagents.

@@ -27,6 +27,7 @@ Guidelines for managing task lists in markdown files.
 - One-shot mode is activated with `--one-shot`.
 - One-shot mode may infer `<plan-key>` when `/tasks/` contains exactly one complete planning set.
 - One-shot review runs once at the end in a fresh `full-branch` review subagent.
+- Follow `skills/shared/references/reasoning-budget.md`: request strong reasoning for implementation workers and the strongest appropriate reasoning tier for the final review subagent.
 - One-shot execution scope is the entire unchecked remainder of `tasks/tasks-plan-<plan-key>.md`, not just the current parent task, milestone, or section.
 - If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, commit them on the active execution branch before the first implementation sub-task.
 - For each sub-task:
@@ -61,6 +62,7 @@ Use this cadence to keep one-shot execution fast without dropping the final qual
 6. Prefer one worker per sub-task. Do not spawn exploratory or review agents per sub-task in one-shot mode.
 7. Prefer concise git/context commands during the implementation loop: `git status --short`, `git diff --stat`, `git diff --name-only`, and `git diff --check`.
 8. Avoid repeated large full-diff dumps. Read targeted hunks only for the files or symbols currently being edited, and reserve broad diffs for final review setup or specific debugging decisions.
+9. Treat formatting, artifact moves, narrow command checks, deterministic verification, and cleanup as mechanical work under `skills/shared/references/reasoning-budget.md`; choose medium/standard reasoning for those steps.
 
 ## One-shot context defaults
 

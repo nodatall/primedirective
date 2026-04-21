@@ -32,6 +32,7 @@ Load these files before running:
 - `skills/shared/references/planning/generate-tasks.md`
 - `skills/shared/references/planning/improve-plan.md`
 - `skills/shared/references/execution/task-file-contract.md`
+- `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/harness-drift.md`
 
 ## Workflow
@@ -66,6 +67,7 @@ Load these files before running:
 ## Planning rules
 
 - Always produce all three planning artifacts.
+- Follow `reasoning-budget.md`: planning, Socratic refinement, and `--deep-research` should use the strongest appropriate reasoning tier for the selected model family or budget.
 - With `--direct`, skip the planning question loop, minimum question floors, challenge-question requirement, and standalone summary checkpoint. Ask only when the core objective is missing, contradictory, or impossible to infer without likely changing implementation shape.
 - With `--direct`, write a concise `Source Interpretation` or assumptions note into the generated artifacts instead of stopping for low-impact clarification.
 - With `--from-thread`, preserve the important plan decisions already discussed in the current conversation and treat them as source material.

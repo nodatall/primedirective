@@ -76,6 +76,7 @@ Default scope rules:
 When subagents are available, execute each review round in one fresh dedicated review subagent/thread.
 
 - The fresh review subagent owns the prompt sequence for that review round.
+- The fresh review subagent should use the strongest appropriate reasoning tier for the selected model family or budget, following `skills/shared/references/reasoning-budget.md`.
 - The review round is the unit of isolation. Do not split Prompt A, Prompt B, Prompt C, and so on into separate threads.
 - During one-shot execution, the main agent must spawn the review subagent after all implementation workers return.
 - Review subagents are siblings of implementation workers. Do not have a worker spawn, direct, or review itself through its own child agent.

@@ -24,6 +24,7 @@ Load these files before running:
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
+- `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
 
 ## Scope
@@ -47,6 +48,7 @@ Load these files before running:
    - Check `git status`, note whether the tree is dirty, and do not revert unrelated changes.
    - Identify missing env vars, broken assumptions, and install blockers.
 2. Run a first-principles no-edit pre-pass.
+   - Follow `reasoning-budget.md`: the first-principles audit and review/resweep subagents use the strongest appropriate reasoning tier, fix workers use strong reasoning, and mechanical verification/cleanup uses medium or standard reasoning.
    - Use `analysis-rubric.md` as the working rubric every time, not as an optional modifier.
    - Start wide before drilling into local issues: read enough of the repository to understand product intent, entrypoints, trust boundaries, data flow, runtime surfaces, operational wiring, and deploy assumptions.
    - Infer the repo's real risk shape from code and configuration rather than accepting docs, green tests, or the user's initial framing as sufficient.
