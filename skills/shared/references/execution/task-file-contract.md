@@ -5,7 +5,7 @@ Canonical path and activation contract for planning, execution, and review skill
 ## Accepted activations
 
 - Planning: `$plan-work` with the source plan or request in the same user message
-- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--deep-research`, `--refine-plan`, `--check-harness-drift`, and/or `--preserve-artifacts`
+- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, and/or `--preserve-artifacts`
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
 - Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
 - One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
@@ -63,6 +63,21 @@ When present:
 - Do not add a revised-summary checkpoint, planning approval gate, or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
 - Stop only when live web research is unavailable or the research reveals a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
 - If `$plan-and-execute --preserve-artifacts` is also present, keep the research memo with the other temp artifacts and surface its path in the final summary.
+
+## Plan-and-execute Pro analysis modifier
+
+`--pro-analysis` is valid with `$plan-and-execute`.
+
+When present:
+
+- Load `skills/shared/references/analysis/pro-oracle-escalation.md`.
+- Run local repo reconnaissance and ChatGPT Pro browser escalation during planning through `./scripts/oracle-pro.sh`.
+- Use filtered whole-repo context for small or broad tasks and curated context for large or narrow tasks.
+- Dry-run the selected file bundle before sending it.
+- Apply locally verified Pro findings back into PRD, TDD, and tasks-plan sequencing before execution begins.
+- Do not add a planning approval gate or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
+- Stop only when the dry-run reveals likely secrets/private data, the Pro setup/run fails in a way that blocks safe planning, or the Pro result exposes a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
+- If both `--pro-analysis` and `--deep-research` are present, run Pro analysis first for repo/task reasoning, then deep research for external source-backed technical and delivery guidance.
 
 ## Plan key resolution
 

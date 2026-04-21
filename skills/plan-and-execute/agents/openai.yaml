@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan And Execute"
   short_description: "Plan from this thread and execute one-shot"
-  default_prompt: "Use $plan-and-execute to turn the current thread plan into docs and execute it one-shot."
+  default_prompt: "Use $plan-and-execute to turn the current thread plan into docs and execute it one-shot. Add --pro-analysis when planning should include ChatGPT Pro browser escalation."

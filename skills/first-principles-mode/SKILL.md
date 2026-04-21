@@ -1,6 +1,6 @@
 ---
 name: first-principles-mode
-description: Run a deep, adaptive, read-only analysis pass that widens the search space, tests competing explanations, and synthesizes the best mechanism-level answer before implementation judgment.
+description: Run a deep, adaptive, read-only analysis pass that widens the search space, tests competing explanations, and synthesizes the best mechanism-level answer before implementation judgment. Supports `--pro` for ChatGPT Pro browser escalation through the repo wrapper.
 ---
 
 # First-Principles Mode Skill
@@ -9,11 +9,17 @@ Run a deliberately deep, adaptive, read-only analysis pass before offering imple
 
 Load `skills/first-principles-mode/references/analysis-rubric.md` before starting.
 
+If `--pro` is present, also load `skills/shared/references/analysis/pro-oracle-escalation.md`.
+
 ## Activation
 
 Invoke explicitly with `$first-principles-mode`.
 
 Treat the current user request as the analysis target. Do not require the user to restate it in a second command.
+
+Supported modifiers:
+
+- `--pro`
 
 ## Goal
 
@@ -36,6 +42,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 - If the same request also asks for edits, debugging, refactors, or fixes, complete the analytical pass first and stop there. Wait for an explicit follow-up before changing files.
 - Back conclusions with file-backed evidence or other observable artifacts from the repo.
 - State confidence and the key uncertainty when they materially affect the conclusion.
+- With `--pro`, use the Oracle Pro escalation reference after local reconnaissance. Oracle is an implementation detail: choose context, dry-run, run the Pro pass, then synthesize against local evidence.
 
 ## Workflow
 
@@ -59,16 +66,21 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 6. Gather confirming and disconfirming evidence before choosing the best explanation.
    - Use file-backed observations, control-flow traces, contracts, config, or operational artifacts when relevant.
    - Distinguish what the evidence shows from what it merely suggests.
-7. Run an explicit adversarial pass against the current best view.
+7. If `--pro` is present, run the Pro escalation after the local breadth pass has identified the problem shape and likely context.
+   - Use `./scripts/oracle-pro.sh dry-run` first.
+   - Use filtered whole-repo context for small or broad questions; use curated files for large or narrow questions.
+   - Stop before sending only when the dry-run or local inspection reveals likely secrets, private data, or an obviously wrong context bundle.
+   - Treat the Pro result as external analysis to verify and synthesize, not as source of truth.
+8. Run an explicit adversarial pass against the current best view.
    - Ask what would falsify it.
    - Look for hidden assumptions, missing constraints, or a broader framing that changes the problem shape.
    - If the evidence remains mixed, keep the answer mixed.
-8. Recompose the findings into one coherent answer that starts plain and becomes more technical only as needed.
-9. Choose the smallest user-facing output shape that preserves the conclusion, confidence, and decisive evidence.
+9. Recompose the findings into one coherent answer that starts plain and becomes more technical only as needed.
+10. Choose the smallest user-facing output shape that preserves the conclusion, confidence, and decisive evidence.
    - Keep internal subquestions, discarded hypotheses, and intermediate reasoning private unless surfacing them will materially help the user.
    - Prefer a tight causal memo over a report template when the thesis is clear.
    - Expand only when ambiguity, confidence, or decision risk justifies it.
-10. Stop after the analysis pass. Do not move into implementation, patching, or task execution.
+11. Stop after the analysis pass. Do not move into implementation, patching, or task execution.
 
 ## Output Contract
 
@@ -121,3 +133,4 @@ Formatting rules:
 - `$first-principles-mode Diagnose the root cause of this architecture drift; do not propose fixes yet`
 - `$first-principles-mode Pressure-test this plan and tell me where its reasoning breaks`
 - `$first-principles-mode Find a materially different way to solve this problem, not just an optimization of the current path`
+- `$first-principles-mode --pro Explain the real architecture risk in this repo`

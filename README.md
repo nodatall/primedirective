@@ -16,9 +16,9 @@ All skills use explicit Codex-native `$skill-name` invocation text.
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
-| `first-principles-mode` | `$first-principles-mode` | None |
+| `first-principles-mode` | `$first-principles-mode` | `--pro` |
 | `frontend-design-improve` | `$frontend-design-improve` | None |
-| `plan-and-execute` | `$plan-and-execute` | `--deep-research`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
+| `plan-and-execute` | `$plan-and-execute` | `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
 | `repo-sweep` | `$repo-sweep` | `--preserve-review-artifacts` |
@@ -30,6 +30,7 @@ All skills use explicit Codex-native `$skill-name` invocation text.
 - `skills/` canonical skills and shared references
 - `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
 - `scripts/install-claude-skills.sh` idempotent Claude skills installer
+- `scripts/oracle-pro.sh` ChatGPT Pro browser escalation wrapper for Prime Directive analysis flows
 
 ## Install For Codex
 
@@ -102,3 +103,21 @@ HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 ```
 
 The installers are expected to be idempotent.
+
+## Optional ChatGPT Pro Escalation
+
+Prime Directive can use ChatGPT Pro browser mode as an internal escalation path for:
+
+- `$first-principles-mode --pro`
+- `$plan-and-execute --pro-analysis`
+
+The public workflow stays on those skill modifiers. The implementation detail is the repo wrapper:
+
+```bash
+./scripts/oracle-pro.sh setup
+./scripts/oracle-pro.sh session
+./scripts/oracle-pro.sh dry-run -p "Analyze this repo" --file .
+./scripts/oracle-pro.sh run -p "Analyze this repo" --file .
+```
+
+Run setup once when the browser profile needs ChatGPT login. If setup reports a duplicate running session, use `./scripts/oracle-pro.sh session` to reattach or `./scripts/oracle-pro.sh setup --force` to start a fresh setup check. The setup action skips thinking-time UI selection because it is only a login/profile check. Normal dry-run/run/render actions use extended thinking by default because the ChatGPT Pro picker may expose only Standard and Extended; set `ORACLE_PRO_THINKING=heavy` only when that option exists, or `ORACLE_PRO_THINKING=off` if the thinking-time control is unavailable. The wrapper owns Oracle defaults for browser mode, Pro model, manual-login profile reuse, file bundling, timeouts, and dry-run previews.

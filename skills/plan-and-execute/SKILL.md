@@ -1,6 +1,6 @@
 ---
 name: plan-and-execute
-description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, optionally deepen or refine the plan, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--deep-research`, `--refine-plan`, `--check-harness-drift`, and `--preserve-artifacts`.
+description: Convert the current thread plan into PRD, TDD, and tasks-plan artifacts, optionally deepen or refine the plan, then execute it one-shot through final review and cleanup. Defaults to current-branch execution on feature branches and branch-plus-PR execution from main. Supports `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, and `--preserve-artifacts`.
 ---
 
 # Plan And Execute Skill
@@ -14,6 +14,7 @@ Invoke explicitly with `$plan-and-execute`.
 Supported modifiers:
 
 - `--deep-research`
+- `--pro-analysis`
 - `--refine-plan`
 - `--check-harness-drift`
 - `--preserve-artifacts`
@@ -26,6 +27,7 @@ Load these files before running:
 - `skills/plan-refine/SKILL.md`
 - `skills/execute-task/SKILL.md`
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
+- `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/review/review-protocol.md`
@@ -45,8 +47,12 @@ Load these files before running:
    - no summary checkpoint gate
    - ask only for a true blocker where the core objective is missing, contradictory, or unsafe to infer
    - write assumptions into the artifacts instead of stopping for low-impact clarification
+   - with `--pro-analysis`, run a local reconnaissance pass and Pro escalation during planning before PRD/TDD are treated as final inputs; synthesize the Pro result against local evidence and adopt surviving findings into PRD, TDD, and task sequencing
+   - with `--pro-analysis`, do not expose Oracle mechanics as the workflow surface; use `./scripts/oracle-pro.sh` through the Pro escalation reference
+   - with `--pro-analysis`, do not add an extra approval pause before execution unless the dry-run reveals likely secrets/private data, the Pro pass fails in a way that blocks safe planning, or the result exposes a true blocker that is unsafe, contradictory, or impossible to default
    - with `--deep-research`, run the normal `plan-work` research pass after initial PRD/TDD drafting and before tasks-plan generation, then adopt findings into PRD, TDD, and task sequencing before execution
    - with `--deep-research`, do not add a user-facing revised-summary checkpoint or any extra approval pause before execution; keep going unless live web research is unavailable or the research exposes a true blocker that is unsafe, contradictory, or impossible to default
+   - if both `--pro-analysis` and `--deep-research` are present, run Pro analysis first for repo/task reasoning, then run deep research for external source-backed technical and delivery guidance
 4. Require all three artifacts before execution:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`
