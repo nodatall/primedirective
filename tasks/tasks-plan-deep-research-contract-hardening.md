@@ -81,12 +81,12 @@ Implement the deep-research core first, then update downstream audit/generation 
 - [ ] 4.0 Validate and review the skill-contract change
   - covers_prd: `FR-001`, `FR-002`, `FR-003`, `FR-004`, `FR-005`, `FR-006`, `FR-007`, `FR-008`, `FR-009`, `FR-010`
   - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`, `TDR-006`, `TDR-007`, `TDR-008`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-012`
-  - [ ] 4.1 Run focused text checks and installer smoke checks
+  - [x] 4.1 Run focused text checks and installer smoke checks
     - covers_prd: `AC-008`, `AC-009`
     - covers_tdd: `TDR-012`
     - output: validation evidence
-    - verify: `git diff --check && python3 scripts/alfred-skill-router.py --format list && HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh && HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh`
-    - done_when: Checks pass or any failures are documented with concrete cause.
+    - verify: `git diff --check && HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh && HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh`
+    - done_when: Checks pass. The stale Alfred router CI step was removed because Alfred integration was intentionally removed before this task.
   - [ ] 4.2 Run final full-branch review and archive planning artifacts
     - covers_prd: `AC-001`, `AC-002`, `AC-003`, `AC-004`, `AC-005`, `AC-006`, `AC-007`, `AC-008`, `AC-009`
     - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`, `TDR-006`, `TDR-007`, `TDR-008`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-012`

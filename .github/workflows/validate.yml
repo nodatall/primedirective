@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate Alfred router output
-        run: python3 scripts/alfred-skill-router.py --format list
       - name: Validate Codex installer idempotence
         run: |
           export HOME="$RUNNER_TEMP/home"

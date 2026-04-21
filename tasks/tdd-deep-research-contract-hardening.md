@@ -33,7 +33,7 @@ Planning orchestration lives in:
 Validation surface:
 
 - README documents installer smoke checks.
-- `.github/workflows/validate.yml` runs `python3 scripts/alfred-skill-router.py --format list` and validates Codex installer idempotence. It does not currently run the Claude installer, so Claude installer validation remains a local smoke check unless this plan explicitly updates CI.
+- `.github/workflows/validate.yml` validates Codex installer idempotence. The prior Alfred router validation step is out of scope because Alfred integration was removed, and Claude installer validation remains a local smoke check unless this plan explicitly updates CI.
 - There is no repo-wide Markdown linter or automated contract parser.
 
 ## Architecture / Approach
@@ -129,7 +129,6 @@ The main operational concern is skill visibility after install. Installer smoke 
 Focused checks:
 
 - `git diff --check`
-- `python3 scripts/alfred-skill-router.py --format list`
 - `HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh`
 - `HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh`
 
