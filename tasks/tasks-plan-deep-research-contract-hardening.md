@@ -62,7 +62,7 @@ Implement the deep-research core first, then update downstream audit/generation 
     - verify: `rg -n "research-backed rationale|completion stamp|evidence_bar_met: no|Finding-to-Artifact Delta|Evidence Ledger|adopted.*finding" skills/shared/references/planning/create-tdd.md skills/shared/references/planning/generate-tasks.md skills/shared/references/planning/improve-plan.md`
     - done_when: Final TDD retains compact research rationale, task generation checks completion/carry-forward and stops on `evidence_bar_met: no`, and improve-plan audits the structured memo instead of improving around a failed stamp.
 
-- [ ] 3.0 Lock combined modifier and refinement guardrails
+- [x] 3.0 Lock combined modifier and refinement guardrails
   - covers_prd: `FR-008`, `FR-009`
   - covers_tdd: `TDR-010`, `TDR-011`, `TDR-012`
   - [x] 3.1 Update `plan-and-execute` and task-file contract for explicit modifier order and Pro/research reconciliation
@@ -71,7 +71,7 @@ Implement the deep-research core first, then update downstream audit/generation 
     - output: `skills/plan-and-execute/SKILL.md`, `skills/shared/references/execution/task-file-contract.md`
     - verify: `rg -n "deep research first|Pro.*does not count|Pro-suggested|independently.*verified|Evidence Ledger|reconciliation|primary evidence" skills/plan-and-execute/SKILL.md skills/shared/references/execution/task-file-contract.md`
     - done_when: Combined modifiers are ordered as deep research, Pro analysis, tasks-plan, refine-plan, execution; Pro cannot replace primary evidence; Pro-suggested sources influence source-backed claims only after independent verification and Evidence Ledger recording; conflicts with research or repo facts require reconciliation.
-  - [ ] 3.2 Update `plan-refine` and task-file contract so refinement cannot silently weaken research-backed decisions
+  - [x] 3.2 Update `plan-refine` and task-file contract so refinement cannot silently weaken research-backed decisions
     - covers_prd: `FR-009`
     - covers_tdd: `TDR-011`
     - output: `skills/plan-refine/SKILL.md`, `skills/shared/references/execution/task-file-contract.md`

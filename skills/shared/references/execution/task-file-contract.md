@@ -45,6 +45,11 @@ When present:
 - Use the generated plan key explicitly; do not infer across multiple planning sets.
 - Use `$plan-refine`'s normal default round cap, fresh reviewer rounds, and artifact-editing rules.
 - Treat refinement as an automatic repair pass, not a separate readiness gate.
+- When `--deep-research` was also used, `$plan-refine` must read `tasks/tmp/research-plan-<plan-key>.md` if it still exists; otherwise it must read the durable research digest in `tasks/tdd-<plan-key>.md`.
+- Treat the plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
+- When `--deep-research` was also used, `$plan-refine` must stop on `evidence_bar_met: no` instead of refining around a failed research evidence bar.
+- When `--deep-research` was also used, `$plan-refine` may not remove or weaken research-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies without recording why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
+- When `--deep-research` was also used, `$plan-refine` must run a final research-carry-forward check before execution continues.
 - Apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution.
 - If the loop reaches max rounds or churn, choose the safest concrete artifact fix available, record the accepted assumption or residual risk, and continue.
 - Ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default.
@@ -159,6 +164,11 @@ Then:
 - Uses one fresh read-only reviewer subagent per refinement round.
 - The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and the final user summary.
 - If fresh reviewer subagents cannot be spawned, stop immediately instead of falling back to local self-review.
+- If deep research was used, reads `tasks/tmp/research-plan-<plan-key>.md` when it still exists; otherwise reads the durable research digest in the TDD.
+- Treats a plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
+- If deep research was used, stops on `evidence_bar_met: no`.
+- If deep research was used, preserves research-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
+- If deep research was used, runs a final research-carry-forward check before execution continues.
 - Deletes the refinement log after successful completion unless `--preserve-refine-artifacts` is present.
 - Keeps the refinement log when the run stops with unresolved blockers, material findings, missing artifacts, max rounds, or repeated/contradictory churn.
 
