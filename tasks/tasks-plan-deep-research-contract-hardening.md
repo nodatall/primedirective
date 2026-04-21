@@ -30,7 +30,7 @@ Implement the deep-research core first, then update downstream audit/generation 
 
 ## Tasks
 
-- [ ] 1.0 Harden the core deep-research memo and evidence contract
+- [x] 1.0 Harden the core deep-research memo and evidence contract
   - covers_prd: `FR-001`, `FR-002`, `FR-003`, `FR-004`, `FR-005`, `FR-010`
   - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`
   - [x] 1.1 Add source-count, source-type, source-family, source-authority, source-conflict, and privacy rules to `deep-research.md`
@@ -39,7 +39,7 @@ Implement the deep-research core first, then update downstream audit/generation 
     - output: `skills/shared/references/planning/deep-research.md`
     - verify: `rg -n "Evidence Ledger|source_id|source_type|source_family|publication_date|last_updated_date|accessed_date|version_or_scope|supported_claims|current_enough_reason|source authority|privacy" skills/shared/references/planning/deep-research.md`
     - done_when: The contract clearly defines which sources count toward the external primary minimum, requires the Evidence Ledger fields named in `FR-001`/`TDR-001`, explains how source conflicts are resolved, and states what private context cannot be sent externally.
-  - [ ] 1.2 Add draft-linked research questions, finding-to-artifact delta, and completion stamp requirements to `deep-research.md`
+  - [x] 1.2 Add draft-linked research questions, finding-to-artifact delta, and completion stamp requirements to `deep-research.md`
     - covers_prd: `FR-003`, `FR-004`, `FR-005`
     - covers_tdd: `TDR-002`, `TDR-003`, `TDR-004`
     - output: `skills/shared/references/planning/deep-research.md`

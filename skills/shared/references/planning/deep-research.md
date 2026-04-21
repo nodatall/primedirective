@@ -82,12 +82,13 @@ Before the first external search:
 
 1. Start from the locked planning decisions plus the current PRD/TDD drafts, not from a blank prompt.
 2. Review the source plan and current PRD/TDD drafts to identify the highest-risk technical and delivery questions that could change implementation quality or sequencing.
-3. Write a short research agenda first:
+3. Write a Draft-Linked Research Agenda first:
    - the main technical questions to answer
    - the highest-risk unknowns
    - which research buckets apply to this plan
    - the exact current date being used for freshness-sensitive questions
    - the stack-, provider-, or framework-specific areas that need current verification
+   - the draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` each question could change
 4. Create a temporary working memo at `tasks/tmp/research-plan-<plan-key>.md` while the research pass is in progress.
 5. Seed the working memo with an improvement backlog:
    - draft weaknesses or assumptions to test
@@ -137,6 +138,7 @@ Before deep research may be considered complete, gather and record:
 - at least 5 substantive external primary web source reviews
 - repo-local source reviews as needed for implementation grounding, but never as a substitute for the external minimum
 - at least 3 distinct research questions answered for this plan
+- each research question linked to a draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change
 - at least 4 applicable buckets reviewed from the default scope, unless the plan is genuinely too narrow for that many
 - at least 2 rounds of follow-up research after the initial source pass
 - explicit notes on at least 3 design-impacting findings, not just links
@@ -206,6 +208,47 @@ The working memo must include an Evidence Ledger. Each source row must include:
 
 Use `unknown` for unavailable publication or update dates, but still explain why the source is current enough for each supported claim.
 
+## Draft-Linked Research Agenda
+
+The working memo must include a Draft-Linked Research Agenda before research begins. Each question must name the draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change, plus the research bucket and possible impact on PRD, TDD, rollout, verification, or task sequencing.
+
+Do not include generic research questions that cannot plausibly change the plan.
+
+## Finding-to-Artifact Delta
+
+The working memo must include a Finding-to-Artifact Delta. Each finding row must include:
+
+- `finding_id`
+- `research_question_id`
+- `bucket`
+- `disposition`
+- `recommendation`
+- `recommendation_level`
+- `support_type`
+- `source_ids`
+- `prd_tdd_sections_changed`
+- `task_plan_inputs_created`
+- `disposition_reason`
+
+Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding is not adopted unless it changes PRD/TDD or creates an explicit task-plan input; otherwise record the reason in `disposition_reason`.
+
+## Deep Research Completion Stamp
+
+The working memo must end with a Deep Research Completion Stamp containing:
+
+- `external_primary_sources_count`
+- `source_family_count`
+- `research_questions_answered`
+- `buckets_reviewed`
+- `follow_up_passes_completed`
+- `adopted_findings_count`
+- `rejected_or_deferred_findings_count`
+- `prd_tdd_sections_changed`
+- `task_plan_inputs_created`
+- `evidence_bar_met`
+
+Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, and PRD/TDD revisions are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
+
 ## Working memo contract
 
 The temporary research memo must contain:
@@ -216,6 +259,9 @@ The temporary research memo must contain:
 - version-first stack discovery notes and any unknown versions
 - external-query privacy notes, including any redactions or query constraints used
 - Evidence Ledger with the required source fields and count eligibility
+- Draft-Linked Research Agenda with plan-changing draft links for each question
+- Finding-to-Artifact Delta with the required finding, disposition, support, source, artifact-change, and task-input fields
+- Deep Research Completion Stamp with counts and `evidence_bar_met`
 - external primary sources reviewed, with direct links and one-line notes on what each source answered
 - source freshness notes for each substantive external source
 - source-family count and source authority notes
@@ -274,4 +320,5 @@ Before continuing to tasks-plan generation:
 3. Any new risks or sequencing requirements are reflected in revised PRD/TDD where appropriate and are ready to be carried into tasks-plan.
 4. The research did not silently widen scope into broad product discovery.
 5. The working memo meets the minimum evidence bar, including the external-source minimum and required web-status sections.
-6. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.
+6. The Deep Research Completion Stamp says `evidence_bar_met: yes`.
+7. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.
