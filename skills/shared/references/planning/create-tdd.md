@@ -92,11 +92,17 @@ When the plan involves agents, secrets, untrusted input, or outbound actions, ma
 13. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
 14. If `--deep-research` is active, TDD is the primary home for research-backed technical recommendations and rationale.
 15. When `--deep-research` is active, treat the first TDD draft as a staging artifact for research review, then update it with the adopted findings before tasks-plan generation.
-16. When repo-local implementations or tests already provide a good pattern, name them in the relevant design sections so execution can follow an existing local convention.
-17. When the plan breaks into executable slices, make clear which slices are expected to use a failing-test-first red/green loop and where a test-first exception is likely because the work is not practically testable first.
-18. When the plan touches agents, secrets, untrusted input, or outbound actions, enrich `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` with the concrete trust and approval constraints that execution and review must enforce.
-19. Do not add standalone `Security Trust Boundaries` or `Agent Safety Constraints` sections; enrich the existing section set only when those concerns are relevant.
-20. When `--direct` is active, record concise assumptions in the relevant existing sections and defer unsupported exact implementation choices to `$execute-task` sub-task contracts.
+16. When `--deep-research` is active, preserve compact durable research-backed rationale inside the relevant existing sections rather than adding a standalone research section. For each adopted technical recommendation that affects implementation, include:
+   - the decision being adopted
+   - why it matters to the plan
+   - the supporting source IDs or links from the research memo
+   - the affected `TDR-*` obligations
+17. When `--deep-research` is active and the temporary memo will be cleaned up later, make the TDD durable enough that execution and review can still understand the adopted decision, source basis, implementation impact, and affected `TDR-*` without reopening the full memo.
+18. When repo-local implementations or tests already provide a good pattern, name them in the relevant design sections so execution can follow an existing local convention.
+19. When the plan breaks into executable slices, make clear which slices are expected to use a failing-test-first red/green loop and where a test-first exception is likely because the work is not practically testable first.
+20. When the plan touches agents, secrets, untrusted input, or outbound actions, enrich `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` with the concrete trust and approval constraints that execution and review must enforce.
+21. Do not add standalone `Security Trust Boundaries` or `Agent Safety Constraints` sections; enrich the existing section set only when those concerns are relevant.
+22. When `--direct` is active, record concise assumptions in the relevant existing sections and defer unsupported exact implementation choices to `$execute-task` sub-task contracts.
 
 ## Build gate reminder
 

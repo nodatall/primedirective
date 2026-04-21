@@ -45,6 +45,11 @@ When present:
 - Use the generated plan key explicitly; do not infer across multiple planning sets.
 - Use `$plan-refine`'s normal default round cap, fresh reviewer rounds, and artifact-editing rules.
 - Treat refinement as an automatic repair pass, not a separate readiness gate.
+- When `--deep-research` was also used, `$plan-refine` must read `tasks/tmp/research-plan-<plan-key>.md` if it still exists; otherwise it must read the durable research digest in `tasks/tdd-<plan-key>.md`.
+- Treat the plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
+- When `--deep-research` was also used, `$plan-refine` must stop on `evidence_bar_met: no` instead of refining around a failed research evidence bar.
+- When `--deep-research` was also used, `$plan-refine` may not remove or weaken research-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies without recording why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
+- When `--deep-research` was also used, `$plan-refine` must run a final research-carry-forward check before execution continues.
 - Apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution.
 - If the loop reaches max rounds or churn, choose the safest concrete artifact fix available, record the accepted assumption or residual risk, and continue.
 - Ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default.
@@ -59,9 +64,12 @@ When present:
 
 - Compose `$plan-work --from-thread --direct --deep-research` during the planning phase.
 - Run the normal deep-research pass after initial PRD/TDD drafting and before tasks-plan generation.
-- Apply adopted findings back into PRD, TDD, and tasks-plan sequencing before execution begins.
+- Apply adopted findings back into PRD, TDD, and task sequencing before execution begins.
 - Do not add a revised-summary checkpoint, planning approval gate, or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
 - Stop only when live web research is unavailable or the research reveals a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
+- Keep `tasks/tmp/research-plan-<plan-key>.md` available until `improve-plan.md` completes so downstream planning audits can inspect the memo even when preservation was not requested.
+- If `$plan-and-execute --refine-plan` is also active, keep `tasks/tmp/research-plan-<plan-key>.md` available until `plan-refine` completes.
+- After `improve-plan.md`, and after `plan-refine` when active, normal cleanup applies unless preservation was requested.
 - If `$plan-and-execute --preserve-artifacts` is also present, keep the research memo with the other temp artifacts and surface its path in the final summary.
 
 ## Plan-and-execute Pro analysis modifier
@@ -74,10 +82,13 @@ When present:
 - Run local repo reconnaissance and ChatGPT Pro browser escalation during planning through `./scripts/oracle-pro.sh`.
 - Use filtered whole-repo context for small or broad tasks and curated context for large or narrow tasks.
 - Dry-run the selected file bundle before sending it.
-- Apply locally verified Pro findings back into PRD, TDD, and tasks-plan sequencing before execution begins.
+- Apply locally verified Pro findings back into PRD, TDD, and task sequencing before execution begins.
+- Treat Pro output as adversarial analysis, not primary evidence; it does not count toward the `--deep-research` external primary-source minimum.
+- Let Pro-suggested sources influence source-backed claims only after the main agent independently verifies those sources live and records them in the Evidence Ledger.
+- Reconcile any Pro claim that conflicts with the research memo or repo facts before tasks-plan generation.
 - Do not add a planning approval gate or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
 - Stop only when the dry-run reveals likely secrets/private data, the Pro setup/run fails in a way that blocks safe planning, or the Pro result exposes a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
-- If both `--pro-analysis` and `--deep-research` are present, run Pro analysis first for repo/task reasoning, then deep research for external source-backed technical and delivery guidance.
+- If both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, run Pro analysis as the final adversarial planning pass, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute.
 
 ## Plan key resolution
 
@@ -113,7 +124,7 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
 
-By default, planning, refinement, and review temporary files are deleted after successful completion. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning, refinement, and review temporary files are deleted after successful completion. A deep-research planning memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 
@@ -153,6 +164,11 @@ Then:
 - Uses one fresh read-only reviewer subagent per refinement round.
 - The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and the final user summary.
 - If fresh reviewer subagents cannot be spawned, stop immediately instead of falling back to local self-review.
+- If deep research was used, reads `tasks/tmp/research-plan-<plan-key>.md` when it still exists; otherwise reads the durable research digest in the TDD.
+- Treats a plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
+- If deep research was used, stops on `evidence_bar_met: no`.
+- If deep research was used, preserves research-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
+- If deep research was used, runs a final research-carry-forward check before execution continues.
 - Deletes the refinement log after successful completion unless `--preserve-refine-artifacts` is present.
 - Keeps the refinement log when the run stops with unresolved blockers, material findings, missing artifacts, max rounds, or repeated/contradictory churn.
 

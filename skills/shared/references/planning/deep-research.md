@@ -68,16 +68,27 @@ Before starting web research, explicitly frame the pass with:
 
 Do not send a generic "latest best practices" prompt. Research must be scoped to the actual plan, current drafts, and technical environment.
 
+## Version-first and privacy rules
+
+Before the first external search:
+
+- inspect repo manifests, lockfiles, configs, package files, deployment files, and existing docs enough to identify the relevant framework, SDK, database, provider, runtime, hosting, and validation versions
+- record unknown versions explicitly instead of assuming the latest version
+- include known versions or provider constraints in external queries when they materially affect the answer
+- do not send secrets, private customer data, unpublished business details, proprietary identifiers, or large private snippets into web searches or external research prompts
+- redact private project details before external searches; prefer stack-, provider-, version-, and behavior-specific queries
+
 ## Research process
 
 1. Start from the locked planning decisions plus the current PRD/TDD drafts, not from a blank prompt.
 2. Review the source plan and current PRD/TDD drafts to identify the highest-risk technical and delivery questions that could change implementation quality or sequencing.
-3. Write a short research agenda first:
+3. Write a Draft-Linked Research Agenda first:
    - the main technical questions to answer
    - the highest-risk unknowns
    - which research buckets apply to this plan
    - the exact current date being used for freshness-sensitive questions
    - the stack-, provider-, or framework-specific areas that need current verification
+   - the draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` each question could change
 4. Create a temporary working memo at `tasks/tmp/research-plan-<plan-key>.md` while the research pass is in progress.
 5. Seed the working memo with an improvement backlog:
    - draft weaknesses or assumptions to test
@@ -127,6 +138,7 @@ Before deep research may be considered complete, gather and record:
 - at least 5 substantive external primary web source reviews
 - repo-local source reviews as needed for implementation grounding, but never as a substitute for the external minimum
 - at least 3 distinct research questions answered for this plan
+- each research question linked to a draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change
 - at least 4 applicable buckets reviewed from the default scope, unless the plan is genuinely too narrow for that many
 - at least 2 rounds of follow-up research after the initial source pass
 - explicit notes on at least 3 design-impacting findings, not just links
@@ -135,6 +147,37 @@ Before deep research may be considered complete, gather and record:
 - at least 1 plan-specific checklist or implementation guidance section derived from the findings
 
 Do not waive these minimums for narrow or local-only tasks when `--deep-research` is present.
+
+## Source count and authority rules
+
+An external primary source counts toward the 5-source minimum only when it is opened live, is substantive for a plan claim, and is recorded in the Evidence Ledger.
+
+Count these source types toward the external primary minimum:
+
+- official product, framework, platform, or vendor documentation
+- API references, SDK references, migration guides, release notes, changelogs, and deprecation notices from the owning project or vendor
+- standards, specifications, RFCs, protocol docs, and security advisories from authoritative maintainers or standards bodies
+- primary technical references from the project, provider, or maintainer responsible for the behavior being researched
+
+Do not count these toward the external primary minimum:
+
+- repo-local files, tests, docs, issues, or PRs
+- Pro/Oracle output, AI answers, search-result pages, snippets, summaries, or copied citations that were not independently opened
+- generic blogs, tutorials, Q&A, forum posts, social posts, marketing pages, press, or vendor sales copy
+- duplicate mirrors, archived copies, or repeated pages from the same source that do not add a distinct claim
+- sources that are stale, version-mismatched, or not current enough for the claim being supported
+
+Use `source_family` to group sources by authority family, such as a vendor, standards body, framework project, cloud provider, database project, or security advisory source. Record `source_family_count` in the completion stamp, and avoid satisfying the evidence bar with many pages from one family when the decision depends on cross-provider, cross-layer, or standards-versus-vendor evidence.
+
+For source authority and source conflict handling:
+
+- prefer the owner of the behavior for product, API, SDK, runtime, security, limit, pricing, and migration claims
+- prefer standards or specifications for protocol and interoperability claims, then vendor implementation docs for provider-specific behavior
+- prefer repo-local evidence only for what this project currently does; it does not outrank current external primary sources on external behavior
+- when sources conflict, record the conflict, the source IDs involved, the authority order used, and the reason the selected source is current enough
+- do not adopt a conflicted recommendation until the conflict is reconciled or explicitly marked as a residual risk
+
+Follow-up passes count only when they resolve a source conflict, verify a version or provider constraint, validate a limit, failure mode, rollout, rollback, or recovery concern, test a recommendation against an alternative, or prove an expected bucket is not applicable.
 
 ## Research buckets
 
@@ -147,6 +190,65 @@ Cover all applicable buckets below, not just the easiest one:
 - security, privacy, secrets, auth, or operational readiness
 - testing, verification, observability, and failure handling
 
+## Evidence Ledger
+
+The working memo must include an Evidence Ledger. Each source row must include:
+
+- `source_id`
+- `source_type`
+- `source_family`
+- `url`
+- `publication_date`
+- `last_updated_date`
+- `accessed_date`
+- `version_or_scope`
+- `supported_claims`
+- `counts_toward_external_primary_minimum`
+- `current_enough_reason`
+
+Use `unknown` for unavailable publication or update dates, but still explain why the source is current enough for each supported claim.
+
+## Draft-Linked Research Agenda
+
+The working memo must include a Draft-Linked Research Agenda before research begins. Each question must name the draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change, plus the research bucket and possible impact on PRD, TDD, rollout, verification, or task sequencing.
+
+Do not include generic research questions that cannot plausibly change the plan.
+
+## Finding-to-Artifact Delta
+
+The working memo must include a Finding-to-Artifact Delta. Each finding row must include:
+
+- `finding_id`
+- `research_question_id`
+- `bucket`
+- `disposition`
+- `recommendation`
+- `recommendation_level`
+- `support_type`
+- `source_ids`
+- `prd_tdd_sections_changed`
+- `task_plan_inputs_created`
+- `disposition_reason`
+
+Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding is not adopted unless it changes PRD/TDD or creates an explicit task-plan input; otherwise record the reason in `disposition_reason`.
+
+## Deep Research Completion Stamp
+
+The working memo must end with a Deep Research Completion Stamp containing:
+
+- `external_primary_sources_count`
+- `source_family_count`
+- `research_questions_answered`
+- `buckets_reviewed`
+- `follow_up_passes_completed`
+- `adopted_findings_count`
+- `rejected_or_deferred_findings_count`
+- `prd_tdd_sections_changed`
+- `task_plan_inputs_created`
+- `evidence_bar_met`
+
+Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, and PRD/TDD revisions are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
+
 ## Working memo contract
 
 The temporary research memo must contain:
@@ -154,8 +256,16 @@ The temporary research memo must contain:
 - web research status
 - exact current date used for the research pass, and timezone when known
 - project context snapshot for the plan-specific stack and constraints
+- version-first stack discovery notes and any unknown versions
+- external-query privacy notes, including any redactions or query constraints used
+- Evidence Ledger with the required source fields and count eligibility
+- Draft-Linked Research Agenda with plan-changing draft links for each question
+- Finding-to-Artifact Delta with the required finding, disposition, support, source, artifact-change, and task-input fields
+- Deep Research Completion Stamp with counts and `evidence_bar_met`
 - external primary sources reviewed, with direct links and one-line notes on what each source answered
 - source freshness notes for each substantive external source
+- source-family count and source authority notes
+- source conflict notes and reconciliation status when sources disagree
 - research agenda
 - sources reviewed
 - improvement backlog and candidate ideas being tested
@@ -210,4 +320,5 @@ Before continuing to tasks-plan generation:
 3. Any new risks or sequencing requirements are reflected in revised PRD/TDD where appropriate and are ready to be carried into tasks-plan.
 4. The research did not silently widen scope into broad product discovery.
 5. The working memo meets the minimum evidence bar, including the external-source minimum and required web-status sections.
-6. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.
+6. The Deep Research Completion Stamp says `evidence_bar_met: yes`.
+7. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.
