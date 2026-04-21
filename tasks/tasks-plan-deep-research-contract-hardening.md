@@ -65,7 +65,7 @@ Implement the deep-research core first, then update downstream audit/generation 
 - [ ] 3.0 Lock combined modifier and refinement guardrails
   - covers_prd: `FR-008`, `FR-009`
   - covers_tdd: `TDR-010`, `TDR-011`, `TDR-012`
-  - [ ] 3.1 Update `plan-and-execute` and task-file contract for explicit modifier order and Pro/research reconciliation
+  - [x] 3.1 Update `plan-and-execute` and task-file contract for explicit modifier order and Pro/research reconciliation
     - covers_prd: `FR-008`
     - covers_tdd: `TDR-010`, `TDR-012`
     - output: `skills/plan-and-execute/SKILL.md`, `skills/shared/references/execution/task-file-contract.md`

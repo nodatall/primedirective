@@ -78,9 +78,12 @@ When present:
 - Use filtered whole-repo context for small or broad tasks and curated context for large or narrow tasks.
 - Dry-run the selected file bundle before sending it.
 - Apply locally verified Pro findings back into PRD, TDD, and task sequencing before execution begins.
+- Treat Pro output as adversarial analysis, not primary evidence; it does not count toward the `--deep-research` external primary-source minimum.
+- Let Pro-suggested sources influence source-backed claims only after the main agent independently verifies those sources live and records them in the Evidence Ledger.
+- Reconcile any Pro claim that conflicts with the research memo or repo facts before tasks-plan generation.
 - Do not add a planning approval gate or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
 - Stop only when the dry-run reveals likely secrets/private data, the Pro setup/run fails in a way that blocks safe planning, or the Pro result exposes a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
-- If both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, then run Pro analysis as the final adversarial planning pass before tasks-plan generation.
+- If both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, run Pro analysis as the final adversarial planning pass, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute.
 
 ## Plan key resolution
 

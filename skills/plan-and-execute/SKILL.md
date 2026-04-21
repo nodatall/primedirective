@@ -47,12 +47,15 @@ Load these files before running:
    - no summary checkpoint gate
    - ask only for a true blocker where the core objective is missing, contradictory, or unsafe to infer
    - write assumptions into the artifacts instead of stopping for low-impact clarification
-   - with `--pro-analysis`, run a local reconnaissance pass and Pro escalation during planning before PRD/TDD are treated as final inputs; synthesize the Pro result against local evidence and adopt surviving findings into PRD, TDD, and task sequencing
+   - with `--pro-analysis`, run a local reconnaissance pass and Pro escalation during planning before tasks-plan generation; synthesize the Pro result against local evidence and adopt surviving findings into PRD, TDD, and task sequencing
    - with `--pro-analysis`, do not expose Oracle mechanics as the workflow surface; use `./scripts/oracle-pro.sh` through the Pro escalation reference
+   - with `--pro-analysis`, treat Pro output as adversarial analysis, not primary evidence; it does not count toward the `--deep-research` external primary-source minimum
+   - with `--pro-analysis`, only let Pro-suggested sources influence source-backed claims after the main agent independently verifies those sources live and records them in the Evidence Ledger
+   - with `--pro-analysis`, reconcile any Pro claim that conflicts with the research memo or repo facts before tasks-plan generation
    - with `--pro-analysis`, do not add an extra approval pause before execution unless the dry-run reveals likely secrets/private data, the Pro pass fails in a way that blocks safe planning, or the result exposes a true blocker that is unsafe, contradictory, or impossible to default
    - with `--deep-research`, run the normal `plan-work` research pass after initial PRD/TDD drafting and before tasks-plan generation, then adopt findings into PRD, TDD, and task sequencing before execution
    - with `--deep-research`, do not add a user-facing revised-summary checkpoint or any extra approval pause before execution; keep going unless live web research is unavailable or the research exposes a true blocker that is unsafe, contradictory, or impossible to default
-   - if both `--pro-analysis` and `--deep-research` are present, run Pro analysis first for repo/task reasoning, then run deep research for external source-backed technical and delivery guidance
+   - if both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, run Pro analysis as the final adversarial planning pass, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute
 4. Require all three artifacts before execution:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`
