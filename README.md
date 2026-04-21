@@ -16,7 +16,7 @@ All skills use explicit Codex-native `$skill-name` invocation text.
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
-| `first-principles-mode` | `$first-principles-mode` | `--pro` |
+| `first-principles-mode` | `$first-principles-mode` | `--pro-analysis` |
 | `frontend-design-improve` | `$frontend-design-improve` | None |
 | `plan-and-execute` | `$plan-and-execute` | `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
@@ -108,7 +108,7 @@ The installers are expected to be idempotent.
 
 Prime Directive can use ChatGPT Pro browser mode as an internal escalation path for:
 
-- `$first-principles-mode --pro`
+- `$first-principles-mode --pro-analysis`
 - `$plan-and-execute --pro-analysis`
 - `$repo-sweep --pro-analysis`
 

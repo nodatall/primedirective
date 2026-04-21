@@ -1,6 +1,6 @@
 ---
 name: first-principles-mode
-description: Run a deep, adaptive, read-only analysis pass that widens the search space, tests competing explanations, and synthesizes the best mechanism-level answer before implementation judgment. Supports `--pro` for ChatGPT Pro browser escalation through the repo wrapper.
+description: Run a deep, adaptive, read-only analysis pass that widens the search space, tests competing explanations, and synthesizes the best mechanism-level answer before implementation judgment. Supports `--pro-analysis` for ChatGPT Pro browser escalation through the repo wrapper.
 ---
 
 # First-Principles Mode Skill
@@ -9,7 +9,7 @@ Run a deliberately deep, adaptive, read-only analysis pass before offering imple
 
 Load `skills/first-principles-mode/references/analysis-rubric.md` before starting.
 
-If `--pro` is present, also load `skills/shared/references/analysis/pro-oracle-escalation.md`.
+If `--pro-analysis` is present, also load `skills/shared/references/analysis/pro-oracle-escalation.md`.
 
 ## Activation
 
@@ -19,7 +19,7 @@ Treat the current user request as the analysis target. Do not require the user t
 
 Supported modifiers:
 
-- `--pro`
+- `--pro-analysis`
 
 ## Goal
 
@@ -42,7 +42,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 - If the same request also asks for edits, debugging, refactors, or fixes, complete the analytical pass first and stop there. Wait for an explicit follow-up before changing files.
 - Back conclusions with file-backed evidence or other observable artifacts from the repo.
 - State confidence and the key uncertainty when they materially affect the conclusion.
-- With `--pro`, use the Oracle Pro escalation reference after local reconnaissance. Oracle is an implementation detail: choose context, dry-run, run the Pro pass, then synthesize against local evidence.
+- With `--pro-analysis`, use the Oracle Pro escalation reference after local reconnaissance. Oracle is an implementation detail: choose context, dry-run, run the Pro pass, then synthesize against local evidence.
 
 ## Workflow
 
@@ -66,7 +66,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 6. Gather confirming and disconfirming evidence before choosing the best explanation.
    - Use file-backed observations, control-flow traces, contracts, config, or operational artifacts when relevant.
    - Distinguish what the evidence shows from what it merely suggests.
-7. If `--pro` is present, run the Pro escalation after the local breadth pass has identified the problem shape and likely context.
+7. If `--pro-analysis` is present, run the Pro escalation after the local breadth pass has identified the problem shape and likely context.
    - Use `./scripts/oracle-pro.sh dry-run` first.
    - Use filtered whole-repo context for small or broad questions; use curated files for large or narrow questions.
    - Stop before sending only when the dry-run or local inspection reveals likely secrets, private data, or an obviously wrong context bundle.
@@ -133,4 +133,4 @@ Formatting rules:
 - `$first-principles-mode Diagnose the root cause of this architecture drift; do not propose fixes yet`
 - `$first-principles-mode Pressure-test this plan and tell me where its reasoning breaks`
 - `$first-principles-mode Find a materially different way to solve this problem, not just an optimization of the current path`
-- `$first-principles-mode --pro Explain the real architecture risk in this repo`
+- `$first-principles-mode --pro-analysis Explain the real architecture risk in this repo`
