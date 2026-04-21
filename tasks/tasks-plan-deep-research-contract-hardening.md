@@ -33,7 +33,7 @@ Implement the deep-research core first, then update downstream audit/generation 
 - [ ] 1.0 Harden the core deep-research memo and evidence contract
   - covers_prd: `FR-001`, `FR-002`, `FR-003`, `FR-004`, `FR-005`, `FR-010`
   - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`
-  - [ ] 1.1 Add source-count, source-type, source-family, source-authority, source-conflict, and privacy rules to `deep-research.md`
+  - [x] 1.1 Add source-count, source-type, source-family, source-authority, source-conflict, and privacy rules to `deep-research.md`
     - covers_prd: `FR-001`, `FR-002`, `FR-010`
     - covers_tdd: `TDR-001`, `TDR-005`
     - output: `skills/shared/references/planning/deep-research.md`
