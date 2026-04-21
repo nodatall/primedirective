@@ -219,6 +219,7 @@ Require this prompt for frontend-facing `full-branch` review rounds and for expl
 Action:
 Use Playwright MCP by default to open the changed UI, exercise the affected flows, resize for relevant breakpoints, and capture screenshots of all changed screens and states.
 When motion, timing, or multi-step interaction matters, also capture video or trace evidence using the Playwright CLI workflow.
+After evidence is captured, close transient browser tabs, windows, and contexts opened only for review. Preserve only sessions that are explicitly named as persistent, such as manual-login, debugging, or long-running external workflows.
 Review the captured evidence for visual regressions, broken layout, missing states, incorrect copy, and obvious accessibility issues visible in the UI.
 Grade the result explicitly on four criteria: design quality, originality, craft, and functionality.
 Use the sub-task contract when present to judge whether the intended screens, states, and design direction actually shipped.

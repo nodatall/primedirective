@@ -39,7 +39,7 @@ Do not use this skill to force a redesign when the task is backend-only or when 
    - foundation before flourish
    - layout and hierarchy before decorative detail
    - interaction clarity before motion polish
-4. After implementation, inspect the real UI in a browser instead of relying on code inspection.
+4. After implementation, inspect the real UI in a browser instead of relying on code inspection. Close transient browser tabs, windows, and contexts after capturing evidence unless the session is explicitly being preserved for login, debugging, or a long-running workflow.
 5. Run a skeptical design pass using the rubric:
    - refine the current direction if the design is working
    - pivot if the result is coherent but bland, or if originality is flat
