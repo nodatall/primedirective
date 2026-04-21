@@ -1,6 +1,6 @@
 ---
 name: repo-sweep
-description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes. Supports `--preserve-review-artifacts`.
+description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes unless `--loop` is present. Supports `--pro-analysis`, `--loop`, and `--preserve-review-artifacts`.
 ---
 
 # Repo Sweep Skill
@@ -11,8 +11,10 @@ Run a full-repository sweep that separates first-principles detection from repai
 
 Invoke explicitly with `$repo-sweep`.
 
-Supported modifier:
+Supported modifiers:
 
+- `--loop`
+- `--pro-analysis`
 - `--preserve-review-artifacts`
 
 ## Required references
@@ -22,6 +24,7 @@ Load these files before running:
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
+- `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
 
 ## Scope
 
@@ -31,7 +34,9 @@ Load these files before running:
 - Detect before repairing.
 - Always run a first-principles no-edit pre-pass before normal review-chain prompts or fixes.
 - Prefer verified findings over plausible theory.
-- Do not edit files before the repo-wide report and explicit user approval to proceed with fixes.
+- Do not edit files before the repo-wide report and explicit user approval to proceed with fixes, unless `--loop` is present.
+- With `--loop`, the user has pre-approved the repair loop for verified, fixable findings. Still stop for changes that require a human product, security, schema, billing, customer-visible UX, or public API decision.
+- With `--pro-analysis`, use ChatGPT Pro browser escalation as a Round 1 audit-thesis input through the shared Pro escalation reference. Do not run Oracle in every loop round unless a future modifier explicitly says so.
 - Include all normal review-chain components. For repo sweep, force a comprehensive review pass rather than a shortened provider-specific subset.
 
 ## Workflow
@@ -49,6 +54,9 @@ Load these files before running:
    - Look for evidence that would disconfirm the leading risk story before settling on it.
    - Keep the standalone first-principles skill's read-only posture, but do not stop after this pre-pass. In repo sweep, continue into the no-edit audit and review-chain evidence collection, then stop before fixes at the normal approval gate.
    - Carry one concise audit thesis into the repo-wide report so the findings are organized around mechanism, not only around file-local defects.
+   - With `--pro-analysis`, run local repo reconnaissance, select context, dry-run the file bundle, run Oracle Pro, and synthesize the Pro result into the audit thesis before continuing to the no-edit audit.
+   - Treat the Pro result as external reviewer input, not as source of truth. Verify or qualify Pro claims against local files, commands, probes, and tests.
+   - If `--pro-analysis` and `--loop` are both present, use Pro only in Round 1 by default. Subsequent resweeps use fresh local review subagents unless the user explicitly asks for another Pro pass.
 3. Run a no-edit security, config, and API-surface audit.
    - Do not edit code in this step.
    - Inventory entrypoints, routes, jobs, background workers, config defaults, auth boundaries, CORS policy, secret sources, and public state-changing endpoints before touching build or test failures.
@@ -87,10 +95,11 @@ Load these files before running:
      - `Residual Risks`
    - If a section has no verified findings, say `none verified`.
    - Keep the report concise, but do not bury serious production risks behind lower-priority cleanup.
-8. Stop on a hard user gate after the report.
+8. Stop on a hard user gate after the report unless `--loop` is present.
    - After presenting the report, explicitly ask whether the user wants fixes to proceed.
    - Do not patch files, change config, or "fix while reviewing" until the user answers yes.
    - If the user declines or does not answer, stop after the report.
+   - With `--loop`, skip this approval gate because the modifier is the approval to proceed with the bounded sweep/fix loop.
 9. After approval, run everything that defines repo health.
    - Run every relevant install, lint, format check, typecheck, test, build, migration, and security command defined by the repo or CI.
    - Treat any failing verification command as top priority.
@@ -111,6 +120,42 @@ Load these files before running:
    - Re-confirm the high-risk API-surface findings against the post-fix state so repaired systems are not accidentally re-opened by later changes.
 13. Stop only on a real blocker.
    - Ask the user only when the correct fix would change product behavior, auth rules, schema semantics, billing logic, customer-visible UX intent, or public API behavior in a non-obvious way.
+
+## Loop Mode
+
+`--loop` turns repo sweep into a bounded sweep/fix/resweep workflow.
+
+Use this mode when the user wants the agent to keep improving the repository without stopping after the first report. It is still a repo sweep: every round starts with detection, keeps evidence for findings, and uses fresh review context before deciding whether more work remains.
+
+Rules:
+
+- Maximum 8 rounds. If the user asks for more, cap at 8 and say so in the final summary.
+- Round 1 still runs the full first-principles no-edit pre-pass, no-edit audit, runtime probes when applicable, and comprehensive review-chain coverage.
+- Emit a concise Round 1 repo-wide report before fixes, but do not ask for approval unless a human decision is required.
+- Fix only verified, in-scope, actionable findings where the repair is clear enough to make without changing product intent or external contracts.
+- After fixes and validation for a round, start the next sweep in one fresh dedicated review subagent/thread when subagents are available.
+- Each loop review subagent owns detection for that round only. The main agent owns orchestration, edits, verification, loop stop decisions, artifact cleanup, and the final user summary.
+- Do not reuse the previous round's reviewer as evidence that the current state is clean. A clean stop requires a fresh resweep after the latest fixes.
+- Stop early when a fresh resweep finds no verified in-scope findings that should be fixed.
+- Stop early when all remaining findings require a human decision, cannot be reproduced, cannot be safely fixed, or are explicitly out of scope.
+- Do not create new branches, commits, pushes, or PRs unless the user separately asked for those git actions.
+- Do not loop on cosmetic preferences, speculative risks, or issues where the only remaining action is broader product redesign.
+
+Loop round shape:
+
+1. `Detect`: run the sweep/review pass for the current repo state.
+2. `Classify`: split findings into fix-now, human-decision, residual-risk, and no-action.
+3. `Fix`: address fix-now findings with the smallest correct changes.
+4. `Verify`: run targeted checks plus any repo-health commands affected by the fixes.
+5. `Resweep`: spawn a fresh review subagent for the next detection round, unless max rounds or a stop condition was reached.
+
+For final output in loop mode, include:
+
+1. Loop rounds completed and why the loop stopped.
+2. Fixed findings by round.
+3. Verification commands and outcomes.
+4. Remaining human-decision items.
+5. Residual risks.
 
 ## Artifact behavior
 
