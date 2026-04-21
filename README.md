@@ -21,7 +21,7 @@ All skills use explicit Codex-native `$skill-name` invocation text.
 | `plan-and-execute` | `$plan-and-execute` | `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
-| `repo-sweep` | `$repo-sweep` | `--loop`, `--preserve-review-artifacts` |
+| `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--loop`, `--preserve-review-artifacts` |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
 
 ## Layout
@@ -110,6 +110,7 @@ Prime Directive can use ChatGPT Pro browser mode as an internal escalation path 
 
 - `$first-principles-mode --pro`
 - `$plan-and-execute --pro-analysis`
+- `$repo-sweep --pro-analysis`
 
 The public workflow stays on those skill modifiers. The implementation detail is the repo wrapper:
 

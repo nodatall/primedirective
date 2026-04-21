@@ -1,6 +1,6 @@
 # Pro Oracle Escalation
 
-Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro` or `$plan-and-execute --pro-analysis`.
+Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro`, `$plan-and-execute --pro-analysis`, or `$repo-sweep --pro-analysis`.
 
 ## Wrapper
 
@@ -103,3 +103,5 @@ Treat the Pro answer as an external reviewer, not as source of truth.
 For `$first-principles-mode --pro`, stop after synthesis unless the user separately asked for edits.
 
 For `$plan-and-execute --pro-analysis`, apply the synthesized findings into planning artifacts and continue execution unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+
+For `$repo-sweep --pro-analysis`, use the synthesized findings as Round 1 audit-thesis input before the no-edit audit and review-chain report. If `--loop` is also present, do not rerun Pro every loop round by default; use fresh local review subagents for resweeps unless the user explicitly asks for another Pro pass.
