@@ -10,7 +10,7 @@ Required planning artifacts:
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - `tasks/tasks-plan-<plan-key>.md`
-- `tasks/tmp/research-plan-<plan-key>.md` when `--deep-research --preserve-planning-artifacts` is used
+- `tasks/tmp/research-plan-<plan-key>.md` when `--deep-research` was used
 
 This pass exists to strengthen the plan and to prove that normalization did not drop anything important.
 
@@ -112,12 +112,19 @@ Evaluate and improve:
 
 Evaluate and improve when `--deep-research` was used:
 
+- Whether the research memo is available for audit.
 - Whether the deep-research pass actually met the evidence bar rather than stopping after a few searches.
+- Whether the Deep Research Completion Stamp exists, includes the required counts/status fields, and says `evidence_bar_met: yes`.
+- Whether `evidence_bar_met: no` appears anywhere in the completion stamp. If it does, stop rather than improving around the failed research pass.
 - Whether the deep-research memo used live web research and included the required web-status section.
 - Whether the deep-research memo captured the exact current date and used plan-specific stack and constraint framing rather than a generic research prompt.
 - Whether the deep-research memo included at least 5 substantive external primary web sources.
+- Whether the Evidence Ledger exists and records `source_id`, source type, source family, URL, publication/update/access dates, version or scope, supported claims, count eligibility, and current-enough rationale.
+- Whether sources counted toward the external primary minimum are actually eligible primary sources, and whether ineligible, stale, duplicate, repo-local, AI-generated, search-result, tutorial, or decorative evidence is excluded from that count.
 - Whether substantive external sources included freshness metadata and were current enough for the claims they supported.
 - Whether the deep-research pass reviewed the initial PRD/TDD drafts rather than researching in the abstract.
+- Whether the Draft-Linked Research Agenda tied each research question to a draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change.
+- Whether the Finding-to-Artifact Delta exists and records finding ID, research question ID, bucket, disposition, recommendation, recommendation level, support type, source IDs, PRD/TDD section changes, task-plan inputs, and disposition reason.
 - Whether the selected design reflects the strongest research-backed recommendation.
 - Whether the best ideas from the research memo were pulled back into PRD/TDD before tasks-plan generation.
 - Whether source-backed risks, rollout work, or verification gaps were carried into TDD and tasks-plan.
@@ -125,7 +132,8 @@ Evaluate and improve when `--deep-research` was used:
 - Whether PRD changed only where research affected product-facing constraints or defaults.
 - Whether findings were clearly separated into adopt-now guidance, emerging trends, and avoid guidance where relevant.
 - Whether the research produced a plan-specific checklist or implementation guidance section rather than only a raw source dump.
-- Whether any cited sources were merely decorative rather than materially supporting the selected design.
+- Whether source/decorative evidence was separated from material support, and whether any cited sources were merely decorative rather than materially supporting the selected design.
+- Whether every adopted implementation-impact finding appears in PRD/TDD and tasks-plan, or is explicitly rejected, deferred, or marked as a non-goal with a reason.
 
 ## Required audit checks
 
@@ -146,8 +154,11 @@ The improved plan must explicitly satisfy all of these:
 13. Any `--deep-research` pass includes live web research, the external-source minimum, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
 14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
 15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
-16. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
-17. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
+16. Any `--deep-research` pass includes an auditable Evidence Ledger, Finding-to-Artifact Delta, and Deep Research Completion Stamp.
+17. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
+18. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
+19. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
+20. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
 
 ## For every issue identified
 
@@ -162,7 +173,7 @@ You must:
 
 Do not dump option menus on the user unless business intent is ambiguous.
 
-If a `--deep-research` pass fails the mandatory web-backed evidence bar, or if PRD/TDD were not revised from the adopted findings before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the research step to be redone before execution begins.
+If a `--deep-research` pass fails the mandatory web-backed evidence bar, if its Deep Research Completion Stamp says `evidence_bar_met: no`, or if PRD/TDD were not revised from the adopted findings before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the research step to be redone before execution begins.
 
 ## Escalation policy (rare)
 

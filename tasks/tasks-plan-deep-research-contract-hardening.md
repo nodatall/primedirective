@@ -46,7 +46,7 @@ Implement the deep-research core first, then update downstream audit/generation 
     - verify: `rg -n "Draft-Linked Research Agenda|Finding-to-Artifact Delta|finding_id|research_question_id|disposition_reason|Deep Research Completion Stamp|evidence_bar_met|source_family_count|follow_up_passes_completed|prd_tdd_sections_changed|task_plan_inputs_created" skills/shared/references/planning/deep-research.md`
     - done_when: The memo cannot be considered complete without draft-linked questions, artifact deltas containing the fields named in `FR-004`/`TDR-003`, and an explicit completion stamp containing the fields named in `FR-005`/`TDR-004`.
 
-- [ ] 2.0 Carry research evidence through downstream planning contracts
+- [x] 2.0 Carry research evidence through downstream planning contracts
   - covers_prd: `FR-006`, `FR-007`
   - covers_tdd: `TDR-006`, `TDR-007`, `TDR-008`, `TDR-009`
   - [x] 2.1 Update `plan-work` and task-file cleanup rules so the research memo remains available through planning audits
@@ -55,7 +55,7 @@ Implement the deep-research core first, then update downstream audit/generation 
     - output: `skills/plan-work/SKILL.md`, `skills/shared/references/execution/task-file-contract.md`
     - verify: `rg -n "research memo.*improve-plan|until.*improve-plan|until.*plan-refine" skills/plan-work/SKILL.md skills/shared/references/execution/task-file-contract.md`
     - done_when: `improve-plan` receives the memo whenever deep research was used, and cleanup happens only after required planning audits.
-  - [ ] 2.2 Update TDD, task generation, and improve-plan contracts to audit and preserve research-backed decisions
+  - [x] 2.2 Update TDD, task generation, and improve-plan contracts to audit and preserve research-backed decisions
     - covers_prd: `FR-007`
     - covers_tdd: `TDR-007`, `TDR-008`, `TDR-009`
     - output: `skills/shared/references/planning/create-tdd.md`, `skills/shared/references/planning/generate-tasks.md`, `skills/shared/references/planning/improve-plan.md`
