@@ -29,6 +29,7 @@ Guidelines for managing task lists in markdown files.
 - One-shot review runs once at the end in a fresh `full-branch` review subagent.
 - Follow `skills/shared/references/reasoning-budget.md`: request strong reasoning for implementation workers and the strongest appropriate reasoning tier for the final review subagent.
 - One-shot execution scope is the entire unchecked remainder of `tasks/tasks-plan-<plan-key>.md`, not just the current parent task, milestone, or section.
+- Before the first execution edit, capture the baseline dirty state described in `skills/shared/references/execution/finalization-gate.md`.
 - If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, commit them on the active execution branch before the first implementation sub-task.
 - For each sub-task:
   1. Main agent selects the next unchecked sub-task in file order.
@@ -167,24 +168,26 @@ Rules:
 
 1. Before first sub-task, create/switch to a dedicated feature branch if not already on one. If `--stay-on-current-branch` is present, keep the current non-base branch and do not create, switch, or rename branches.
 2. If kickoff dirtiness is only the current plan's required planning artifacts, commit them on the active execution branch before implementation commits begin.
-3. Regularly update task list after significant work.
-4. Create one dedicated commit per completed sub-task.
-5. Keep checklist status accurate for sub-task and parent tasks.
-6. Keep `Relevant Files` accurate.
-7. In standard mode, pause after each sub-task for approval.
-8. In one-shot mode, continue automatically after main-agent integration, focused verification, and commit completion for each sub-task.
-9. In one-shot mode, do not run per-sub-task review chains. Spawn one fresh review subagent for the final `full-branch` review after all sub-tasks complete.
-10. When all tasks complete, archive artifacts under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` before final PR handoff.
-11. In one-shot mode, do not pause or summarize as complete merely because the next remaining work starts under a new parent task number like `2.0` or `3.0`.
-12. If `--preserve-review-artifacts` is present, keep `tasks/tmp/` plan and review files created during execution and list them in the final handoff.
-13. Before producing a terminal handoff in one-shot mode, re-open the task file and verify there are no remaining unchecked sub-tasks.
-14. In one-shot mode, the only valid terminal outcomes are:
+3. Capture the kickoff dirty-state baseline from `skills/shared/references/execution/finalization-gate.md` before the first execution edit. This allows pre-existing dirty files to remain without allowing new uncommitted run work to escape finalization.
+4. Regularly update task list after significant work.
+5. Create one dedicated commit per completed sub-task.
+6. Keep checklist status accurate for sub-task and parent tasks.
+7. Keep `Relevant Files` accurate.
+8. In standard mode, pause after each sub-task for approval.
+9. In one-shot mode, continue automatically after main-agent integration, focused verification, and commit completion for each sub-task.
+10. In one-shot mode, do not run per-sub-task review chains. Spawn one fresh review subagent for the final `full-branch` review after all sub-tasks complete.
+11. When all tasks complete, archive artifacts under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` before final PR handoff.
+12. In one-shot mode, do not pause or summarize as complete merely because the next remaining work starts under a new parent task number like `2.0` or `3.0`.
+13. If `--preserve-review-artifacts` is present, keep `tasks/tmp/` plan and review files created during execution and list them in the final handoff.
+14. Before producing a terminal handoff in one-shot mode, re-open the task file and verify there are no remaining unchecked sub-tasks.
+15. In one-shot mode, the only valid terminal outcomes are:
     - all remaining unchecked sub-tasks completed, reviewed, finalized, and then handed off after PR creation, or after the documented `$plan-and-execute` existing non-base branch no-PR exception path
     - execution blocked by an unresolved issue that is explicitly described, with the exact next required user action
-15. Before any user-visible one-shot completion message, run a liveness check against `tasks/tasks-plan-<plan-key>.md`: if any `- [ ]` entry remains, do not hand off and do not summarize as a stopping point.
-16. Do not emit a one-shot progress update between sub-tasks. Keep executing silently unless a real blocker requires a user-visible interruption.
-17. Treat a recap shaped like `completed items + passing verifies + already started next task + remaining unchecked work` as a terminal-style handoff attempt. Suppress it and continue execution.
-18. Assume any user-visible one-shot message before Step 9 finalization may end or stall the run, so intermediate status reporting is forbidden.
-19. Before final handoff, run the relevant repo-defined validation commands for the touched surface when they exist, such as lint, format-check, typecheck, test, and build. In one-shot mode, this final validation is where deferred broad checks should happen. If the current plan added that tooling, use the newly introduced commands and mention any commands that remain intentionally absent.
-20. Treat branch publication and PR creation as explicit finalization work, not implied behavior. If the environment supports native PR actions, use them; otherwise push with git and open the PR with a concrete provider CLI.
-21. For substantial one-shot runs, and for any run with `--check-harness-drift`, include the compact harness drift check from `skills/shared/references/harness-drift.md` inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict. When `--check-harness-drift` is active, keep planning artifacts, sub-task contracts, review logs, and relevant temp files available until the drift report is generated, then run normal cleanup unless preservation was requested. Do not create a separate artifact unless the user asked for preserved review artifacts, and do not replace the inline final summary with an archived report path.
+16. Before any user-visible one-shot completion message, run a liveness check against `tasks/tasks-plan-<plan-key>.md`: if any `- [ ]` entry remains, do not hand off and do not summarize as a stopping point.
+17. Do not emit a one-shot progress update between sub-tasks. Keep executing silently unless a real blocker requires a user-visible interruption.
+18. Treat a recap shaped like `completed items + passing verifies + already started next task + remaining unchecked work` as a terminal-style handoff attempt. Suppress it and continue execution.
+19. Assume any user-visible one-shot message before Step 9 finalization may end or stall the run, so intermediate status reporting is forbidden.
+20. Before final handoff, run the relevant repo-defined validation commands for the touched surface when they exist, such as lint, format-check, typecheck, test, and build. In one-shot mode, this final validation is where deferred broad checks should happen. If the current plan added that tooling, use the newly introduced commands and mention any commands that remain intentionally absent.
+21. Treat branch publication and PR creation as explicit finalization work, not implied behavior. If the environment supports native PR actions, use them; otherwise push with git and open the PR with a concrete provider CLI.
+22. Run the hard finalization gate from `skills/shared/references/execution/finalization-gate.md` before terminal handoff. If it fails, complete the missing work or report the exact blocker instead of sending a completion message.
+23. For substantial one-shot runs, and for any run with `--check-harness-drift`, include the compact harness drift check from `skills/shared/references/harness-drift.md` inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict. When `--check-harness-drift` is active, keep planning artifacts, sub-task contracts, review logs, and relevant temp files available until the drift report is generated, then run normal cleanup unless preservation was requested. Do not create a separate artifact unless the user asked for preserved review artifacts, and do not replace the inline final summary with an archived report path.

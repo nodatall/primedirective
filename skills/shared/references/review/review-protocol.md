@@ -410,9 +410,11 @@ Operational translation:
   - `tasks/prd-<plan-key>.md`
   - `tasks/tdd-<plan-key>.md`
   - `tasks/tasks-plan-<plan-key>.md`
+- Run the hard finalization gate from `skills/shared/references/execution/finalization-gate.md`, including unchecked-task search, archive verification, final `git status --porcelain=v1`, and comparison against `tasks/tmp/finalization-baseline-<plan-key>.status`.
+- If archiving, checklist updates, cleanup, implementation, or tests created uncommitted changes, commit them before terminal handoff. Pre-existing dirty entries from the kickoff baseline may remain, but no new uncommitted run work may remain.
 - Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`, unless the `$plan-and-execute` existing non-base branch exception applies.
 - Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`, unless the `$plan-and-execute` existing non-base branch exception applies.
-- Exception: `$plan-and-execute` does not open a PR by default when it started on an existing non-base branch. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL.
+- Exception: `$plan-and-execute` does not open a PR by default when it started on an existing non-base branch. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL. This exception skips PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
 - Include summary, test evidence, and known risks/follow-ups in the PR body.
 - Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation or the `$plan-and-execute` existing non-base branch exception applies.
 - Only after these steps, or the documented `$plan-and-execute` existing non-base branch exception path, may one-shot execution produce its terminal completion handoff.

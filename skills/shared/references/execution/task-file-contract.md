@@ -113,6 +113,7 @@ Resolve files exactly as:
 
 - Planning research memo: `tasks/tmp/research-plan-<plan-key>.md`
 - Plan refinement log: `tasks/tmp/plan-refine-<plan-key>.md`
+- Finalization dirty-state baseline: `tasks/tmp/finalization-baseline-<plan-key>.status`
 - Per-sub-task plan doc: `tasks/tmp/plan-task-<task-id>.md`
 - Task review log: `tasks/tmp/review-task-<task-id>.md`
 - One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
@@ -202,7 +203,8 @@ Then:
 - Review subagents are siblings of the worker subagent. Do not have the worker spawn or own its own reviewer.
 - Main agent owns task-list updates, review orchestration, review decisions, commits, integration checks, and finalization.
 - No pauses between sub-tasks.
-- Run finalization once after all sub-tasks complete.
+- Run finalization once after all sub-tasks complete, including the hard gate in `skills/shared/references/execution/finalization-gate.md`.
+- Existing non-base branch mode and `--stay-on-current-branch` skip branch creation only, and the `$plan-and-execute` existing non-base branch exception skips default PR creation only. Neither path skips commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
 - If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs plus the final full-branch review log.
 
 ## Legacy syntax

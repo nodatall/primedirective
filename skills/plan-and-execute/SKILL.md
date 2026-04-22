@@ -30,6 +30,7 @@ Load these files before running:
 - `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
+- `skills/shared/references/execution/finalization-gate.md`
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
@@ -44,6 +45,7 @@ Load these files before running:
    - If currently on `main`, `master`, or the resolved local base branch, fetch `origin/main`, verify local main and `origin/main` do not diverge, then create a new feature branch from `origin/main`.
    - If detached `HEAD`, stop and ask.
    - If the worktree has unrelated or dangerous overlapping changes, stop and ask.
+   - Capture the finalization baseline from `finalization-gate.md` after branch-state decisions and before generating PRD/TDD/tasks-plan artifacts.
 3. Generate planning artifacts using `$plan-work --from-thread --direct` behavior, adding `--deep-research` when that modifier is present:
    - no Socratic question loop
    - no summary checkpoint gate
@@ -77,6 +79,7 @@ Load these files before running:
 7. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include the actual compact report inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict; do not satisfy this by only mentioning an archived report path. Then continue normal cleanup unless `--preserve-artifacts` is present.
 8. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
 9. If `--preserve-artifacts` is present, keep temp planning, refinement, and review artifacts and list them in the final handoff.
+10. Run the hard finalization gate from `finalization-gate.md` before any terminal handoff. The existing non-base branch path skips default PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
 
 ## Branch and PR rules
 
@@ -89,7 +92,7 @@ Load these files before running:
 
 Do not stop after artifact generation. The run is terminal only when:
 
-- all planned work is implemented, validated, final-reviewed, cleaned up, and handed off, or
+- all planned work is implemented, validated, final-reviewed, cleaned up, committed, archived, passed through the finalization gate, and handed off, or
 - a real blocker prevents safe continuation and the exact required user action is stated.
 
 ## Relationship to underlying skills

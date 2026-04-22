@@ -43,6 +43,7 @@ Load these files before running:
 
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/execution/task-management.md`
+- `skills/shared/references/execution/finalization-gate.md`
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
@@ -73,7 +74,7 @@ Load these files before running:
   - create a dedicated commit for the sub-task
   - in one-shot mode, immediately re-open `tasks/tasks-plan-<plan-key>.md` after the commit, identify the next unchecked sub-task in file order, and continue directly when one exists
 6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round automatically using the active prompt profile from `review-protocol.md` in one fresh review subagent before finalization. This is the review round that must satisfy Prompt G for frontend-facing work.
-7. Run finalization from `review-protocol.md` Step 9 rules only after all unchecked sub-tasks in the task plan are complete, and do not treat one-shot execution as finished until the feature branch is pushed and the PR has been created, unless an orchestration skill such as `$plan-and-execute` explicitly uses the existing non-base branch no-PR terminal behavior.
+7. Run finalization from `review-protocol.md` Step 9 rules and the hard gate from `finalization-gate.md` only after all unchecked sub-tasks in the task plan are complete. Do not treat one-shot execution as finished until the feature branch is pushed and the PR has been created, unless an orchestration skill such as `$plan-and-execute` explicitly uses the existing non-base branch no-PR terminal behavior. That exception skips default PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
 8. Before any terminal handoff in one-shot mode, re-open `tasks/tasks-plan-<plan-key>.md` and confirm there are no remaining unchecked sub-tasks anywhere in the file. If any remain, continue execution instead of handing off unless a real blocker prevents further progress.
 9. In one-shot mode, do not stop after an intermediate sub-task merely to report status, preserve a clean commit boundary, or hand off remaining work. Only stop early for a real blocker that cannot be resolved inside the current run.
 10. In one-shot mode, do not emit user-visible mid-run progress updates while unchecked sub-tasks remain. Keep executing silently across sub-task boundaries instead of reporting intermediate completion, verification, or “continuing into X” status.
@@ -96,6 +97,7 @@ Load these files before running:
 - During one-shot execution, prefer concise command output: use `git diff --stat`, `git diff --name-only`, and targeted hunk reads before large full-diff dumps; only print broad diffs when they are needed for a concrete decision or final review.
 - During one-shot execution, do not pass full PRD, TDD, and task-plan files to every worker by default. The main agent owns full-plan coherence and gives workers compact implementation packets; workers open full artifacts only through the escape hatches in `task-management.md`.
 - When `--check-harness-drift` is present, keep planning artifacts, sub-task contracts, review logs, and relevant temp files available through final review and drift-report generation. Include the actual compact drift report from `harness-drift.md` inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict; do not satisfy this by only mentioning an archived report path. Then run normal cleanup unless `--preserve-review-artifacts` is also present or the user explicitly asks to keep artifacts.
+- Before terminal handoff in one-shot mode, run the finalization gate from `finalization-gate.md`; a clean-looking branch summary is not a substitute for the archived-artifact, unchecked-task, commit, and final-status checks.
 - Do not invent lint, format, hook, or similar repo tooling mid-execution unless the planned task explicitly includes introducing that tooling or the user asks for it.
 
 ## Review relationship
