@@ -64,24 +64,30 @@ Load these files before running:
    - Otherwise read the durable research digest from `tasks/tdd-<plan-key>.md`.
    - Stop immediately if the research memo or TDD digest says `evidence_bar_met: no`; do not refine around a failed research evidence bar.
    - If deep research was used but neither the research memo nor a durable TDD digest is available, stop and report the missing research evidence instead of guessing.
-4. Stay on the current branch. Do not create, switch, rename, commit, or push branches.
-5. Inspect `git status --short`.
+4. If Pro analysis was used for the plan, load the Pro synthesis context before reviewer rounds.
+   - Treat the plan as Pro-backed when `tasks/tmp/pro-analysis-<plan-key>.md` exists or the TDD contains a durable Pro synthesis digest or `pro_synthesis_complete` value.
+   - Prefer `tasks/tmp/pro-analysis-<plan-key>.md` when it still exists.
+   - Otherwise read the durable Pro synthesis digest from `tasks/tdd-<plan-key>.md`.
+   - Stop immediately if the Pro synthesis memo or TDD digest is missing `pro_synthesis_complete: yes`; do not refine around a failed or missing Pro synthesis gate.
+   - If Pro analysis was used but neither the Pro synthesis memo nor a durable TDD digest is available, stop and report the missing Pro synthesis evidence instead of guessing.
+5. Stay on the current branch. Do not create, switch, rename, commit, or push branches.
+6. Inspect `git status --short`.
    - Continue when the working tree is clean.
    - Continue when only the current plan artifacts are dirty.
    - If unrelated dirty files exist, report that they are unrelated and ignore them unless they prevent reading or editing the planning artifacts.
-6. Create a temporary refinement log at `tasks/tmp/plan-refine-<plan-key>.md`.
-7. Treat invocation of `$plan-refine` as an explicit request to delegate every critique round to a fresh reviewer subagent.
+7. Create a temporary refinement log at `tasks/tmp/plan-refine-<plan-key>.md`.
+8. Treat invocation of `$plan-refine` as an explicit request to delegate every critique round to a fresh reviewer subagent.
    - Spawn one fresh read-only reviewer subagent per round.
    - Request the strongest appropriate reasoning tier for each reviewer round, following `reasoning-budget.md`.
    - The reviewer subagent must not edit files.
    - The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and final user summary.
    - If fresh reviewer subagents cannot be spawned, stop immediately and tell the user this workflow requires subagents.
-8. Before starting reviewer rounds, set the effective max round count.
+9. Before starting reviewer rounds, set the effective max round count.
    - Use the requested `--max-rounds=<n>` when `n` is 8 or lower.
    - If the requested `--max-rounds` is greater than 8, set the effective max round count to 8 and record that cap in the refinement log.
-9. For each round from 1 through the effective max round count:
+10. For each round from 1 through the effective max round count:
    - Start from the current PRD, TDD, and tasks-plan.
-   - Send the reviewer subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's critique standard, and any loaded research memo or durable research digest.
+   - Send the reviewer subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's critique standard, any loaded research memo or durable research digest, and any loaded Pro synthesis memo or durable Pro synthesis digest.
    - Ask the reviewer subagent to run a fresh first-principles critique using the analysis rubric plus the audit checks in `improve-plan.md`.
    - Do not ask the reviewer to apply fixes, rewrite artifacts, or continue into another round.
    - Keep each reviewer round isolated. Do not reuse the same reviewer subagent for later rounds.
@@ -102,19 +108,24 @@ Load these files before running:
    - Do not invent exact APIs, schemas, classes, routes, file names, helper names, or test paths unless the source plan or repo inspection already supports them.
    - Preserve useful source-plan substance. Do not remove scope just because it is hard.
    - Preserve research-backed decisions. Do not remove or weaken research-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
+   - Preserve Pro-backed decisions. Do not remove or weaken adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
    - Re-run the required audit checks from `improve-plan.md` after edits.
    - Append the round findings, fixes, and stop decision to `tasks/tmp/plan-refine-<plan-key>.md`.
-10. When deep research was used, run a final research-carry-forward check after the last artifact edit and before successful completion.
+11. When deep research was used, run a final research-carry-forward check after the last artifact edit and before successful completion.
     - Confirm research-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies are still present or have a recorded superseded, inapplicable, over-scoped, rejected, or deferred reason.
     - Confirm no artifact being handed to execution still contains `evidence_bar_met: no`.
     - Record the check result in `tasks/tmp/plan-refine-<plan-key>.md`.
-11. Stop early when a fresh reviewer round finds no `blocker` or `material` issues.
-12. Stop early and report churn when a round repeats the same finding without a stronger fix, reverses a prior fix without new evidence, or only produces local wording edits after the previous round already satisfied the fixed stop rule.
-13. If the effective max round count is reached while `blocker` or `material` findings remain, stop and report that the plan is not ready for execution.
+12. When Pro analysis was used, run a final Pro-carry-forward check after the last artifact edit and before successful completion.
+    - Confirm adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies are still present or have a recorded superseded, inapplicable, over-scoped, rejected, or deferred reason.
+    - Confirm no artifact being handed to execution contains a missing or failed `pro_synthesis_complete` gate.
+    - Record the check result in `tasks/tmp/plan-refine-<plan-key>.md`.
+13. Stop early when a fresh reviewer round finds no `blocker` or `material` issues.
+14. Stop early and report churn when a round repeats the same finding without a stronger fix, reverses a prior fix without new evidence, or only produces local wording edits after the previous round already satisfied the fixed stop rule.
+15. If the effective max round count is reached while `blocker` or `material` findings remain, stop and report that the plan is not ready for execution.
     - Keep the refinement log even without `--preserve-refine-artifacts`.
     - Include the last round's remaining blocker/material findings in the final response.
     - Say this max-round stop is evidence for improving `$plan-refine` from the concrete example.
-14. Delete `tasks/tmp/plan-refine-<plan-key>.md` after a successful run unless `--preserve-refine-artifacts` is active. Keep it when the run stops with unresolved blockers, material findings, max rounds, or churn.
+16. Delete `tasks/tmp/plan-refine-<plan-key>.md` after a successful run unless `--preserve-refine-artifacts` is active. Keep it when the run stops with unresolved blockers, material findings, max rounds, or churn.
 
 ## Critique Standard
 

@@ -50,6 +50,11 @@ When present:
 - When `--deep-research` was also used, `$plan-refine` must stop on `evidence_bar_met: no` instead of refining around a failed research evidence bar.
 - When `--deep-research` was also used, `$plan-refine` may not remove or weaken research-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies without recording why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
 - When `--deep-research` was also used, `$plan-refine` must run a final research-carry-forward check before execution continues.
+- When `--pro-analysis` was also used, `$plan-refine` must read `tasks/tmp/pro-analysis-<plan-key>.md` if it still exists; otherwise it must read the durable Pro synthesis digest in `tasks/tdd-<plan-key>.md`.
+- Treat the plan as Pro-backed when the retained Pro synthesis memo exists or the TDD contains a durable Pro synthesis digest or `pro_synthesis_complete` value.
+- When `--pro-analysis` was also used, `$plan-refine` must stop unless the Pro synthesis memo or durable TDD digest says `pro_synthesis_complete: yes`.
+- When `--pro-analysis` was also used, `$plan-refine` may not remove or weaken adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies without recording why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
+- When `--pro-analysis` was also used, `$plan-refine` must run a final Pro-carry-forward check before execution continues.
 - Apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution.
 - If the loop reaches max rounds or churn, choose the safest concrete artifact fix available, record the accepted assumption or residual risk, and continue.
 - Ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default.
@@ -86,9 +91,12 @@ When present:
 - Treat Pro output as adversarial analysis, not primary evidence; it does not count toward the `--deep-research` external primary-source minimum.
 - Let Pro-suggested sources influence source-backed claims only after the main agent independently verifies those sources live and records them in the Evidence Ledger.
 - Reconcile any Pro claim that conflicts with the research memo or repo facts before tasks-plan generation.
+- Treat `oracle-pro.sh dry-run`, `run`, and `render` as Pro-analysis actions. If `--deep-research` is also active, none of them may run until the deep-research pre-Oracle gate in `pro-oracle-escalation.md` passes.
+- After `oracle-pro.sh run` returns, write `tasks/tmp/pro-analysis-<plan-key>.md` and end it with a Pro synthesis completion stamp. Raw Oracle output does not satisfy the gate.
+- Do not generate `tasks-plan`, run `$plan-refine`, or execute until `tasks/tmp/pro-analysis-<plan-key>.md` exists, says `pro_synthesis_complete: yes`, and all adopted Pro findings have been reflected in PRD/TDD or explicitly converted into task-plan inputs.
 - Do not add a planning approval gate or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
 - Stop only when the dry-run reveals likely secrets/private data, the Pro setup/run fails in a way that blocks safe planning, or the Pro result exposes a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
-- If both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, run Pro analysis as the final adversarial planning pass, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute.
+- If both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, verify `tasks/tmp/research-plan-<plan-key>.md` says `evidence_bar_met: yes`, run Pro analysis as the final adversarial planning pass, write and verify `tasks/tmp/pro-analysis-<plan-key>.md`, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute.
 
 ## Plan key resolution
 
@@ -112,6 +120,7 @@ Resolve files exactly as:
 ## Temporary workflow files
 
 - Planning research memo: `tasks/tmp/research-plan-<plan-key>.md`
+- Pro analysis synthesis memo: `tasks/tmp/pro-analysis-<plan-key>.md`
 - Plan refinement log: `tasks/tmp/plan-refine-<plan-key>.md`
 - Finalization dirty-state baseline: `tasks/tmp/finalization-baseline-<plan-key>.status`
 - Per-sub-task plan doc: `tasks/tmp/plan-task-<task-id>.md`
@@ -125,7 +134,7 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
 
-By default, planning, refinement, and review temporary files are deleted after successful completion. A deep-research planning memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning, refinement, and review temporary files are deleted after successful completion. A deep-research planning memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. A Pro analysis synthesis memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 
@@ -171,6 +180,11 @@ Then:
 - If deep research was used, stops on `evidence_bar_met: no`.
 - If deep research was used, preserves research-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
 - If deep research was used, runs a final research-carry-forward check before execution continues.
+- If Pro analysis was used, reads `tasks/tmp/pro-analysis-<plan-key>.md` when it still exists; otherwise reads the durable Pro synthesis digest in the TDD.
+- Treats a plan as Pro-backed when the retained Pro synthesis memo exists or the TDD contains a durable Pro synthesis digest or `pro_synthesis_complete` value.
+- If Pro analysis was used, stops unless the Pro synthesis memo or durable TDD digest says `pro_synthesis_complete: yes`.
+- If Pro analysis was used, preserves adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
+- If Pro analysis was used, runs a final Pro-carry-forward check before execution continues.
 - Deletes the refinement log after successful completion unless `--preserve-refine-artifacts` is present.
 - Keeps the refinement log when the run stops with unresolved blockers, material findings, missing artifacts, max rounds, or repeated/contradictory churn.
 

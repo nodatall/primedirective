@@ -56,10 +56,13 @@ Load these files before running:
    - with `--pro-analysis`, treat Pro output as adversarial analysis, not primary evidence; it does not count toward the `--deep-research` external primary-source minimum
    - with `--pro-analysis`, only let Pro-suggested sources influence source-backed claims after the main agent independently verifies those sources live and records them in the Evidence Ledger
    - with `--pro-analysis`, reconcile any Pro claim that conflicts with the research memo or repo facts before tasks-plan generation
+   - with `--pro-analysis`, do not run `oracle-pro.sh dry-run`, `run`, or `render` before the Pro preflight gate in `pro-oracle-escalation.md` has passed; dry-run is part of Pro analysis, not a harmless earlier reconnaissance step
+   - with `--pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` after the Pro result is read and before tasks-plan generation; the memo must record local verification, adopted/rejected/deferred dispositions, PRD/TDD changes, unresolved blockers, and `pro_synthesis_complete: yes`
+   - with `--pro-analysis`, do not generate `tasks-plan`, start `--refine-plan`, or execute until the Pro synthesis memo exists, says `pro_synthesis_complete: yes`, and all adopted findings have been applied back into PRD/TDD or explicitly deferred/rejected with a reason
    - with `--pro-analysis`, do not add an extra approval pause before execution unless the dry-run reveals likely secrets/private data, the Pro pass fails in a way that blocks safe planning, or the result exposes a true blocker that is unsafe, contradictory, or impossible to default
    - with `--deep-research`, run the normal `plan-work` research pass after initial PRD/TDD drafting and before tasks-plan generation, then adopt findings into PRD, TDD, and task sequencing before execution
    - with `--deep-research`, do not add a user-facing revised-summary checkpoint or any extra approval pause before execution; keep going unless live web research is unavailable or the research exposes a true blocker that is unsafe, contradictory, or impossible to default
-   - if both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, run Pro analysis as the final adversarial planning pass, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute
+   - if both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, verify `tasks/tmp/research-plan-<plan-key>.md` has `evidence_bar_met: yes`, then run Pro analysis as the final adversarial planning pass, write and verify `tasks/tmp/pro-analysis-<plan-key>.md`, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute
 4. Require all three artifacts before execution:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`
