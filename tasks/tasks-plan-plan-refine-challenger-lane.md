@@ -54,7 +54,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 - [ ] 2.0 Mirror composition-relevant refinement behavior
   - covers_prd: `FR-006`, `FR-007`, `FR-011`, `FR-012`, `FR-013`
   - covers_tdd: `TDR-006`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-013`
-  - [ ] 2.1 Update `task-file-contract.md` with composition-relevant challenger cadence, subagent requirements, reviewer-owned stop rule, disposition logging, hard-stop outcomes, and `$plan-and-execute` refinement-log retention.
+  - [x] 2.1 Update `task-file-contract.md` with composition-relevant challenger cadence, subagent requirements, reviewer-owned stop rule, disposition logging, hard-stop outcomes, and `$plan-and-execute` refinement-log retention.
     - covers_prd: `FR-006`, `FR-011`, `FR-012`, `FR-013`
     - covers_tdd: `TDR-006`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-013`
     - output: `skills/shared/references/execution/task-file-contract.md`

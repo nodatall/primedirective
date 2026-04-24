@@ -43,8 +43,11 @@ When present:
 
 - Run `$plan-refine plan-key=<plan-key>` after PRD, TDD, and tasks-plan generation and before `$execute-task --one-shot`.
 - Use the generated plan key explicitly; do not infer across multiple planning sets.
-- Use `$plan-refine`'s normal default round cap, fresh reviewer rounds, and artifact-editing rules.
+- Use `$plan-refine`'s normal default round cap, internal challenger lane, fresh read-only challenger/reviewer requirements, and artifact-editing rules.
 - Treat refinement as an automatic repair pass, not a separate readiness gate.
+- Run the challenger lane only for applicable rounds: `round == 1 OR previous_reviewer_round_had_blocker_or_material`.
+- Treat challenger objections as reviewer input only. The reviewer owns severity classification and the fixed stop rule; challenger-only objections do not keep refinement alive unless the reviewer promotes them to `blocker` or `material` findings.
+- Require every non-empty challenge brief `challenge_id` to have a reviewer disposition in `tasks/tmp/plan-refine-<plan-key>.md` before artifact edits, clean stop decisions, or successful continuation.
 - When `--deep-research` was also used, `$plan-refine` must read `tasks/tmp/research-plan-<plan-key>.md` if it still exists; otherwise it must read the durable research digest in `tasks/tdd-<plan-key>.md`.
 - Treat the plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
 - When `--deep-research` was also used, `$plan-refine` must stop on `evidence_bar_met: no` instead of refining around a failed research evidence bar.
@@ -56,10 +59,13 @@ When present:
 - When `--pro-analysis` was also used, `$plan-refine` may not remove or weaken adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies without recording why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
 - When `--pro-analysis` was also used, `$plan-refine` must run a final Pro-carry-forward check before execution continues.
 - Apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution.
-- If the loop reaches max rounds or churn, choose the safest concrete artifact fix available, record the accepted assumption or residual risk, and continue.
+- Hard-stop execution when `$plan-refine` fails due to missing artifacts, failed research or Pro gates, unavailable required fresh challenger/reviewer subagents, incomplete challenge dispositions, unsafe or impossible-to-default blockers, or max rounds with unresolved reviewer blocker/material findings.
+- If max rounds are reached with unresolved reviewer blocker/material findings, keep `tasks/tmp/plan-refine-<plan-key>.md`, report the unresolved findings, and do not continue into execution.
+- Recoverable churn may continue only when no unresolved reviewer blocker/material findings remain and the refinement log records the safest concrete artifact fix, accepted assumption, or accepted residual risk.
 - Ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default.
-- Continue into execution with the refined artifacts.
-- If `$plan-and-execute --preserve-artifacts` is also present, keep the refinement log with the other temp artifacts and surface its path in the final summary.
+- Continue into execution only after clean refinement success or recoverable churn with no unresolved reviewer blocker/material findings.
+- Keep `tasks/tmp/plan-refine-<plan-key>.md` available through execution, final full-branch review, and finalization. Delete it during final cleanup only after finalization succeeds unless `$plan-and-execute --preserve-artifacts` is active.
+- If `$plan-and-execute --preserve-artifacts` is also present, keep the refinement log with the other temp artifacts after finalization and surface its path in the final summary.
 
 ## Plan-and-execute deep research modifier
 
@@ -134,7 +140,7 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
 
-By default, planning, refinement, and review temporary files are deleted after successful completion. A deep-research planning memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. A Pro analysis synthesis memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning, refinement, and review temporary files are deleted after successful completion. A deep-research planning memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. A Pro analysis synthesis memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. A refinement log created by standalone `$plan-refine` is deleted after successful completion unless `--preserve-refine-artifacts` is active; a refinement log created by `$plan-and-execute --refine-plan` is retained through execution, final full-branch review, and finalization, then deleted during final cleanup only after finalization succeeds unless `$plan-and-execute --preserve-artifacts` is active. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
 
 ## Execution artifact gate
 
@@ -169,12 +175,15 @@ Then:
 - Requires a complete planning artifact set.
 - `<plan-key>` may be explicit or inferred through the resolution rules above.
 - Edits only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md`.
-- Follows `skills/shared/references/reasoning-budget.md`: reviewer subagents use the strongest appropriate reasoning tier for the selected model family or budget.
+- Follows `skills/shared/references/reasoning-budget.md`: challenger and reviewer subagents use the strongest appropriate reasoning tier for the selected model family or budget.
 - Defaults to 8 refinement rounds and treats 8 as the hard maximum; higher requested values are capped at 8 and noted in the final summary.
 - Uses `tasks/tmp/plan-refine-<plan-key>.md` as the temporary refinement log.
+- Uses one fresh read-only challenger subagent for applicable rounds: `round == 1 OR previous_reviewer_round_had_blocker_or_material`.
 - Uses one fresh read-only reviewer subagent per refinement round.
+- The reviewer owns severity classification and the stop rule. Challenger objections become artifact edits or additional rounds only when the reviewer promotes them to `blocker` or `material` findings.
+- Every non-empty challenge brief `challenge_id` must have a reviewer disposition in the refinement log before the main agent edits artifacts, records a clean stop, or reports successful completion.
 - The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and the final user summary.
-- If fresh reviewer subagents cannot be spawned, stop immediately instead of falling back to local self-review.
+- If required fresh challenger or reviewer subagents cannot be spawned, stop immediately instead of falling back to local self-review.
 - If deep research was used, reads `tasks/tmp/research-plan-<plan-key>.md` when it still exists; otherwise reads the durable research digest in the TDD.
 - Treats a plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
 - If deep research was used, stops on `evidence_bar_met: no`.
@@ -187,6 +196,7 @@ Then:
 - If Pro analysis was used, runs a final Pro-carry-forward check before execution continues.
 - Deletes the refinement log after successful completion unless `--preserve-refine-artifacts` is present.
 - Keeps the refinement log when the run stops with unresolved blockers, material findings, missing artifacts, max rounds, or repeated/contradictory churn.
+- Treats max rounds with unresolved reviewer blocker/material findings as a hard-stop outcome. Recoverable churn can continue only when no unresolved reviewer blocker/material findings remain and the refinement log records the accepted assumption or residual risk.
 
 ### One-shot mode
 
