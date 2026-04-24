@@ -236,6 +236,8 @@ def parse_owner_table(errors: list[str]) -> dict[str, str]:
         if len(cells) < 4:
             continue
         key = cells[0].strip("`")
+        if key in rows:
+            fail(errors, "PD-CONTRACT-DUPLICATE-KEY", f"contract_key {key!r} appears more than once in contract ownership table")
         owner = cells[1].replace("`", "")
         rows[key] = owner
     return rows
