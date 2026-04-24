@@ -94,6 +94,7 @@ Load these files before running:
    - Run the challenger lane first when the round is applicable: `round == 1 OR previous_reviewer_round_had_blocker_or_material`.
    - Send the challenger subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's challenger standard, any loaded research memo or durable research digest, and any loaded Pro synthesis memo or durable Pro synthesis digest.
    - Ask the challenger subagent to pressure-test the artifact set for hidden assumptions, false settled decisions, implementation drift traps, likely failure paths, overengineering, under-specification, and counter-plan pressure.
+   - The challenger must preserve research-backed and Pro-backed decisions unless it can name a concrete conflict, stale evidence, over-scoped obligation, missing carry-forward, or unsafe assumption with artifact evidence and research/Pro memo or durable digest basis.
    - Do not ask the challenger to assign severity, apply fixes, rewrite artifacts, ask the user questions, or continue into another round.
    - Require the challenger to return a challenge brief that follows the Challenge Brief Contract below.
    - If the challenger finds no material challenge, it must return `no_material_challenges_found: yes` with a one-sentence rationale instead of inventing objections.
@@ -124,7 +125,7 @@ Load these files before running:
    - Preserve research-backed decisions. Do not remove or weaken research-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
    - Preserve Pro-backed decisions. Do not remove or weaken adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
    - Re-run the required audit checks from `improve-plan.md` after edits.
-   - Append the round findings, fixes, challenge brief, reviewer challenge dispositions, artifact changes from promoted challenges, rejected/deferred challenge reasons, and stop decision to `tasks/tmp/plan-refine-<plan-key>.md`.
+   - Append the round findings, fixes, challenge brief, reviewer challenge dispositions, artifact changes from promoted challenges, challenger-sourced material fixes, accepted residual challenge risks, rejected/deferred challenge reasons, and stop decision to `tasks/tmp/plan-refine-<plan-key>.md`.
 11. When deep research was used, run a final research-carry-forward check after the last artifact edit and before successful completion.
     - Confirm research-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies are still present or have a recorded superseded, inapplicable, over-scoped, rejected, or deferred reason.
     - Confirm no artifact being handed to execution still contains `evidence_bar_met: no`.
@@ -139,7 +140,10 @@ Load these files before running:
     - Keep the refinement log even without `--preserve-refine-artifacts`.
     - Include the last round's remaining blocker/material findings in the final response.
     - Say this max-round stop is evidence for improving `$plan-refine` from the concrete example.
-16. Delete `tasks/tmp/plan-refine-<plan-key>.md` after a successful run unless `--preserve-refine-artifacts` is active. Keep it when the run stops with unresolved blockers, material findings, max rounds, or churn.
+16. Clean up `tasks/tmp/plan-refine-<plan-key>.md` according to invocation context.
+    - For standalone `$plan-refine`, delete the log after a successful run unless `--preserve-refine-artifacts` is active.
+    - For `$plan-and-execute --refine-plan`, keep the log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless preservation is active.
+    - Keep the log when the run stops with unresolved blockers, material findings, max rounds, or churn.
 
 ## Critique Standard
 
@@ -172,6 +176,7 @@ The challenger must focus on:
 - failure paths, missing constraints, or verification gaps that would make execution fragile
 - places where the plan is broader than the actual problem requires
 - counter-plan pressure that could simplify or narrow the work without losing the user's goal
+- research-backed or Pro-backed decisions only when the challenger can identify a conflict, stale evidence, over-scope, missing carry-forward, or unsafe assumption from the artifacts plus the loaded memo or durable digest
 
 The challenger is read-only, uses a fresh subagent when applicable, and follows the strongest appropriate reasoning tier for refinement work. Its output is advisory input to the reviewer; the reviewer alone decides whether any objection becomes a `blocker`, `material`, or `minor` finding.
 
@@ -250,8 +255,10 @@ Final response must include:
 - effective max round cap, only when the user requested more than 8 rounds or the run stopped because max rounds were reached
 - files changed
 - material issues fixed
+- challenger-sourced material fixes, when any exist
 - unresolved issues or accepted residual risk
+- accepted residual challenge risks, when any exist
 - whether the plan is ready for `$execute-task`
-- preserved artifact path when `--preserve-refine-artifacts` is active or when the run stopped before success
+- preserved artifact path when `--preserve-refine-artifacts` is active, when the run stopped before success, or when `$plan-and-execute --refine-plan` is retaining the log through final full-branch review and finalization
 
 Keep the final answer compact. Do not paste the full refinement log unless the user asks for it.

@@ -29,7 +29,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 
 ## Tasks
 
-- [ ] 1.0 Add challenger lane to `$plan-refine`
+- [x] 1.0 Add challenger lane to `$plan-refine`
   - covers_prd: `FR-001`, `FR-002`, `FR-003`, `FR-004`, `FR-005`, `FR-006`, `FR-008`, `FR-009`, `FR-010`, `FR-012`
   - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`, `TDR-011`, `TDR-012`
   - [x] 1.1 Define the challenger role, applicable-round cadence, no-edit rule, and reasoning/subagent requirements in `skills/plan-refine/SKILL.md`.
@@ -44,7 +44,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
     - output: `skills/plan-refine/SKILL.md`
     - verify: `rg -n "challenge_id|deferred_with_owner|promoted_to_finding|normal.*audit|reviewer owns severity" skills/plan-refine/SKILL.md`
     - done_when: Challenger objections cannot become edits without reviewer promotion, every challenge ID must be dispositioned, and blocker-grade risks cannot be vaguely deferred.
-  - [ ] 1.3 Preserve research/Pro-backed decisions and update final output/log rules for challenger-sourced fixes or accepted residual challenge risks.
+  - [x] 1.3 Preserve research/Pro-backed decisions and update final output/log rules for challenger-sourced fixes or accepted residual challenge risks.
     - covers_prd: `FR-005`, `FR-008`, `FR-012`
     - covers_tdd: `TDR-003`, `TDR-011`, `TDR-012`
     - output: `skills/plan-refine/SKILL.md`
