@@ -67,10 +67,10 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
     - verify: `rg -n "challenger|reviewer-owned|hard-stop|recoverable|unresolved reviewer blocker|refinement log" skills/plan-and-execute/SKILL.md`
     - done_when: `$plan-and-execute` remains a thin orchestrator, no longer describes refinement as reviewer-only, and can continue only after clean refinement success or recoverable churn with no unresolved reviewer blocker/material findings.
 
-- [ ] 3.0 Validate, install, review, and archive
+- [x] 3.0 Validate, install, review, and archive
   - covers_prd: `FR-007`
   - covers_tdd: `TDR-008`
-  - [ ] 3.1 Run text and installer validation, then inspect public invocation surfaces for unintended syntax changes.
+  - [x] 3.1 Run text and installer validation, then inspect public invocation surfaces for unintended syntax changes.
     - covers_prd: `FR-007`
     - covers_tdd: `TDR-008`
     - output: validation evidence in final summary and task checklist
