@@ -69,12 +69,13 @@ Load these files before running:
    - `tasks/tasks-plan-<plan-key>.md`
 5. If `--refine-plan` is present, run the `$plan-refine plan-key=<plan-key>` improvement loop before execution:
    - use the generated plan key explicitly
-   - use `$plan-refine`'s normal default round cap, fresh reviewer rounds, and artifact-editing rules
-   - keep the refinement log when `--preserve-artifacts` is present; otherwise use normal `$plan-refine` cleanup behavior
-   - apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution
-   - if the loop reaches max rounds or churn, choose the safest concrete artifact fix available, record the accepted assumption or residual risk, and continue
+   - use `$plan-refine`'s normal default round cap, internal challenger lane, fresh read-only challenger/reviewer requirements, reviewer-owned severity gate, and artifact-editing rules
+   - apply fixes for reviewer blocker and material findings in the PRD, TDD, and tasks-plan before execution
+   - hard-stop execution when `$plan-refine` fails because required refinement gates fail, required fresh subagents are unavailable, challenge dispositions are incomplete, unsafe blockers remain, or max rounds end with unresolved reviewer blocker/material findings
+   - treat churn as recoverable only when no unresolved reviewer blocker/material findings remain and the refinement log records the safest concrete artifact fix, accepted assumption, or accepted residual risk
    - ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default
-   - continue into execution with the refined artifacts
+   - continue into execution only after clean refinement success or recoverable churn with no unresolved reviewer blocker/material findings
+   - keep the refinement log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless `--preserve-artifacts` is present
 6. Execute the generated or refined plan in one-shot mode:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default
    - if the skill created a branch from main/base, use normal branch execution and open a PR at the end

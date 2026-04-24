@@ -51,7 +51,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
     - verify: `rg -n "research-backed|Pro-backed|challenger-sourced|residual.*challenge|final full-branch review|finalization|plan-refine-<plan-key>" skills/plan-refine/SKILL.md`
     - done_when: Challenger context receives the same research/Pro evidence as the reviewer, final summaries can surface material challenger-sourced fixes or accepted challenge risks, and `$plan-and-execute --refine-plan` keeps the refinement log through final full-branch review and finalization before cleanup unless preservation is active.
 
-- [ ] 2.0 Mirror composition-relevant refinement behavior
+- [x] 2.0 Mirror composition-relevant refinement behavior
   - covers_prd: `FR-006`, `FR-007`, `FR-011`, `FR-012`, `FR-013`
   - covers_tdd: `TDR-006`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-013`
   - [x] 2.1 Update `task-file-contract.md` with composition-relevant challenger cadence, subagent requirements, reviewer-owned stop rule, disposition logging, hard-stop outcomes, and `$plan-and-execute` refinement-log retention.
@@ -60,7 +60,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
     - output: `skills/shared/references/execution/task-file-contract.md`
     - verify: `rg -n "challenger|hard-stop|recoverable|unresolved reviewer blocker|plan-refine-<plan-key>" skills/shared/references/execution/task-file-contract.md`
     - done_when: Shared contract mirrors only behavior needed by orchestration, does not duplicate the full challenge brief schema, and treats max-round stops with unresolved reviewer blocker/material findings as hard stops.
-  - [ ] 2.2 Update `skills/plan-and-execute/SKILL.md` thin wording so `--refine-plan` references normal `$plan-refine` behavior, internal challenger lane, reviewer-owned severity gate, hard-stop outcomes, and log availability through final review/finalization.
+  - [x] 2.2 Update `skills/plan-and-execute/SKILL.md` thin wording so `--refine-plan` references normal `$plan-refine` behavior, internal challenger lane, reviewer-owned severity gate, hard-stop outcomes, and log availability through final review/finalization.
     - covers_prd: `FR-007`, `FR-011`, `FR-012`, `FR-013`
     - covers_tdd: `TDR-007`, `TDR-009`, `TDR-010`, `TDR-011`, `TDR-013`
     - output: `skills/plan-and-execute/SKILL.md`
