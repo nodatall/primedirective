@@ -95,10 +95,12 @@ Load these files before running:
    - Send the challenger subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's challenger standard, any loaded research memo or durable research digest, and any loaded Pro synthesis memo or durable Pro synthesis digest.
    - Ask the challenger subagent to pressure-test the artifact set for hidden assumptions, false settled decisions, implementation drift traps, likely failure paths, overengineering, under-specification, and counter-plan pressure.
    - Do not ask the challenger to assign severity, apply fixes, rewrite artifacts, ask the user questions, or continue into another round.
-   - If the challenger finds no material challenge, it must return `no_material_challenges_found` with a one-sentence rationale instead of inventing objections.
+   - Require the challenger to return a challenge brief that follows the Challenge Brief Contract below.
+   - If the challenger finds no material challenge, it must return `no_material_challenges_found: yes` with a one-sentence rationale instead of inventing objections.
    - Send the reviewer subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's critique standard, the challenger brief when one was produced for the round, any loaded research memo or durable research digest, and any loaded Pro synthesis memo or durable Pro synthesis digest.
-   - Ask the reviewer subagent to run a fresh first-principles critique using the analysis rubric plus the audit checks in `improve-plan.md`, then account for any challenger brief.
+   - Ask the reviewer subagent to run the normal `$plan-refine` audit first: a fresh first-principles critique using the analysis rubric plus the audit checks in `improve-plan.md`; only after that normal audit should it adjudicate any challenge brief.
    - The reviewer remains the severity and stop gate. Challenger objections do not become artifact edits, user questions, or another refinement round unless the reviewer classifies them as `blocker` or `material` findings.
+   - Require the reviewer to disposition every `challenge_id` before edits, stop decisions, or clean completion. If any `challenge_id` lacks a valid disposition, request a corrected reviewer response for the same round before editing artifacts.
    - Do not ask the reviewer to apply fixes, rewrite artifacts, or continue into another round.
    - Keep each reviewer round isolated. Do not reuse the same reviewer subagent for later rounds.
    - Produce structured findings before editing:
@@ -113,6 +115,7 @@ Load these files before running:
    - Treat `material` as an issue that changes behavior, technical direction, sequencing, verification, rollout, safety, or implementer clarity.
    - Treat `minor` as wording, formatting, local clarity, or polish that does not change execution risk.
    - Set `previous_reviewer_round_had_blocker_or_material` from reviewer findings only; challenger-only objections do not set it.
+   - Do not apply challenger-derived fixes unless the reviewer promoted the related `challenge_id` to a `blocker` or `material` finding. The only exception is a minor coherence edit needed after applying an accepted blocker/material fix.
    - Apply fixes for all `blocker` and `material` findings.
    - Apply `minor` fixes only when the edit is necessary to keep the artifacts coherent after material changes.
    - Update only PRD, TDD, tasks-plan, and the refinement log.
@@ -121,7 +124,7 @@ Load these files before running:
    - Preserve research-backed decisions. Do not remove or weaken research-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
    - Preserve Pro-backed decisions. Do not remove or weaken adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
    - Re-run the required audit checks from `improve-plan.md` after edits.
-   - Append the round findings, fixes, and stop decision to `tasks/tmp/plan-refine-<plan-key>.md`.
+   - Append the round findings, fixes, challenge brief, reviewer challenge dispositions, artifact changes from promoted challenges, rejected/deferred challenge reasons, and stop decision to `tasks/tmp/plan-refine-<plan-key>.md`.
 11. When deep research was used, run a final research-carry-forward check after the last artifact edit and before successful completion.
     - Confirm research-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies are still present or have a recorded superseded, inapplicable, over-scoped, rejected, or deferred reason.
     - Confirm no artifact being handed to execution still contains `evidence_bar_met: no`.
@@ -171,6 +174,57 @@ The challenger must focus on:
 - counter-plan pressure that could simplify or narrow the work without losing the user's goal
 
 The challenger is read-only, uses a fresh subagent when applicable, and follows the strongest appropriate reasoning tier for refinement work. Its output is advisory input to the reviewer; the reviewer alone decides whether any objection becomes a `blocker`, `material`, or `minor` finding.
+
+## Challenge Brief Contract
+
+For every applicable challenger round, the challenge brief must be either a valid empty brief or one or more challenge entries.
+
+A valid empty brief contains only:
+
+- `no_material_challenges_found: yes`
+- `rationale`: one sentence explaining why no material challenge was found
+
+Do not require challenge ID dispositions for a valid empty brief.
+
+Each non-empty challenge entry must include:
+
+- `challenge_id`: stable within the round, such as `CH-<round>-<n>`
+- `pressure_type`
+- `artifact_refs`: PRD, TDD, or tasks-plan references specific enough for the reviewer to inspect
+- `hidden_assumption_or_failure_mode`
+- `how_it_could_break_execution`
+- `evidence_or_gap`
+- `counter_plan_pressure`
+- `suggested_reviewer_test`
+- `requires_user_decision_candidate`: `yes` or `no`
+
+The challenger must not include severity, disposition, or artifact rewrite instructions. The reviewer owns severity.
+
+Reviewer challenge dispositions must be keyed by `challenge_id` and use one of:
+
+- `promoted_to_finding`
+- `already_covered`
+- `non_material`
+- `rejected`
+- `superseded`
+- `deferred_with_owner`
+
+Record challenge material in the refinement log under stable round sections:
+
+- `challenge_brief`
+- `challenger_objections`, keyed by `challenge_id`
+- `reviewer_dispositions`, keyed by `challenge_id`
+- `artifact_changes_from_challenges`
+- `rejected_or_deferred_challenges`
+
+Disposition rules:
+
+- `promoted_to_finding` must reference the resulting reviewer finding ID and severity.
+- `already_covered` must reference the existing reviewer finding ID that covers the challenge.
+- `non_material`, `rejected`, and `superseded` must include a concise reason.
+- `deferred_with_owner` must name the owner and carry-forward location: a TDD obligation, task-plan step, explicit non-goal, or accepted residual risk.
+- `deferred_with_owner` cannot hide blocker-grade issues; if a challenge would prevent execution, the reviewer must promote it, fix it, or escalate it instead of deferring it.
+- Every `challenge_id` must have exactly one disposition before the main agent edits artifacts, records a clean stop, or reports successful completion.
 
 ## Stop Discipline
 

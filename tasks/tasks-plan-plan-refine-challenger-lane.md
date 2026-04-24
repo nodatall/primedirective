@@ -38,7 +38,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
     - output: `skills/plan-refine/SKILL.md`
     - verify: `rg -n "challenger|round == 1|previous_reviewer_round_had_blocker_or_material|no_material_challenges_found" skills/plan-refine/SKILL.md`
     - done_when: The workflow clearly runs a fresh read-only challenger in round 1 and later only when the previous reviewer round had blocker/material findings.
-  - [ ] 1.2 Add the challenge brief schema, valid empty-brief behavior, reviewer normal-audit-first handoff, challenge ID dispositions, and direct-edit prohibition.
+  - [x] 1.2 Add the challenge brief schema, valid empty-brief behavior, reviewer normal-audit-first handoff, challenge ID dispositions, and direct-edit prohibition.
     - covers_prd: `FR-002`, `FR-004`, `FR-005`, `FR-006`, `FR-009`, `FR-010`
     - covers_tdd: `TDR-003`, `TDR-004`, `TDR-005`, `TDR-012`
     - output: `skills/plan-refine/SKILL.md`
