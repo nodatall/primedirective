@@ -112,6 +112,8 @@ Use reasoning effort for search and comparison first, not for elaborating one ea
 
 ## Plain-Language First
 
+Use `skills/shared/references/plain-language.md` as the detailed output standard.
+
 Lead with a short explanation a non-specialist could follow.
 
 Then add:

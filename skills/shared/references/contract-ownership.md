@@ -16,6 +16,7 @@ Prime Directive contracts should have one owner. Consumers may include short ori
 | contract_key | owner_path | consumers | mirror_policy |
 | --- | --- | --- | --- |
 | `public-skill-metadata` | `README.md; skills/*/SKILL.md` | README, installer scripts, skill users | README owns public overview; each skill owns its front matter and supported modifiers; validator compares them. |
+| `plain-language-output` | `skills/shared/references/plain-language.md` | `skills/plain-language/SKILL.md`, `skills/first-principles-mode/SKILL.md`, `skills/plan-work/SKILL.md`, `skills/shared/references/planning/create-prd.md` | Consumers may name when plain-language output is required; wording rules live here. |
 | `planning-intake` | `skills/shared/references/planning/socratic-planning.md` | `skills/plan-work/SKILL.md`, `skills/plan-and-execute/SKILL.md` | Consumers may summarize direct or Socratic mode only. |
 | `prd-generation` | `skills/shared/references/planning/create-prd.md` | `skills/plan-work/SKILL.md`, `skills/plan-and-execute/SKILL.md` | Consumers reference PRD generation rather than copying structure. |
 | `tdd-generation` | `skills/shared/references/planning/create-tdd.md` | `skills/plan-work/SKILL.md`, `skills/plan-and-execute/SKILL.md` | Consumers reference TDD generation rather than copying structure. |

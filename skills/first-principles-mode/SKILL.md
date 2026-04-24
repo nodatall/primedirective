@@ -7,7 +7,10 @@ description: Run a deep, adaptive, read-only analysis pass that widens the searc
 
 Run a deliberately deep, adaptive, read-only analysis pass before offering implementation judgment.
 
-Load `skills/first-principles-mode/references/analysis-rubric.md` before starting.
+Load these references before starting:
+
+- `skills/first-principles-mode/references/analysis-rubric.md`
+- `skills/shared/references/plain-language.md`
 
 If `--pro-analysis` is present, also load `skills/shared/references/analysis/pro-oracle-escalation.md`.
 
@@ -36,6 +39,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 - Try to disconfirm the leading explanation before settling on it.
 - Separate observation, inference, and synthesis internally, and surface the distinction when it matters.
 - Explain in plain language first, then add technical detail.
+- Use `skills/shared/references/plain-language.md` for the opening verdict and any user-facing restatement.
 - Spend available reasoning effort on search, comparison, and falsification rather than on polishing prose.
 - Be thorough internally and concise externally.
 - Stay read-only by default.
