@@ -87,6 +87,10 @@ MIRROR_CHECKS = [
     },
 ]
 
+INVOCATION_OVERRIDES = {
+    "cleanup-merged-branches": "$cleanup-merged-branches",
+}
+
 
 def rel(path: Path) -> str:
     return path.relative_to(ROOT).as_posix()
@@ -148,9 +152,9 @@ def declared_skill_tokens(text: str) -> set[str]:
     return tokens
 
 
-def readme_rows() -> dict[str, str]:
+def readme_rows() -> dict[str, tuple[str, str]]:
     readme = (ROOT / "README.md").read_text()
-    rows: dict[str, str] = {}
+    rows: dict[str, tuple[str, str]] = {}
     in_table = False
     for line in readme.splitlines():
         if line.startswith("| Skill |"):
@@ -167,7 +171,7 @@ def readme_rows() -> dict[str, str]:
             continue
         match = re.fullmatch(r"`([^`]+)`", cells[0])
         if match:
-            rows[match.group(1)] = " ".join(cells[1:])
+            rows[match.group(1)] = (cells[1], cells[2])
     return rows
 
 
@@ -194,7 +198,17 @@ def validate_skill_metadata(errors: list[str]) -> None:
             fail(errors, "PD-README-SKILL-EXTRA", f"README has unknown skill rows: {', '.join(extra)}")
 
     for name, expected in sorted(skills.items()):
-        actual = public_tokens(rows.get(name, ""))
+        invocation_cell, options_cell = rows.get(name, ("", ""))
+        expected_invocation = INVOCATION_OVERRIDES.get(name, f"${name}")
+        invocation_codes = re.findall(r"`([^`]+)`", invocation_cell)
+        valid_invocations = bool(invocation_codes)
+        for code in invocation_codes:
+            first_token = code.split()[0] if code.split() else ""
+            if first_token != expected_invocation:
+                valid_invocations = False
+        if not valid_invocations:
+            fail(errors, "PD-README-INVOCATION", f"{name}: README invocation cell does not include `{expected_invocation}`")
+        actual = public_tokens(" ".join([invocation_cell, options_cell]))
         if actual != expected:
             fail(
                 errors,
@@ -209,7 +223,13 @@ def parse_owner_table(errors: list[str]) -> dict[str, str]:
         fail(errors, "PD-CONTRACT-OWNERSHIP-MISSING", f"{rel(path)} missing")
         return {}
     rows: dict[str, str] = {}
+    in_owner_inventory = False
     for line in path.read_text().splitlines():
+        if line.startswith("## "):
+            in_owner_inventory = line.strip() == "## Owner Inventory"
+            continue
+        if not in_owner_inventory:
+            continue
         if not line.startswith("| `"):
             continue
         cells = [cell.strip() for cell in line.strip("|").split("|")]
@@ -217,8 +237,7 @@ def parse_owner_table(errors: list[str]) -> dict[str, str]:
             continue
         key = cells[0].strip("`")
         owner = cells[1].replace("`", "")
-        if key in REQUIRED_CONTRACTS:
-            rows[key] = owner
+        rows[key] = owner
     return rows
 
 
@@ -240,16 +259,30 @@ def validate_owner_paths(errors: list[str]) -> None:
                     fail(errors, "PD-CONTRACT-OWNER-GLOB", f"{key}: owner_path glob {part!r} matched no files")
             elif not (ROOT / part).exists():
                 fail(errors, "PD-CONTRACT-OWNER-PATH", f"{key}: owner_path {part!r} does not exist")
+    for key, owner in sorted(rows.items()):
+        for part in [p.strip() for p in owner.split(";")]:
+            if not part:
+                fail(errors, "PD-CONTRACT-OWNER-PARSE", f"{key}: empty owner_path segment")
+                continue
+            if any(ch in part for ch in "*?["):
+                if not glob.glob(str(ROOT / part)):
+                    fail(errors, "PD-CONTRACT-OWNER-GLOB", f"{key}: owner_path glob {part!r} matched no files")
+            elif not (ROOT / part).exists():
+                fail(errors, "PD-CONTRACT-OWNER-PATH", f"{key}: owner_path {part!r} does not exist")
 
 
-def mirror_hits() -> list[tuple[str, str, str, str]]:
-    hits: list[tuple[str, str, str, str]] = []
+def scan_mirrors(include_allowed: bool = False) -> list[tuple[str, str, str, str, str]]:
+    hits: list[tuple[str, str, str, str, str]] = []
     for file_path in sorted((ROOT / "skills").glob("**/*.md")):
         rel_path = rel(file_path)
         text = file_path.read_text()
         for check in MIRROR_CHECKS:
-            if rel_path in check["owner"] or rel_path in check["allowed"]:
-                continue
+            if rel_path in check["owner"]:
+                disposition = "owner"
+            elif rel_path in check["allowed"]:
+                disposition = "allowed_summary" if rel_path == "skills/shared/references/contract-ownership.md" else "allowed_gate/check"
+            else:
+                disposition = "refactor/remove"
             reasons: list[str] = []
             for token in check["single"]:
                 if token in text:
@@ -258,25 +291,26 @@ def mirror_hits() -> list[tuple[str, str, str, str]]:
             if together and all(token in text for token in together):
                 reasons.append(" + ".join(together))
             for reason in reasons:
-                hits.append((check["error"], check["key"], rel_path, reason))
+                if include_allowed or disposition == "refactor/remove":
+                    hits.append((check["error"], check["key"], rel_path, reason, disposition))
     return hits
 
 
 def print_inventory() -> None:
     print("# Stale Mirror Inventory")
     print()
-    current_hits = mirror_hits()
+    current_hits = scan_mirrors(include_allowed=True)
     if not current_hits:
-        print("No prohibited stale-mirror hits found by the final scanner.")
+        print("No stale-mirror hits found by the final scanner.")
         return
     print("| error_id | pattern_key | path | matched | disposition |")
     print("| --- | --- | --- | --- | --- |")
-    for error_id, key, path, reason in current_hits:
-        print(f"| `{error_id}` | `{key}` | `{path}` | `{reason}` | `refactor/remove` |")
+    for error_id, key, path, reason, disposition in current_hits:
+        print(f"| `{error_id}` | `{key}` | `{path}` | `{reason}` | `{disposition}` |")
 
 
 def validate_mirrors(errors: list[str]) -> None:
-    for error_id, key, path, reason in mirror_hits():
+    for error_id, key, path, reason, _disposition in scan_mirrors(include_allowed=False):
         fail(errors, error_id, f"{path} matches {key} outside owner/allowlist: {reason}")
 
 
