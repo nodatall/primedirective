@@ -41,6 +41,7 @@ Round limit:
 Fixed stop rule:
 
 - Stop when a fresh reviewer round finds no `blocker` or `material` issues.
+- Challenger objections alone do not trigger another round; only reviewer-classified `blocker` or `material` findings affect the stop rule.
 
 ## Required References
 
@@ -76,19 +77,28 @@ Load these files before running:
    - Continue when only the current plan artifacts are dirty.
    - If unrelated dirty files exist, report that they are unrelated and ignore them unless they prevent reading or editing the planning artifacts.
 7. Create a temporary refinement log at `tasks/tmp/plan-refine-<plan-key>.md`.
-8. Treat invocation of `$plan-refine` as an explicit request to delegate every critique round to a fresh reviewer subagent.
+8. Treat invocation of `$plan-refine` as an explicit request to delegate applicable challenger rounds and every critique round to fresh subagents.
+   - The challenger lane is internal to `$plan-refine`; it does not add or change public invocation syntax or supported modifiers.
+   - Spawn one fresh read-only challenger subagent only for applicable rounds: `round == 1 OR previous_reviewer_round_had_blocker_or_material`.
    - Spawn one fresh read-only reviewer subagent per round.
-   - Request the strongest appropriate reasoning tier for each reviewer round, following `reasoning-budget.md`.
+   - Request the strongest appropriate reasoning tier for each challenger and reviewer round, following `reasoning-budget.md`.
+   - The challenger subagent must not edit files.
    - The reviewer subagent must not edit files.
    - The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and final user summary.
-   - If fresh reviewer subagents cannot be spawned, stop immediately and tell the user this workflow requires subagents.
+   - If a required fresh challenger or reviewer subagent cannot be spawned, stop immediately and tell the user this workflow requires subagents.
 9. Before starting reviewer rounds, set the effective max round count.
    - Use the requested `--max-rounds=<n>` when `n` is 8 or lower.
    - If the requested `--max-rounds` is greater than 8, set the effective max round count to 8 and record that cap in the refinement log.
 10. For each round from 1 through the effective max round count:
    - Start from the current PRD, TDD, and tasks-plan.
-   - Send the reviewer subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's critique standard, any loaded research memo or durable research digest, and any loaded Pro synthesis memo or durable Pro synthesis digest.
-   - Ask the reviewer subagent to run a fresh first-principles critique using the analysis rubric plus the audit checks in `improve-plan.md`.
+   - Run the challenger lane first when the round is applicable: `round == 1 OR previous_reviewer_round_had_blocker_or_material`.
+   - Send the challenger subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's challenger standard, any loaded research memo or durable research digest, and any loaded Pro synthesis memo or durable Pro synthesis digest.
+   - Ask the challenger subagent to pressure-test the artifact set for hidden assumptions, false settled decisions, implementation drift traps, likely failure paths, overengineering, under-specification, and counter-plan pressure.
+   - Do not ask the challenger to assign severity, apply fixes, rewrite artifacts, ask the user questions, or continue into another round.
+   - If the challenger finds no material challenge, it must return `no_material_challenges_found` with a one-sentence rationale instead of inventing objections.
+   - Send the reviewer subagent the current PRD, TDD, tasks-plan, plan key, round number, this skill's critique standard, the challenger brief when one was produced for the round, any loaded research memo or durable research digest, and any loaded Pro synthesis memo or durable Pro synthesis digest.
+   - Ask the reviewer subagent to run a fresh first-principles critique using the analysis rubric plus the audit checks in `improve-plan.md`, then account for any challenger brief.
+   - The reviewer remains the severity and stop gate. Challenger objections do not become artifact edits, user questions, or another refinement round unless the reviewer classifies them as `blocker` or `material` findings.
    - Do not ask the reviewer to apply fixes, rewrite artifacts, or continue into another round.
    - Keep each reviewer round isolated. Do not reuse the same reviewer subagent for later rounds.
    - Produce structured findings before editing:
@@ -102,6 +112,7 @@ Load these files before running:
    - Treat `blocker` as an issue that prevents execution.
    - Treat `material` as an issue that changes behavior, technical direction, sequencing, verification, rollout, safety, or implementer clarity.
    - Treat `minor` as wording, formatting, local clarity, or polish that does not change execution risk.
+   - Set `previous_reviewer_round_had_blocker_or_material` from reviewer findings only; challenger-only objections do not set it.
    - Apply fixes for all `blocker` and `material` findings.
    - Apply `minor` fixes only when the edit is necessary to keep the artifacts coherent after material changes.
    - Update only PRD, TDD, tasks-plan, and the refinement log.
@@ -146,6 +157,20 @@ The critique must cover:
 - whether research-backed decisions from the memo or durable TDD digest were preserved, explicitly superseded, rejected, deferred, or narrowed with a recorded reason
 - whether the current plan is over-engineered relative to the actual problem
 - whether the current plan is under-specified in ways that would cause implementation drift
+
+## Challenger Standard
+
+The challenger is not a second reviewer and must not produce a parallel edit list. Its job is to try to break the apparent plan before the reviewer judges it.
+
+The challenger must focus on:
+
+- hidden assumptions or decisions the artifacts treat as settled without support
+- implementation drift traps a worker could plausibly misread
+- failure paths, missing constraints, or verification gaps that would make execution fragile
+- places where the plan is broader than the actual problem requires
+- counter-plan pressure that could simplify or narrow the work without losing the user's goal
+
+The challenger is read-only, uses a fresh subagent when applicable, and follows the strongest appropriate reasoning tier for refinement work. Its output is advisory input to the reviewer; the reviewer alone decides whether any objection becomes a `blocker`, `material`, or `minor` finding.
 
 ## Stop Discipline
 

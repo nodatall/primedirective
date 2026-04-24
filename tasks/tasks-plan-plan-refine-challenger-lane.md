@@ -32,7 +32,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 - [ ] 1.0 Add challenger lane to `$plan-refine`
   - covers_prd: `FR-001`, `FR-002`, `FR-003`, `FR-004`, `FR-005`, `FR-006`, `FR-008`, `FR-009`, `FR-010`, `FR-012`
   - covers_tdd: `TDR-001`, `TDR-002`, `TDR-003`, `TDR-004`, `TDR-005`, `TDR-011`, `TDR-012`
-  - [ ] 1.1 Define the challenger role, applicable-round cadence, no-edit rule, and reasoning/subagent requirements in `skills/plan-refine/SKILL.md`.
+  - [x] 1.1 Define the challenger role, applicable-round cadence, no-edit rule, and reasoning/subagent requirements in `skills/plan-refine/SKILL.md`.
     - covers_prd: `FR-001`, `FR-002`, `FR-003`, `FR-007`, `FR-008`
     - covers_tdd: `TDR-001`, `TDR-002`, `TDR-004`
     - output: `skills/plan-refine/SKILL.md`
