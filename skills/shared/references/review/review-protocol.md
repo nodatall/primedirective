@@ -4,6 +4,8 @@ Mandatory review behavior for task execution and explicit review commands.
 
 Use `skills/shared/references/review/review-calibration.md` as calibration context for task-based review rounds. The calibration examples are guidance for reviewer judgment; they do not add user-facing approval steps.
 
+See `skills/shared/references/contract-ownership.md` for shared contract ownership. This file owns review topology, prompt profile selection, review logs, and final review/finalization sequencing.
+
 ## Step 1: Kickoff (task execution only)
 
 Default branch-creation kickoff:
@@ -18,6 +20,7 @@ Current-branch kickoff when `$execute-task` includes `--stay-on-current-branch`:
 ```text
 Please fetch the latest `origin/main` from github.
 We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. Keep the current branch. Do not create, switch, or rename branches. If the current branch is `main`, `master`, the resolved local base branch, or detached `HEAD`, stop and ask before implementation starts. If the only uncommitted changes are those required planning artifacts for this plan, commit them on the current branch before implementation starts.
+If the current branch already has an open PR, do not treat PR title/scope mismatch as a kickoff blocker. Continue locally, do not push or update that PR by default, and report the mismatch in the final handoff.
 ```
 
 Default branch-creation operational translation:
@@ -39,6 +42,7 @@ Current-branch operational translation:
 - Stop and ask if the current checkout is detached `HEAD`.
 - Stop and ask if the current branch is `main`, `master`, or the resolved local base branch.
 - Keep the current branch. Do not create, switch, or rename branches.
+- If the current branch already has an open PR, continue locally anyway. A PR title/scope mismatch is not a reason to stop before implementation.
 - Skip the local-`main` versus `origin/main` divergence gate because no new branch is being created from main.
 - If the working tree is clean, continue on the current branch.
 - If the only dirty files are `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` for the current plan, commit them on the current branch before implementation starts.
@@ -415,6 +419,7 @@ Operational translation:
 - Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`, unless the `$plan-and-execute` existing non-base branch exception applies.
 - Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`, unless the `$plan-and-execute` existing non-base branch exception applies.
 - Exception: `$plan-and-execute` does not open a PR by default when it started on an existing non-base branch. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL. This exception skips PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
+- If the existing non-base branch already has an open PR, do not push to it, update it, or require its scope to match the new plan by default. Report any visible PR scope mismatch in the final handoff so the user can decide whether to push later, move the commits, or close/update the PR.
 - Include summary, test evidence, and known risks/follow-ups in the PR body.
 - Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation or the `$plan-and-execute` existing non-base branch exception applies.
 - Only after these steps, or the documented `$plan-and-execute` existing non-base branch exception path, may one-shot execution produce its terminal completion handoff.

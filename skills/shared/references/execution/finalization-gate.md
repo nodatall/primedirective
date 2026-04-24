@@ -4,6 +4,8 @@ Portable hard gate for `$execute-task --one-shot` and `$plan-and-execute`.
 
 This gate uses normal shell commands and repo artifacts only. It does not depend on a Prime Directive script being available in the target repository.
 
+See `skills/shared/references/contract-ownership.md` for shared contract ownership. This file owns baseline capture and terminal handoff checks.
+
 ## Kickoff Baseline
 
 Capture the current dirty state before the workflow creates new task artifacts or implementation changes:
@@ -65,5 +67,7 @@ Run this gate immediately before any final user-visible completion message:
 Starting `$plan-and-execute` on an existing non-base branch skips default PR creation only.
 
 It does not skip task completion, final review, archiving, cleanup, commits, validation, baseline comparison, or the final status check.
+
+If that branch already has an open PR, the gate does not require the PR title or scope to match the new plan. Do not push to or mutate the existing PR by default; include any visible mismatch in the final handoff as context for the user's next action.
 
 If the gate fails, do not send a final completion message. Either finish the missing finalization work or stop with a blocker that names the exact failed gate item and the user action required.
