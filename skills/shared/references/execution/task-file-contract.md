@@ -194,7 +194,7 @@ Then:
 - If Pro analysis was used, stops unless the Pro synthesis memo or durable TDD digest says `pro_synthesis_complete: yes`.
 - If Pro analysis was used, preserves adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
 - If Pro analysis was used, runs a final Pro-carry-forward check before execution continues.
-- Deletes the refinement log after successful completion unless `--preserve-refine-artifacts` is present.
+- Deletes a standalone `$plan-refine` refinement log after successful completion unless `--preserve-refine-artifacts` is present. When refinement runs under `$plan-and-execute --refine-plan`, keep the log through execution, final full-branch review, and finalization, then delete it during final cleanup only after finalization succeeds unless `$plan-and-execute --preserve-artifacts` is active.
 - Keeps the refinement log when the run stops with unresolved blockers, material findings, missing artifacts, max rounds, or repeated/contradictory churn.
 - Treats max rounds with unresolved reviewer blocker/material findings as a hard-stop outcome. Recoverable churn can continue only when no unresolved reviewer blocker/material findings remain and the refinement log records the accepted assumption or residual risk.
 
