@@ -31,6 +31,7 @@ All skills use explicit Codex-native `$skill-name` invocation text.
 - `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
 - `scripts/install-claude-skills.sh` idempotent Claude skills installer
 - `scripts/oracle-pro.sh` ChatGPT Pro browser escalation wrapper for Prime Directive analysis flows
+- `scripts/validate-skill-contracts.py` skill metadata and contract ownership validator
 
 ## Install For Codex
 
@@ -87,6 +88,7 @@ Conventions:
 - keep `description` concise and invocation-oriented
 - use `skills/...` paths for internal references
 - keep shared non-invokable references under `skills/shared/`
+- keep reusable workflow contracts owned in one place; see `skills/shared/references/contract-ownership.md`
 
 Codex invocation is explicit; keep the complete list in `Skill Invocations` current when adding, renaming, or removing skills.
 
@@ -95,6 +97,7 @@ Codex invocation is explicit; keep the complete list in `Skill Invocations` curr
 Useful local checks:
 
 ```bash
+python3 scripts/validate-skill-contracts.py
 ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
@@ -102,7 +105,7 @@ HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 ```
 
-The installers are expected to be idempotent.
+The contract validator checks public skill rows, modifier/request-option drift, owner-path rows, and known stale mirrors. The installers are expected to be idempotent.
 
 ## Optional ChatGPT Pro Escalation
 

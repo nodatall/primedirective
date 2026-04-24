@@ -1,18 +1,31 @@
 # Task File Contract
 
-Canonical path and activation contract for planning, execution, and review skills.
+Canonical activation, plan-key, artifact-path, temp-file, archive-file, and execution-entry contract for planning, execution, refinement, and review skills.
 
-## Accepted activations
+See `skills/shared/references/contract-ownership.md` for the broader contract ownership model. This file owns path and entry gates; it does not own the detailed workflow behavior of `$plan-work`, `$plan-refine`, `$execute-task`, deep research, Pro analysis, review, or finalization.
 
-- Planning: `$plan-work` with the source plan or request in the same user message
-- Plan and execute: `$plan-and-execute` with the source plan already present in the current thread; may include `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, and/or `--preserve-artifacts`
+## Accepted Activations
+
+- Planning: `$plan-work`
+- Plan and execute: `$plan-and-execute`
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
-- Standard task execution: `$execute-task` with a specific `<task-id>` and optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
-- One-shot execution: `$execute-task --one-shot` with optional `<plan-key>`; may include `--stay-on-current-branch` and/or `--check-harness-drift`
-- Task review: `$review-chain` with a specific `<task-id>`
-- Ad-hoc review (default): `$review-chain` without a task ID
+- Standard task execution: `$execute-task` with a specific `task-id=<task-id>` and optional `plan-key=<plan-key>`
+- One-shot execution: `$execute-task --one-shot` with optional `plan-key=<plan-key>`
+- Task review: `$review-chain` with a specific task ID
+- Ad-hoc review: `$review-chain` without a task ID
 
-## Execution branch modifier
+## Owner References
+
+- `$plan-work` behavior: `skills/plan-work/SKILL.md`
+- `$plan-refine` behavior, challenger schema, severity gate, and stop discipline: `skills/plan-refine/SKILL.md`
+- `$execute-task` activation behavior: `skills/execute-task/SKILL.md`
+- One-shot worker cadence, task-list lifecycle, temp sub-task contract shape, and cleanup phase: `skills/shared/references/execution/task-management.md`
+- Finalization baseline and terminal gate: `skills/shared/references/execution/finalization-gate.md`
+- Review topology and final review behavior: `skills/shared/references/review/review-protocol.md`
+- Deep research details: `skills/shared/references/planning/deep-research.md`
+- Pro analysis details: `skills/shared/references/analysis/pro-oracle-escalation.md`
+
+## Execution Branch Modifier
 
 `--stay-on-current-branch` is valid only with `$execute-task`, in standard or one-shot mode.
 
@@ -21,101 +34,28 @@ When present:
 - Keep the current non-base branch instead of creating/switching to a new branch from `origin/main`.
 - Do not create, switch, or rename branches during kickoff.
 - Do not use this mode on `main`, `master`, a resolved local base branch, or detached `HEAD`; stop and ask if that is the current state.
+- If the current branch already has an open PR, do not stop solely because the PR title/scope differs from the current plan. Continue locally, do not push or update that PR by default when the parent `$plan-and-execute` existing-branch exception applies, and surface the mismatch in the final handoff.
 - Do not skip execution gates, review rounds, commits, final rebase, push, or PR creation, except for the `$plan-and-execute` existing non-base branch no-PR terminal behavior documented in the review protocol.
 
-## Harness drift modifier
+## Modifier Ownership
 
-`--check-harness-drift` is valid with `$execute-task` and `$plan-and-execute`.
+- `--check-harness-drift` is valid with `$execute-task` and `$plan-and-execute`; detailed behavior is owned by `skills/shared/references/harness-drift.md`.
+- `--refine-plan` is valid with `$plan-and-execute`; detailed behavior is owned by `skills/plan-refine/SKILL.md`.
+- `--deep-research` is valid with `$plan-work` and `$plan-and-execute`; detailed behavior is owned by `skills/shared/references/planning/deep-research.md`.
+- `--pro-analysis` is valid with `$first-principles-mode`, `$plan-and-execute`, and `$repo-sweep`; detailed behavior is owned by `skills/shared/references/analysis/pro-oracle-escalation.md`.
 
-When present:
-
-- Run the compact harness drift check from `skills/shared/references/harness-drift.md` during final handoff.
-- Keep planning artifacts, sub-task contracts, review logs, and relevant temp files available until the drift report is generated.
-- After the report is generated, run normal cleanup and archive behavior.
-- Do not add mandatory human approval steps, extra user-facing checkpoints, or standalone artifacts unless preservation was requested.
-- If evidence is missing because the run failed before artifact creation or a prior cleanup already removed files, report the evidence gap instead of guessing.
-
-## Plan-and-execute refinement modifier
-
-`--refine-plan` is valid with `$plan-and-execute`.
-
-When present:
-
-- Run `$plan-refine plan-key=<plan-key>` after PRD, TDD, and tasks-plan generation and before `$execute-task --one-shot`.
-- Use the generated plan key explicitly; do not infer across multiple planning sets.
-- Use `$plan-refine`'s normal default round cap, internal challenger lane, fresh read-only challenger/reviewer requirements, and artifact-editing rules.
-- Treat refinement as an automatic repair pass, not a separate readiness gate.
-- Run the challenger lane only for applicable rounds: `round == 1 OR previous_reviewer_round_had_blocker_or_material`.
-- Treat challenger objections as reviewer input only. The reviewer owns severity classification and the fixed stop rule; challenger-only objections do not keep refinement alive unless the reviewer promotes them to `blocker` or `material` findings.
-- Require every non-empty challenge brief `challenge_id` to have a reviewer disposition in `tasks/tmp/plan-refine-<plan-key>.md` before artifact edits, clean stop decisions, or successful continuation.
-- When `--deep-research` was also used, `$plan-refine` must read `tasks/tmp/research-plan-<plan-key>.md` if it still exists; otherwise it must read the durable research digest in `tasks/tdd-<plan-key>.md`.
-- Treat the plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
-- When `--deep-research` was also used, `$plan-refine` must stop on `evidence_bar_met: no` instead of refining around a failed research evidence bar.
-- When `--deep-research` was also used, `$plan-refine` may not remove or weaken research-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies without recording why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
-- When `--deep-research` was also used, `$plan-refine` must run a final research-carry-forward check before execution continues.
-- When `--pro-analysis` was also used, `$plan-refine` must read `tasks/tmp/pro-analysis-<plan-key>.md` if it still exists; otherwise it must read the durable Pro synthesis digest in `tasks/tdd-<plan-key>.md`.
-- Treat the plan as Pro-backed when the retained Pro synthesis memo exists or the TDD contains a durable Pro synthesis digest or `pro_synthesis_complete` value.
-- When `--pro-analysis` was also used, `$plan-refine` must stop unless the Pro synthesis memo or durable TDD digest says `pro_synthesis_complete: yes`.
-- When `--pro-analysis` was also used, `$plan-refine` may not remove or weaken adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, or task dependencies without recording why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
-- When `--pro-analysis` was also used, `$plan-refine` must run a final Pro-carry-forward check before execution continues.
-- Apply fixes for blocker and material findings in the PRD, TDD, and tasks-plan before execution.
-- Hard-stop execution when `$plan-refine` fails due to missing artifacts, failed research or Pro gates, unavailable required fresh challenger/reviewer subagents, incomplete challenge dispositions, unsafe or impossible-to-default blockers, or max rounds with unresolved reviewer blocker/material findings.
-- If max rounds are reached with unresolved reviewer blocker/material findings, keep `tasks/tmp/plan-refine-<plan-key>.md`, report the unresolved findings, and do not continue into execution.
-- Recoverable churn may continue only when no unresolved reviewer blocker/material findings remain and the refinement log records the safest concrete artifact fix, accepted assumption, or accepted residual risk.
-- Ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default.
-- Continue into execution only after clean refinement success or recoverable churn with no unresolved reviewer blocker/material findings.
-- Keep `tasks/tmp/plan-refine-<plan-key>.md` available through execution, final full-branch review, and finalization. Delete it during final cleanup only after finalization succeeds unless `$plan-and-execute --preserve-artifacts` is active.
-- If `$plan-and-execute --preserve-artifacts` is also present, keep the refinement log with the other temp artifacts after finalization and surface its path in the final summary.
-
-## Plan-and-execute deep research modifier
-
-`--deep-research` is valid with `$plan-and-execute`.
-
-When present:
-
-- Compose `$plan-work --from-thread --direct --deep-research` during the planning phase.
-- Run the normal deep-research pass after initial PRD/TDD drafting and before tasks-plan generation.
-- Apply adopted findings back into PRD, TDD, and task sequencing before execution begins.
-- Do not add a revised-summary checkpoint, planning approval gate, or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
-- Stop only when live web research is unavailable or the research reveals a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
-- Keep `tasks/tmp/research-plan-<plan-key>.md` available until `improve-plan.md` completes so downstream planning audits can inspect the memo even when preservation was not requested.
-- If `$plan-and-execute --refine-plan` is also active, keep `tasks/tmp/research-plan-<plan-key>.md` available until `plan-refine` completes.
-- After `improve-plan.md`, and after `plan-refine` when active, normal cleanup applies unless preservation was requested.
-- If `$plan-and-execute --preserve-artifacts` is also present, keep the research memo with the other temp artifacts and surface its path in the final summary.
-
-## Plan-and-execute Pro analysis modifier
-
-`--pro-analysis` is valid with `$plan-and-execute`.
-
-When present:
-
-- Load `skills/shared/references/analysis/pro-oracle-escalation.md`.
-- Run local repo reconnaissance and ChatGPT Pro browser escalation during planning through `./scripts/oracle-pro.sh`.
-- Use filtered whole-repo context for small or broad tasks and curated context for large or narrow tasks.
-- Dry-run the selected file bundle before sending it.
-- Apply locally verified Pro findings back into PRD, TDD, and task sequencing before execution begins.
-- Treat Pro output as adversarial analysis, not primary evidence; it does not count toward the `--deep-research` external primary-source minimum.
-- Let Pro-suggested sources influence source-backed claims only after the main agent independently verifies those sources live and records them in the Evidence Ledger.
-- Reconcile any Pro claim that conflicts with the research memo or repo facts before tasks-plan generation.
-- Treat `oracle-pro.sh dry-run`, `run`, and `render` as Pro-analysis actions. If `--deep-research` is also active, none of them may run until the deep-research pre-Oracle gate in `pro-oracle-escalation.md` passes.
-- After `oracle-pro.sh run` returns, write `tasks/tmp/pro-analysis-<plan-key>.md` and end it with a Pro synthesis completion stamp. Raw Oracle output does not satisfy the gate.
-- Do not generate `tasks-plan`, run `$plan-refine`, or execute until `tasks/tmp/pro-analysis-<plan-key>.md` exists, says `pro_synthesis_complete: yes`, and all adopted Pro findings have been reflected in PRD/TDD or explicitly converted into task-plan inputs.
-- Do not add a planning approval gate or other user-facing pause before execution. `$plan-and-execute` remains a direct orchestration flow.
-- Stop only when the dry-run reveals likely secrets/private data, the Pro setup/run fails in a way that blocks safe planning, or the Pro result exposes a true blocker that is unsafe, contradictory, or impossible to default without changing external scope or product intent.
-- If both `--pro-analysis` and `--deep-research` are present, run deep research first, revise PRD/TDD from the adopted findings, verify `tasks/tmp/research-plan-<plan-key>.md` says `evidence_bar_met: yes`, run Pro analysis as the final adversarial planning pass, write and verify `tasks/tmp/pro-analysis-<plan-key>.md`, reconcile conflicts, generate the tasks-plan, run `--refine-plan` when active, then execute.
-
-## Plan key resolution
+## Plan Key Resolution
 
 Resolve `<plan-key>` in this order for plan refinement, standard execution, and one-shot execution:
 
-1. If the activation includes an explicit `<plan-key>`, use it.
-2. Otherwise inspect `/tasks/` for complete planning sets:
+1. If the activation includes an explicit `plan-key=<plan-key>`, use it.
+2. Otherwise inspect `tasks/` for complete planning sets:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`
    - `tasks/tasks-plan-<plan-key>.md`
 3. If exactly one `<plan-key>` has all three files, infer that key and continue.
 4. If no complete planning set exists, stop immediately and tell the user planning is incomplete.
-5. If more than one complete planning set exists, stop and ask for an explicit `<plan-key>`.
+5. If more than one complete planning set exists, stop and ask for an explicit `plan-key=<plan-key>`.
 
 Resolve files exactly as:
 
@@ -123,7 +63,7 @@ Resolve files exactly as:
 - Required TDD: `tasks/tdd-<plan-key>.md`
 - Required task list: `tasks/tasks-plan-<plan-key>.md`
 
-## Temporary workflow files
+## Temporary Workflow Files
 
 - Planning research memo: `tasks/tmp/research-plan-<plan-key>.md`
 - Pro analysis synthesis memo: `tasks/tmp/pro-analysis-<plan-key>.md`
@@ -134,104 +74,51 @@ Resolve files exactly as:
 - One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review log: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
-## Archive workflow files
+## Archive Workflow Files
 
 - Final archive directory: `tasks/archive/<yyyy-mm-dd>-<plan-key>/`
 
-Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory so archived PRD/TDD/task artifacts preserve completion timing in-repo.
+Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory.
 
-By default, planning, refinement, and review temporary files are deleted after successful completion. A deep-research planning memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. A Pro analysis synthesis memo is retained until `improve-plan.md` completes, and until `plan-refine` completes when `$plan-and-execute --refine-plan` is active, before default cleanup. A refinement log created by standalone `$plan-refine` is deleted after successful completion unless `--preserve-refine-artifacts` is active; a refinement log created by `$plan-and-execute --refine-plan` is retained through execution, final full-branch review, and finalization, then deleted during final cleanup only after finalization succeeds unless `$plan-and-execute --preserve-artifacts` is active. If the activation includes `--preserve-planning-artifacts`, `--preserve-refine-artifacts`, `--preserve-review-artifacts`, or `$plan-and-execute --preserve-artifacts`, keep the matching temporary files in place and surface their paths in the final summary.
+By default, planning, refinement, and review temporary files are deleted after successful completion unless the matching preservation flag is active. Owner-specific retention rules live with the workflow owner listed above.
 
-## Execution artifact gate
+## Execution Artifact Gate
 
-Execution requires all three planning artifacts.
-
-If any one of these is missing:
+Execution requires all three planning artifacts:
 
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - `tasks/tasks-plan-<plan-key>.md`
 
-Then:
+If any required planning artifact is missing, stop immediately, do not code, and instruct the user to complete planning first.
 
-- stop immediately
-- do not code
-- do not auto-generate missing planning docs
-- instruct the user to complete planning first
-
-## Mode rules
+## Mode Entry Summary
 
 ### Standard mode
 
-- Requires `<task-id>`.
-- `<plan-key>` may be explicit or inferred through the resolution rules above.
-- Executes the requested task/sub-task in the main agent.
-- Pause for user confirmation between sub-tasks.
-- If `--stay-on-current-branch` is present, keep the current non-base branch during kickoff.
-- If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs and review logs.
+- Requires `task-id=<task-id>`.
+- `plan-key=<plan-key>` may be explicit or inferred through the resolution rules above.
+- Executes the requested sub-task.
+- Pauses for user confirmation between sub-tasks.
+- Uses the task-management, review-protocol, and finalization owners for detailed behavior.
 
 ### Plan refinement mode
 
 - Requires a complete planning artifact set.
-- `<plan-key>` may be explicit or inferred through the resolution rules above.
-- Edits only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md`.
-- Follows `skills/shared/references/reasoning-budget.md`: challenger and reviewer subagents use the strongest appropriate reasoning tier for the selected model family or budget.
-- Defaults to 8 refinement rounds and treats 8 as the hard maximum; higher requested values are capped at 8 and noted in the final summary.
-- Uses `tasks/tmp/plan-refine-<plan-key>.md` as the temporary refinement log.
-- Uses one fresh read-only challenger subagent for applicable rounds: `round == 1 OR previous_reviewer_round_had_blocker_or_material`.
-- Uses one fresh read-only reviewer subagent per refinement round.
-- The reviewer owns severity classification and the stop rule. Challenger objections become artifact edits or additional rounds only when the reviewer promotes them to `blocker` or `material` findings.
-- Every non-empty challenge brief `challenge_id` must have a reviewer disposition in the refinement log before the main agent edits artifacts, records a clean stop, or reports successful completion.
-- The main agent owns orchestration, artifact edits, audit checks, refinement-log updates, and the final user summary.
-- If required fresh challenger or reviewer subagents cannot be spawned, stop immediately instead of falling back to local self-review.
-- If deep research was used, reads `tasks/tmp/research-plan-<plan-key>.md` when it still exists; otherwise reads the durable research digest in the TDD.
-- Treats a plan as deep-research-backed when the retained research memo exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
-- If deep research was used, stops on `evidence_bar_met: no`.
-- If deep research was used, preserves research-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
-- If deep research was used, runs a final research-carry-forward check before execution continues.
-- If Pro analysis was used, reads `tasks/tmp/pro-analysis-<plan-key>.md` when it still exists; otherwise reads the durable Pro synthesis digest in the TDD.
-- Treats a plan as Pro-backed when the retained Pro synthesis memo exists or the TDD contains a durable Pro synthesis digest or `pro_synthesis_complete` value.
-- If Pro analysis was used, stops unless the Pro synthesis memo or durable TDD digest says `pro_synthesis_complete: yes`.
-- If Pro analysis was used, preserves adopted Pro findings, Pro-backed `TDR-*`, rollout, migration, rollback, verification obligations, and task dependencies unless the refinement log records why the finding is superseded, inapplicable, over-scoped, rejected, or deferred.
-- If Pro analysis was used, runs a final Pro-carry-forward check before execution continues.
-- Deletes a standalone `$plan-refine` refinement log after successful completion unless `--preserve-refine-artifacts` is present. When refinement runs under `$plan-and-execute --refine-plan`, keep the log through execution, final full-branch review, and finalization, then delete it during final cleanup only after finalization succeeds unless `$plan-and-execute --preserve-artifacts` is active.
-- Keeps the refinement log when the run stops with unresolved blockers, material findings, missing artifacts, max rounds, or repeated/contradictory churn.
-- Treats max rounds with unresolved reviewer blocker/material findings as a hard-stop outcome. Recoverable churn can continue only when no unresolved reviewer blocker/material findings remain and the refinement log records the accepted assumption or residual risk.
+- `plan-key=<plan-key>` may be explicit or inferred through the resolution rules above.
+- Edits only the PRD, TDD, tasks-plan, and refinement log.
+- Uses `skills/plan-refine/SKILL.md` for challenger/reviewer behavior, severity rules, stop discipline, and cleanup.
 
 ### One-shot mode
 
 - Requires `--one-shot`.
-- `<plan-key>` may be explicit or inferred through the resolution rules above.
-- Follows `skills/shared/references/reasoning-budget.md`: implementation workers use strong reasoning, final review uses the strongest appropriate reasoning tier, and mechanical chores use medium/standard reasoning.
-- Start at first unchecked sub-task and continue in file order.
-- If `--stay-on-current-branch` is present, keep the current non-base branch during kickoff.
-- If kickoff begins with only the current plan's required planning artifacts uncommitted, commit them on the active execution branch before the first implementation sub-task begins.
-- Continue until there are no unchecked sub-tasks left anywhere in the file; do not stop at parent-task or section boundaries.
-- Do not emit user-visible mid-run progress updates while unchecked sub-tasks remain; keep executing silently across sub-task boundaries.
-- A clean commit boundary, milestone boundary, or partially completed checklist is not a valid stopping point.
-- Treat any user-visible one-shot message before final completion as potentially terminal for the run.
-- Only return control early when a real blocker remains unresolved after reasonable attempts to proceed, such as missing required artifacts, unrelated dirty-tree changes that need user choice before branch creation, or an external approval/dependency failure that prevents continued execution.
-- Use one worker subagent per sub-task.
-- Do not run per-sub-task review chains.
-- Use one fresh review subagent for the final `full-branch` review round.
-- Main agent owns full PRD, TDD, and task-plan context across the run.
-- One-shot worker context should be compact by default and must include:
-  - `plan_key` and `task_id`
-  - the exact sub-task block or a faithful concise copy of it
-  - the compact implementation packet from `tasks/tmp/plan-task-<task-id>.md`
-  - PRD/TDD anchors such as `covers_prd` / `covers_tdd` when present, not full artifact text by default
-  - relevant file paths, symbols, reference patterns, acceptance checks, and focused verification command
-- One-shot workers may open full PRD, TDD, or task-plan files only when the compact packet is insufficient, contradictory, or the slice touches product intent, trust boundaries, public contracts, data shape, architecture, or cross-task assumptions.
-- Review subagent context must include:
-  - for the final `full-branch` review: `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, `tasks/tasks-plan-<plan-key>.md`, plus any still-relevant temp sub-task contract that remains available and materially informs the branch-wide review
-- Review subagents are siblings of the worker subagent. Do not have the worker spawn or own its own reviewer.
-- Main agent owns task-list updates, review orchestration, review decisions, commits, integration checks, and finalization.
-- No pauses between sub-tasks.
-- Run finalization once after all sub-tasks complete, including the hard gate in `skills/shared/references/execution/finalization-gate.md`.
+- `plan-key=<plan-key>` may be explicit or inferred through the resolution rules above.
+- Starts at the first unchecked sub-task and continues in file order until no unchecked sub-tasks remain.
+- Uses `skills/shared/references/execution/task-management.md` for worker cadence, task contract shape, checklist updates, and cleanup.
+- Uses `skills/shared/references/review/review-protocol.md` for the final full-branch review.
 - Existing non-base branch mode and `--stay-on-current-branch` skip branch creation only, and the `$plan-and-execute` existing non-base branch exception skips default PR creation only. Neither path skips commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
-- If `--preserve-review-artifacts` is present, keep per-sub-task temp plan docs plus the final full-branch review log.
 
-## Legacy syntax
+## Legacy Syntax
 
 Do not depend on legacy `start planning`, `begin task`, `begin one-shot`, or `begin review` command phrases.
 Do not accept legacy `prd-key`/`prd-id` wording. Use explicit skill activation plus `plan-key` or `task-id` context instead.

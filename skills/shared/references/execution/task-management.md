@@ -2,6 +2,8 @@
 
 Guidelines for managing task lists in markdown files.
 
+See `skills/shared/references/contract-ownership.md` for shared contract ownership. This file owns task-list lifecycle, one-shot worker cadence, temporary sub-task contract shape, and cleanup-phase rules.
+
 ## Execution Entry Gate (Required)
 
 - This execution workflow may start only from:
