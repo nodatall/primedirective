@@ -67,7 +67,9 @@ Load these files before running:
    - hard-stop execution when `$plan-refine` fails because required refinement gates fail, required fresh subagents are unavailable, challenge dispositions are incomplete, unsafe blockers remain, or max rounds end with unresolved reviewer blocker/material findings
    - treat churn as recoverable only when no unresolved reviewer blocker/material findings remain and the refinement log records the safest concrete artifact fix, accepted assumption, or accepted residual risk
    - ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default
-   - continue into execution only after clean refinement success or recoverable churn with no unresolved reviewer blocker/material findings
+   - after `$plan-refine` returns, audit `tasks/tmp/plan-refine-<plan-key>.md` before any implementation edit
+   - hard-stop when the refinement log is missing, lacks a `Refinement Completion Stamp`, lacks round evidence from at least one fresh reviewer subagent, or looks like a hand-written risk note rather than a real `$plan-refine` run
+   - continue into execution only when the stamp says `plan_refine_complete: yes`, `ready_for_execution: yes`, `fresh_reviewer_rounds` is at least `1`, and `reviewer_stop_gate: no_unresolved_blocker_or_material`
    - keep the refinement log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless `--preserve-artifacts` is present
 6. Execute the generated or refined plan in one-shot mode:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default

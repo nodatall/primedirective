@@ -44,6 +44,7 @@ Run this for every completed planning flow after decisions are locked. When `--d
 
 ## Plain-Language Summary rules
 
+- Follow `skills/shared/references/plain-language.md`.
 - Must be understandable to a 12-year-old.
 - Keep it concrete and plain.
 - Use it to sanity-check that the document still matches the actual intent.

@@ -140,7 +140,12 @@ Load these files before running:
     - Keep the refinement log even without `--preserve-refine-artifacts`.
     - Include the last round's remaining blocker/material findings in the final response.
     - Say this max-round stop is evidence for improving `$plan-refine` from the concrete example.
-16. Clean up `tasks/tmp/plan-refine-<plan-key>.md` according to invocation context.
+16. Before reporting successful refinement or allowing a parent `$plan-and-execute --refine-plan` workflow to continue, append the Refinement Completion Stamp below to `tasks/tmp/plan-refine-<plan-key>.md`.
+    - Do not write a successful stamp until at least one fresh reviewer subagent round has completed.
+    - Do not write a successful stamp when the log lacks a round section with the reviewer findings, stop decision, and the challenge brief or valid empty challenge brief for every applicable challenger round.
+    - Do not write a successful stamp when required challenge dispositions, research carry-forward checks, or Pro carry-forward checks are missing.
+    - If the workflow stops before success, write the stamp with `plan_refine_complete: no` and `ready_for_execution: no`, then include the stop reason.
+17. Clean up `tasks/tmp/plan-refine-<plan-key>.md` according to invocation context.
     - For standalone `$plan-refine`, delete the log after a successful run unless `--preserve-refine-artifacts` is active.
     - For `$plan-and-execute --refine-plan`, keep the log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless preservation is active.
     - Keep the log when the run stops with unresolved blockers, material findings, max rounds, or churn.
@@ -245,6 +250,42 @@ Stop only from an explicit reason:
 
 Do not continue rounds just to spend the requested budget when the fixed stop rule has already passed.
 
+## Refinement Completion Stamp
+
+Every run must end the refinement log with this stamp. Parent workflows must treat the stamp as the handoff gate; a short risk note without this stamp is not a completed `$plan-refine` run.
+
+Required stamp fields:
+
+- `plan_refine_complete`: `yes` only when the refinement loop completed successfully.
+- `plan_key`: the resolved plan key.
+- `rounds_run`: integer, at least `1` for a successful run.
+- `fresh_challenger_rounds`: integer count of challenger rounds actually delegated. This may be `0` only when no challenger round was applicable after round 1 failure/stop rules; a successful normal run should include the round 1 challenger.
+- `fresh_reviewer_rounds`: integer, at least `1` for a successful run.
+- `stop_reason`: one of `clean_reviewer_round`, `recoverable_churn_no_unresolved_material`, `max_rounds_unresolved_material`, `unresolved_blocker_needs_user`, `missing_required_artifact`, `missing_required_subagent`, `failed_research_gate`, or `failed_pro_gate`.
+- `reviewer_stop_gate`: `no_unresolved_blocker_or_material`, `unresolved_blocker_or_material`, or `not_reached`.
+- `all_challenges_dispositioned`: `yes`, `no`, or `not_applicable`.
+- `research_carry_forward_complete`: `yes`, `no`, or `not_applicable`.
+- `pro_carry_forward_complete`: `yes`, `no`, or `not_applicable`.
+- `ready_for_execution`: `yes` only when `plan_refine_complete: yes`, `fresh_reviewer_rounds >= 1`, `reviewer_stop_gate: no_unresolved_blocker_or_material`, all required challenge dispositions are complete, and required research/Pro carry-forward checks are complete.
+
+Successful stamp template:
+
+```text
+## Refinement Completion Stamp
+
+plan_refine_complete: yes
+plan_key: <plan-key>
+rounds_run: <n>
+fresh_challenger_rounds: <n>
+fresh_reviewer_rounds: <n>
+stop_reason: clean_reviewer_round
+reviewer_stop_gate: no_unresolved_blocker_or_material
+all_challenges_dispositioned: yes|not_applicable
+research_carry_forward_complete: yes|not_applicable
+pro_carry_forward_complete: yes|not_applicable
+ready_for_execution: yes
+```
+
 ## Output Contract
 
 Final response must include:
@@ -259,6 +300,7 @@ Final response must include:
 - unresolved issues or accepted residual risk
 - accepted residual challenge risks, when any exist
 - whether the plan is ready for `$execute-task`
+- completion stamp status, including `plan_refine_complete`, `ready_for_execution`, `rounds_run`, and `fresh_reviewer_rounds`
 - preserved artifact path when `--preserve-refine-artifacts` is active, when the run stopped before success, or when `$plan-and-execute --refine-plan` is retaining the log through final full-branch review and finalization
 
 Keep the final answer compact. Do not paste the full refinement log unless the user asks for it.

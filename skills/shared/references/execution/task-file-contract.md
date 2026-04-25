@@ -92,6 +92,18 @@ Execution requires all three planning artifacts:
 
 If any required planning artifact is missing, stop immediately, do not code, and instruct the user to complete planning first.
 
+When `$plan-and-execute --refine-plan` is active, execution also requires a valid `tasks/tmp/plan-refine-<plan-key>.md` handoff from `skills/plan-refine/SKILL.md`.
+
+Before coding, confirm the refinement log includes:
+
+- the `Refinement Completion Stamp`
+- `plan_refine_complete: yes`
+- `ready_for_execution: yes`
+- at least one fresh reviewer round recorded by the stamp
+- a reviewer stop gate showing no unresolved blocker/material findings
+
+If any of those are missing, stop before implementation. A short risk checklist or ad-hoc note is not a valid refinement handoff.
+
 ## Mode Entry Summary
 
 ### Standard mode
@@ -108,6 +120,7 @@ If any required planning artifact is missing, stop immediately, do not code, and
 - `plan-key=<plan-key>` may be explicit or inferred through the resolution rules above.
 - Edits only the PRD, TDD, tasks-plan, and refinement log.
 - Uses `skills/plan-refine/SKILL.md` for challenger/reviewer behavior, severity rules, stop discipline, and cleanup.
+- Successful parent handoff requires the refinement log completion stamp defined by `skills/plan-refine/SKILL.md`.
 
 ### One-shot mode
 
