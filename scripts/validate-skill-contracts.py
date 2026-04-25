@@ -42,6 +42,18 @@ MIRROR_CHECKS = [
         "together": ["challenge_id", "pressure_type"],
     },
     {
+        "key": "plan-refine-completion-stamp",
+        "error": "PD-CONTRACT-MIRROR-PLAN-REFINE-STAMP",
+        "owner": {"skills/plan-refine/SKILL.md"},
+        "allowed": {
+            "skills/plan-and-execute/SKILL.md",
+            "skills/shared/references/contract-ownership.md",
+            "skills/shared/references/execution/task-file-contract.md",
+        },
+        "single": ["plan_refine_complete: yes", "ready_for_execution: yes"],
+        "together": ["Refinement Completion Stamp", "fresh_reviewer_rounds"],
+    },
+    {
         "key": "deep-research-stamp-detail",
         "error": "PD-CONTRACT-MIRROR-DEEP-RESEARCH",
         "owner": {"skills/shared/references/planning/deep-research.md"},
@@ -316,6 +328,46 @@ def validate_mirrors(errors: list[str]) -> None:
         fail(errors, error_id, f"{path} matches {key} outside owner/allowlist: {reason}")
 
 
+def validate_plan_refine_completion_gate(errors: list[str]) -> None:
+    plan_refine = (ROOT / "skills/plan-refine/SKILL.md").read_text()
+    plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
+    task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
+
+    owner_tokens = [
+        "## Refinement Completion Stamp",
+        "plan_refine_complete",
+        "fresh_reviewer_rounds",
+        "reviewer_stop_gate",
+        "ready_for_execution",
+        "Do not write a successful stamp until at least one fresh reviewer subagent round has completed.",
+    ]
+    for token in owner_tokens:
+        if token not in plan_refine:
+            fail(errors, "PD-PLAN-REFINE-STAMP-OWNER", f"skills/plan-refine/SKILL.md missing completion-stamp token: {token}")
+
+    orchestrator_tokens = [
+        "Refinement Completion Stamp",
+        "plan_refine_complete: yes",
+        "ready_for_execution: yes",
+        "fresh_reviewer_rounds",
+        "reviewer_stop_gate: no_unresolved_blocker_or_material",
+        "before any implementation edit",
+    ]
+    for token in orchestrator_tokens:
+        if token not in plan_and_execute:
+            fail(errors, "PD-PLAN-EXECUTE-REFINE-GATE", f"skills/plan-and-execute/SKILL.md missing refine gate token: {token}")
+
+    shared_gate_tokens = [
+        "Refinement Completion Stamp",
+        "plan_refine_complete: yes",
+        "ready_for_execution: yes",
+        "A short risk checklist or ad-hoc note is not a valid refinement handoff.",
+    ]
+    for token in shared_gate_tokens:
+        if token not in task_file_contract:
+            fail(errors, "PD-TASK-FILE-REFINE-GATE", f"skills/shared/references/execution/task-file-contract.md missing refine gate token: {token}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory-only", action="store_true", help="print stale-mirror inventory and exit")
@@ -328,6 +380,7 @@ def main() -> int:
     errors: list[str] = []
     validate_skill_metadata(errors)
     validate_owner_paths(errors)
+    validate_plan_refine_completion_gate(errors)
     validate_mirrors(errors)
 
     if errors:
