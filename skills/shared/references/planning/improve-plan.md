@@ -119,6 +119,8 @@ Evaluate and improve when `--deep-research` was used:
 - Whether the deep-research memo used live web research and included the required web-status section.
 - Whether the deep-research memo captured the exact current date and used plan-specific stack and constraint framing rather than a generic research prompt.
 - Whether the deep-research memo included at least 5 substantive external primary web sources.
+- Whether the deep-research memo included current operator-practice discovery when relevant, not only official documentation.
+- Whether operator-practice sources were opened live, recorded in the Evidence Ledger, and tied to concrete lessons, rejected ideas, or adopted plan changes.
 - Whether the Evidence Ledger exists and records `source_id`, source type, source family, URL, publication/update/access dates, version or scope, supported claims, count eligibility, and current-enough rationale.
 - Whether sources counted toward the external primary minimum are actually eligible primary sources, and whether ineligible, stale, duplicate, repo-local, AI-generated, search-result, tutorial, or decorative evidence is excluded from that count.
 - Whether substantive external sources included freshness metadata and were current enough for the claims they supported.
@@ -131,6 +133,7 @@ Evaluate and improve when `--deep-research` was used:
 - Whether the research stayed within `Tech + Delivery` scope unless the plan clearly required more.
 - Whether PRD changed only where research affected product-facing constraints or defaults.
 - Whether findings were clearly separated into adopt-now guidance, emerging trends, and avoid guidance where relevant.
+- Whether new ideas from operator-practice research were explicitly considered and either adopted, rejected, deferred, or marked not applicable.
 - Whether the research produced a plan-specific checklist or implementation guidance section rather than only a raw source dump.
 - Whether source/decorative evidence was separated from material support, and whether any cited sources were merely decorative rather than materially supporting the selected design.
 - Whether every adopted implementation-impact finding appears in PRD/TDD and tasks-plan, or is explicitly rejected, deferred, or marked as a non-goal with a reason.
@@ -165,7 +168,7 @@ The improved plan must explicitly satisfy all of these:
 10. Plain-language summaries remain clear and faithful to the full plan.
 11. PRD includes clear user/problem framing and success guardrails.
 12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
-13. Any `--deep-research` pass includes live web research, the external-source minimum, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
+13. Any `--deep-research` pass includes live web research, the external-source minimum, operator-practice discovery when relevant, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
 14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
 15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
 16. Any `--deep-research` pass includes an auditable Evidence Ledger, Finding-to-Artifact Delta, and Deep Research Completion Stamp.

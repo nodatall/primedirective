@@ -114,8 +114,9 @@ Final review exception:
    - anti-goals to avoid generic or off-brand output
 6. Before coding, search the repo for similar implementations, tests, and validation commands or config, record the chosen local pattern in `reference_patterns`, and justify any decision to introduce a new pattern instead of following the existing one.
 7. Default to a red/green loop for code-bearing, practically testable slices: add or update the targeted test first, run the failure-first command, then implement. Only skip that order when the recorded `test_first_plan` exception makes the reason explicit.
-8. Update the contract when implementation or review reveals a better-scoped slice, a better local pattern, or a missing verification step.
-9. Delete temp plan docs only after they are no longer needed for review and any requested harness drift check has completed: after the standard sub-task review completes, or after the final full-branch review and drift report complete in one-shot mode, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
+8. Prefer existing tests. If no test covers the path, create a temporary script under `/codex-scripts/` that imports or copies the relevant production code and exercises the changed behavior. Keep `/codex-scripts/` gitignored unless the probe is promoted into a real test.
+9. Update the contract when implementation or review reveals a better-scoped slice, a better local pattern, or a missing verification step.
+10. Delete temp plan docs only after they are no longer needed for review and any requested harness drift check has completed: after the standard sub-task review completes, or after the final full-branch review and drift report complete in one-shot mode, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
 
 ## Pre-coding contract critique
 

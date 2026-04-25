@@ -98,6 +98,7 @@ Load these files before running:
 - Make expected red/green ownership explicit in the generated artifacts: identify which planned sub-tasks should begin with a failing targeted test first, and note only the slices that are expected to need a justified exception.
 - With `--deep-research`, research defaults to `Tech + Delivery`: technical design, migration/rollout/rollback, security/ops, and verification strategy.
 - With `--deep-research`, live web research is mandatory and the working memo must include at least 5 substantive external primary web sources.
+- With `--deep-research`, scour current operator practice and new ideas from strong practitioners, not only official documentation; record operator-practice sources and dispositions for ideas considered.
 - With `--deep-research`, the research framing must include the exact current date and the plan-specific stack, constraints, and quality priorities before web research begins.
 - With `--deep-research`, record source freshness metadata for substantive external sources and distinguish adopt-now guidance from emerging or avoid guidance.
 - With `--deep-research`, PRD and TDD may be drafted before research, but treat them as interim drafts until the research memo and completion checks from `deep-research.md` are complete and adopted findings are applied back into both documents as needed.

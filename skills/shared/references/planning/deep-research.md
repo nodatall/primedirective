@@ -8,6 +8,8 @@ This pass exists to strengthen drafted PRD and TDD before tasks-plan is generate
 
 This mode is not satisfied by a token burst of a few searches. Treat `--deep-research` as a substantial, web-backed research pass with a real evidence bar before tasks-plan may be drafted and before PRD/TDD may be treated as final.
 
+The goal is not just citation coverage. The goal is to scour current best practices, operator lessons, failure reports, implementation playbooks, and new ideas from strong practitioners, then decide what should actually change in this plan.
+
 Treat this as a current-state research task, not a timeless brainstorming task. The prompt and memo must stay anchored to the actual run date and the project's concrete stack, constraints, and risk areas.
 
 ## Accepted activation suffixes
@@ -52,6 +54,8 @@ Cover these areas when relevant:
 - migration, backfill, rollout, rollback, and recovery concerns
 - security, operational readiness, and dependency concerns
 - verification strategy, edge cases, and regression protection
+- current operator practice: postmortems, production lessons, benchmark notes, maintainer guidance, high-quality engineering writeups, and real-world implementation reports
+- emerging but plausible ideas that could improve this plan, clearly separated from adopt-now guidance
 
 Do not expand into broad market research or product discovery unless the source plan clearly depends on it.
 
@@ -96,8 +100,9 @@ Before the first external search:
    - the expected impact of each candidate on PRD, TDD, or task sequencing
 6. Research in multiple passes, not one search burst:
    - first pass: official docs and primary references for the core stack or provider
-   - second pass: operational constraints, failure modes, limits, rollout, and verification guidance
-   - third pass: any plan-specific edge areas uncovered by the first two passes
+   - second pass: current operator guidance, production lessons, postmortems, implementation writeups, maintainer notes, and best-practice discussions from strong practitioners
+   - third pass: operational constraints, failure modes, limits, rollout, rollback, observability, and verification guidance
+   - fourth pass when needed: any plan-specific edge areas, conflicts, or promising new ideas uncovered by the earlier passes
 7. For major recommendations, compare at least 2 independent relevant sources when possible.
 8. Record source freshness for every substantive external source:
    - publication date when available
@@ -122,7 +127,7 @@ Before the first external search:
    - inference or judgment calls made for this specific plan
 15. If live web research is unavailable at runtime, stop immediately and tell the user that `--deep-research` cannot proceed without web access.
 16. Do not create a local-only exception for narrowly scoped or repo-heavy tasks. If the user wants a faster repo-only pass, they should use planning without `--deep-research`.
-17. Budget a real deep pass, typically around 20-30 minutes for non-trivial plans, and do not treat the pass as complete until the completion checks below are met.
+17. Budget a real deep pass, typically around 20-30 minutes for non-trivial plans. Do not compress it into a fast citation pass. If the plan is too narrow to justify that level of operator discovery, say so and recommend normal planning instead of pretending `--deep-research` was used.
 18. End the research pass by triaging the working memo:
    - choose the highest-value findings to adopt
    - note meaningful ideas rejected or deferred and why
@@ -136,12 +141,14 @@ Before the first external search:
 Before deep research may be considered complete, gather and record:
 
 - at least 5 substantive external primary web source reviews
+- at least 3 substantive operator-practice source reviews when relevant to the plan, such as maintainer guidance, engineering writeups, postmortems, benchmark notes, production lessons, or current best-practice discussions from strong practitioners
 - repo-local source reviews as needed for implementation grounding, but never as a substitute for the external minimum
 - at least 3 distinct research questions answered for this plan
 - each research question linked to a draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change
 - at least 4 applicable buckets reviewed from the default scope, unless the plan is genuinely too narrow for that many
 - at least 2 rounds of follow-up research after the initial source pass
 - explicit notes on at least 3 design-impacting findings, not just links
+- explicit notes on any new ideas considered, with a disposition of `adopted`, `rejected`, `deferred`, or `not applicable`
 - source-date metadata for every substantive external source
 - at least 1 section that distinguishes adopt-now guidance from watchlist or avoid guidance
 - at least 1 plan-specific checklist or implementation guidance section derived from the findings
@@ -166,6 +173,8 @@ Do not count these toward the external primary minimum:
 - generic blogs, tutorials, Q&A, forum posts, social posts, marketing pages, press, or vendor sales copy
 - duplicate mirrors, archived copies, or repeated pages from the same source that do not add a distinct claim
 - sources that are stale, version-mismatched, or not current enough for the claim being supported
+
+Operator-practice sources do not need to count toward the external primary minimum, but they must be opened live, recorded in the Evidence Ledger, and used only for the claims they can actually support. High-quality operator-practice sources include maintainer posts, production postmortems, public engineering writeups, benchmark reports, migration reports, conference talks with transcripts or notes, and practitioner discussions that contain concrete implementation or operational lessons. Low-signal opinion posts, copied summaries, generic tutorials, and unsupported social takes should be recorded as rejected or not used.
 
 Use `source_family` to group sources by authority family, such as a vendor, standards body, framework project, cloud provider, database project, or security advisory source. Record `source_family_count` in the completion stamp, and avoid satisfying the evidence bar with many pages from one family when the decision depends on cross-provider, cross-layer, or standards-versus-vendor evidence.
 
@@ -237,6 +246,7 @@ Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding
 The working memo must end with a Deep Research Completion Stamp containing:
 
 - `external_primary_sources_count`
+- `operator_practice_sources_count`
 - `source_family_count`
 - `research_questions_answered`
 - `buckets_reviewed`
@@ -265,12 +275,14 @@ The temporary research memo must contain:
 - external primary sources reviewed, with direct links and one-line notes on what each source answered
 - source freshness notes for each substantive external source
 - source-family count and source authority notes
+- operator-practice sources reviewed and what concrete lesson each contributed
 - source conflict notes and reconciliation status when sources disagree
 - research agenda
 - sources reviewed
 - improvement backlog and candidate ideas being tested
 - findings by bucket
 - findings grouped into standards, adopt-now best practices, emerging trends, and outdated advice when applicable
+- current operator-practice ideas considered, including rejected ideas and why they do not fit
 - adopted ideas, rejected ideas, and why
 - design decisions or defaults changed by research
 - recommendation level for meaningful findings: `adopt now`, `consider`, or `avoid`

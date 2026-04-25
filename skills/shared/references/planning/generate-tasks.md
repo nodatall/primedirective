@@ -62,7 +62,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 
 1. Confirm `<plan-key>` is known.
 2. Confirm PRD and TDD are both finalized first. If `--deep-research` is active, confirm they were revised after the research pass before continuing.
-3. If `--deep-research` is active, verify the Deep Research Completion Stamp before generating tasks. If the stamp is missing, incomplete, or says `evidence_bar_met: no`, hard-stop task generation and report the unmet research checks instead of generating around the gap.
+3. If `--deep-research` is active, verify the Deep Research Completion Stamp before generating tasks, including `operator_practice_sources_count`. If the stamp is missing, incomplete, or says `evidence_bar_met: no`, hard-stop task generation and report the unmet research checks instead of generating around the gap.
 4. If `$plan-and-execute --pro-analysis` is active, verify `tasks/tmp/pro-analysis-<plan-key>.md` before generating tasks. If the memo is missing, lacks a Pro synthesis completion stamp, says anything other than `pro_synthesis_complete: yes`, or leaves adopted Pro findings unapplied/unmapped, hard-stop task generation and report the unmet Pro synthesis gate.
 5. Derive task sequencing from finalized PRD and TDD obligations.
 6. Order work risk-first and dependency-aware.
