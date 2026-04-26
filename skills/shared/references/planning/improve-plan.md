@@ -168,13 +168,13 @@ The improved plan must explicitly satisfy all of these:
 10. Plain-language summaries remain clear and faithful to the full plan.
 11. PRD includes clear user/problem framing and success guardrails.
 12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
-13. Any `--deep-research` pass includes live web research, the external-source minimum, operator-practice discovery when relevant, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
+13. Any `--deep-research` pass includes live web research, the external-source minimum, operator-practice discovery when relevant, a short visible Deep Research Summary, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
 14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
 15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
 16. Any `--deep-research` pass includes an auditable Evidence Ledger, Finding-to-Artifact Delta, and Deep Research Completion Stamp.
 17. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
 18. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
-19. Any `$plan-and-execute --pro-analysis` pass includes a Pro synthesis memo, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
+19. Any `$plan-and-execute --pro-analysis` pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
 20. Any `$plan-and-execute --pro-analysis` completion stamp says `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
 21. Any adopted implementation-impact Pro finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
 22. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.

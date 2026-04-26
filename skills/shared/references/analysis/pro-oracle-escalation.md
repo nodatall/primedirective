@@ -81,7 +81,9 @@ For `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>
 - artifact delta: PRD/TDD sections changed, task-plan inputs created, and source-backed claims independently verified when Pro suggested external sources
 - Pro synthesis completion stamp containing `oracle_result_read`, `findings_reconciled`, `artifact_changes_applied`, `unresolved_blockers`, and `pro_synthesis_complete`
 
-Set `pro_synthesis_complete: yes` only when the Pro answer was read, every material Pro finding has a disposition, adopted findings have been applied to PRD/TDD or converted into explicit task-plan inputs, conflicts have been reconciled, and no unresolved blocker remains.
+Before setting `pro_synthesis_complete: yes`, print a short `Pro Findings Summary` in the visible thread/log: adopted, rejected/deferred, blockers, and artifact changes.
+
+Set `pro_synthesis_complete: yes` only when the Pro answer was read, every material Pro finding has a disposition, adopted findings have been applied to PRD/TDD or converted into explicit task-plan inputs, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
 
 If `pro_synthesis_complete` is missing or not `yes`, stop. Do not generate `tasks-plan`, run `$plan-refine`, or execute.
 
@@ -140,6 +142,6 @@ For `$first-principles-mode --pro-analysis`, stop after synthesis unless the use
 
 For `$plan-and-execute --pro-analysis`, apply the synthesized findings into planning artifacts and continue execution unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
 
-For `$plan-and-execute --pro-analysis`, raw Oracle output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md` and that memo must end with `pro_synthesis_complete: yes` before downstream planning continues.
+For `$plan-and-execute --pro-analysis`, raw Oracle output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_synthesis_complete: yes` before downstream planning continues.
 
 For `$repo-sweep --pro-analysis`, use the synthesized findings as Round 1 audit-thesis input before the no-edit audit and review-chain report. If `--loop` is also present, do not rerun Pro every loop round by default; use fresh local review subagents for resweeps unless the user explicitly asks for another Pro pass.

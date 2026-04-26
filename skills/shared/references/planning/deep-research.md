@@ -259,6 +259,8 @@ The working memo must end with a Deep Research Completion Stamp containing:
 
 Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, and PRD/TDD revisions are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
 
+Before setting `evidence_bar_met: yes`, print a short `Deep Research Summary` in the visible thread/log: adopted findings, rejected/deferred ideas, blockers, and artifact changes.
+
 ## Working memo contract
 
 The temporary research memo must contain:

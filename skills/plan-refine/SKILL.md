@@ -149,6 +149,7 @@ Load these files before running:
     - For standalone `$plan-refine`, delete the log after a successful run unless `--preserve-refine-artifacts` is active.
     - For `$plan-and-execute --refine-plan`, keep the log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless preservation is active.
     - Keep the log when the run stops with unresolved blockers, material findings, max rounds, or churn.
+18. Before returning control to `$plan-and-execute`, print a short `Refinement Findings Summary`: material fixes, promoted challenger fixes, remaining blockers, and whether execution is ready.
 
 ## Critique Standard
 

@@ -53,8 +53,8 @@ Load these files before running:
    - no summary checkpoint gate
    - ask only for a true blocker where the core objective is missing, contradictory, or unsafe to infer
    - write assumptions into the artifacts instead of stopping for low-impact clarification
-   - with `--deep-research`, compose the owner contract in `skills/shared/references/planning/deep-research.md` through `$plan-work`; keep going unless that owner contract requires a hard stop
-   - with `--pro-analysis`, compose the owner contract in `skills/shared/references/analysis/pro-oracle-escalation.md`; keep the Pro mechanics internal and continue unless that owner contract requires a hard stop
+   - with `--deep-research`, compose the owner contract in `skills/shared/references/planning/deep-research.md` through `$plan-work`; print the required short Deep Research Summary before task generation or execution
+   - with `--pro-analysis`, compose the owner contract in `skills/shared/references/analysis/pro-oracle-escalation.md`; print the required short Pro findings summary before refinement or execution
    - when both `--deep-research` and `--pro-analysis` are active, use the order and gates owned by `pro-oracle-escalation.md`
 4. Require all three artifacts before execution:
    - `tasks/prd-<plan-key>.md`
@@ -70,6 +70,7 @@ Load these files before running:
    - after `$plan-refine` returns, audit `tasks/tmp/plan-refine-<plan-key>.md` before any implementation edit
    - hard-stop when the refinement log is missing, lacks a `Refinement Completion Stamp`, lacks round evidence from at least one fresh reviewer subagent, or looks like a hand-written risk note rather than a real `$plan-refine` run
    - continue into execution only when the stamp says `plan_refine_complete: yes`, `ready_for_execution: yes`, `fresh_reviewer_rounds` is at least `1`, and `reviewer_stop_gate: no_unresolved_blocker_or_material`
+   - print the short `Refinement Findings Summary` before execution; do not paste the full refinement log unless the user asks
    - keep the refinement log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless `--preserve-artifacts` is present
 6. Execute the generated or refined plan in one-shot mode:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default

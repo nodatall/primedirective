@@ -105,6 +105,7 @@ Load these files before running:
 - With `--deep-research`, do not proceed if live web research is unavailable; stop and tell the user the deep-research pass cannot run without web access.
 - With `--deep-research`, do not begin `tasks-plan` drafting until the research memo is complete and PRD/TDD have been revised from the adopted findings.
 - `--deep-research` should influence TDD and tasks-plan first; update PRD only when product constraints or defaults materially change.
+- With `--deep-research`, print the short `Deep Research Summary` before task generation or execution.
 - With `--deep-research`, end the memo with a plan-specific checklist or implementation guidance section so the adopted findings are easy to carry into execution for this plan.
 - With `--deep-research`, keep `tasks/tmp/research-plan-<plan-key>.md` available through `improve-plan.md` even when preservation was not requested; then normal cleanup applies unless the activation requested preserved planning artifacts.
 - With `--preserve-planning-artifacts`, keep `tasks/tmp/research-plan-<plan-key>.md` and mention it in the final planning summary.
