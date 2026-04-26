@@ -12,7 +12,7 @@ Load these references before starting:
 - `skills/first-principles-mode/references/analysis-rubric.md`
 - `skills/shared/references/plain-language.md`
 
-If `--deep-research` is present, also load `skills/shared/references/planning/deep-research.md` and use its evidence standard without generating PRD/TDD/tasks-plan artifacts.
+If `--deep-research` is present, also load `skills/shared/references/planning/deep-research.md` and use its evidence standard without generating PRD/TDD/tasks-plan artifacts. Because first-principles mode has no planning memo by default, the visible answer/log must carry the audit trail through the First-Principles Deep Research Summary described below.
 
 If `--pro-analysis` is present, also load `skills/shared/references/analysis/pro-oracle-escalation.md`.
 
@@ -77,7 +77,9 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 7. If `--deep-research` is present, run a web-backed research pass after local breadth work has identified the real question.
    - Use the current date, source freshness, primary sources, operator-practice sources, and conflict handling from `deep-research.md`.
    - Do not create PRD, TDD, tasks-plan, or planning stamps.
-   - Print a short `Deep Research Summary`: adopted findings, rejected/deferred ideas, blockers, and what changed in the analysis.
+   - Print a visible `First-Principles Deep Research Summary` before the final answer or as a clearly labeled part of the final answer.
+   - Include enough detail in that summary for the user to audit whether `--deep-research` actually ran, not just that a few searches happened.
+   - If the evidence bar was not met, say `--deep-research was requested but not completed to standard`, then explain the unmet checks and clearly label any web work as a limited cross-check.
 8. If `--pro-analysis` is present, run the Pro escalation after the local breadth pass has identified the problem shape and likely context.
    - Use `./scripts/oracle-pro.sh dry-run` first.
    - Use filtered whole-repo context for small or broad questions; use curated files for large or narrow questions.
@@ -105,6 +107,21 @@ Use this shape unless the user asks for a deep dive or the ambiguity is genuinel
 3. Attach evidence inline where each claim needs support.
 4. When material, include a brief note on confidence, key uncertainty, or the evidence gap most likely to change the answer.
 5. End with implications, fix order, or next steps only if the user asked for them or they are necessary to make the diagnosis useful.
+
+When `--deep-research` is active, the answer must include a compact `First-Principles Deep Research Summary` with:
+
+- exact research date
+- searches run
+- external sources opened, including URLs
+- external primary source count
+- operator-practice source count when relevant
+- adopted findings
+- rejected or deferred ideas
+- source conflicts or blockers
+- what changed in the analysis because of web research
+- `evidence_bar_met: yes` or `evidence_bar_met: no`
+
+For first-principles mode, `evidence_bar_met: yes` means the web-backed pass met the applicable spirit of `deep-research.md`: live sources were opened, source freshness was considered, external primary and operator-practice evidence was enough for the claim being made, and the final diagnosis changed or was strengthened through that evidence. If that cannot be shown in the visible summary, set `evidence_bar_met: no` and avoid calling the result completed deep research.
 
 Usually this should be:
 
