@@ -249,6 +249,7 @@ Monitoring and alerting visibility where relevant.
 Whether the change can access private data.
 Whether the change accepts or is exposed to untrusted input.
 Whether the change can send data externally or invoke outbound tools/actions.
+For deployable web/API services, also check applicable go-live risks: load or capacity evidence, horizontal-scale assumptions, server-memory sessions, direct app-server uploads, synchronous email or slow third-party calls in request paths, queue/worker retries and idempotency, database indexes and multi-step-write transactions, startup migration race safety, backup/restore evidence, compression/CDN/static asset handling, health checks, graceful shutdown, outbound HTTP timeouts, circuit breakers or degradation behavior, centralized logs, alerting, websocket state handling, and incident runbooks.
 Action: Report concrete evidence for each applicable item, flag gaps explicitly, and fix any production-readiness issues that are in scope for this change. Fail this prompt when the change combines access to private data, exposure to untrusted input, and outbound capability without a hard separation boundary or a human approval gate.
 ```
 

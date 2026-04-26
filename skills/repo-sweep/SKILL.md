@@ -72,18 +72,30 @@ Load these files before running:
    - Env validation: verify required env vars fail closed rather than silently degrading to insecure or mock behavior.
    - Public admin, debug, or internal endpoints: verify they are absent, disabled, or properly authenticated.
    - For each check, capture concrete evidence from code, config, logs, command output, or runtime probes. Do not mark a check complete from code reading alone when the behavior can be executed.
-5. Require runtime probing where applicable.
+5. Run a go-live readiness pass for deployable web/API services.
+   - Apply this pass when the repo exposes a production web app, API, worker, upload flow, websocket/realtime feature, background job, database-backed service, or third-party integration. For local-only CLIs, libraries, prototypes, and non-deployable tools, mark the irrelevant items `not applicable` with a short reason.
+   - Check load and capacity evidence: load/stress test command, known traffic limit, rate-limit behavior, and the highest-risk bottleneck if no load test exists.
+   - Check horizontal scale assumptions: server-memory sessions, in-memory queues, in-memory rate limits, websocket state, local disk state, and whether multiple app instances would preserve behavior.
+   - Check file uploads and static assets: uploads should not depend on ephemeral app-server disk for durable storage, and large/static assets should have an object-storage/CDN path when traffic volume warrants it.
+   - Check background work: email sending, webhooks, image/video processing, AI calls, report generation, and other slow tasks should not block latency-sensitive API routes unless the synchronous behavior is explicitly acceptable.
+   - Check queue and worker behavior where background tasks exist: retry policy, dead-letter/failure visibility, idempotency, and whether one slow task can block unrelated work.
+   - Check database production readiness: indexed join/filter columns for hot paths, transactions for multi-step writes, migration race safety, backup existence, and restore-test evidence or a residual-risk note.
+   - Check HTTP/runtime safety: compression for large responses, health checks, graceful shutdown, bounded request/body sizes where relevant, and no deploy-time behavior that can corrupt shared state.
+   - Check outbound dependency resilience: connection timeouts, bounded retries, circuit breakers or load-shedding where relevant, fallback/degradation behavior, and clear failure logging.
+   - Check logs and incident readiness: logs should not be local-disk-only for deployable services, errors should be alertable, and common incidents should have a runbook or at least an explicit residual-risk note.
+   - Report each applicable item as `verified`, `finding`, `not applicable`, or `residual risk`. Do not convert every missing launch-hardening item into an automatic fix; stop for product, cost, infrastructure, data, or operational decisions.
+6. Require runtime probing where applicable.
    - When the repo exposes HTTP, RPC, webhook, queue-consumer, CLI, or worker entrypoints that can be executed locally, run the service and probe the real interface.
    - Use actual requests against the running app for representative entrypoints instead of relying only on unit tests or static inspection.
    - If runtime probing is impossible, state exactly why and treat the corresponding area as a residual risk unless disproven by stronger evidence.
-6. Run the normal review chain components as part of the no-edit review phase.
+7. Run the normal review chain components as part of the no-edit review phase.
    - Use the prompts from `review-protocol.md` as required review components for the repo sweep.
    - For repo sweep, force the comprehensive `full-chain` coverage: Prompt A through Prompt I, one prompt at a time.
    - Treat Prompt G and Prompt H with the same applicability rules as the normal review chain, but record them explicitly as executed or `not applicable`.
    - Record findings, fixes attempted, and test or probe evidence for each prompt, even when the fix field is `none during no-edit phase`.
    - Enforce the normal review-chain completion gates during reporting: do not mark the review phase complete while material verified findings are still hidden, unclassified, or hand-waved.
    - During this pre-fix review phase, use the prompts to deepen evidence collection and categorization, not to edit files.
-7. Emit the repo-wide report before repairs.
+8. Emit the repo-wide report before repairs.
    - Open with a short `Audit Thesis` paragraph from the first-principles pre-pass.
    - Before making substantive fixes, report the verified findings already discovered, ordered by severity inside clear sections.
    - Use these sections:
@@ -97,30 +109,31 @@ Load these files before running:
      - `Residual Risks`
    - If a section has no verified findings, say `none verified`.
    - Keep the report concise, but do not bury serious production risks behind lower-priority cleanup.
-8. Stop on a hard user gate after the report unless `--loop` is present.
+9. Stop on a hard user gate after the report unless `--loop` is present.
    - After presenting the report, explicitly ask whether the user wants fixes to proceed.
    - Do not patch files, change config, or "fix while reviewing" until the user answers yes.
    - If the user declines or does not answer, stop after the report.
    - With `--loop`, skip this approval gate because the modifier is the approval to proceed with the bounded sweep/fix loop.
-9. After approval, run everything that defines repo health.
+10. After approval, run everything that defines repo health.
    - Run every relevant install, lint, format check, typecheck, test, build, migration, and security command defined by the repo or CI.
    - Treat any failing verification command as top priority.
-10. Work in a fix-first stabilization loop.
+11. Work in a fix-first stabilization loop.
    - Reproduce the failure.
    - Find the root cause from code.
    - Apply the smallest correct fix.
    - Re-run the affected command or flow.
    - Continue until green or blocked.
-11. Sweep for high-value issues beyond verification.
+12. Sweep for high-value issues beyond verification.
    - Trace the top 5-10 core user or system journeys through entrypoint, handler, business logic, DB or side effects, and response or error handling.
    - Check actual routes, pages, jobs, integrations, schema, migrations, auth, validation, error handling, observability, and deployability.
    - Fix weak links when the remediation is clear and low-risk.
-12. Run a dedicated final production-readiness and security pass after fixes.
+13. Run a dedicated final production-readiness and security pass after fixes.
    - Always run this pass after stabilization, regardless of model or prompt profile.
    - Re-run the relevant normal review-chain components needed to validate the repaired state, including Prompt H and Prompt I, plus Prompt G when frontend work was touched.
    - Re-check configuration externalization, rollback or migration safety, dependency and security hygiene, logging and monitoring visibility, performance-sensitive paths, and operational failure handling.
+   - Re-run the applicable go-live readiness checks for deployable services and update any fixed findings or residual risks.
    - Re-confirm the high-risk API-surface findings against the post-fix state so repaired systems are not accidentally re-opened by later changes.
-13. Stop only on a real blocker.
+14. Stop only on a real blocker.
    - Ask the user only when the correct fix would change product behavior, auth rules, schema semantics, billing logic, customer-visible UX intent, or public API behavior in a non-obvious way.
 
 ## Loop Mode
