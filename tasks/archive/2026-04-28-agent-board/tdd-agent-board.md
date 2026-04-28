@@ -38,14 +38,15 @@ Add a self-contained app workspace:
 
 Backend layers:
 
-- API layer: repo/card/run/settings endpoints.
+- API layer: repo/card/run/settings endpoints with loopback-only defaults and origin checks for state-changing routes.
 - Persistence layer: typed SQLite access for repo, card, run, run_event, worktree, pull_request, integration_job, setting, and workflow_override records.
 - Workflow loader: reads optional `AGENT_BOARD.md` from managed repos and merges with defaults.
 - Orchestrator: owns scheduler state, bounded concurrency, retries, stall detection, reconciliation, and dispatch.
 - Workspace manager: creates/reuses per-card worktrees and enforces cwd/path invariants.
 - Agent runner: spawns `codex exec --json` subprocesses, parses JSONL events, captures stdout/stderr/exit state, supports cancellation, and updates run events.
 - GitHub integration: wraps non-interactive `gh` commands for PR creation/status/checks/merge.
-- Integration lock manager: serializes rebase/merge/auto-merge/cleanup per repo.
+- Git critical-section manager: serializes same-repo shared Git metadata operations such as fetch, branch creation, worktree add/remove/prune, and shared-ref updates.
+- Integration lock manager: serializes PR creation, rebase/repair, merge/auto-merge, and cleanup jobs per repo without consuming Codex run slots.
 
 Frontend layers:
 
@@ -73,6 +74,7 @@ Frontend layers:
 - Node HTTP backend, likely Express based on Voidgrid precedent.
 - SQLite driver or ORM selected during implementation; it must support local file persistence, tests, transactions, and WAL mode.
 - Codex CLI available on the host, with `codex exec --json --full-auto --sandbox workspace-write` usable from a git worktree.
+- Prime Directive skill/plugin availability inside spawned Codex sessions for Planned Track.
 - Git CLI available on the host.
 - GitHub CLI `gh` authenticated on the host.
 - Browser automation/test tooling for UI validation.
@@ -90,7 +92,11 @@ The board API should provide stable local endpoints for:
 
 Exact route names and handler boundaries are deferred to execution after the app scaffold is chosen.
 
+Before runner and UI work, the implementation must define a minimal shared API/event contract: card DTO, run DTO, run event DTO, PR DTO, status enum, blocker reason enum, status transition event, log event, blocker event, prompt preview event, and live-stream reconnect cursor semantics. Exact route paths may still be chosen during implementation, but DTO/event names and enum values must be shared by frontend, backend, and tests.
+
 Planned Track must be treated as prompt text. The backend does not shell-execute `$plan-and-execute`; it builds a Codex prompt that begins with `$plan-and-execute --refine-plan` and includes card title, instructions, repo context, and board constraints.
+
+Track ownership differs after Codex returns. Quick Track is backend-finalized: the backend detects changes, classifies protected risk, commits, pushes, and creates the PR. If no changes are detected, it records `no_changes_detected`, blocks, and does not create an empty commit or PR. Planned Track is skill-finalized inside the board-created branch: `$plan-and-execute --refine-plan` owns local planning artifacts, review/finalization behavior, and local commits. The backend verifies and records the resulting branch/PR state, pushes when needed, detects and associates an existing PR for the board branch when present, and creates or updates the PR without adding duplicate finalization commits. Multiple matching PRs block with `existing_pr_ambiguous`.
 
 ## Data Model / Schema / Storage Changes
 
@@ -100,7 +106,7 @@ Use SQLite-backed records for:
 - `card`: id, repo id, title, instructions, task type, auto-merge flag, status, branch, worktree id, PR id, blocker summary, override state, timestamps.
 - `run`: id, card id, attempt, phase, status, command/prompt summary, started/ended timestamps, exit code, error.
 - `run_event`: id, run id, timestamp, event type, stream/log payload, metadata.
-- `worktree`: id, card id, repo id, path, branch, status, created/cleaned timestamps.
+- `worktree`: id, card id, repo id, path, branch, status, created/cleaned timestamps. Branch and path must be unique and card-owned.
 - `pull_request`: id, card id, repo id, number, URL, state, mergeability, checks state, timestamps.
 - `integration_job`: id, card id, repo id, type, status, lock key, attempts, timestamps.
 - `setting`: key/value.
@@ -121,17 +127,29 @@ Generated data files, SQLite databases, logs, and worktrees must be ignored by g
 - `TDR-009`: Implement Planned Track prompt generation where the Codex prompt begins with `$plan-and-execute --refine-plan`; do not treat that token as a backend executable.
 - `TDR-010`: Implement live run-event streaming to the UI via SSE or WebSocket.
 - `TDR-011`: Wrap `gh` CLI operations for non-interactive PR creation, PR status, checks, mergeability, and guarded auto-merge.
-- `TDR-012`: Implement auto-merge guardrails for checks, mergeability, protected paths, unresolved blockers, and no-check Quick Track cases.
+- `TDR-012`: Implement auto-merge guardrails for checks, mergeability, protected-risk classification, unresolved blockers, and no-check Quick Track cases.
 - `TDR-013`: Implement blocked-card resume with operator note appended to the next prompt.
 - `TDR-014`: Implement restart reconciliation from SQLite, worktrees, and GitHub PR state.
 - `TDR-015`: Implement safe post-merge cleanup that archives logs/history before removing a clean, merged worktree.
 - `TDR-016`: Implement optional `AGENT_BOARD.md` parsing with defaults, validation, and safe fallback.
 - `TDR-017`: Add app-local validation scripts and tests for backend state transitions, guardrails, workflow loading, and core frontend flows.
-- `TDR-018`: Backend owns post-run changed-file detection, protected-path scan, verification decision, `git add`, deterministic commit message, `git push -u origin <branch>`, and `gh pr create --title ... --body ... --base ... --head ...`.
+- `TDR-018`: For Quick Track, backend owns post-run changed-file detection, protected-risk classification, verification decision, `git add`, deterministic commit message, `git push -u origin <branch>`, and `gh pr create --title ... --body ... --base ... --head ...`.
 - `TDR-019`: Auto-merge must poll `gh pr view --json` fields including `headRefOid`, `mergeStateStatus`, `mergeable`, `statusCheckRollup`, `reviewDecision`, `isDraft`, `state`, `mergedAt`, `url`, and `number`, then call `gh pr merge --auto --squash --match-head-commit <verifiedHeadSha>` only when guardrails pass. Never use `--admin`.
 - `TDR-020`: Cleanup must use `git worktree remove <path>` without `--force`; dirty, missing, or conflicted cleanup cases move to cleanup blocked.
 - `TDR-021`: Maintain separate accounting for Codex run slots and integration jobs; integration jobs use per-repo locks and do not consume Codex run slots.
 - `TDR-022`: Persist state machine transitions for cards, runs, and integration jobs so restart reconciliation can explain interrupted work.
+- `TDR-023`: Protect same-repo shared Git metadata operations with a per-repo critical section while allowing already-created isolated worktrees to run Codex in parallel.
+- `TDR-024`: Implement protected-risk classification using path, diff/content, and task-intent heuristics, including semantic risk outside obvious protected paths.
+- `TDR-025`: Persist runner lease/process metadata and quarantine ambiguous active runs after restart rather than launching a second runner into the same worktree.
+- `TDR-026`: Parse `AGENT_BOARD.md` through an allowlisted schema and reject overrides that weaken immutable safety invariants.
+- `TDR-027`: Define shared DTOs, status enums, blocker reason enums, event type enums, and live-stream reconnect cursor semantics before runner/UI implementation.
+- `TDR-028`: Implement deterministic card-id-based branch/worktree naming with SQLite uniqueness constraints, same-card reuse validation, different-card collision blocking, stale/dirty path blocking, existing remote branch ambiguity blocking, and no overwrite/force-delete behavior.
+- `TDR-029`: Implement Quick Track zero-diff handling as a blocked outcome with reason `no_changes_detected` and no commit/push/PR.
+- `TDR-030`: Implement Planned Track existing-PR association for the board branch, with duplicate/ambiguous matches blocked as `existing_pr_ambiguous`.
+- `TDR-031`: Implement the no-check auto-merge override as an allowlisted repo-scoped Quick Track-only setting that is off by default and cannot bypass protected-risk, expected-head-SHA, mergeability, draft/open-state, or blocker guardrails.
+- `TDR-032`: Bind the local API to loopback by default, reject unexpected origins on state-changing routes, avoid permissive CORS, and test that remote/origin requests cannot trigger Codex, GitHub, merge, or cleanup actions.
+- `TDR-033`: Add a gated live smoke/probe for the real `codex exec --json` runner adapter against a disposable fixture; record live GitHub PR creation as run or explicitly skipped for environment/safety reasons.
+- `TDR-034`: Preflight Planned Track skill/plugin availability from the perspective of spawned Codex sessions and block with actionable setup text if `$plan-and-execute --refine-plan` cannot resolve.
 
 ## State Machine
 
@@ -171,25 +189,56 @@ Integration job statuses:
 | `conflict_repair` | repo | `repaired`, `blocked` |
 | `cleanup` | repo | `cleaned`, `cleanup_blocked` |
 
+Immutable board safety invariants:
+
+- Codex cwd must equal the validated card worktree path under the configured workspace root.
+- Auto-merge must use expected-head-SHA pinning and must never use admin bypass.
+- Cleanup must use non-force `git worktree remove` and must block dirty, missing, unmerged, or conflicted worktrees.
+- Unresolved runner/review blockers must stop autopilot until explicit resume.
+- Protected-risk classification cannot be disabled by repo override.
+- Same-repo shared Git metadata operations must remain in per-repo critical sections.
+- No-check auto-merge exceptions are Quick Track-only and cannot bypass expected-head-SHA, protected-risk, mergeability, open/non-draft PR state, or unresolved-blocker checks.
+
+Stable blocker reason codes:
+
+- `no_changes_detected`
+- `collision_detected`
+- `existing_pr_ambiguous`
+- `checks_absent`
+- `protected_risk`
+- `runner_failed`
+- `approval_required`
+- `cleanup_blocked`
+- `restart_quarantined`
+- `origin_rejected`
+- `planned_skill_unavailable`
+
 ## Ingestion / Backfill / Migration / Rollout Plan
 
 No existing board data needs migration. Rollout is additive under `apps/board`.
 
 Implementation should begin with app scaffolding, persistence schema, and tests for the scheduler/workflow model before wiring real Codex and GitHub execution. Because the user requested a real runner in v1, simulated runner behavior may exist only as test support, not as the shipped primary path.
 
-The first real vertical slice must be Quick Track to PR Ready: one repo, one Quick card, deterministic worktree, real `codex exec --json`, persisted streamed logs, changed-file detection, protected-path scan, backend-owned commit/push, non-interactive `gh pr create`, and visible PR Ready or Blocked state. Auto-merge, cleanup, Planned Track, and full restart reconciliation should follow after this slice is working.
+The first real vertical slice must be Quick Track to PR Ready: one repo, one Quick card, deterministic collision-safe worktree, real `codex exec --json`, persisted streamed logs, changed-file detection, protected-risk classification, backend-owned Quick Track commit/push, non-interactive `gh pr create`, zero-diff blocking, and visible PR Ready or Blocked state. Auto-merge, cleanup, Planned Track, and full restart reconciliation should follow after this slice is working.
 
 ## Failure Modes / Recovery / Rollback
 
 - Codex missing or exits non-zero: mark card Blocked with command, exit code, and log excerpt.
 - `gh` missing or unauthenticated: block GitHub-dependent phases with actionable setup text.
+- Unsafe API bind/origin configuration: fail closed and do not start state-changing routes.
+- Planned Track skill/plugin unavailable to spawned Codex: block with `planned_skill_unavailable` before launching the runner.
 - Worktree path escapes workspace root: hard fail before process launch.
+- Branch/worktree collision or ambiguous remote branch: block with `collision_detected`; never overwrite, delete, or force-reuse a colliding branch/path.
+- Quick Track produces no changes: block with `no_changes_detected`; do not create an empty commit, push, or PR.
+- Planned Track has multiple matching PRs for the board branch: block with `existing_pr_ambiguous`.
 - Worktree dirty at cleanup: block cleanup and preserve worktree.
 - PR not mergeable: attempt at most one guarded conflict repair pass, then block if unresolved.
 - Checks absent: allow PR Ready but block auto-merge unless repo override explicitly permits no-check auto-merge.
 - Backend restart: do not assume old subprocesses are recoverable; reconcile durable state and mark interrupted active runs appropriately.
+- Ambiguous active runner after restart: persist runner lease/process metadata where possible, probe conservatively, and quarantine/block the card instead of launching another runner into the same worktree.
 - Manual UI override: pause autopilot until resume.
-- Unsafe Quick Track protected path: block or require conversion to Planned Track.
+- Unsafe Quick Track protected risk: block or require conversion to Planned Track.
+- Unsafe workflow override: reject unsupported or invariant-weakening `AGENT_BOARD.md` values and continue with safe defaults where possible.
 - SQLite unavailable or corrupt: fail closed and do not launch new runs.
 - SQLite WAL files or runtime data mishandled: keep DB, WAL, logs, and worktrees under ignored runtime directories and document that naive file-copy backup is not a supported v1 feature.
 - Codex requests approval or attempts unavailable permissions: mark Blocked with the approval/sandbox reason.
@@ -203,18 +252,20 @@ The board runs local subprocesses that can edit code, push branches, and merge P
 
 The backend should log structured run events and preserve enough data to debug blocked cards after restart. Long-running or stalled Codex processes need timeout/stall detection and stop/retry behavior. Concurrency settings must be visible and bounded.
 
-Commits, pushes, and PR creation are backend-owned integration steps after a successful Codex run. This keeps PR behavior deterministic and makes Quick Track independent of whether Codex chose to commit. Auto-merge must be SHA-pinned to the last verified head commit and must never bypass protection with admin privileges.
+Quick Track commits, pushes, and PR creation are backend-owned integration steps after a successful Codex run. Planned Track local commits and finalization are skill-owned, while the backend verifies, records, pushes, and creates or updates PR metadata. Auto-merge must be SHA-pinned to the last verified head commit and must never bypass protection with admin privileges.
 
 ## Verification and Test Strategy
 
 App-local verification should include:
 
 - Unit tests for workflow config defaults and `AGENT_BOARD.md` parsing.
-- Unit tests for scheduler concurrency, per-repo integration locks, status transitions, and restart reconciliation.
-- Unit tests for protected-path and auto-merge guardrails.
+- Unit tests for loopback binding, origin checks, and no permissive CORS on state-changing routes.
+- Unit tests for scheduler concurrency, per-repo Git critical sections, per-repo integration locks, status transitions, and restart reconciliation.
+- Unit tests for protected-risk and auto-merge guardrails.
 - Integration tests with fake `codex exec --json` and fake `gh` executables to exercise Quick/Planned run lifecycles without invoking real external systems.
 - Worktree safety tests that reject paths outside workspace root and cwd mismatches.
 - Frontend tests for card creation, status rendering, blocked details, log stream rendering, and manual override behavior.
 - Browser smoke test for the core board flow when the app can run locally.
+- Gated live runner smoke for the actual `codex exec --json` adapter against a disposable fixture, with PR creation either safely exercised or explicitly skipped with evidence.
 
 Expected commands should be introduced by the app scaffold. Existing repo-level validation is only `python3 scripts/validate-skill-contracts.py` and installer idempotence; the board must add its own `npm` scripts under `apps/board`.

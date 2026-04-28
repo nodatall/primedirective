@@ -1,3 +1,12 @@
 .DS_Store
 .codex/environments/
 /codex-scripts/
+apps/board/data/
+apps/board/worktrees/
+apps/board/logs/
+apps/board/**/dist/
+apps/board/**/dist-types/
+apps/board/**/node_modules/
+apps/board/test-results/
+apps/board/playwright-report/
+apps/board/api/apps/board/worktrees/

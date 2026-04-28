@@ -34,6 +34,8 @@ Ship a local web app under `apps/board` that lets the user create and supervise 
 - The user can create a card with `Title`, `Repo`, `Instructions`, `Task type`, and `Auto-merge PR`.
 - The board can run up to five active cards globally and up to five active cards for the same repo by default.
 - Every active card runs in its own deterministic git worktree.
+- Deterministic branch/worktree names must be card-id-based and must fail closed on collisions instead of overwriting or deleting an existing branch/path.
+- The local API binds to loopback by default and does not allow arbitrary browser origins to trigger Codex, GitHub, merge, or cleanup actions.
 - Quick cards run without PRD/TDD/tasks-plan artifacts.
 - Planned cards invoke `$plan-and-execute --refine-plan`.
 - Card status moves automatically from runner and GitHub state rather than relying on manual dragging.
@@ -53,10 +55,11 @@ The first implementation slice must prove the real runner path before advanced a
 - run real `codex exec --json`
 - stream and persist run events/logs
 - detect changed files
-- run protected-path scan
-- backend commits and pushes the branch
+- run protected-risk classification
+- backend commits and pushes the branch for Quick Track
 - backend creates a PR through non-interactive `gh pr create`
 - card lands in `PR Ready` or `Blocked`
+- if Quick Track succeeds with no file changes, the card blocks with `no_changes_detected` instead of creating an empty commit or PR
 
 Auto-merge, post-merge cleanup, Planned Track, full restart reconciliation, conflict repair, and refined UI polish remain part of v1, but must be sequenced after this first vertical slice.
 
@@ -88,22 +91,31 @@ Auto-merge, post-merge cleanup, Planned Track, full restart reconciliation, conf
 - `FR-005`: The backend must automatically move card status from orchestrator and GitHub state.
 - `FR-006`: Manual card moves must be recorded as operator overrides and pause autopilot until resumed.
 - `FR-007`: The Quick Track must run a compact Codex prompt without PRD/TDD/tasks-plan artifacts.
-- `FR-008`: The Planned Track must run `$plan-and-execute --refine-plan` in the card worktree.
+- `FR-008`: The Planned Track must run Codex in the card worktree with prompt text beginning `$plan-and-execute --refine-plan`.
 - `FR-009`: The board must support five active cards globally by default.
 - `FR-010`: The board must support five active cards per repo by default.
 - `FR-011`: Each card run must use a deterministic isolated git worktree.
+- `FR-011A`: Branch and worktree names must be deterministic, card-id-based, uniqueness-constrained in SQLite, and collision-safe: same-card reuse is allowed only when ownership and cleanliness match, different-card collisions block, dirty/stale paths block, existing remote branch ambiguity blocks, and the board must never overwrite or force-delete a colliding branch/worktree.
 - `FR-012`: The UI must expose live logs, run history, current/next prompt, PR links, worktree path, artifacts when present, and resume actions.
 - `FR-013`: Blocked cards must show a one-line blocker summary and a detail view with failing step, command, exit code, relevant log excerpt, and recommended next action when available.
 - `FR-014`: The operator must be able to resume a blocked card with a note appended to the next Codex prompt.
 - `FR-015`: The backend must create PRs using the local `gh` CLI.
-- `FR-015A`: The backend must own post-run diff detection, protected-path scan, commit, push, and non-interactive PR creation; Codex is not required to commit or open the PR.
+- `FR-015A`: For Quick Track, the backend must own post-run diff detection, protected-risk classification, commit, push, and non-interactive PR creation; Codex is not required to commit or open the PR.
+- `FR-015A1`: If a successful Quick Track run produces zero changed files, the backend must not commit, push, or create a PR; it must persist evidence, move the card to `Blocked`, use blocker reason `no_changes_detected`, and allow resume or abandon.
+- `FR-015B`: For Planned Track, the Prime Directive skill owns local planning, execution, review/finalization, and local commits inside the board-created branch; the backend must verify final branch state, persist artifacts/PR metadata, push when needed, detect and associate an existing PR for the board branch when present, and create or update the PR without duplicating skill-owned commits.
+- `FR-015C`: If Planned Track PR detection finds multiple matching PRs or ambiguous PR metadata, the backend must block with reason `existing_pr_ambiguous` and show actionable context instead of creating a duplicate PR.
 - `FR-016`: Auto-merge must be controlled by a per-card `Auto-merge PR` toggle and must remain off by default.
-- `FR-017`: Auto-merge must require mergeability, passing checks, no protected-path guardrail failure, and no unresolved runner/review blocker.
+- `FR-017`: Auto-merge must require mergeability, passing checks, no protected-risk guardrail failure, and no unresolved runner/review blocker.
 - `FR-017A`: Auto-merge must pin the expected PR head SHA and must not use admin bypass behavior.
 - `FR-018`: Quick Track may create a PR without a detected verification command, but auto-merge must not proceed without a passing check unless a repo workflow override explicitly permits it.
 - `FR-019`: The app must clean up a card worktree only after GitHub reports the PR is merged and final logs/history are preserved.
 - `FR-020`: The app must support an optional repo-owned `AGENT_BOARD.md` workflow override, while providing useful defaults when the file is missing.
+- `FR-020A`: `AGENT_BOARD.md` overrides must be allowlisted and must not weaken immutable board safety invariants: cwd containment, expected-head-SHA auto-merge pinning, no admin merge bypass, no-force cleanup, unresolved-blocker stops, protected-risk handling, and per-repo Git critical sections.
+- `FR-020B`: The only allowed no-check auto-merge override is repo-scoped, off by default, explicit for Quick Track no-check PRs, and still requires protected-risk pass, expected-head-SHA pinning, mergeability, non-draft open PR state, and no unresolved blockers.
 - `FR-021`: The app must reconcile card state after backend restart from the database, worktree state, and GitHub PR state.
+- `FR-022`: The API must bind to loopback by default, reject non-local or unexpected browser origins for state-changing routes, avoid permissive CORS, and include tests proving unsafe remote/origin requests cannot launch Codex, push, merge, or clean worktrees.
+- `FR-023`: The implementation must include a gated live smoke/probe for the real `codex exec --json` runner adapter against a disposable fixture, with explicit evidence when live GitHub PR creation is skipped for safety or environment reasons.
+- `FR-024`: Planned Track must preflight that spawned Codex sessions can resolve the required Prime Directive skill/plugin path before queuing work; if unavailable, the card must block with actionable setup text.
 
 ## Acceptance Criteria
 
@@ -112,12 +124,15 @@ Auto-merge, post-merge cleanup, Planned Track, full restart reconciliation, conf
 - `AC-003` (`FR-005`, `FR-006`): Runner/GitHub events move cards automatically; manual drag creates an override record and pauses autopilot.
 - `AC-004` (`FR-007`, `FR-008`): Quick and Planned cards generate different Codex prompts and do not incorrectly require the same artifact gates.
 - `AC-005` (`FR-009`, `FR-010`): The scheduler can run five cards concurrently, including five cards for the same repo, while preserving per-card worktree isolation.
-- `AC-006` (`FR-011`): The backend refuses to launch Codex unless the process cwd is the card worktree path inside the configured workspace root.
+- `AC-006` (`FR-011`, `FR-011A`): The backend refuses to launch Codex unless the process cwd is the card worktree path inside the configured workspace root, and branch/worktree collision cases block safely without overwrite.
 - `AC-007` (`FR-012`, `FR-013`, `FR-014`): A failed run moves to Blocked, shows actionable failure context, and can be resumed with an operator note.
-- `AC-008` (`FR-015`, `FR-015A`, `FR-016`, `FR-017`, `FR-017A`, `FR-018`): PR creation and auto-merge behavior can be verified with `gh` command wrappers or tests that exercise success and failure paths, including expected-head-SHA protection.
+- `AC-008` (`FR-015`, `FR-015A`, `FR-015A1`, `FR-015B`, `FR-015C`, `FR-016`, `FR-017`, `FR-017A`, `FR-018`, `FR-020B`): PR creation and auto-merge behavior can be verified with `gh` command wrappers or tests that exercise success and failure paths, including zero-diff Quick Track, existing Planned PR association, ambiguous PR blocking, expected-head-SHA protection, no-check override shape, and track-specific Git ownership.
 - `AC-009` (`FR-019`): A merged PR triggers archival and safe worktree cleanup; an unmerged or dirty worktree is not removed.
-- `AC-010` (`FR-020`): Missing `AGENT_BOARD.md` uses defaults; present workflow file overrides supported settings and rejects unsafe values.
+- `AC-010` (`FR-020`, `FR-020A`): Missing `AGENT_BOARD.md` uses defaults; present workflow file overrides supported settings and rejects unsafe or non-allowlisted values.
 - `AC-011` (`FR-021`): Restart reconciliation produces a consistent card state without assuming prior in-memory runner sessions survived.
+- `AC-012` (`FR-022`): API safety tests prove loopback binding and origin restrictions protect state-changing runner/GitHub/cleanup routes.
+- `AC-013` (`FR-023`): The final validation record includes a gated real-runner smoke result for `codex exec --json` or a clear environment/safety skip reason.
+- `AC-014` (`FR-024`): Planned Track preflight blocks with actionable text when the Prime Directive skill/plugin is unavailable to spawned Codex sessions.
 
 ## Product Rules / UX Rules / Content Rules
 
@@ -133,6 +148,7 @@ Auto-merge, post-merge cleanup, Planned Track, full restart reconciliation, conf
 ## Constraints and Defaults
 
 - App path: `apps/board`.
+- API host default: loopback only, not `0.0.0.0`.
 - Frontend/backend split: `apps/board/web` and `apps/board/api`.
 - Frontend: Vite, React, Tailwind, Atlaskit drag/drop unless research or implementation proves a better local fit.
 - Backend: Node/Express-style local API unless research or implementation proves a better local fit.
@@ -145,8 +161,11 @@ Auto-merge, post-merge cleanup, Planned Track, full restart reconciliation, conf
 - Default `max_active_runs`: `5`.
 - Default `max_active_cards_per_repo`: `5`.
 - Integration and auto-merge operations are serialized per repo.
+- Shared same-repo Git metadata operations are protected by per-repo critical sections, including fetch, branch creation, worktree add/remove/prune, and shared-ref updates. Codex subprocesses may run in parallel after their isolated worktrees are safely created.
 - Agent run slots and integration jobs are counted separately; PR creation, rebase/repair, auto-merge, and cleanup use per-repo integration locks but should not consume Codex run slots.
-- Quick Track protected areas include auth, billing, migrations/schema, public API contracts, destructive operations, secrets/config/deployment, broad refactors, unclear multi-file behavior changes, and unclear acceptance criteria.
+- Quick Track protected-risk classification includes path, diff/content, and task-intent heuristics for auth, billing, migrations/schema, public API contracts, destructive operations, secrets/config/deployment, broad refactors, unclear multi-file behavior changes, and unclear acceptance criteria.
+- Stable blocker reason codes must include at least `no_changes_detected`, `collision_detected`, `existing_pr_ambiguous`, `checks_absent`, `protected_risk`, `runner_failed`, `approval_required`, `cleanup_blocked`, and `restart_quarantined`.
+- Planned Track preflight must verify Prime Directive skill availability for spawned Codex sessions, not merely that the host repo contains the skills.
 
 ## Success Metrics / Guardrails
 
