@@ -10,7 +10,7 @@ import { BoardCard } from './BoardCard';
 const columns: Array<{ title: string; statuses: CardStatus[] }> = [
   { title: 'Inbox', statuses: ['Inbox'] },
   { title: 'Running', statuses: ['Queued', 'Running'] },
-  { title: 'Needs Attention', statuses: ['Blocked'] },
+  { title: 'Blocked', statuses: ['Blocked'] },
   { title: 'Review', statuses: ['PR Ready', 'Checks Pending', 'Merging'] },
   { title: 'Done', statuses: ['Merged', 'Done'] }
 ];
