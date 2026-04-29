@@ -9,7 +9,7 @@ import { canAutoMerge, classifyRemoteBranchLookup, pickOpenPrForBranch } from '.
 import { preflightPlannedSkill } from '../repos/preflight.js';
 import { deterministicWorktree, ensureRuntimeDirs, removeCleanWorktree } from '../worktrees/manager.js';
 import { planQuickFinalization } from '../quick-track/finalize.js';
-import { captureVisualEvidence } from '../visual/evidence.js';
+import { captureVisualEvidence, copyVisualEvidenceForPr, formatVisualEvidenceMarkdown, type PullRequestVisualArtifact } from '../visual/evidence.js';
 import { KeyedSerialQueue } from './locks.js';
 import { Scheduler } from './scheduler.js';
 
@@ -133,10 +133,16 @@ async function finalizeQuick(store: SqliteStore, card: CardDTO, repo: RepoDTO): 
   if (finalization.status === 'blocked') return block(store, card, finalization.reason, finalization.reason === 'no_changes_detected' ? 'Codex completed but produced no file changes.' : 'Quick Track touched protected-risk areas.');
   const visualEvidence = captureVisualEvidence(card, cleanPaths);
   if (visualEvidence.error) return block(store, card, 'visual_evidence_missing', visualEvidence.error);
-  for (const artifact of visualEvidence.artifacts) {
+  let prVisualEvidence: { artifacts: PullRequestVisualArtifact[]; paths: string[] };
+  try {
+    prVisualEvidence = copyVisualEvidenceForPr(card, visualEvidence.artifacts);
+  } catch (error) {
+    return block(store, card, 'visual_evidence_missing', error instanceof Error ? error.message : String(error));
+  }
+  for (const artifact of prVisualEvidence.artifacts.length > 0 ? prVisualEvidence.artifacts : visualEvidence.artifacts) {
     append(store, card, 'visual_artifact', `${artifact.kind}: ${artifact.name}`, { ...artifact });
   }
-  const prResult = await gitQueue.run(repo.id, async () => commitPushAndCreatePr(card, repo, cleanPaths));
+  const prResult = await gitQueue.run(repo.id, async () => commitPushAndCreatePr(card, repo, [...cleanPaths, ...prVisualEvidence.paths], prVisualEvidence.artifacts));
   if (!prResult.ok) return block(store, card, 'runner_failed', prResult.error);
   const ready: CardDTO = { ...card, status: 'PR Ready', updatedAt: new Date().toISOString() };
   store.upsertCard(ready);
@@ -162,17 +168,30 @@ function collectDiffText(cwd: string, changedFiles: ChangedFileEntry[]): string 
   return `${trackedDiff}\n${untrackedText}`;
 }
 
-function commitPushAndCreatePr(card: CardDTO, repo: RepoDTO, paths: string[]): { ok: true; url: string; number: number } | { ok: false; error: string } {
+function commitPushAndCreatePr(card: CardDTO, repo: RepoDTO, paths: string[], visualArtifacts: PullRequestVisualArtifact[] = []): { ok: true; url: string; number: number } | { ok: false; error: string } {
   const add = spawnSync('git', ['add', ...paths], { cwd: card.worktreePath, encoding: 'utf8' });
   if (add.status !== 0) return { ok: false, error: add.stderr || 'git add failed' };
   const commit = spawnSync('git', ['commit', '-m', `Agent Board: ${card.title}`], { cwd: card.worktreePath, encoding: 'utf8' });
   if (commit.status !== 0) return { ok: false, error: commit.stderr || 'git commit failed' };
   const push = spawnSync('git', ['push', '-u', 'origin', card.branch ?? ''], { cwd: card.worktreePath, encoding: 'utf8' });
   if (push.status !== 0) return { ok: false, error: push.stderr || 'git push failed' };
-  const pr = spawnSync('gh', ['pr', 'create', '--title', card.title, '--body', card.instructions, '--base', repo.defaultBranch, '--head', card.branch ?? ''], { cwd: card.worktreePath, encoding: 'utf8' });
+  const pr = spawnSync('gh', ['pr', 'create', '--title', card.title, '--body', pullRequestBody(card, visualArtifacts), '--base', repo.defaultBranch, '--head', card.branch ?? ''], { cwd: card.worktreePath, encoding: 'utf8' });
   if (pr.status !== 0) return { ok: false, error: pr.stderr || 'gh pr create failed' };
   const url = pr.stdout.trim();
   return { ok: true, url, number: Number(url.match(/\/(\d+)$/)?.[1] ?? 0) };
+}
+
+function pullRequestBody(card: CardDTO, visualArtifacts: PullRequestVisualArtifact[]): string {
+  const body = card.instructions.trim() || 'Agent Board task.';
+  const markdown = formatVisualEvidenceMarkdown(visualArtifacts, { repoUrl: githubRepoUrl(card.worktreePath), branch: card.branch });
+  return markdown ? `${body}\n\n${markdown}` : body;
+}
+
+function githubRepoUrl(cwd: string | undefined): string | undefined {
+  if (!cwd) return undefined;
+  const result = spawnSync('gh', ['repo', 'view', '--json', 'url', '--jq', '.url'], { cwd, encoding: 'utf8' });
+  if (result.status !== 0) return undefined;
+  return result.stdout.trim() || undefined;
 }
 
 function associatePlannedPrOrBlock(store: SqliteStore, card: CardDTO, repo: RepoDTO): void {

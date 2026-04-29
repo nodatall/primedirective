@@ -104,7 +104,7 @@ export interface PromptPreviewEvent extends RunEventDTO {
 
 export interface VisualArtifactEvent extends RunEventDTO {
   type: 'visual_artifact';
-  metadata: { kind: 'screenshot' | 'video'; name: string; path: string; viewport?: { width: number; height: number }; url?: string };
+  metadata: { kind: 'screenshot' | 'video'; name: string; path: string; prPath?: string; viewport?: { width: number; height: number }; url?: string };
 }
 
 export interface StreamCursor {

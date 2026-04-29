@@ -1,6 +1,6 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { dirname, resolve } from 'node:path';
+import { dirname, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { CardDTO } from '@prime-board/shared';
 
@@ -16,6 +16,15 @@ export interface VisualEvidenceResult {
   required: boolean;
   artifacts: VisualArtifact[];
   error?: string;
+}
+
+export interface PullRequestVisualArtifact extends VisualArtifact {
+  prPath: string;
+}
+
+export interface PullRequestVisualEvidence {
+  artifacts: PullRequestVisualArtifact[];
+  paths: string[];
 }
 
 const boardRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -62,13 +71,67 @@ export function captureVisualEvidence(card: CardDTO, changedFiles: string[]): Vi
   }
 
   try {
-    const parsed = JSON.parse(result.stdout) as { artifacts?: VisualArtifact[] };
+    const parsed = JSON.parse(jsonPayload(result.stdout)) as { artifacts?: VisualArtifact[] };
     const artifacts = parsed.artifacts ?? [];
     if (artifacts.length === 0) return { required: true, artifacts: [], error: 'Frontend files changed but no visual artifacts were produced.' };
     return { required: true, artifacts };
   } catch {
     return { required: true, artifacts: [], error: 'Visual evidence capture returned invalid JSON.' };
   }
+}
+
+export function copyVisualEvidenceForPr(card: CardDTO, artifacts: VisualArtifact[]): PullRequestVisualEvidence {
+  if (!card.worktreePath || artifacts.length === 0) return { artifacts: [], paths: [] };
+  const visualArtifacts = artifacts.filter((artifact) => artifact.kind === 'screenshot');
+  if (visualArtifacts.length === 0) return { artifacts: [], paths: [] };
+
+  const relativeDir = `.agent-board/visual-evidence/${safeSegment(card.id)}`;
+  const targetDir = resolve(card.worktreePath, relativeDir);
+  mkdirSync(targetDir, { recursive: true });
+
+  const prepared = visualArtifacts.map((artifact, index) => {
+    if (!statSync(artifact.path).isFile()) throw new Error(`Visual evidence artifact is not a file: ${artifact.path}`);
+    const extension = extname(artifact.path) || '.png';
+    const filename = `${String(index + 1).padStart(2, '0')}-${safeSegment(artifact.name)}${extension}`;
+    const prPath = `${relativeDir}/${filename}`;
+    copyFileSync(artifact.path, resolve(card.worktreePath!, prPath));
+    return { ...artifact, prPath };
+  });
+
+  return { artifacts: prepared, paths: prepared.map((artifact) => artifact.prPath) };
+}
+
+export function formatVisualEvidenceMarkdown(artifacts: PullRequestVisualArtifact[], options: { repoUrl?: string; branch?: string } = {}): string {
+  if (artifacts.length === 0) return '';
+  const lines = ['## Visual evidence', ''];
+  for (const artifact of artifacts) {
+    const dimensions = artifact.viewport ? ` (${artifact.viewport.width}x${artifact.viewport.height})` : '';
+    const label = `${artifact.name}${dimensions}`;
+    const url = visualArtifactUrl(artifact.prPath, options);
+    lines.push(`### ${label}`, '', `![${markdownAlt(label)}](${url})`, '');
+  }
+  return lines.join('\n').trim();
+}
+
+function jsonPayload(stdout: string): string {
+  const trimmed = stdout.trim();
+  if (trimmed.startsWith('{')) return trimmed;
+  const line = trimmed.split('\n').reverse().find((entry) => entry.trim().startsWith('{'));
+  if (!line) return trimmed;
+  return line.trim();
+}
+
+function visualArtifactUrl(path: string, options: { repoUrl?: string; branch?: string }): string {
+  if (!options.repoUrl || !options.branch) return path;
+  return encodeURI(`${options.repoUrl.replace(/\/$/, '')}/blob/${options.branch}/${path}?raw=1`);
+}
+
+function markdownAlt(value: string): string {
+  return value.replace(/[\[\]\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function safeSegment(value: string): string {
+  return value.trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'artifact';
 }
 
 function fakeArtifacts(card: CardDTO): VisualEvidenceResult {

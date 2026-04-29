@@ -6,7 +6,7 @@ import { Scheduler } from '../src/orchestrator/scheduler.js';
 import { findExistingPrForBranch, canAutoMerge } from '../src/github/gh.js';
 import { reconcileActiveRunner } from '../src/orchestrator/reconcile.js';
 import { discardCard, resumeCard } from '../src/orchestrator/cardLifecycle.js';
-import { captureVisualEvidence, requiresVisualEvidence } from '../src/visual/evidence.js';
+import { captureVisualEvidence, copyVisualEvidenceForPr, formatVisualEvidenceMarkdown, requiresVisualEvidence } from '../src/visual/evidence.js';
 
 it('creates deterministic collision-safe worktree names', () => {
   const target = deterministicWorktree({ cardId: 'card-1', repoId: 'repo', repoPath: '/Volumes/Code/example', workspaceRoot: '/tmp/board' });
@@ -49,7 +49,7 @@ it('quarantines ambiguous active runners after restart', () => {
   expect(reconcileActiveRunner({ pid: 123, worktreePath: '/tmp/wt', startedAt: new Date().toISOString() })).toMatchObject({ status: 'blocked', reason: 'restart_quarantined' });
 });
 
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { SqliteStore } from '../src/db/sqliteStore.js';
@@ -163,6 +163,26 @@ it('produces fake visual artifacts for frontend changes in test mode', () => {
     if (previousArtifactRoot === undefined) delete process.env.BOARD_VISUAL_EVIDENCE_ARTIFACT_ROOT;
     else process.env.BOARD_VISUAL_EVIDENCE_ARTIFACT_ROOT = previousArtifactRoot;
   }
+});
+
+it('copies visual screenshots into the branch and formats PR markdown', () => {
+  const root = mkdtempSync(join(tmpdir(), 'board-pr-visual-'));
+  const worktree = join(root, 'worktree');
+  const source = join(root, 'desktop.png');
+  mkdirSync(worktree);
+  writeFileSync(source, 'fake png\n');
+
+  const prepared = copyVisualEvidenceForPr(
+    { id: 'card', repoId: 'repo', title: 'Card', instructions: 'Do it', taskType: 'Quick', autoMerge: false, status: 'Running', worktreePath: worktree, branch: 'agent-board/repo/card', updatedAt: new Date().toISOString() },
+    [{ kind: 'screenshot', name: 'desktop', path: source, viewport: { width: 1440, height: 900 } }]
+  );
+
+  expect(prepared.paths).toEqual(['.agent-board/visual-evidence/card/01-desktop.png']);
+  expect(existsSync(join(worktree, prepared.paths[0]))).toBe(true);
+  expect(readFileSync(join(worktree, prepared.paths[0]), 'utf8')).toBe('fake png\n');
+  expect(formatVisualEvidenceMarkdown(prepared.artifacts, { repoUrl: 'https://github.com/acme/project', branch: 'agent-board/repo/card' })).toContain(
+    '![desktop (1440x900)](https://github.com/acme/project/blob/agent-board/repo/card/.agent-board/visual-evidence/card/01-desktop.png?raw=1)'
+  );
 });
 
 it('discards a card by removing its worktree, local branch, and board records', async () => {
