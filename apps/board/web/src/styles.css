@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @font-face { font-family: 'Space Grotesk Board'; src: local('Space Grotesk'); font-display: swap; }
-:root { --bg:#070906; --panel:#10140f; --panel2:#151c16; --grid:rgba(185,255,102,.07); --lime:#c8ff64; --cyan:#65f4ff; --ink:#eef7e8; --muted:#91a08b; --danger:#ff7b72; }
+:root { --bg:#070906; --panel:#10140f; --panel2:#151c16; --grid:rgba(185,255,102,.07); --lime:#c8ff64; --cyan:#65f4ff; --pink:#ff6bb5; --ink:#eef7e8; --muted:#91a08b; --danger:#ff7b72; }
 * { box-sizing: border-box; }
 body { margin:0; min-height:100vh; font-family:'Space Grotesk Board', ui-sans-serif; color:var(--ink); background: radial-gradient(circle at 20% 0%, rgba(101,244,255,.14), transparent 28rem), radial-gradient(circle at 90% 10%, rgba(200,255,100,.12), transparent 24rem), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px), var(--bg); background-size:auto, auto, 32px 32px, 32px 32px, auto; }
 button,input,textarea { font:inherit; }
@@ -19,8 +19,8 @@ p { color:var(--muted); }
 input,textarea { width:100%; border:1px solid rgba(238,247,232,.12); background:#080b08; color:var(--ink); border-radius:14px; padding:12px; margin-bottom:10px; }
 textarea { min-height:110px; resize:vertical; }
 .segmented { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
-.segmented button,.primary,.detail__close { border:1px solid rgba(238,247,232,.14); background:#0c110c; color:var(--ink); border-radius:14px; padding:10px; cursor:pointer; }
-.segmented .active,.primary { color:#071006; background:linear-gradient(135deg,var(--lime),var(--cyan)); border:0; font-weight:800; }
+.segmented button,.primary,.detail__close { border:1px solid rgba(255,107,181,.45); background:rgba(255,107,181,.12); color:var(--ink); border-radius:14px; padding:10px; cursor:pointer; }
+.segmented .active,.primary { color:#180510; background:linear-gradient(135deg,var(--pink),#ffd1e6); border:0; font-weight:800; }
 .toggle { display:flex; gap:8px; color:var(--muted); margin:8px 0 14px; }
 .board { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px, 1fr); gap:14px; overflow-x:auto; padding-bottom:16px; }
 .column { min-height:560px; padding:14px; }
