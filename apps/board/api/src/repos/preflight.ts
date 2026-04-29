@@ -34,7 +34,7 @@ export function preflightPlannedSkill(repoPath: string): PreflightResult {
     'Reply with exactly PLAN_AND_EXECUTE_AVAILABLE only if that file is readable, its frontmatter name is plan-and-execute, and it documents the --refine-plan modifier.',
     'If any check fails, reply with exactly PLAN_AND_EXECUTE_UNAVAILABLE.'
   ].join('\n');
-  const result = spawnSync('codex', ['exec', '--json', '--full-auto', '--sandbox', 'read-only', prompt], { cwd: resolve(repoPath), encoding: 'utf8', timeout: 120000 });
+  const result = spawnSync('codex', ['exec', '--json', '--full-auto', '--sandbox', 'read-only', '-c', 'model_reasoning_effort="high"', prompt], { cwd: resolve(repoPath), encoding: 'utf8', timeout: 120000 });
   if (result.status !== 0) return { ok: false, errors: [`planned_skill_unavailable: Codex skill resolution probe failed: ${result.stderr || result.stdout}`] };
   if (!result.stdout.includes('PLAN_AND_EXECUTE_AVAILABLE')) return { ok: false, errors: ['planned_skill_unavailable: spawned Codex session did not confirm plan-and-execute availability'] };
   return { ok: true, errors: [] };

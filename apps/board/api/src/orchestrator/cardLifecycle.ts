@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
-import { readFileSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { CardDTO, RepoDTO, RunEventDTO } from '@prime-board/shared';
@@ -118,7 +118,7 @@ function createGitWorktree(repo: RepoDTO, path: string, branch: string): { ok: t
 function runCodex(prompt: string, cwd: string, sink: (message: string, metadata?: Record<string, unknown>) => void): Promise<number | null> {
   if (process.env.BOARD_DISABLE_CODEX === '1') { sink('Codex disabled by BOARD_DISABLE_CODEX=1', { stream: 'system' }); return Promise.resolve(0); }
   return new Promise((resolveExit) => {
-    const child = spawn('codex', ['exec', '--json', '--full-auto', '--sandbox', 'workspace-write', prompt], { cwd, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn('codex', ['exec', '--json', '--full-auto', '--sandbox', 'workspace-write', '-c', 'model_reasoning_effort="high"', prompt], { cwd, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.on('data', (chunk: Buffer) => sink(String(chunk), { stream: 'stdout' }));
     child.stderr.on('data', (chunk: Buffer) => sink(String(chunk), { stream: 'stderr' }));
     child.on('exit', (code) => resolveExit(code));
@@ -217,6 +217,47 @@ export async function cleanupMergedCard(store: SqliteStore, cardId: string): Pro
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+export async function discardCard(store: SqliteStore, cardId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const card = store.findCard(cardId);
+  if (!card) return { ok: false, error: 'card not found' };
+  const repo = store.findRepo(card.repoId);
+  if (!repo) return { ok: false, error: 'discard_blocked: repo missing' };
+  if (!card.branch || !card.worktreePath) return { ok: false, error: 'discard_blocked: branch/worktree missing' };
+  const branch = card.branch;
+  const worktreePath = card.worktreePath;
+  const pr = store.read().pullRequests.find((candidate) => candidate.cardId === cardId);
+  if (pr?.state === 'MERGED') return { ok: false, error: 'discard_blocked: PR is already merged; use merged cleanup' };
+
+  const result = await gitQueue.run(repo.id, async () => {
+    let prState = pr?.state;
+    const commandCwd = existsSync(worktreePath) ? worktreePath : repo.path;
+    if (pr && prState !== 'CLOSED' && process.env.BOARD_SKIP_GH_PR_CLOSE !== '1') {
+      const view = spawnSync('gh', ['pr', 'view', String(pr.number), '--json', 'state,mergedAt'], { cwd: commandCwd, encoding: 'utf8' });
+      if (view.status !== 0) return view.stderr || view.stdout || 'gh pr view failed';
+      const parsed = JSON.parse(view.stdout) as { state?: string; mergedAt?: string | null };
+      if (parsed.mergedAt || parsed.state === 'MERGED') return 'discard_blocked: PR is already merged; use merged cleanup';
+      prState = parsed.state ?? prState;
+    }
+    if (pr && prState !== 'CLOSED' && process.env.BOARD_SKIP_GH_PR_CLOSE !== '1') {
+      const close = spawnSync('gh', ['pr', 'close', String(pr.number), '--delete-branch'], { cwd: commandCwd, encoding: 'utf8' });
+      if (close.status !== 0) return close.stderr || close.stdout || 'gh pr close failed';
+    }
+    if (existsSync(worktreePath)) {
+      const remove = spawnSync('git', ['worktree', 'remove', '--force', worktreePath], { cwd: repo.path, encoding: 'utf8' });
+      if (remove.status !== 0) return remove.stderr || remove.stdout || 'git worktree remove failed';
+    }
+    const branchExists = spawnSync('git', ['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], { cwd: repo.path });
+    if (branchExists.status === 0) {
+      const deleteBranch = spawnSync('git', ['branch', '-D', branch], { cwd: repo.path, encoding: 'utf8' });
+      if (deleteBranch.status !== 0) return deleteBranch.stderr || deleteBranch.stdout || 'git branch delete failed';
+    }
+    return undefined;
+  });
+  if (result) return { ok: false, error: result };
+  store.deleteCard(cardId);
+  return { ok: true };
 }
 
 export function resumeCard(store: SqliteStore, cardId: string, note: string): { ok: true; card: CardDTO } | { ok: false; error: string } {

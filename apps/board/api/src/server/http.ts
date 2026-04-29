@@ -5,7 +5,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SqliteStore } from '../db/sqliteStore.js';
 import { rejectUnsafeOrigin, resolveHost } from './security.js';
-import { autoMergeCard, cleanupMergedCard, createCard, drainQueuedCards, manualMoveCard, pollPrState, resumeCard } from '../orchestrator/cardLifecycle.js';
+import { autoMergeCard, cleanupMergedCard, createCard, discardCard, drainQueuedCards, manualMoveCard, pollPrState, resumeCard } from '../orchestrator/cardLifecycle.js';
 import { reconcileStartup } from '../orchestrator/reconcile.js';
 import type { CardDTO, RepoDTO } from '@prime-board/shared';
 
@@ -71,7 +71,7 @@ export function makeBoardServer(store = new SqliteStore(process.env.BOARD_DB_PAT
       store.deleteCard(cardMatch[1]);
       return send(res, 200, { ok: true });
     }
-    const actionMatch = url.pathname.match(/^\/api\/cards\/([^/]+)\/(resume|move|poll|automerge|cleanup)$/);
+    const actionMatch = url.pathname.match(/^\/api\/cards\/([^/]+)\/(resume|move|poll|automerge|cleanup|discard)$/);
     if (req.method === 'POST' && actionMatch) {
       const [, cardId, action] = actionMatch;
       const body = await readJson<{ note?: string; status?: CardDTO['status'] }>(req);
@@ -79,6 +79,7 @@ export function makeBoardServer(store = new SqliteStore(process.env.BOARD_DB_PAT
         : action === 'move' ? manualMoveCard(store, cardId, body.status ?? 'Blocked')
         : action === 'poll' ? pollPrState(store, cardId)
         : action === 'automerge' ? await autoMergeCard(store, cardId)
+        : action === 'discard' ? await discardCard(store, cardId)
         : await cleanupMergedCard(store, cardId);
       return send(res, result.ok ? 200 : 409, result);
     }

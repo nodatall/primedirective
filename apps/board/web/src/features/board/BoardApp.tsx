@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import IconButton from '@mui/material/IconButton';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { type SelectChangeEvent } from '@mui/material/Select';
+import TextField from '@mui/material/TextField';
 import type { CardDTO, CardStatus, RepoDTO, RunEventDTO } from '../../contracts';
 import { CardComposer, type DraftCard } from '../cards/CardComposer';
 import { CardDetail } from '../card-detail/CardDetail';
@@ -24,8 +32,8 @@ export function BoardApp() {
   const [repoDraft, setRepoDraft] = useState({ name: '', path: '' });
   const [repoError, setRepoError] = useState('');
   const [repoModalOpen, setRepoModalOpen] = useState(false);
+  const [repoSwitcherOpen, setRepoSwitcherOpen] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
-  const [apiState, setApiState] = useState<'connecting' | 'live' | 'offline'>('connecting');
 
   useEffect(() => {
     let alive = true;
@@ -42,10 +50,8 @@ export function BoardApp() {
         setRepos(nextRepos);
         setSelectedRepoId((current) => nextRepos.some((repo) => repo.id === current) ? current : nextRepos[0]?.id ?? 'primedirective');
         setSelected((current) => current ? nextCards.find((card) => card.id === current.id) ?? current : current);
-        setApiState('live');
       } catch {
         if (!alive) return;
-        setApiState('offline');
       }
     }
     void loadSnapshot();
@@ -75,10 +81,8 @@ export function BoardApp() {
       if (!response.ok) throw new Error('card create failed');
       const payload = await response.json() as { card: CardDTO };
       setCards((current) => current.map((card) => card.id === optimistic.id ? payload.card : card));
-      setApiState('live');
     } catch {
       setCards((current) => current.map((card) => card.id === optimistic.id ? { ...card, status: 'Blocked', blockerReason: 'runner_failed', blockerSummary: 'API unavailable; card is local only.' } : card));
-      setApiState('offline');
     }
   }
 
@@ -142,59 +146,69 @@ export function BoardApp() {
   return (
     <main className="shell">
       <section className="topbar">
-        <label className="repo-picker">
-          <span>Repo</span>
-          <select value={selectedRepoId} onChange={(event) => { setSelectedRepoId(event.target.value); setRepoError(''); }}>
-            {repoOptions.map((repo) => <option value={repo.id} key={repo.id}>{repo.name}</option>)}
-          </select>
-        </label>
-        <div className="repo-actions">
-          <button className="icon-action" type="button" aria-label="Add repo" title="Add repo" onClick={() => { setRepoModalOpen(true); setRepoError(''); }}>
-            <PlaylistAddIcon fontSize="small" />
-          </button>
-          <button className="icon-action" type="button" aria-label="Remove repo" title="Remove repo" onClick={removeSelectedRepo}>
-            <DeleteIcon fontSize="small" />
-          </button>
-          <button className="icon-action icon-action--primary" type="button" aria-label="New agent card" title="New agent card" onClick={() => setComposerOpen(true)}>
-            <AddCircleIcon fontSize="small" />
-          </button>
-        </div>
-        {selectedRepo ? <span className="repo-path">{selectedRepo.path}</span> : null}
-        <span className="api-state">{apiState === 'live' ? 'API live' : apiState}</span>
+        <Button className="repo-name-trigger" type="button" onClick={() => { setRepoSwitcherOpen(true); setRepoError(''); }}>{selectedRepo?.name ?? selectedRepoId}</Button>
         {repoError ? <p className="repo-error">{repoError}</p> : null}
       </section>
-      <section className="workspace">
-        <div className="board" aria-label="Agent Kanban board">
-          {columns.map((column) => (
-            <section className="column" key={column.title}>
-              <header><span>{column.title}</span><b>{visibleCards.filter((card) => column.statuses.includes(card.status)).length}</b></header>
-              {visibleCards.filter((card) => column.statuses.includes(card.status)).map((card) => <BoardCard card={card} onOpen={setSelected} key={card.id} />)}
-            </section>
-          ))}
+      <div className="board" aria-label="Agent Kanban board">
+        {columns.map((column) => (
+          <section className="column" key={column.title}>
+            <header>
+              <span>{column.title}</span>
+              {column.title === 'Inbox' ? (
+                <IconButton className="icon-action icon-action--primary column-new-card-action" type="button" aria-label="New agent card" title="New agent card" onClick={() => setComposerOpen(true)}>
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              ) : null}
+            </header>
+            {visibleCards.filter((card) => column.statuses.includes(card.status)).map((card) => <BoardCard card={card} onOpen={setSelected} key={card.id} />)}
+          </section>
+        ))}
+      </div>
+      <Dialog open={composerOpen} onClose={() => setComposerOpen(false)} aria-label="New agent card" slotProps={{ paper: { className: 'dialog-paper' } }}>
+        <CardComposer repoId={selectedRepoId} onCreate={createDraft} onCancel={() => setComposerOpen(false)} />
+      </Dialog>
+      <Dialog open={repoSwitcherOpen} onClose={() => setRepoSwitcherOpen(false)} aria-label="Repo controls" slotProps={{ paper: { className: 'dialog-paper' } }}>
+        <div className="repo-switcher-modal">
+          <IconButton className="detail__close" type="button" aria-label="Close repo controls" onClick={() => setRepoSwitcherOpen(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+          <div className="repo-cluster">
+            <label className="repo-picker">
+              <Select className="repo-select" value={selectedRepoId} onChange={(event: SelectChangeEvent) => { setSelectedRepoId(event.target.value); setRepoError(''); }} displayEmpty MenuProps={{ PaperProps: { className: 'repo-menu' } }}>
+                {repoOptions.map((repo) => <MenuItem value={repo.id} key={repo.id}>{repo.name}</MenuItem>)}
+              </Select>
+            </label>
+            <div className="repo-actions">
+              <IconButton className="icon-action" type="button" aria-label="Add repo" title="Add repo" onClick={() => { setRepoSwitcherOpen(false); setRepoModalOpen(true); setRepoError(''); }}>
+                <PlaylistAddIcon fontSize="small" />
+              </IconButton>
+              <IconButton className="icon-action" type="button" aria-label="Remove repo" title="Remove repo" onClick={removeSelectedRepo}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </div>
+          </div>
+          {repoError ? <p className="repo-error repo-error--modal">{repoError}</p> : null}
         </div>
-      </section>
-      {composerOpen ? (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="New agent card">
-          <CardComposer repoId={selectedRepoId} onCreate={createDraft} onCancel={() => setComposerOpen(false)} />
-        </div>
-      ) : null}
-      {repoModalOpen ? (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Add repo">
-          <form className="repo-modal" onSubmit={(event) => { event.preventDefault(); addRepo(); }}>
+      </Dialog>
+      <Dialog open={repoModalOpen} onClose={() => setRepoModalOpen(false)} aria-label="Add repo" slotProps={{ paper: { className: 'dialog-paper' } }}>
+          <Box component="form" className="repo-modal" onSubmit={(event) => { event.preventDefault(); addRepo(); }}>
             <div className="composer__header">
               <span>Add repo</span>
-              <button className="detail__close" type="button" onClick={() => setRepoModalOpen(false)}>Close</button>
+              <IconButton className="detail__close" type="button" aria-label="Close add repo" onClick={() => setRepoModalOpen(false)}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
             </div>
-            <input aria-label="Name" placeholder="Name, e.g. sortinghat" value={repoDraft.name} onChange={(event) => setRepoDraft({ ...repoDraft, name: event.target.value })} />
-            <input aria-label="Local path" placeholder="/Volumes/Code/sortinghat" value={repoDraft.path} onChange={(event) => setRepoDraft({ ...repoDraft, path: event.target.value })} />
-            <button className="primary" type="submit">Add repo</button>
-          </form>
-        </div>
-      ) : null}
+            <TextField className="board-field" aria-label="Name" placeholder="Name, e.g. sortinghat" value={repoDraft.name} onChange={(event) => setRepoDraft({ ...repoDraft, name: event.target.value })} />
+            <TextField className="board-field" aria-label="Local path" placeholder="/Volumes/Code/sortinghat" value={repoDraft.path} onChange={(event) => setRepoDraft({ ...repoDraft, path: event.target.value })} />
+            <Button className="primary" variant="contained" type="submit">Add repo</Button>
+          </Box>
+      </Dialog>
       <CardDetail card={selected} events={selectedEvents} onClose={() => setSelected(undefined)} onResume={async (card, note) => {
         await fetch(`/api/cards/${card.id}/resume`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ note }) });
       }} onDelete={async (card) => {
-        await fetch(`/api/cards/${card.id}`, { method: 'DELETE' });
+        if (!window.confirm('Close the PR, delete the branch, delete the workspace, and remove this card?')) return;
+        const response = await fetch(`/api/cards/${card.id}/discard`, { method: 'POST' });
+        if (!response.ok) return;
         setCards((current) => current.filter((item) => item.id !== card.id));
         setSelected(undefined);
       }} />

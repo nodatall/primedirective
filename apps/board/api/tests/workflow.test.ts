@@ -5,7 +5,7 @@ import { planQuickFinalization } from '../src/quick-track/finalize.js';
 import { Scheduler } from '../src/orchestrator/scheduler.js';
 import { findExistingPrForBranch, canAutoMerge } from '../src/github/gh.js';
 import { reconcileActiveRunner } from '../src/orchestrator/reconcile.js';
-import { resumeCard } from '../src/orchestrator/cardLifecycle.js';
+import { discardCard, resumeCard } from '../src/orchestrator/cardLifecycle.js';
 import { captureVisualEvidence, requiresVisualEvidence } from '../src/visual/evidence.js';
 
 it('creates deterministic collision-safe worktree names', () => {
@@ -163,6 +163,64 @@ it('produces fake visual artifacts for frontend changes in test mode', () => {
     if (previousArtifactRoot === undefined) delete process.env.BOARD_VISUAL_EVIDENCE_ARTIFACT_ROOT;
     else process.env.BOARD_VISUAL_EVIDENCE_ARTIFACT_ROOT = previousArtifactRoot;
   }
+});
+
+it('discards a card by removing its worktree, local branch, and board records', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'board-discard-'));
+  const repo = join(root, 'repo');
+  const worktreePath = join(root, 'repo-card');
+  const branch = 'agent-board/repo/card';
+  mkdirSync(repo);
+  git(['init', '-b', 'main'], repo);
+  git(['config', 'user.email', 'board@example.test'], repo);
+  git(['config', 'user.name', 'Board Test'], repo);
+  writeFileSync(join(repo, 'README.md'), '# fixture\n');
+  git(['add', 'README.md'], repo);
+  git(['commit', '-m', 'initial'], repo);
+  git(['worktree', 'add', '-b', branch, worktreePath], repo);
+
+  const previousSkipGh = process.env.BOARD_SKIP_GH_PR_CLOSE;
+  process.env.BOARD_SKIP_GH_PR_CLOSE = '1';
+  try {
+    const store = new SqliteStore(join(root, 'board.sqlite'));
+    store.upsertRepo({ id: 'repo', name: 'Repo', path: repo, defaultBranch: 'main' });
+    store.upsertCard({ id: 'card', repoId: 'repo', title: 'Discard', instructions: 'Discard it', taskType: 'Quick', autoMerge: false, status: 'PR Ready', branch, worktreePath, updatedAt: new Date().toISOString() });
+    store.upsertWorktree({ id: 'wt-card', cardId: 'card', repoId: 'repo', path: worktreePath, branch, status: 'active' });
+    store.upsertPullRequest({ id: 'pr-card', cardId: 'card', repoId: 'repo', number: 12, url: 'https://example.test/pr/12', state: 'OPEN' });
+
+    await expect(discardCard(store, 'card')).resolves.toEqual({ ok: true });
+    expect(store.findCard('card')).toBeUndefined();
+    expect(spawnSync('test', ['-d', worktreePath]).status).not.toBe(0);
+    expect(spawnSync('git', ['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], { cwd: repo }).status).not.toBe(0);
+  } finally {
+    if (previousSkipGh === undefined) delete process.env.BOARD_SKIP_GH_PR_CLOSE;
+    else process.env.BOARD_SKIP_GH_PR_CLOSE = previousSkipGh;
+  }
+});
+
+it('finishes stale discard when the PR is already closed and local cleanup already happened', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'board-stale-discard-'));
+  const repo = join(root, 'repo');
+  const worktreePath = join(root, 'repo-card');
+  const branch = 'agent-board/repo/card';
+  mkdirSync(repo);
+  git(['init', '-b', 'main'], repo);
+  git(['config', 'user.email', 'board@example.test'], repo);
+  git(['config', 'user.name', 'Board Test'], repo);
+  writeFileSync(join(repo, 'README.md'), '# fixture\n');
+  git(['add', 'README.md'], repo);
+  git(['commit', '-m', 'initial'], repo);
+
+  const store = new SqliteStore(join(root, 'board.sqlite'));
+  store.upsertRepo({ id: 'repo', name: 'Repo', path: repo, defaultBranch: 'main' });
+  store.upsertCard({ id: 'card', repoId: 'repo', title: 'Stale discard', instructions: 'Discard it', taskType: 'Quick', autoMerge: false, status: 'PR Ready', branch, worktreePath, updatedAt: new Date().toISOString() });
+  store.upsertWorktree({ id: 'wt-card', cardId: 'card', repoId: 'repo', path: worktreePath, branch, status: 'active' });
+  store.upsertPullRequest({ id: 'pr-card', cardId: 'card', repoId: 'repo', number: 12, url: 'https://example.test/pr/12', state: 'CLOSED' });
+
+  await expect(discardCard(store, 'card')).resolves.toEqual({ ok: true });
+  expect(store.findCard('card')).toBeUndefined();
+  expect(store.read().pullRequests).toHaveLength(0);
+  expect(store.read().worktrees).toHaveLength(0);
 });
 
 function git(args: string[], cwd: string): void {

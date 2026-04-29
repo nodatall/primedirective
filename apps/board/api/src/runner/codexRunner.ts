@@ -8,7 +8,7 @@ export type RunnerSink = (event: RunnerEvent) => void;
 export class CodexRunner {
   run(prompt: string, worktreePath: string, sink: RunnerSink): ChildProcessByStdio<null, Readable, Readable> {
     assertCodexCwd(worktreePath, worktreePath);
-    const child = spawn('codex', ['exec', '--json', '--full-auto', '--sandbox', 'workspace-write', prompt], { cwd: worktreePath, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn('codex', ['exec', '--json', '--full-auto', '--sandbox', 'workspace-write', '-c', 'model_reasoning_effort="high"', prompt], { cwd: worktreePath, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.on('data', (chunk: Buffer) => {
       for (const line of String(chunk).split('\n').filter(Boolean)) {
         try { sink({ type: 'json', payload: JSON.parse(line) }); }
