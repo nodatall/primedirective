@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 260">
+  <defs>
+    <filter id="node" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M42 38 75 19 108 38 108 76 75 95 42 76Z" stroke="#7b858d" stroke-width="1.5" opacity=".42"/>
+    <path d="M108 76 141 57 174 76 174 114 141 133 108 114Z" stroke="#9aa3aa" stroke-width="1.55" opacity=".52"/>
+    <path d="M174 76 207 57 240 76 240 114 207 133 174 114Z" stroke="#737d86" stroke-width="1.35" opacity=".3"/>
+    <path d="M75 133 108 114 141 133 141 171 108 190 75 171Z" stroke="#8d969e" stroke-width="1.45" opacity=".46"/>
+    <path d="M141 171 174 152 207 171 207 209 174 228 141 209Z" stroke="#6f7982" stroke-width="1.25" opacity=".24"/>
+
+    <path d="M262 34 298 14 334 34 334 76 298 96 262 76Z" stroke="#7f8991" stroke-width="1.45" opacity=".36"/>
+    <path d="M298 96 334 76 370 96" stroke="#747e86" stroke-width="1.25" opacity=".22"/>
+
+    <path d="M16 198 50 179 84 198 84 236 50 255 16 236Z" stroke="#717b84" stroke-width="1.28" opacity=".28"/>
+    <path d="M240 184 273 165 306 184 306 222 273 241 240 222Z" stroke="#879099" stroke-width="1.45" opacity=".38"/>
+
+    <path d="M42 76 16 91" stroke="#9aa3aa" stroke-width="1.25" opacity=".3"/>
+    <path d="M240 114 273 133" stroke="#9aa3aa" stroke-width="1.2" opacity=".26"/>
+    <path d="M108 38 141 57" stroke="#a4adb4" stroke-width="1.2" opacity=".32"/>
+    <path d="M207 133 174 152" stroke="#a4adb4" stroke-width="1.2" opacity=".22"/>
+
+    <path d="M250 36 262 34 298 14" stroke="#b3bbc1" stroke-width="1.2" opacity=".32"/>
+    <path d="M306 222 334 238" stroke="#737d86" stroke-width="1.15" opacity=".18"/>
+    <path d="M8 42 42 38" stroke="#737d86" stroke-width="1.15" opacity=".18"/>
+
+    <path d="M72 55 83 49 94 55 94 68 83 74 72 68Z" stroke="#a7b0b7" stroke-width=".9" opacity=".36"/>
+    <path d="M94 68 105 62 116 68 116 81 105 87 94 81" stroke="#8d969e" stroke-width=".85" opacity=".26"/>
+    <path d="M130 93 143 86 156 93 156 108 143 115 130 108Z" stroke="#b0b8be" stroke-width=".9" opacity=".34"/>
+    <path d="M174 94 186 87 198 94 198 108 186 115 174 108Z" stroke="#8d969e" stroke-width=".85" opacity=".24"/>
+    <path d="M102 154 115 147 128 154 128 169 115 176 102 169Z" stroke="#a7b0b7" stroke-width=".9" opacity=".32"/>
+    <path d="M154 185 166 178 178 185 178 199 166 206 154 199Z" stroke="#879099" stroke-width=".85" opacity=".22"/>
+    <path d="M273 56 286 48 299 56 299 71 286 79 273 71Z" stroke="#a7b0b7" stroke-width=".9" opacity=".3"/>
+    <path d="M264 200 276 193 288 200 288 214 276 221 264 214Z" stroke="#a7b0b7" stroke-width=".85" opacity=".28"/>
+
+    <path d="M83 74 83 91" stroke="#a7b0b7" stroke-width=".75" opacity=".24"/>
+    <path d="M143 115 143 133" stroke="#a7b0b7" stroke-width=".75" opacity=".22"/>
+    <path d="M186 115 207 133" stroke="#a7b0b7" stroke-width=".75" opacity=".2"/>
+    <path d="M276 193 273 165" stroke="#a7b0b7" stroke-width=".75" opacity=".2"/>
+  </g>
+
+  <g filter="url(#node)">
+    <circle cx="108" cy="76" r="2.6" fill="#bcc4ca" opacity=".38"/>
+    <circle cx="141" cy="133" r="2.4" fill="#c8cfd4" opacity=".34"/>
+    <circle cx="174" cy="76" r="2.2" fill="#bcc4ca" opacity=".28"/>
+    <circle cx="75" cy="133" r="2.1" fill="#aeb7be" opacity=".22"/>
+    <circle cx="298" cy="96" r="2.2" fill="#bcc4ca" opacity=".3"/>
+    <circle cx="273" cy="165" r="2" fill="#aeb7be" opacity=".22"/>
+  </g>
+</svg>

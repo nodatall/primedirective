@@ -15,11 +15,12 @@ export const BLOCKER_REASONS = [
   'cleanup_blocked',
   'restart_quarantined',
   'origin_rejected',
-  'planned_skill_unavailable'
+  'planned_skill_unavailable',
+  'visual_evidence_missing'
 ] as const;
 export type BlockerReason = (typeof BLOCKER_REASONS)[number];
 
-export const RUN_EVENT_TYPES = ['status_transition', 'log', 'blocker', 'prompt_preview', 'runner_json', 'pr', 'system'] as const;
+export const RUN_EVENT_TYPES = ['status_transition', 'log', 'blocker', 'prompt_preview', 'runner_json', 'visual_artifact', 'pr', 'system'] as const;
 export type RunEventType = (typeof RUN_EVENT_TYPES)[number];
 
 export interface RepoDTO {
@@ -99,6 +100,11 @@ export interface BlockerEvent extends RunEventDTO {
 export interface PromptPreviewEvent extends RunEventDTO {
   type: 'prompt_preview';
   metadata: { promptPreview: string };
+}
+
+export interface VisualArtifactEvent extends RunEventDTO {
+  type: 'visual_artifact';
+  metadata: { kind: 'screenshot' | 'video'; name: string; path: string; viewport?: { width: number; height: number }; url?: string };
 }
 
 export interface StreamCursor {

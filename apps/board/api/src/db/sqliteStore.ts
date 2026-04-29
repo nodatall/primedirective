@@ -50,6 +50,24 @@ export class SqliteStore {
     return row ? rowToCard(row) : undefined;
   }
 
+  countCardsForRepo(repoId: string): number {
+    const row = this.db.prepare('SELECT COUNT(*) AS count FROM card WHERE repo_id = ?').get(repoId) as { count: number };
+    return Number(row.count);
+  }
+
+  deleteRepo(id: string): void {
+    this.db.prepare('DELETE FROM repo WHERE id = ?').run(id);
+  }
+
+  deleteCard(id: string): void {
+    this.db.prepare('DELETE FROM integration_job WHERE card_id = ?').run(id);
+    this.db.prepare('DELETE FROM pull_request WHERE card_id = ?').run(id);
+    this.db.prepare('DELETE FROM worktree WHERE card_id = ?').run(id);
+    this.db.prepare('DELETE FROM run_event WHERE card_id = ?').run(id);
+    this.db.prepare('DELETE FROM run WHERE card_id = ?').run(id);
+    this.db.prepare('DELETE FROM card WHERE id = ?').run(id);
+  }
+
   upsertRepo(repo: RepoDTO): void {
     const now = new Date().toISOString();
     this.db.prepare(`

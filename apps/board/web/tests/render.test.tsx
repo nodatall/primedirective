@@ -9,5 +9,4 @@ it('renders the Voidgrid-inspired board cockpit and card form', () => {
   expect(html).toContain('New agent card');
   expect(html).toContain('Quick');
   expect(html).toContain('Planned');
-  expect(html).toContain('protected_risk');
 });

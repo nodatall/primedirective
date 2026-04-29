@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 300">
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 64 96 42 134 64 134 108 96 130 58 108Z" stroke="#79838b" stroke-width="1.35" opacity=".28"/>
+    <path d="M134 108 172 86 210 108 210 152 172 174 134 152Z" stroke="#9aa3aa" stroke-width="1.5" opacity=".42"/>
+    <path d="M210 152 248 130 286 152 286 196 248 218 210 196Z" stroke="#727c84" stroke-width="1.25" opacity=".22"/>
+    <path d="M286 76 324 54 362 76 362 120 324 142 286 120Z" stroke="#879099" stroke-width="1.35" opacity=".3"/>
+    <path d="M20 202 58 180 96 202 96 246 58 268" stroke="#727c84" stroke-width="1.2" opacity=".2"/>
+    <path d="M96 130 134 152" stroke="#a4adb4" stroke-width="1.05" opacity=".22"/>
+    <path d="M248 130 286 76" stroke="#a4adb4" stroke-width="1.05" opacity=".2"/>
+
+    <path d="M91 83 105 75 119 83 119 99 105 107 91 99Z" stroke="#aeb6bd" stroke-width=".82" opacity=".28"/>
+    <path d="M157 127 171 119 185 127 185 143 171 151 157 143Z" stroke="#c0c7cc" stroke-width=".9" opacity=".32"/>
+    <path d="M238 174 252 166 266 174 266 190 252 198 238 190Z" stroke="#aeb6bd" stroke-width=".82" opacity=".26"/>
+    <path d="M318 96 331 88 344 96 344 111 331 119 318 111Z" stroke="#aeb6bd" stroke-width=".82" opacity=".24"/>
+  </g>
+</svg>

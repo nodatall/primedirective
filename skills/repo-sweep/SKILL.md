@@ -70,8 +70,9 @@ Load these files before running:
    - Secrets and config: scan for committed credentials, hardcoded secrets, unsafe defaults, and insecure fallbacks.
    - Dev or mock behavior: verify debug, bootstrap, seed, admin, bypass, and mock flags default off for a fresh deployment.
    - Env validation: verify required env vars fail closed rather than silently degrading to insecure or mock behavior.
+   - Destructive data paths: search scripts, tests, migrations, seed/reset/bootstrap jobs, and helper CLIs for `DROP`, `TRUNCATE`, broad `DELETE`, `CASCADE`, reset/recreate commands, and production-like connection strings. Verify they prefer isolated test env vars, positively identify disposable targets before mutating data, and refuse to run against production, shared dev, or ambiguous databases unless the user explicitly approved the exact operation.
    - Public admin, debug, or internal endpoints: verify they are absent, disabled, or properly authenticated.
-   - For each check, capture concrete evidence from code, config, logs, command output, or runtime probes. Do not mark a check complete from code reading alone when the behavior can be executed.
+   - For each check, capture concrete evidence from code, config, logs, command output, or runtime probes. Do not mark a check complete from code reading alone when the behavior can be executed safely. Do not execute destructive paths as proof unless the target is disposable and the command scope is explicit.
 5. Run a go-live readiness pass for deployable web/API services.
    - Apply this pass when the repo exposes a production web app, API, worker, upload flow, websocket/realtime feature, background job, database-backed service, or third-party integration. For local-only CLIs, libraries, prototypes, and non-deployable tools, mark the irrelevant items `not applicable` with a short reason.
    - Check load and capacity evidence: load/stress test command, known traffic limit, rate-limit behavior, and the highest-risk bottleneck if no load test exists.
@@ -79,7 +80,7 @@ Load these files before running:
    - Check file uploads and static assets: uploads should not depend on ephemeral app-server disk for durable storage, and large/static assets should have an object-storage/CDN path when traffic volume warrants it.
    - Check background work: email sending, webhooks, image/video processing, AI calls, report generation, and other slow tasks should not block latency-sensitive API routes unless the synchronous behavior is explicitly acceptable.
    - Check queue and worker behavior where background tasks exist: retry policy, dead-letter/failure visibility, idempotency, and whether one slow task can block unrelated work.
-   - Check database production readiness: indexed join/filter columns for hot paths, transactions for multi-step writes, migration race safety, backup existence, and restore-test evidence or a residual-risk note.
+   - Check database production readiness: indexed join/filter columns for hot paths, transactions for multi-step writes, migration race safety, test/seed/reset isolation, backup existence, and restore-test evidence or a residual-risk note.
    - Check HTTP/runtime safety: compression for large responses, health checks, graceful shutdown, bounded request/body sizes where relevant, and no deploy-time behavior that can corrupt shared state.
    - Check outbound dependency resilience: connection timeouts, bounded retries, circuit breakers or load-shedding where relevant, fallback/degradation behavior, and clear failure logging.
    - Check logs and incident readiness: logs should not be local-disk-only for deployable services, errors should be alertable, and common incidents should have a runbook or at least an explicit residual-risk note.
@@ -220,3 +221,4 @@ For backend and API repos, do not mark the sweep successful while any of these r
 - credentialed wildcard CORS is allowed
 - committed secrets or secret fallbacks remain
 - dev or mock behavior is enabled by default
+- unguarded destructive data scripts, tests, migrations, or maintenance commands can target production, shared dev, or ambiguous databases

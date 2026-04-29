@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { CardDTO, RepoDTO, RunEventDTO } from '@prime-board/shared';
@@ -9,6 +9,7 @@ import { canAutoMerge, classifyRemoteBranchLookup, pickOpenPrForBranch } from '.
 import { preflightPlannedSkill } from '../repos/preflight.js';
 import { deterministicWorktree, ensureRuntimeDirs, removeCleanWorktree } from '../worktrees/manager.js';
 import { planQuickFinalization } from '../quick-track/finalize.js';
+import { captureVisualEvidence } from '../visual/evidence.js';
 import { KeyedSerialQueue } from './locks.js';
 import { Scheduler } from './scheduler.js';
 
@@ -57,9 +58,10 @@ export async function runQueuedCard(store: SqliteStore, card: CardDTO): Promise<
   store.upsertRun({ id: runId(card), cardId: card.id, attempt: 1, phase: 'worktree', status: 'running', runnerLease: JSON.stringify({ worktreePath: worktree.path }) });
   append(store, running, 'status_transition', 'Runner started', { from: 'Queued', to: 'Running', branch: worktree.branch, worktreePath: worktree.path });
 
-  const wt = await gitQueue.run(repo.id, async () => createGitWorktree(repo, worktree.path, worktree.branch));
+  const wt = await gitQueue.run(repo.id, async () => prepareGitWorktree(repo, running, worktree.path, worktree.branch));
   if (!wt.ok) return block(store, running, 'collision_detected', wt.error);
   store.upsertWorktree({ id: `wt-${card.id}`, cardId: card.id, repoId: card.repoId, path: worktree.path, branch: worktree.branch, status: 'active' });
+  if (wt.reused) append(store, running, 'system', 'Reusing existing card worktree', { branch: worktree.branch, worktreePath: worktree.path });
 
   const prompt = card.taskType === 'Planned' ? plannedPrompt(card) : quickPrompt(card);
   append(store, running, 'prompt_preview', prompt.slice(0, 1000), { promptPreview: prompt.slice(0, 1000) });
@@ -69,6 +71,36 @@ export async function runQueuedCard(store: SqliteStore, card: CardDTO): Promise<
   store.upsertRun({ id: runId(card), cardId: card.id, attempt: 1, phase: 'post_run_git', status: 'succeeded', exitCode: result });
   if (card.taskType === 'Quick') await finalizeQuick(store, running, repo);
   else await gitQueue.run(repo.id, async () => associatePlannedPrOrBlock(store, running, repo));
+}
+
+function prepareGitWorktree(repo: RepoDTO, card: CardDTO, path: string, branch: string): { ok: true; reused: boolean } | { ok: false; error: string } {
+  const reusable = findReusableWorktree(repo, card, path, branch);
+  if (reusable.ok) return { ok: true, reused: true };
+  if (reusable.error) return { ok: false, error: reusable.error };
+  const created = createGitWorktree(repo, path, branch);
+  return created.ok ? { ok: true, reused: false } : created;
+}
+
+function findReusableWorktree(repo: RepoDTO, card: CardDTO, path: string, branch: string): { ok: true } | { ok: false; error?: string } {
+  if (card.branch !== branch || card.worktreePath !== path) return { ok: false };
+  const listed = spawnSync('git', ['worktree', 'list', '--porcelain'], { cwd: repo.path, encoding: 'utf8' });
+  if (listed.status !== 0) return { ok: false, error: listed.stderr || 'git worktree list failed' };
+  const match = listed.stdout.split('\n\n').find((entry) => {
+    const lines = entry.split('\n');
+    const listedPath = lines.find((line) => line.startsWith('worktree '))?.slice('worktree '.length);
+    const listedBranch = lines.find((line) => line.startsWith('branch '))?.slice('branch '.length);
+    return listedPath && canonicalPath(listedPath) === canonicalPath(path) && listedBranch === `refs/heads/${branch}`;
+  });
+  if (!match) return { ok: false };
+  const status = spawnSync('git', ['status', '--porcelain'], { cwd: path, encoding: 'utf8' });
+  if (status.status !== 0) return { ok: false, error: status.stderr || 'existing worktree status check failed' };
+  if (status.stdout.trim()) return { ok: false, error: 'collision_detected: existing card worktree is dirty' };
+  return { ok: true };
+}
+
+function canonicalPath(path: string): string {
+  try { return realpathSync.native(path); }
+  catch { return resolve(path); }
 }
 
 function createGitWorktree(repo: RepoDTO, path: string, branch: string): { ok: true } | { ok: false; error: string } {
@@ -86,7 +118,7 @@ function createGitWorktree(repo: RepoDTO, path: string, branch: string): { ok: t
 function runCodex(prompt: string, cwd: string, sink: (message: string, metadata?: Record<string, unknown>) => void): Promise<number | null> {
   if (process.env.BOARD_DISABLE_CODEX === '1') { sink('Codex disabled by BOARD_DISABLE_CODEX=1', { stream: 'system' }); return Promise.resolve(0); }
   return new Promise((resolveExit) => {
-    const child = spawn('codex', ['exec', '--json', '--full-auto', '--sandbox', 'workspace-write', prompt], { cwd, shell: false });
+    const child = spawn('codex', ['exec', '--json', '--full-auto', '--sandbox', 'workspace-write', prompt], { cwd, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout.on('data', (chunk: Buffer) => sink(String(chunk), { stream: 'stdout' }));
     child.stderr.on('data', (chunk: Buffer) => sink(String(chunk), { stream: 'stderr' }));
     child.on('exit', (code) => resolveExit(code));
@@ -99,6 +131,11 @@ async function finalizeQuick(store: SqliteStore, card: CardDTO, repo: RepoDTO): 
   const diffText = collectDiffText(card.worktreePath ?? '', statusEntries);
   const finalization = planQuickFinalization({ changedFiles: cleanPaths, diffText, taskText: card.instructions, checksPresent: false });
   if (finalization.status === 'blocked') return block(store, card, finalization.reason, finalization.reason === 'no_changes_detected' ? 'Codex completed but produced no file changes.' : 'Quick Track touched protected-risk areas.');
+  const visualEvidence = captureVisualEvidence(card, cleanPaths);
+  if (visualEvidence.error) return block(store, card, 'visual_evidence_missing', visualEvidence.error);
+  for (const artifact of visualEvidence.artifacts) {
+    append(store, card, 'visual_artifact', `${artifact.kind}: ${artifact.name}`, { ...artifact });
+  }
   const prResult = await gitQueue.run(repo.id, async () => commitPushAndCreatePr(card, repo, cleanPaths));
   if (!prResult.ok) return block(store, card, 'runner_failed', prResult.error);
   const ready: CardDTO = { ...card, status: 'PR Ready', updatedAt: new Date().toISOString() };

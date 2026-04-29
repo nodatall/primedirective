@@ -9,6 +9,8 @@
     "web"
   ],
   "scripts": {
+    "start": "concurrently -n api,web -c green,blue \"npm run dev --workspace @prime-board/api\" \"npm run dev --workspace @prime-board/web\"",
+    "check:web": "npm run build --workspace @prime-board/web",
     "test": "vitest run",
     "build": "npm run build --workspace @prime-board/shared && npm run build --workspace @prime-board/api && npm run build --workspace @prime-board/web",
     "test:e2e": "playwright test",
@@ -22,6 +24,8 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "concurrently": "^9.2.1",
+    "tsx": "^4.21.0",
     "typescript": "latest",
     "vite": "latest",
     "vitest": "latest"
