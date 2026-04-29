@@ -243,6 +243,7 @@ Check:
 Error handling and logging for realistic failure modes.
 Configuration externalization and absence of hardcoded secrets.
 Rollback, migration, or backfill safety where relevant.
+Destructive database or data operations in tests, migrations, seeds, resets, backfills, and maintenance CLIs: they must be environment-scoped, prefer test-only connection strings where applicable, positively verify target database names or hosts before mutating data, and fail closed outside approved disposable targets.
 Performance under expected usage where relevant.
 Dependency and security hygiene.
 Monitoring and alerting visibility where relevant.
@@ -264,6 +265,7 @@ Does it solve the original problem end-to-end or only part of it?
 Are the core interactions and state transitions real, or is anything display-only, stubbed, mocked away, or disconnected from persistence/API/runtime behavior?
 Can a realistic user complete the primary workflow without hidden setup knowledge?
 Do UI, API, database, CLI, logs, or other relevant system states agree after the interaction?
+Could any test, seed, reset, migration, bootstrap, or maintenance path mutate shared dev or production data by env/config accident?
 Was anything skipped, deferred, or left implicit?
 What assumptions remain and should be documented?
 What is most likely to break in production?

@@ -60,6 +60,7 @@ MIRROR_CHECKS = [
         "allowed": {
             "skills/shared/references/analysis/pro-oracle-escalation.md",
             "skills/shared/references/contract-ownership.md",
+            "skills/first-principles-mode/SKILL.md",
             "skills/plan-and-execute/SKILL.md",
             "skills/shared/references/planning/generate-tasks.md",
             "skills/shared/references/planning/improve-plan.md",
@@ -368,6 +369,24 @@ def validate_plan_refine_completion_gate(errors: list[str]) -> None:
             fail(errors, "PD-TASK-FILE-REFINE-GATE", f"skills/shared/references/execution/task-file-contract.md missing refine gate token: {token}")
 
 
+def validate_deep_research_completion_stamp(errors: list[str]) -> None:
+    deep_research = (ROOT / "skills/shared/references/planning/deep-research.md").read_text()
+
+    owner_tokens = [
+        "## Deep Research Completion Stamp",
+        "research_started_at",
+        "research_completed_at",
+        "elapsed_minutes",
+        "duration_expectation_met",
+        "under_20_minutes_explanation",
+        "duration_expectation_met: yes",
+        "evidence_bar_met: yes",
+    ]
+    for token in owner_tokens:
+        if token not in deep_research:
+            fail(errors, "PD-DEEP-RESEARCH-STAMP-OWNER", f"skills/shared/references/planning/deep-research.md missing completion-stamp token: {token}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory-only", action="store_true", help="print stale-mirror inventory and exit")
@@ -381,6 +400,7 @@ def main() -> int:
     validate_skill_metadata(errors)
     validate_owner_paths(errors)
     validate_plan_refine_completion_gate(errors)
+    validate_deep_research_completion_stamp(errors)
     validate_mirrors(errors)
 
     if errors:

@@ -61,3 +61,13 @@ Bad approval:
 Correct finding:
 
 - Manual QA should exercise the acceptance checks, one relevant failure path or edge case, and the observable state after the interaction. If deeper coverage is not practical, review must record what remains unverified instead of treating the slice as fully proven.
+
+## Destructive test uses the wrong database
+
+Bad approval:
+
+- "The service tests pass and the local app still starts."
+
+Correct finding:
+
+- Tests, seed scripts, reset scripts, migrations, and maintenance commands that run `DROP`, `TRUNCATE`, broad `DELETE`, or equivalent destructive operations must prove they cannot target production or shared development data by environment accident. Review should inspect connection-string precedence, env loading, database-name guards, and package scripts. A passing test is a blocker if it can wipe real data on the wrong `DATABASE_URL`.

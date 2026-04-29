@@ -1,0 +1,37 @@
+{
+  "name": "prime-directive-board",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "start": "concurrently -n api,web -c green,blue \"npm run dev --workspace @prime-board/api\" \"npm run dev --workspace @prime-board/web\"",
+    "check:web": "npm run build --workspace @prime-board/web",
+    "test": "vitest run",
+    "build": "npm run build --workspace @prime-board/shared && npm run build --workspace @prime-board/api && npm run build --workspace @prime-board/web",
+    "test:e2e": "playwright test",
+    "live:smoke": "node scripts/live-runner-smoke.mjs",
+    "planned:smoke": "npm run build --workspace @prime-board/api && node scripts/planned-preflight-smoke.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/vite": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "concurrently": "^9.2.1",
+    "tsx": "^4.21.0",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  },
+  "dependencies": {
+    "react": "latest",
+    "react-dom": "latest"
+  }
+}

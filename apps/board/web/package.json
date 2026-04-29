@@ -1,0 +1,27 @@
+{
+  "name": "@prime-board/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "check": "vite build",
+    "dev": "vite --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.0.0",
+    "@mui/material": "^9.0.0",
+    "@prime-board/shared": "0.1.0",
+    "@tailwindcss/vite": "latest",
+    "@vitejs/plugin-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "agentation": "^3.0.2"
+  }
+}

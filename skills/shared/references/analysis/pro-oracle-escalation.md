@@ -25,7 +25,15 @@ First-time setup is:
 
 This opens or reuses the persistent Oracle browser profile. The user may need to sign in to ChatGPT in that browser once. After setup, normal Pro runs should reuse the same profile.
 
-Setup intentionally skips thinking-time UI selection because it is only a login/profile check. Normal dry-run, run, and render actions use extended thinking by default because the ChatGPT Pro picker may expose only Standard and Extended. Use `ORACLE_PRO_THINKING=heavy` only when that option exists, or rerun with `ORACLE_PRO_THINKING=off` if the thinking-time control is unavailable.
+Setup intentionally skips thinking-time UI selection and model-picker selection because it is only a login/profile check. Normal dry-run, run, and render actions use extended thinking by default because the ChatGPT Pro picker may expose only Standard and Extended. Use `ORACLE_PRO_THINKING=heavy` only when that option exists, or rerun with `ORACLE_PRO_THINKING=off` if the thinking-time control is unavailable.
+
+If ChatGPT is logged in but Oracle reports that it cannot locate the model selector, this is usually ChatGPT UI drift or a hidden picker, not proof that the profile is signed out. For a real run where the prompt box is visible but the picker is hidden, use:
+
+```bash
+ORACLE_PRO_MODEL_STRATEGY=ignore ORACLE_PRO_THINKING=off ./scripts/oracle-pro.sh run -p "<prompt>" --file .
+```
+
+This skips forced model and thinking-time selection. Record the result as using the current ChatGPT browser mode rather than a verified model-picker selection.
 
 For setup, dry-run, run, and render actions, the wrapper gives Oracle a private `TMPDIR` and deletes it after Oracle exits. This removes local `attachments-bundle.txt` files created for browser uploads. Set `ORACLE_PRO_KEEP_TMP=1` only when debugging the generated bundle locally.
 

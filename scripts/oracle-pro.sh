@@ -19,6 +19,7 @@ Prime Directive wrapper for ChatGPT Pro browser escalation via Oracle.
 
 Defaults can be overridden with:
   ORACLE_PRO_MODEL                 default: gpt-5.4-pro
+  ORACLE_PRO_MODEL_STRATEGY        optional: select/current/ignore; use ignore when ChatGPT hides the model picker
   ORACLE_PRO_THINKING              default: extended; set off/none/0 to skip UI selection
   ORACLE_PRO_BROWSER_TIMEOUT        default: 3600s
   ORACLE_PRO_PROFILE_DIR            default: ~/.oracle/browser-profile
@@ -69,11 +70,14 @@ if [[ "${ORACLE_PRO_BUNDLE_FILES:-1}" != "0" ]]; then
 fi
 
 has_file_input=0
+has_model_strategy_input=0
 for arg in "$@"; do
   case "$arg" in
     -f|--file|--files|--include|--path|--paths|--file=*|--files=*|--include=*|--path=*|--paths=*)
       has_file_input=1
-      break
+      ;;
+    --browser-model-strategy|--browser-model-strategy=*)
+      has_model_strategy_input=1
       ;;
   esac
 done
@@ -92,6 +96,27 @@ append_thinking_if_enabled() {
       ;;
     *)
       CMD+=(--browser-thinking-time "$thinking")
+      ;;
+  esac
+}
+
+append_model_strategy_if_configured() {
+  if [[ "$has_model_strategy_input" -eq 1 ]]; then
+    return
+  fi
+
+  local strategy="${ORACLE_PRO_MODEL_STRATEGY:-}"
+  if [[ -z "$strategy" ]]; then
+    return
+  fi
+
+  case "$strategy" in
+    select|current|ignore)
+      CMD+=(--browser-model-strategy "$strategy")
+      ;;
+    *)
+      echo "Invalid ORACLE_PRO_MODEL_STRATEGY: $strategy (expected select, current, or ignore)" >&2
+      exit 2
       ;;
   esac
 }
@@ -176,6 +201,24 @@ The wrapper already reset Chrome's crashed-session marker in:
 Set ORACLE_PRO_REPAIR_PROFILE=0 to disable that repair step.
 EOF
   fi
+
+  if [[ "$output" == *"Unable to locate the ChatGPT model selector button"* ]]; then
+    cat >&2 <<EOF
+
+Oracle could not find ChatGPT's model picker in the logged-in browser.
+This can happen when ChatGPT changes or hides the model selector. It does not
+by itself mean the browser is signed out.
+
+Recovery for setup checks:
+  ./scripts/oracle-pro.sh setup --force
+
+Recovery for a run when the prompt box is visible but the picker is hidden:
+  ORACLE_PRO_MODEL_STRATEGY=ignore ORACLE_PRO_THINKING=off ./scripts/oracle-pro.sh run -p "<prompt>" --file .
+
+This skips forced model and thinking-time selection, so record the run as using
+the current ChatGPT browser mode rather than a verified model-picker selection.
+EOF
+  fi
 }
 
 run_with_private_tmpdir() {
@@ -204,7 +247,13 @@ run_with_private_tmpdir() {
 
 case "$action" in
   setup)
-    CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --browser-keep-browser --browser-model-strategy current --slug "${SETUP_SESSION_ID}" -p "Prime Directive Oracle Pro setup check. Reply with OK when this message is received.")
+    CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --browser-keep-browser)
+    if [[ "$has_model_strategy_input" -eq 0 && -z "${ORACLE_PRO_MODEL_STRATEGY:-}" ]]; then
+      CMD+=(--browser-model-strategy ignore)
+    else
+      append_model_strategy_if_configured
+    fi
+    CMD+=(--slug "${SETUP_SESSION_ID}" -p "Prime Directive Oracle Pro setup check. Reply with OK when this message is received.")
     CMD+=("$@")
     run_with_private_tmpdir
     ;;
@@ -220,6 +269,7 @@ case "$action" in
     ;;
   dry-run)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --dry-run summary --files-report)
+    append_model_strategy_if_configured
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
@@ -227,6 +277,7 @@ case "$action" in
     ;;
   dry-run-json)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --dry-run json --files-report)
+    append_model_strategy_if_configured
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
@@ -234,6 +285,7 @@ case "$action" in
     ;;
   run)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}")
+    append_model_strategy_if_configured
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
@@ -241,6 +293,7 @@ case "$action" in
     ;;
   render)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --render --copy-markdown)
+    append_model_strategy_if_configured
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")

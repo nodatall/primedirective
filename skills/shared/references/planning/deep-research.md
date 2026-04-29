@@ -245,6 +245,11 @@ Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding
 
 The working memo must end with a Deep Research Completion Stamp containing:
 
+- `research_started_at`
+- `research_completed_at`
+- `elapsed_minutes`
+- `duration_expectation_met`
+- `under_20_minutes_explanation`
 - `external_primary_sources_count`
 - `operator_practice_sources_count`
 - `source_family_count`
@@ -257,7 +262,9 @@ The working memo must end with a Deep Research Completion Stamp containing:
 - `task_plan_inputs_created`
 - `evidence_bar_met`
 
-Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, and PRD/TDD revisions are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
+Record `research_started_at` and `research_completed_at` as ISO-like timestamps with timezone when known. Record `elapsed_minutes` as a numeric wall-clock duration from the start of the web-backed research pass through completion-stamp triage. Set `duration_expectation_met: yes` only when a non-trivial plan received the real deep pass required above, typically at least 20 minutes. If `elapsed_minutes` is below 20, `under_20_minutes_explanation` is required and must state why the pass is incomplete or why the user should rerun normal planning instead of claiming completed deep research.
+
+Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, PRD/TDD revisions, and duration expectation are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
 
 Before setting `evidence_bar_met: yes`, print a short `Deep Research Summary` in the visible thread/log: adopted findings, rejected/deferred ideas, blockers, and artifact changes.
 
@@ -273,7 +280,7 @@ The temporary research memo must contain:
 - Evidence Ledger with the required source fields and count eligibility
 - Draft-Linked Research Agenda with plan-changing draft links for each question
 - Finding-to-Artifact Delta with the required finding, disposition, support, source, artifact-change, and task-input fields
-- Deep Research Completion Stamp with counts and `evidence_bar_met`
+- Deep Research Completion Stamp with timestamps, elapsed duration, counts, duration expectation status, under-20-minute explanation when applicable, and `evidence_bar_met`
 - external primary sources reviewed, with direct links and one-line notes on what each source answered
 - source freshness notes for each substantive external source
 - source-family count and source authority notes
@@ -334,5 +341,6 @@ Before continuing to tasks-plan generation:
 3. Any new risks or sequencing requirements are reflected in revised PRD/TDD where appropriate and are ready to be carried into tasks-plan.
 4. The research did not silently widen scope into broad product discovery.
 5. The working memo meets the minimum evidence bar, including the external-source minimum and required web-status sections.
-6. The Deep Research Completion Stamp says `evidence_bar_met: yes`.
-7. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.
+6. The Deep Research Completion Stamp records `research_started_at`, `research_completed_at`, `elapsed_minutes`, and `duration_expectation_met: yes`.
+7. The Deep Research Completion Stamp says `evidence_bar_met: yes`.
+8. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.

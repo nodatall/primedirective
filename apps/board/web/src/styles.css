@@ -1,0 +1,828 @@
+@import "tailwindcss";
+
+@font-face { font-family: 'Space Grotesk Board'; src: local('Space Grotesk'); font-display: swap; }
+
+:root {
+  --canvas: #0a0f12;
+  --canvas-deep: #070b0d;
+  --surface: #11181d;
+  --surface-raised: #182229;
+  --card: #0b1013;
+  --card-done: #1c2226;
+  --frame: #22313c;
+  --frame-soft: rgba(34, 49, 60, .72);
+  --ink: #e6edf3;
+  --muted: #8f9faa;
+  --lime: #8fe388;
+  --cyan: #7bd5e5;
+  --violet: #aa94e8;
+  --amber: #f0b85b;
+  --danger: #ff776d;
+  --action: #7bd5e5;
+  --action-hover: #9be6f0;
+  --action-ink: #061014;
+  --shadow-panel: 0 12px 28px rgba(0, 0, 0, .18);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: 'Space Grotesk Board', Inter, ui-sans-serif, system-ui, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(143, 227, 136, .08), transparent 25%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, .08), transparent 24%),
+    linear-gradient(180deg, var(--canvas) 0%, var(--canvas-deep) 100%);
+  background-size: auto, auto, auto;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .58;
+  background:
+    url("./assets/hex-pattern.svg") 0 0 / 280px 202px repeat,
+    url("./assets/hex-pattern-alt.svg") 152px 88px / 520px 371px repeat;
+  background-blend-mode: normal, soft-light;
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, .65), black 18%, black 82%, rgba(0, 0, 0, .7));
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(143, 227, 136, .08), transparent 140px),
+    radial-gradient(circle at 78% 20%, rgba(34, 211, 238, .06), transparent 180px);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.shell {
+  position: relative;
+  min-height: 100vh;
+  padding: 40px 24px;
+}
+
+.topbar,
+.board {
+  width: min(1480px, calc(100vw - 48px));
+  margin: 0 auto;
+}
+
+.topbar {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 4;
+  display: block;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.repo-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.repo-name-trigger.MuiButton-root {
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 0;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.repo-name-trigger.MuiButton-root:hover {
+  background: transparent;
+  color: var(--action);
+  text-decoration: none;
+}
+
+.repo-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.repo-picker {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.repo-select.MuiInputBase-root {
+  min-width: 260px;
+  border: 1px solid var(--frame);
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .78);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.repo-select .MuiSelect-select {
+  padding: 11px 42px 11px 14px;
+}
+
+.repo-select .MuiOutlinedInput-notchedOutline {
+  border: 0;
+}
+
+.repo-select .MuiSelect-icon {
+  color: var(--muted);
+}
+
+.repo-menu.MuiPaper-root {
+  border: 1px solid var(--frame-soft);
+  border-radius: 7px;
+  background: rgba(17, 24, 29, .98);
+  color: var(--ink);
+}
+
+.icon-action.MuiIconButton-root {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--frame);
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .76);
+  color: var(--muted);
+}
+
+.icon-action.MuiIconButton-root:hover {
+  border-color: rgba(255, 255, 255, .16);
+  color: var(--ink);
+}
+
+.icon-action--primary.MuiIconButton-root {
+  border-color: transparent;
+  background: transparent;
+  color: var(--action);
+}
+
+.repo-error {
+  flex-basis: 100%;
+  text-align: right;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.repo-error--modal {
+  text-align: left;
+}
+
+.meters span,
+.pill {
+  border: 1px solid rgba(143, 227, 136, .38);
+  border-radius: 7px;
+  background: rgba(143, 227, 136, .1);
+  color: var(--lime);
+  padding: 3px 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.pill.muted {
+  border-color: rgba(143, 159, 170, .28);
+  background: rgba(17, 24, 29, .7);
+  color: var(--muted);
+}
+
+.composer,
+.detail {
+  border: 1px solid var(--frame-soft);
+  background: rgba(17, 24, 29, .7);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(2px);
+}
+
+.composer {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 7px;
+}
+
+.composer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.composer__repo {
+  font-size: 13px;
+}
+
+.composer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.board-field .MuiOutlinedInput-root {
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .78);
+  color: var(--ink);
+}
+
+.board-field .MuiOutlinedInput-notchedOutline {
+  border-color: var(--frame);
+}
+
+.board-field .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, .16);
+}
+
+.board-field .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(123, 213, 229, .7);
+}
+
+.board-field .MuiInputBase-input,
+.board-field .MuiInputBase-inputMultiline {
+  color: var(--ink);
+  padding: 11px 14px;
+  font-size: 14px;
+}
+
+.board-field .MuiOutlinedInput-root.MuiInputBase-multiline {
+  padding: 0;
+}
+
+.board-field .MuiInputBase-inputMultiline {
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.board-field textarea.MuiInputBase-input {
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.segmented.MuiToggleButtonGroup-root {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  min-width: 170px;
+  grid-column: auto;
+}
+
+.segmented .MuiToggleButtonGroup-grouped {
+  border: 1px solid var(--frame);
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .76);
+  color: var(--ink);
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.1;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.segmented .MuiToggleButtonGroup-grouped.Mui-selected,
+.segmented .MuiToggleButtonGroup-grouped.Mui-selected:hover {
+  border-color: rgba(230, 237, 243, .22);
+  background: rgba(230, 237, 243, .12);
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.primary.MuiButton-root {
+  border-color: transparent;
+  background: var(--action);
+  color: var(--action-ink);
+  font-weight: 900;
+}
+
+.primary.MuiButton-root {
+  grid-column: auto;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.composer__submit.MuiButton-root {
+  min-width: 112px;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.primary.MuiButton-root:hover {
+  background: var(--action-hover);
+  box-shadow: none;
+}
+
+.danger.MuiIconButton-root {
+  margin-top: 10px;
+  border: 1px solid rgba(255, 119, 109, .36);
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .76);
+  color: var(--danger);
+}
+
+.danger.MuiIconButton-root:hover {
+  border-color: rgba(255, 119, 109, .36);
+  background: rgba(255, 119, 109, .1);
+  color: var(--danger);
+}
+
+.toggle.MuiFormControlLabel-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.toggle .MuiFormControlLabel-label {
+  font-size: 13px;
+}
+
+.toggle .MuiSwitch-switchBase.Mui-checked {
+  color: var(--action);
+}
+
+.toggle .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track {
+  background: var(--action);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+  overflow-x: visible;
+  padding-bottom: 10px;
+  scrollbar-color: rgba(143, 227, 136, .38) rgba(17, 24, 29, .35);
+  scrollbar-width: thin;
+}
+
+.board::-webkit-scrollbar { height: 12px; }
+.board::-webkit-scrollbar-track { background: rgba(17, 24, 29, .42); border-radius: 7px; }
+.board::-webkit-scrollbar-thumb { background: linear-gradient(90deg, rgba(143, 227, 136, .55), rgba(34, 211, 238, .42)); border-radius: 7px; }
+
+.column {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.column header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 92px;
+  padding: 28px 16px 16px;
+  border: 1px solid var(--frame-soft);
+  border-radius: 7px;
+  background: rgba(17, 24, 29, .7);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(2px);
+}
+
+.column header::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  height: 5px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, var(--lime), rgba(143, 227, 136, .18));
+}
+
+.column:nth-child(2) header::before,
+.column:nth-child(5) header::before {
+  background: linear-gradient(90deg, var(--cyan), rgba(123, 213, 229, .18));
+}
+
+.column:nth-child(3) header::before,
+.column:nth-child(6) header::before {
+  background: linear-gradient(90deg, var(--amber), rgba(240, 184, 91, .18));
+}
+
+.column:nth-child(4) header::before,
+.column:nth-child(7) header::before {
+  background: linear-gradient(90deg, var(--violet), rgba(170, 148, 232, .18));
+}
+
+.column header span {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font-size: clamp(16px, 1.1vw, 20px);
+  font-weight: 900;
+  letter-spacing: -.04em;
+}
+
+.column-new-card-action.MuiIconButton-root {
+  position: relative;
+  z-index: 1;
+}
+
+.card.MuiButtonBase-root {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin-bottom: 0;
+  overflow: hidden;
+  border: 1px solid var(--frame);
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .95);
+  color: var(--ink);
+  padding: 16px;
+  text-align: left;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .16);
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.card.MuiButtonBase-root:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, .16);
+  background: rgba(24, 34, 41, .95);
+}
+
+.card__rail {
+  display: none;
+}
+
+.card--blocked {
+  border-color: rgba(255, 119, 109, .46);
+}
+
+.card--blocked::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 119, 109, .11), transparent 34%);
+}
+
+.card__topline,
+.card__meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.card__topline > span:first-child {
+  border: 1px solid rgba(123, 213, 229, .36);
+  border-radius: 7px;
+  background: rgba(123, 213, 229, .1);
+  color: var(--cyan);
+  padding: 3px 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.card strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin: 14px 0 8px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: 1.2;
+}
+
+.card p {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+.card__meta span:last-child {
+  color: var(--ink);
+}
+
+.detail.MuiDrawer-paper {
+  position: fixed;
+  top: 24px !important;
+  right: 24px !important;
+  bottom: 24px !important;
+  left: auto !important;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  width: min(460px, calc(100vw - 48px)) !important;
+  height: auto !important;
+  box-sizing: border-box;
+  padding: 28px 20px 20px;
+  border-radius: 7px;
+  background: rgba(17, 24, 29, .96);
+}
+
+.MuiDialog-root .MuiBackdrop-root {
+  background: rgba(3, 6, 8, .64);
+  backdrop-filter: blur(10px);
+}
+
+.dialog-paper.MuiPaper-root {
+  overflow: visible;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  box-shadow: none;
+  max-width: none;
+}
+
+.dialog-paper .composer {
+  width: min(507px, calc(100vw - 48px));
+  background: rgba(17, 24, 29, .98);
+}
+
+.repo-modal {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: min(420px, calc(100vw - 48px));
+  border: 1px solid var(--frame-soft);
+  border-radius: 7px;
+  background: rgba(17, 24, 29, .98);
+  box-shadow: var(--shadow-panel);
+  padding: 14px;
+}
+
+.repo-switcher-modal {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: min(420px, calc(100vw - 48px));
+  border: 1px solid var(--frame-soft);
+  border-radius: 7px;
+  background: rgba(17, 24, 29, .98);
+  box-shadow: var(--shadow-panel);
+  padding: 44px 14px 14px;
+}
+
+.repo-switcher-modal .repo-cluster {
+  align-items: stretch;
+}
+
+.detail__close.MuiIconButton-root {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.detail__close.MuiIconButton-root:hover {
+  background: rgba(255, 255, 255, .06);
+}
+
+.detail__track-pill {
+  align-self: flex-start;
+  margin: 6px 0 8px;
+  border: 1px solid rgba(123, 213, 229, .36);
+  border-radius: 7px;
+  background: rgba(123, 213, 229, .1);
+  color: var(--cyan);
+  padding: 3px 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 8px;
+  color: var(--muted);
+}
+
+dt {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+dd a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+dd a:hover {
+  text-decoration: underline;
+}
+
+.logbox {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  margin: 18px 0;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid rgba(123, 213, 229, .2);
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .78);
+  padding: 14px;
+  scrollbar-color: rgba(123, 213, 229, .55) rgba(10, 15, 18, .7);
+  scrollbar-width: thin;
+}
+
+.logbox__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -14px -14px 0;
+  padding: 14px 14px 8px;
+  border-bottom: 1px solid rgba(123, 213, 229, .14);
+  background: rgba(10, 15, 18, .96);
+  backdrop-filter: blur(8px);
+}
+
+.logbox span,
+.logbox__header span {
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.logbox__copy.MuiButton-root {
+  border: 1px solid var(--frame);
+  border-radius: 7px;
+  background: rgba(17, 24, 29, .8);
+  color: var(--ink);
+  padding: 5px 8px;
+  font-size: 11px;
+  text-transform: none;
+}
+
+.logbox__copy.MuiButton-root:hover {
+  background: rgba(24, 34, 41, .95);
+}
+
+.logbox code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.visual-evidence {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.visual-evidence > span {
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.visual-evidence figure {
+  margin: 0;
+  border: 1px solid var(--frame);
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(10, 15, 18, .78);
+}
+
+.visual-evidence img {
+  display: block;
+  width: 100%;
+}
+
+.visual-evidence figcaption {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.detail__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.detail__actions .primary {
+  flex: 1;
+}
+
+.detail__actions .danger {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  padding: 0;
+}
+
+@media (max-width: 1050px) {
+  .composer {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    padding: 16px;
+  }
+
+  .hero,
+  .topbar,
+  .board {
+    width: 100%;
+  }
+
+  .composer {
+    grid-template-columns: 1fr;
+  }
+
+  .board {
+    grid-template-columns: 1fr;
+  }
+}
