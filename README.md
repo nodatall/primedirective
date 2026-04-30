@@ -16,6 +16,7 @@ All skills use explicit Codex-native `$skill-name` invocation text.
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
+| `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `frontend-design-improve` | `$frontend-design-improve` | None |
 | `plain-language` | `$plain-language` | None |
