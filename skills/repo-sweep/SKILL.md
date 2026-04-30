@@ -45,6 +45,7 @@ Load these files before running:
 1. Establish the baseline.
    - Detect repo structure, frameworks, languages, package managers, monorepo layout, and tooling.
    - Read the actual verification sources: manifests, task runners, CI workflows, test configs, lint/typecheck/build scripts, docker files, and migration tooling.
+   - Inspect recent churn and file-size hotspots before judging the repo: use git history and line counts to identify the largest files, most frequently changed files, and any overlap between the two. Treat that overlap as an audit-prioritization signal, not as proof of debt.
    - Check `git status`, note whether the tree is dirty, and do not revert unrelated changes.
    - Identify missing env vars, broken assumptions, and install blockers.
 2. Run a first-principles no-edit pre-pass.
