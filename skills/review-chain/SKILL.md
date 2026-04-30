@@ -46,3 +46,11 @@ Load these files before running:
 
 - Task mode review: review all branch changes vs `origin/main`, including working-tree edits, against PRD + TDD + tasks-plan context.
 - Ad-hoc review: same branch-wide scope, without task-artifact requirements unless explicitly requested.
+
+## Output
+
+Follow `review-protocol.md` for review logs, prompt completion, and cleanup.
+
+Final review output must lead with findings. For each finding, include severity, file or artifact reference, issue, impact, and suggested fix. If there are no findings, say that clearly and list any residual test, visual, deployment, or review-scope gaps.
+
+After findings, keep the summary brief: prompts run, Prompt G/H applicability, fixes made during review, validation commands run, remaining accepted risks or blockers, and whether review artifacts were deleted or preserved.

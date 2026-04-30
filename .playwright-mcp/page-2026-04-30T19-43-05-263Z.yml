@@ -1,0 +1,157 @@
+- generic [ref=e1]:
+  - main [ref=e3]:
+    - button [ref=e43] [cursor=pointer]: primedirective
+    - generic [ref=e44]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - generic [ref=e9]: Inbox
+          - button [ref=e45] [cursor=pointer]:
+            - img [ref=e11]
+        - button [ref=e46]:
+          - generic [ref=e14]:
+            - generic [ref=e15]: Quick
+            - generic [ref=e16]: manual PR
+          - strong [ref=e17]: Title
+          - paragraph [ref=e18]: example instructions
+          - generic [ref=e19]:
+            - generic [ref=e20]: branch pending
+            - generic [ref=e21]: Inbox
+      - generic [ref=e24]: Running
+      - generic [ref=e27]: Needs Attention
+      - generic [ref=e30]: Review
+      - generic [ref=e33]: Done
+  - button [ref=e47] [cursor=pointer]:
+    - img [ref=e37]
+    - generic:
+      - generic:
+        - button:
+          - img
+      - generic:
+        - button:
+          - img
+      - generic:
+        - button [disabled]:
+          - img
+      - generic:
+        - button [disabled]:
+          - img
+      - button [disabled]:
+        - img
+      - generic:
+        - button [disabled]:
+          - img
+      - generic:
+        - button:
+          - img
+      - generic:
+        - button:
+          - img
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - link:
+              - /url: https://agentation.com
+              - img
+            - paragraph: v3.0.2
+            - button:
+              - generic:
+                - generic:
+                  - img
+          - generic:
+            - generic:
+              - generic:
+                - text: Output Detail
+                - generic:
+                  - img
+              - button:
+                - generic: Standard
+            - generic:
+              - generic:
+                - text: React Components
+                - generic:
+                  - img
+              - generic:
+                - checkbox [checked]
+            - generic:
+              - generic:
+                - text: Hide Until Restart
+                - generic:
+                  - img
+              - generic:
+                - checkbox
+          - generic:
+            - generic: Marker Color
+            - generic:
+              - button
+              - button
+              - button
+              - button
+              - button
+              - button
+              - button
+          - generic:
+            - generic:
+              - generic:
+                - checkbox
+                - img
+              - generic: Clear on copy/send
+              - generic:
+                - img
+            - generic:
+              - generic:
+                - checkbox [checked]
+                - img
+              - generic: Block page interactions
+          - button:
+            - generic: Manage MCP & Webhooks
+            - generic:
+              - img
+        - generic:
+          - button:
+            - img
+            - generic: Manage MCP & Webhooks
+          - generic:
+            - generic:
+              - generic:
+                - text: MCP Connection
+                - generic:
+                  - img
+            - paragraph:
+              - text: MCP connection allows agents to receive and act on annotations.
+              - link:
+                - /url: https://agentation.dev/mcp
+                - text: Learn more
+          - generic:
+            - generic:
+              - generic:
+                - text: Webhooks
+                - generic:
+                  - img
+              - generic:
+                - generic: Auto-Send
+                - generic:
+                  - checkbox [checked] [disabled]
+            - paragraph: The webhook URL will receive live annotation changes and annotation data.
+            - textbox:
+              - /placeholder: Webhook URL
+  - dialog "Card detail" [active] [ref=e49]:
+    - button "Close card detail" [ref=e50] [cursor=pointer]:
+      - img [ref=e51]
+    - button "Title" [ref=e53]
+    - button "example instructions" [ref=e54]
+    - generic [ref=e55]:
+      - term [ref=e56]: Status
+      - definition [ref=e57]: Inbox
+      - term [ref=e58]: Branch
+      - definition [ref=e59]: pending worktree
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - button "live log" [expanded] [ref=e62]:
+          - img [ref=e63]
+          - generic [ref=e65]: live log
+        - button "Copy live log" [ref=e66] [cursor=pointer]:
+          - img [ref=e67]
+      - code [ref=e69]: "[12:30:30 PM] system: Card added to inbox"
+    - button "Close PR, delete branch, and delete workspace" [ref=e71] [cursor=pointer]:
+      - img [ref=e72]

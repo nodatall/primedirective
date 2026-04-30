@@ -111,6 +111,18 @@ Load these files before running:
 - With `--preserve-planning-artifacts`, keep `tasks/tmp/research-plan-<plan-key>.md` and mention it in the final planning summary.
 - Restore traceability from tasks to `FR-*` and `TDR-*` IDs.
 
+## Output
+
+Final planning handoff should be concise and name:
+
+- generated PRD, TDD, and tasks-plan paths
+- locked decisions or assumptions that matter for execution
+- validation or tooling gaps the plan intentionally carries forward
+- deep-research memo path or summary when `--deep-research` was used
+- whether execution is ready and the exact `$execute-task` or parent orchestration trigger to use next
+
+If planning stops early, name the blocker and the smallest user decision or repo evidence needed to continue.
+
 ## UI behavior
 
 Prefer structured dialog questions when client supports them. Fallback to plain-text one-question turns when not supported.

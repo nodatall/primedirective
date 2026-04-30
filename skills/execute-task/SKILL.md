@@ -101,6 +101,19 @@ Load these files before running:
 - Before terminal handoff in one-shot mode, run the finalization gate from `finalization-gate.md`; a clean-looking branch summary is not a substitute for the archived-artifact, unchecked-task, commit, and final-status checks.
 - Do not invent lint, format, hook, or similar repo tooling mid-execution unless the planned task explicitly includes introducing that tooling or the user asks for it.
 
+## Output
+
+For terminal handoff, follow `review-protocol.md` Step 9 and `finalization-gate.md`.
+
+Keep the final user-facing summary compact and include:
+
+- completed scope and task IDs
+- commits created and PR URL, or the documented existing-branch exception details
+- validation commands run, including any visual evidence or harness drift result when applicable
+- archived artifact path or preserved artifact paths
+- remaining blockers, accepted risks, or skipped checks with reasons
+- final working-tree status relative to the kickoff baseline
+
 ## Review relationship
 
 Task execution includes automatic review rounds. Standard mode reviews each completed sub-task before commit. One-shot mode skips per-sub-task review chains and runs one final `full-branch` review after all implementation sub-tasks complete. Manual review runs through explicit `$review-chain` activation, optionally scoped to a specific `<task-id>`.

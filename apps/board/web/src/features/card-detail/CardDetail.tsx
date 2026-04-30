@@ -67,7 +67,7 @@ export function CardDetail({ card, events = [], onClose, onResume, onDelete, onU
       ) : (
         <p className={`detail__instructions ${editable ? 'detail__editable' : ''}`} tabIndex={editable ? 0 : undefined} role={editable ? 'button' : undefined} onClick={() => editable && setEditing('instructions')} onKeyDown={(event) => { if (editable && (event.key === 'Enter' || event.key === ' ')) setEditing('instructions'); }}>{card.instructions}</p>
       )}
-      <dl>
+      <dl className="detail__metadata">
         <dt>Status</dt><dd>{prUrl ? <Link href={prUrl} target="_blank" rel="noreferrer">{card.status}</Link> : card.status}</dd>
         <dt>Branch</dt><dd>{card.branch ?? 'pending worktree'}</dd>
         {card.blockerReason || card.blockerSummary ? <><dt>Blocker</dt><dd>{card.blockerSummary ?? card.blockerReason}</dd></> : null}

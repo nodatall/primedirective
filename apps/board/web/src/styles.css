@@ -566,6 +566,24 @@ p {
   color: var(--ink);
 }
 
+.card__meta .card__running-loader {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  filter: drop-shadow(0 0 9px rgba(123, 213, 229, .34));
+}
+
+.card__running-loader svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .detail.MuiDrawer-paper {
   position: fixed;
   top: 0 !important;
@@ -693,6 +711,7 @@ p {
 }
 
 .detail__instructions {
+  padding-top: 8px;
   font-size: 12px;
   line-height: 1.45;
 }
@@ -705,32 +724,57 @@ p {
   line-height: 1.45;
 }
 
-dl {
+.detail__metadata {
   display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: 8px;
+  grid-template-columns: minmax(110px, 42%) minmax(0, 1fr);
+  flex: 0 0 auto;
+  gap: 0;
+  margin: 24px 0 14px;
+  overflow: hidden;
+  border: 1px solid var(--frame);
+  border-radius: 7px;
+  background: rgba(10, 15, 18, .32);
   color: var(--muted);
 }
 
-dt {
-  color: var(--ink);
+.detail__metadata dt,
+.detail__metadata dd {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  border-bottom: 1px solid rgba(34, 49, 60, .72);
+  padding: 0 16px;
   font-size: 13px;
+  line-height: 1.25;
 }
 
-dd {
+.detail__metadata dt:nth-last-of-type(1),
+.detail__metadata dt:nth-last-of-type(1) + dd {
+  border-bottom: 0;
+}
+
+.detail__metadata dt {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.detail__metadata dd {
   min-width: 0;
   margin: 0;
-  font-size: 13px;
+  border-left: 1px solid rgba(34, 49, 60, .72);
+  background: rgba(17, 24, 29, .24);
+  color: var(--ink);
+  font-weight: 800;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
-dd a {
+.detail__metadata dd a {
   color: var(--cyan);
   text-decoration: none !important;
 }
 
-dd a:hover {
+.detail__metadata dd a:hover {
   text-decoration: none !important;
 }
 
