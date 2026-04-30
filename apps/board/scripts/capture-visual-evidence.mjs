@@ -29,6 +29,7 @@ mkdirSync(artifactDir, { recursive: true });
 const server = await createServer({
   root: target,
   configFile: false,
+  logLevel: 'silent',
   plugins: [react(), tailwindcss()],
   server: {
     host: '127.0.0.1',

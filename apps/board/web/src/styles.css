@@ -413,6 +413,11 @@ p {
   min-width: 0;
 }
 
+.column--drop-target header {
+  border-color: rgba(123, 213, 229, .62);
+  background: rgba(34, 211, 238, .1);
+}
+
 .column header {
   position: relative;
   overflow: hidden;
@@ -485,6 +490,11 @@ p {
   transition: border-color .18s ease, background .18s ease, transform .18s ease;
   align-items: stretch;
   justify-content: flex-start;
+  cursor: grab;
+}
+
+.card.MuiButtonBase-root:active {
+  cursor: grabbing;
 }
 
 .card.MuiButtonBase-root:hover {
@@ -558,19 +568,24 @@ p {
 
 .detail.MuiDrawer-paper {
   position: fixed;
-  top: 24px !important;
-  right: 24px !important;
-  bottom: 24px !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   left: auto !important;
   z-index: 5;
   display: flex;
   flex-direction: column;
-  width: min(460px, calc(100vw - 48px)) !important;
-  height: auto !important;
+  width: min(560px, 100vw) !important;
+  height: 100vh !important;
   box-sizing: border-box;
-  padding: 28px 20px 20px;
-  border-radius: 7px;
+  overflow-y: auto;
+  padding: 34px 24px 22px;
+  border-radius: 0;
   background: rgba(17, 24, 29, .96);
+}
+
+.MuiDrawer-root .MuiBackdrop-root {
+  background: transparent;
 }
 
 .MuiDialog-root .MuiBackdrop-root {
@@ -639,18 +654,55 @@ p {
   background: rgba(255, 255, 255, .06);
 }
 
-.detail__track-pill {
-  align-self: flex-start;
-  margin: 6px 0 8px;
-  border: 1px solid rgba(123, 213, 229, .36);
+.detail h1 {
+  margin: 0;
+  padding-right: 34px;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+
+.detail__editable {
+  cursor: text;
+}
+
+.detail__editable:hover {
+  color: #fff;
+}
+
+.detail__title-input,
+.detail__instructions-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(123, 213, 229, .42);
   border-radius: 7px;
-  background: rgba(123, 213, 229, .1);
-  color: var(--cyan);
-  padding: 3px 7px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
+  outline: 0;
+  background: rgba(10, 15, 18, .9);
+  color: var(--ink);
+  font: inherit;
+}
+
+.detail__title-input {
+  padding: 7px 9px;
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+
+.detail__instructions {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.detail__instructions-input {
+  min-height: 180px;
+  resize: vertical;
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 dl {
@@ -675,11 +727,11 @@ dd {
 
 dd a {
   color: var(--cyan);
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 dd a:hover {
-  text-decoration: underline;
+  text-decoration: none !important;
 }
 
 .logbox {
@@ -687,15 +739,25 @@ dd a:hover {
   grid-template-rows: auto 1fr;
   gap: 8px;
   margin: 18px 0;
-  min-height: 0;
-  flex: 1;
+  min-height: 560px;
+  max-height: 720px;
+  flex: 0 0 640px;
   overflow-y: auto;
   border: 1px solid rgba(123, 213, 229, .2);
   border-radius: 7px;
   background: rgba(10, 15, 18, .78);
-  padding: 14px;
+  padding: 0 14px 14px;
   scrollbar-color: rgba(123, 213, 229, .55) rgba(10, 15, 18, .7);
   scrollbar-width: thin;
+}
+
+.logbox--collapsed {
+  grid-template-rows: auto;
+  min-height: 0;
+  max-height: none;
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 0;
 }
 
 .logbox__header {
@@ -706,11 +768,32 @@ dd a:hover {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: -14px -14px 0;
-  padding: 14px 14px 8px;
+  margin: 0 -14px;
+  padding: 7px 9px 6px 12px;
   border-bottom: 1px solid rgba(123, 213, 229, .14);
   background: rgba(10, 15, 18, .96);
   backdrop-filter: blur(8px);
+}
+
+.logbox--collapsed .logbox__header {
+  margin: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+  padding-bottom: 7px;
+}
+
+.logbox__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--cyan);
+  padding: 0;
+}
+
+.logbox__toggle:hover {
+  color: var(--ink);
 }
 
 .logbox span,
@@ -721,18 +804,23 @@ dd a:hover {
   text-transform: uppercase;
 }
 
-.logbox__copy.MuiButton-root {
-  border: 1px solid var(--frame);
-  border-radius: 7px;
-  background: rgba(17, 24, 29, .8);
-  color: var(--ink);
-  padding: 5px 8px;
-  font-size: 11px;
-  text-transform: none;
+.logbox__copy.MuiIconButton-root {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  width: 22px;
+  height: 22px;
+  padding: 0;
 }
 
-.logbox__copy.MuiButton-root:hover {
-  background: rgba(24, 34, 41, .95);
+.logbox__copy.MuiIconButton-root:hover {
+  background: transparent;
+  color: var(--cyan);
+}
+
+.logbox__copy.MuiIconButton-root svg {
+  font-size: 16px;
 }
 
 .logbox code {

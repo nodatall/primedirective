@@ -118,6 +118,43 @@ export interface WorkflowOverride {
   protectedRiskExtraPatterns?: string[];
 }
 
+const GENERATED_TITLE_LIMIT = 64;
+const IGNORED_TITLE_LINES = new Set(['page feedback', 'viewport', 'location', 'source', 'react']);
+
+export function deriveCardTitle(draft: { title?: string | null; instructions?: string | null }): string {
+  const explicit = cleanTitle(draft.title);
+  if (explicit) return truncateTitle(explicit);
+
+  const lines = (draft.instructions ?? '').split(/\r?\n/).map(cleanTitle).filter(Boolean);
+  const feedbackLine = lines.find((line) => /^feedback\s*:/i.test(line));
+  const candidate = feedbackLine ? stripLabel(feedbackLine) : lines.find((line) => !isIgnoredTitleLine(line));
+  return truncateTitle(candidate ?? 'Untitled card');
+}
+
+function cleanTitle(value?: string | null): string {
+  return (value ?? '')
+    .replace(/[*_`]/g, '')
+    .replace(/^#+\s*/, '')
+    .replace(/^\d+\.\s*/, '')
+    .replace(/^[-*]\s*/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function stripLabel(value: string): string {
+  return value.replace(/^[^:]+:\s*/, '').trim();
+}
+
+function isIgnoredTitleLine(value: string): boolean {
+  const label = value.split(':', 1)[0]?.toLowerCase();
+  return Boolean(label && IGNORED_TITLE_LINES.has(label));
+}
+
+function truncateTitle(value: string): string {
+  if (value.length <= GENERATED_TITLE_LIMIT) return value;
+  return `${value.slice(0, GENERATED_TITLE_LIMIT - 3).trimEnd()}...`;
+}
+
 export interface BoardSettings {
   workspaceRoot: string;
   maxActiveRuns: number;

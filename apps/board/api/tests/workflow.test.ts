@@ -5,7 +5,7 @@ import { planQuickFinalization } from '../src/quick-track/finalize.js';
 import { Scheduler } from '../src/orchestrator/scheduler.js';
 import { findExistingPrForBranch, canAutoMerge } from '../src/github/gh.js';
 import { reconcileActiveRunner } from '../src/orchestrator/reconcile.js';
-import { discardCard, resumeCard } from '../src/orchestrator/cardLifecycle.js';
+import { createCard, discardCard, resumeCard, updateInboxCard } from '../src/orchestrator/cardLifecycle.js';
 import { captureVisualEvidence, copyVisualEvidenceForPr, formatVisualEvidenceMarkdown, requiresVisualEvidence } from '../src/visual/evidence.js';
 
 it('creates deterministic collision-safe worktree names', () => {
@@ -69,6 +69,49 @@ it('persists lifecycle tables across SQLite store restart', () => {
   expect(restarted.worktrees).toHaveLength(1);
   expect(restarted.pullRequests).toHaveLength(1);
   expect(restarted.integrationJobs).toHaveLength(1);
+});
+
+it('adds new cards to inbox without starting a run', () => {
+  const dbPath = join(mkdtempSync(join(tmpdir(), 'board-inbox-card-')), 'board.sqlite');
+  const store = new SqliteStore(dbPath);
+  const card = createCard(store, { id: 'card', repoId: 'repo', title: 'New task', instructions: 'Do it', taskType: 'Quick', autoMerge: false, status: 'Running' });
+  const snapshot = store.read();
+  expect(card.status).toBe('Inbox');
+  expect(snapshot.cards[0]).toMatchObject({ id: 'card', status: 'Inbox' });
+  expect(snapshot.runs).toHaveLength(0);
+});
+
+it('derives a title from instructions when omitted', () => {
+  const dbPath = join(mkdtempSync(join(tmpdir(), 'board-derived-title-')), 'board.sqlite');
+  const store = new SqliteStore(dbPath);
+  const card = createCard(store, {
+    id: 'card',
+    repoId: 'repo',
+    title: '',
+    instructions: '## Page Feedback: /\n**Viewport:** 2048x1062\n**Feedback:** make the submit button smaller',
+    taskType: 'Quick',
+    autoMerge: false
+  });
+  expect(card.title).toBe('make the submit button smaller');
+  expect(store.findCard('card')?.title).toBe('make the submit button smaller');
+});
+
+it('updates inbox card title and instructions before work starts', () => {
+  const dbPath = join(mkdtempSync(join(tmpdir(), 'board-edit-inbox-')), 'board.sqlite');
+  const store = new SqliteStore(dbPath);
+  createCard(store, { id: 'card', repoId: 'repo', title: 'Old title', instructions: 'Old instructions', taskType: 'Quick', autoMerge: false });
+
+  expect(updateInboxCard(store, 'card', { title: 'New title', instructions: 'New instructions' })).toMatchObject({ ok: true, card: { title: 'New title', instructions: 'New instructions' } });
+  expect(store.findCard('card')).toMatchObject({ title: 'New title', instructions: 'New instructions', status: 'Inbox' });
+});
+
+it('rejects inbox edits after a card starts', () => {
+  const dbPath = join(mkdtempSync(join(tmpdir(), 'board-edit-started-')), 'board.sqlite');
+  const store = new SqliteStore(dbPath);
+  store.upsertCard({ id: 'card', repoId: 'repo', title: 'Started', instructions: 'Do it', taskType: 'Quick', autoMerge: false, status: 'Queued', updatedAt: new Date().toISOString() });
+
+  expect(updateInboxCard(store, 'card', { title: 'Too late' })).toEqual({ ok: false, error: 'edit_blocked: card has already started' });
+  expect(store.findCard('card')?.title).toBe('Started');
 });
 
 it('rejects protected risk from untracked secret-like files', () => {
@@ -216,6 +259,16 @@ it('discards a card by removing its worktree, local branch, and board records', 
     if (previousSkipGh === undefined) delete process.env.BOARD_SKIP_GH_PR_CLOSE;
     else process.env.BOARD_SKIP_GH_PR_CLOSE = previousSkipGh;
   }
+});
+
+it('discards an inbox card without requiring a branch or worktree', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'board-inbox-discard-'));
+  const store = new SqliteStore(join(root, 'board.sqlite'));
+  store.upsertRepo({ id: 'repo', name: 'Repo', path: root, defaultBranch: 'main' });
+  store.upsertCard({ id: 'card', repoId: 'repo', title: 'Inbox card', instructions: 'Not started', taskType: 'Quick', autoMerge: false, status: 'Inbox', updatedAt: new Date().toISOString() });
+
+  await expect(discardCard(store, 'card')).resolves.toEqual({ ok: true });
+  expect(store.findCard('card')).toBeUndefined();
 });
 
 it('finishes stale discard when the PR is already closed and local cleanup already happened', async () => {

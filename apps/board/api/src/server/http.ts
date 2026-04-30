@@ -5,7 +5,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SqliteStore } from '../db/sqliteStore.js';
 import { rejectUnsafeOrigin, resolveHost } from './security.js';
-import { autoMergeCard, cleanupMergedCard, createCard, discardCard, drainQueuedCards, manualMoveCard, pollPrState, resumeCard } from '../orchestrator/cardLifecycle.js';
+import { autoMergeCard, cleanupMergedCard, createCard, discardCard, drainQueuedCards, manualMoveCard, pollPrState, resumeCard, updateInboxCard } from '../orchestrator/cardLifecycle.js';
 import { reconcileStartup } from '../orchestrator/reconcile.js';
 import type { CardDTO, RepoDTO } from '@prime-board/shared';
 
@@ -67,6 +67,10 @@ export function makeBoardServer(store = new SqliteStore(process.env.BOARD_DB_PAT
     }
     if (req.method === 'POST' && url.pathname === '/api/cards') return send(res, 201, { card: createCard(store, await readJson<Partial<CardDTO>>(req)) });
     const cardMatch = url.pathname.match(/^\/api\/cards\/([^/]+)$/);
+    if (req.method === 'PATCH' && cardMatch) {
+      const result = updateInboxCard(store, decodeURIComponent(cardMatch[1]), await readJson<Partial<Pick<CardDTO, 'title' | 'instructions'>>>(req));
+      return send(res, result.ok ? 200 : 409, result);
+    }
     if (req.method === 'DELETE' && cardMatch) {
       store.deleteCard(cardMatch[1]);
       return send(res, 200, { ok: true });

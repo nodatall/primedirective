@@ -3,8 +3,9 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { CardDTO, RepoDTO, RunEventDTO } from '@prime-board/shared';
+import { deriveCardTitle, type CardDTO, type RepoDTO, type RunEventDTO } from '@prime-board/shared';
 import type { SqliteStore } from '../db/sqliteStore.js';
+import { canTransition } from '../domain/stateMachine.js';
 import { canAutoMerge, classifyRemoteBranchLookup, pickOpenPrForBranch } from '../github/gh.js';
 import { preflightPlannedSkill } from '../repos/preflight.js';
 import { deterministicWorktree, ensureRuntimeDirs, removeCleanWorktree } from '../worktrees/manager.js';
@@ -20,12 +21,23 @@ function workspaceRoot(): string { return process.env.BOARD_WORKSPACE_ROOT ?? re
 
 export function createCard(store: SqliteStore, draft: Partial<CardDTO>): CardDTO {
   const now = new Date().toISOString();
-  const card: CardDTO = { id: draft.id ?? randomUUID(), repoId: draft.repoId ?? '', title: draft.title ?? 'Untitled card', instructions: draft.instructions ?? '', taskType: draft.taskType ?? 'Quick', autoMerge: Boolean(draft.autoMerge), status: 'Queued', updatedAt: now };
+  const instructions = draft.instructions ?? '';
+  const card: CardDTO = { id: draft.id ?? randomUUID(), repoId: draft.repoId ?? '', title: deriveCardTitle({ title: draft.title, instructions }), instructions, taskType: draft.taskType ?? 'Quick', autoMerge: Boolean(draft.autoMerge), status: 'Inbox', updatedAt: now };
   store.upsertCard(card);
-  store.upsertRun({ id: runId(card), cardId: card.id, attempt: 1, phase: 'preflight', status: 'running', runnerLease: JSON.stringify({ createdAt: now }) });
-  append(store, card, 'status_transition', 'Card queued', { from: 'Inbox', to: 'Queued' });
-  scheduleCard(store, card);
+  append(store, card, 'system', 'Card added to inbox');
   return card;
+}
+
+export function updateInboxCard(store: SqliteStore, cardId: string, patch: Partial<Pick<CardDTO, 'title' | 'instructions'>>): { ok: true; card: CardDTO } | { ok: false; error: string } {
+  const card = store.findCard(cardId);
+  if (!card) return { ok: false, error: 'card not found' };
+  if (card.status !== 'Inbox') return { ok: false, error: 'edit_blocked: card has already started' };
+  const instructions = patch.instructions ?? card.instructions;
+  const title = patch.title === undefined ? card.title : deriveCardTitle({ title: patch.title, instructions });
+  const updated: CardDTO = { ...card, title, instructions, updatedAt: new Date().toISOString() };
+  store.upsertCard(updated);
+  append(store, updated, 'system', 'Inbox card edited', { titleChanged: title !== card.title, instructionsChanged: instructions !== card.instructions });
+  return { ok: true, card: updated };
 }
 
 export function scheduleCard(store: SqliteStore, card: CardDTO): void {
@@ -243,6 +255,10 @@ export async function discardCard(store: SqliteStore, cardId: string): Promise<{
   if (!card) return { ok: false, error: 'card not found' };
   const repo = store.findRepo(card.repoId);
   if (!repo) return { ok: false, error: 'discard_blocked: repo missing' };
+  if (!card.branch && !card.worktreePath) {
+    store.deleteCard(cardId);
+    return { ok: true };
+  }
   if (!card.branch || !card.worktreePath) return { ok: false, error: 'discard_blocked: branch/worktree missing' };
   const branch = card.branch;
   const worktreePath = card.worktreePath;
@@ -292,9 +308,17 @@ export function resumeCard(store: SqliteStore, cardId: string, note: string): { 
 export function manualMoveCard(store: SqliteStore, cardId: string, status: CardDTO['status']): { ok: true; card: CardDTO } | { ok: false; error: string } {
   const card = store.findCard(cardId);
   if (!card) return { ok: false, error: 'card not found' };
-  const moved: CardDTO = { ...card, status, overridePaused: true, updatedAt: new Date().toISOString() };
+  const startsRun = status === 'Queued' || status === 'Running';
+  const nextStatus = startsRun ? 'Queued' : status;
+  if (card.status === nextStatus) return { ok: true, card };
+  if (!canTransition(card.status, nextStatus)) return { ok: false, error: `invalid transition ${card.status} -> ${nextStatus}` };
+  const moved: CardDTO = { ...card, status: nextStatus, overridePaused: startsRun ? false : true, updatedAt: new Date().toISOString() };
   store.upsertCard(moved);
-  append(store, moved, 'status_transition', 'Manual operator move', { from: card.status, to: status, overridePaused: true });
+  append(store, moved, 'status_transition', startsRun ? 'Card queued from board' : 'Manual operator move', { from: card.status, to: nextStatus, overridePaused: moved.overridePaused });
+  if (startsRun) {
+    store.upsertRun({ id: runId(card), cardId: card.id, attempt: 1, phase: 'preflight', status: 'running', runnerLease: JSON.stringify({ createdAt: new Date().toISOString() }) });
+    scheduleCard(store, moved);
+  }
   return { ok: true, card: moved };
 }
 

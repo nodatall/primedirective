@@ -20,14 +20,14 @@ export function CardComposer({ repoId, onCancel, onCreate }: { repoId: string; o
         <CloseIcon fontSize="small" />
       </IconButton>
       <p className="composer__repo">Repo: {repoId}</p>
-      <TextField className="board-field" aria-label="Title" placeholder="Title" value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} />
+      <TextField className="board-field" aria-label="Title" placeholder="Title (optional)" value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} />
       <TextField className="board-field" aria-label="Instructions" placeholder="Instructions" value={draft.instructions} multiline minRows={8} onChange={(event) => setDraft({ ...draft, instructions: event.target.value })} />
       <ToggleButtonGroup className="segmented" exclusive value={draft.taskType} aria-label="Task type" onChange={(_, value: TaskType | null) => { if (value) setDraft({ ...draft, taskType: value }); }}>
         {(['Quick', 'Planned'] as TaskType[]).map((type) => <ToggleButton value={type} key={type}>{type}</ToggleButton>)}
       </ToggleButtonGroup>
       <div className="composer__actions">
         <FormControlLabel className="toggle" control={<Switch checked={draft.autoMerge} onChange={(event) => setDraft({ ...draft, autoMerge: event.target.checked })} />} label="Auto-merge PR" />
-        <Button className="primary composer__submit" type="submit" variant="contained" size="small">Begin</Button>
+        <Button className="primary composer__submit" type="submit" variant="contained" size="small">Add task</Button>
       </div>
     </Box>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type DragEvent, useEffect, useMemo, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -10,14 +10,14 @@ import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { type SelectChangeEvent } from '@mui/material/Select';
 import TextField from '@mui/material/TextField';
-import type { CardDTO, CardStatus, RepoDTO, RunEventDTO } from '../../contracts';
+import { deriveCardTitle, type CardDTO, type CardStatus, type RepoDTO, type RunEventDTO } from '../../contracts';
 import { CardComposer, type DraftCard } from '../cards/CardComposer';
 import { CardDetail } from '../card-detail/CardDetail';
 import { BoardCard } from './BoardCard';
 
-const columns: Array<{ title: string; statuses: CardStatus[] }> = [
+const columns: Array<{ title: string; statuses: CardStatus[]; dropStatus?: CardStatus }> = [
   { title: 'Inbox', statuses: ['Inbox'] },
-  { title: 'Running', statuses: ['Queued', 'Running'] },
+  { title: 'Running', statuses: ['Queued', 'Running'], dropStatus: 'Queued' },
   { title: 'Needs Attention', statuses: ['Blocked'] },
   { title: 'Review', statuses: ['PR Ready', 'Checks Pending', 'Merging'] },
   { title: 'Done', statuses: ['Merged', 'Done'] }
@@ -34,6 +34,8 @@ export function BoardApp() {
   const [repoModalOpen, setRepoModalOpen] = useState(false);
   const [repoSwitcherOpen, setRepoSwitcherOpen] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [draggedCardId, setDraggedCardId] = useState<string | undefined>();
+  const [dragOverColumn, setDragOverColumn] = useState<string | undefined>();
 
   useEffect(() => {
     let alive = true;
@@ -73,7 +75,7 @@ export function BoardApp() {
   }, []);
 
   async function createDraft(draft: DraftCard) {
-    const optimistic: CardDTO = { id: crypto.randomUUID(), status: 'Inbox', updatedAt: new Date().toISOString(), ...draft };
+    const optimistic: CardDTO = { id: crypto.randomUUID(), status: 'Inbox', updatedAt: new Date().toISOString(), ...draft, title: deriveCardTitle(draft) };
     setCards((current) => [optimistic, ...current]);
     setComposerOpen(false);
     try {
@@ -84,6 +86,52 @@ export function BoardApp() {
     } catch {
       setCards((current) => current.map((card) => card.id === optimistic.id ? { ...card, status: 'Blocked', blockerReason: 'runner_failed', blockerSummary: 'API unavailable; card is local only.' } : card));
     }
+  }
+
+  async function moveCard(card: CardDTO, status: CardStatus) {
+    setCards((current) => current.map((item) => item.id === card.id ? { ...item, status, updatedAt: new Date().toISOString() } : item));
+    try {
+      const response = await fetch(`/api/cards/${card.id}/move`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+      if (!response.ok) throw new Error('move failed');
+      const payload = await response.json() as { card?: CardDTO };
+      if (payload.card) setCards((current) => current.map((item) => item.id === card.id ? payload.card! : item));
+    } catch {
+      setCards((current) => current.map((item) => item.id === card.id ? { ...item, status: card.status, blockerSummary: 'Could not move card.' } : item));
+    }
+  }
+
+  async function updateCard(card: CardDTO, patch: Partial<Pick<CardDTO, 'title' | 'instructions'>>) {
+    const optimistic = { ...card, ...patch, updatedAt: new Date().toISOString() };
+    setCards((current) => current.map((item) => item.id === card.id ? optimistic : item));
+    setSelected((current) => current?.id === card.id ? optimistic : current);
+    try {
+      const response = await fetch(`/api/cards/${card.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) });
+      if (!response.ok) throw new Error('card update failed');
+      const payload = await response.json() as { card?: CardDTO };
+      if (payload.card) {
+        setCards((current) => current.map((item) => item.id === card.id ? payload.card! : item));
+        setSelected((current) => current?.id === card.id ? payload.card : current);
+      }
+    } catch {
+      setCards((current) => current.map((item) => item.id === card.id ? card : item));
+      setSelected((current) => current?.id === card.id ? card : current);
+    }
+  }
+
+  function dragOver(event: DragEvent<HTMLElement>, dropStatus: CardStatus | undefined) {
+    if (!dropStatus) return;
+    event.preventDefault();
+    setDragOverColumn(dropStatus);
+  }
+
+  function dropCard(event: DragEvent<HTMLElement>, dropStatus: CardStatus | undefined) {
+    event.preventDefault();
+    setDragOverColumn(undefined);
+    if (!dropStatus) return;
+    const id = event.dataTransfer.getData('text/plain') || draggedCardId;
+    const card = cards.find((candidate) => candidate.id === id);
+    if (!card || card.status === dropStatus) return;
+    void moveCard(card, dropStatus);
   }
 
   async function addRepo() {
@@ -151,7 +199,7 @@ export function BoardApp() {
       </section>
       <div className="board" aria-label="Agent Kanban board">
         {columns.map((column) => (
-          <section className="column" key={column.title}>
+          <section className={`column ${dragOverColumn === column.dropStatus ? 'column--drop-target' : ''}`} key={column.title} onDragOver={(event) => dragOver(event, column.dropStatus)} onDragLeave={() => setDragOverColumn(undefined)} onDrop={(event) => dropCard(event, column.dropStatus)}>
             <header>
               <span>{column.title}</span>
               {column.title === 'Inbox' ? (
@@ -160,7 +208,18 @@ export function BoardApp() {
                 </IconButton>
               ) : null}
             </header>
-            {visibleCards.filter((card) => column.statuses.includes(card.status)).map((card) => <BoardCard card={card} onOpen={setSelected} key={card.id} />)}
+            {visibleCards.filter((card) => column.statuses.includes(card.status)).map((card) => (
+              <BoardCard
+                card={card}
+                onOpen={setSelected}
+                onDragStart={(item, event) => {
+                  setDraggedCardId(item.id);
+                  event.dataTransfer.effectAllowed = 'move';
+                  event.dataTransfer.setData('text/plain', item.id);
+                }}
+                key={card.id}
+              />
+            ))}
           </section>
         ))}
       </div>
@@ -205,8 +264,9 @@ export function BoardApp() {
       </Dialog>
       <CardDetail card={selected} events={selectedEvents} onClose={() => setSelected(undefined)} onResume={async (card, note) => {
         await fetch(`/api/cards/${card.id}/resume`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ note }) });
-      }} onDelete={async (card) => {
-        if (!window.confirm('Close the PR, delete the branch, delete the workspace, and remove this card?')) return;
+      }} onUpdate={updateCard} onDelete={async (card) => {
+        const message = card.branch || card.worktreePath ? 'Close the PR, delete the branch, delete the workspace, and remove this card?' : 'Remove this card?';
+        if (!window.confirm(message)) return;
         const response = await fetch(`/api/cards/${card.id}/discard`, { method: 'POST' });
         if (!response.ok) return;
         setCards((current) => current.filter((item) => item.id !== card.id));
