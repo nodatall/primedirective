@@ -68,9 +68,31 @@ If the source plan contains sections like these, preserve them in TDD under the 
 - Migration, backfill, rollout, or rollback detail
 - Test Cases and Scenarios with technical verification content
 - Existing repo validation/tooling inventory and gaps
+- Core domain entities, stable identifiers, normalization rules, or shared vocabulary
+- Lifecycle states, status transitions, retry/reconciliation behavior, or scheduling rules
+- Typed error, blocker, timeout, approval, or recovery categories
+- Config fields, defaults, environment indirection, reload behavior, or runtime preflight rules
+- Safety invariants, trust boundaries, destructive-action limits, and secret-handling constraints
+- Reference algorithms, pseudocode, or step-by-step runtime flows
 
 Do not collapse concrete interface, schema, migration, or verification detail into generic prose.
 When the plan involves agents, secrets, untrusted input, or outbound actions, make those constraints explicit in the existing `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` sections rather than inventing standalone security-only headings.
+
+## Contract detail rules
+
+`$plan-work` is normally used for serious, non-trivial work. Default to a spec-like technical contract in the TDD whenever the work has runtime behavior, integration behavior, persistence, orchestration, APIs, jobs, schedulers, agents, external tools, configuration, state transitions, concurrency, retries, reconciliation, cleanup, permissions, secrets, destructive actions, or security-sensitive behavior.
+
+Do not create a large standalone spec section by default. Fold contract detail into the existing TDD headings:
+
+- Put domain entities, stable identifiers, vocabulary, and normalization rules in `Architecture / Approach`, `System Boundaries / Source of Truth`, `Route / API / Public Interface Changes`, or `Data Model / Schema / Storage Changes`.
+- Put ownership of mutable state, allowed writers, lifecycle states, transition triggers, concurrency rules, idempotency, and reconciliation in `System Boundaries / Source of Truth`, `Architecture / Approach`, or `Failure Modes / Recovery / Rollback`.
+- Put config fields, defaults, env-var resolution, dynamic reload behavior, startup checks, and runtime preflight validation in `Dependencies`, `Operational Readiness`, or the relevant interface/config section.
+- Put typed error classes, blocker reason codes, timeout handling, retry/backoff behavior, recovery paths, rollback behavior, and operator intervention points in `Failure Modes / Recovery / Rollback`.
+- Put trust boundaries, approval/sandbox posture, filesystem/path invariants, secret handling, and destructive-action guardrails in `System Boundaries / Source of Truth`, `Operational Readiness`, and `Failure Modes / Recovery / Rollback`.
+- Put reference algorithms or pseudocode only when prose would leave a multi-step runtime flow ambiguous; keep them compact and language-agnostic.
+- Put conformance-style deterministic tests, extension/optional-feature tests, and real-integration smoke checks in `Verification and Test Strategy`.
+
+If a contract detail category truly does not apply, compress it to one explicit sentence in the closest existing section instead of adding ceremonial headings.
 
 ## Rules
 
@@ -103,6 +125,8 @@ When the plan involves agents, secrets, untrusted input, or outbound actions, ma
 20. When the plan touches agents, secrets, untrusted input, or outbound actions, enrich `System Boundaries / Source of Truth`, `Failure Modes / Recovery / Rollback`, and `Operational Readiness` with the concrete trust and approval constraints that execution and review must enforce.
 21. Do not add standalone `Security Trust Boundaries` or `Agent Safety Constraints` sections; enrich the existing section set only when those concerns are relevant.
 22. When `--direct` is active, record concise assumptions in the relevant existing sections and defer unsupported exact implementation choices to `$execute-task` sub-task contracts.
+23. Before finalizing the TDD, perform a contract completeness check: every important entity, state, transition, config/default, invariant, failure class, recovery path, and verification profile that affects implementation must either be documented in the TDD, explicitly marked not applicable, or deferred with a reason to the `$execute-task` sub-task contract.
+24. Prefer normative wording for true implementation obligations (`must`, `must not`, `required`) and softer wording for recommendations or implementation choices (`should`, `may`, `implementation-defined`). Do not use normative wording for guesses that lack source-plan or repo evidence.
 
 ## Build gate reminder
 

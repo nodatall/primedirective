@@ -75,7 +75,23 @@ Evaluate and improve:
 - Whether the checkpoint summary meaning, or direct source interpretation when `--direct` was active, survived into both PRD and TDD without drift.
 - Whether deep-research findings were reflected in the technical design when `--deep-research` was used.
 
-### 4. Task-plan quality review
+### 4. Contract executability review
+
+Evaluate and improve:
+
+- Whether the TDD reads as an executable contract for non-trivial work rather than only an architecture narrative.
+- Whether core domain entities, stable identifiers, normalization rules, and shared vocabulary are explicit where they affect implementation.
+- Whether mutable state has clear source-of-truth ownership, allowed writers, lifecycle states, transition triggers, terminal states, and reconciliation/idempotency rules when relevant.
+- Whether config fields, defaults, env-var indirection, startup validation, runtime preflight checks, and reload/restart semantics are documented when relevant.
+- Whether typed error classes, blocker reason codes, timeout paths, retry/backoff behavior, rollback behavior, and operator intervention points are specific enough to implement and test.
+- Whether safety invariants, trust boundaries, approval/sandbox posture, secret handling, and destructive-action limits are testable obligations rather than vague warnings.
+- Whether complex orchestration or runtime flows need compact reference algorithms or pseudocode, and whether any existing pseudocode matches the stated requirements.
+- Whether the verification strategy distinguishes deterministic core checks, optional/extension checks, and gated real-integration smoke checks when that distinction affects execution.
+- Whether anything is marked implementation-defined without documenting the selected behavior, default, or execution-time decision point.
+
+If the work is genuinely small enough that contract detail would be noise, keep the TDD compressed but still make the non-applicability explicit in the closest existing section.
+
+### 5. Task-plan quality review
 
 Evaluate and improve:
 
@@ -86,9 +102,11 @@ Evaluate and improve:
 - Missing failure-path or cleanup work.
 - Whether `output`, `verify`, and `done_when` are concrete enough for implementation.
 - Whether each sub-task is narrow enough to support a pre-coding contract and a meaningful review pass without bundling unrelated work together.
+- Whether every implementation-impact contract detail from the TDD appears in an executable task, a verification step, or an explicit defer/non-goal note in PRD/TDD.
+- Whether state-machine, config/default, invariant, failure/recovery, and validation-profile work is sequenced before dependent feature polish.
 - For frontend-facing work, whether tasks name the affected screens, states, and flows instead of leaving design intent implicit.
 
-### 5. Premature specificity review
+### 6. Premature specificity review
 
 Evaluate and improve:
 
@@ -96,8 +114,9 @@ Evaluate and improve:
 - Whether task-plan `output` fields name precise files only when they are known or strongly supported.
 - Whether unsupported technical specifics should be moved into assumptions, softened into high-level constraints, or deferred to `tasks/tmp/plan-task-<task-id>.md` during `$execute-task`.
 - Whether the plan remains precise about behavior, constraints, source-of-truth decisions, and verification expectations after unsupported low-level detail is removed.
+- Whether spec-like contract wording uses `must`/`required` only for real obligations, and uses `should`/`may` or explicit assumptions for recommendations and unsupported implementation choices.
 
-### 6. Verification coverage review
+### 7. Verification coverage review
 
 Evaluate and improve:
 
@@ -106,9 +125,11 @@ Evaluate and improve:
 - Regression protection for risky areas.
 - Missing edge-case or negative-path checks.
 - Gaps in migration/backfill/rollback validation.
+- Tests for domain model normalization, state transitions, config/default resolution, typed error mapping, safety invariants, retries/reconciliation, and restart/cleanup behavior when those contracts exist in the TDD.
+- Whether real integrations are represented as explicit smoke/probe checks with clear skip conditions rather than silently treated as covered by unit tests.
 - For frontend-facing work, whether browser-based verification covers the changed states, responsive breakpoints, and obvious visual regressions.
 
-### 7. Research integration review
+### 8. Research integration review
 
 Evaluate and improve when `--deep-research` was used:
 
@@ -138,7 +159,7 @@ Evaluate and improve when `--deep-research` was used:
 - Whether source/decorative evidence was separated from material support, and whether any cited sources were merely decorative rather than materially supporting the selected design.
 - Whether every adopted implementation-impact finding appears in PRD/TDD and tasks-plan, or is explicitly rejected, deferred, or marked as a non-goal with a reason.
 
-### 8. Pro analysis integration review
+### 9. Pro analysis integration review
 
 Evaluate and improve when `$plan-and-execute --pro-analysis` was used:
 
@@ -168,17 +189,19 @@ The improved plan must explicitly satisfy all of these:
 10. Plain-language summaries remain clear and faithful to the full plan.
 11. PRD includes clear user/problem framing and success guardrails.
 12. TDD makes dependencies, source of truth, and operational readiness explicit enough to guide execution and debugging.
-13. Any `--deep-research` pass includes live web research, the external-source minimum, operator-practice discovery when relevant, a short visible Deep Research Summary, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
-14. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
-15. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
-16. Any `--deep-research` pass includes an auditable Evidence Ledger, Finding-to-Artifact Delta, and Deep Research Completion Stamp.
-17. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
-18. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
-19. Any `$plan-and-execute --pro-analysis` pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
-20. Any `$plan-and-execute --pro-analysis` completion stamp says `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
-21. Any adopted implementation-impact Pro finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
-22. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
-23. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
+13. For non-trivial technical work, the TDD includes or explicitly rules out the needed contract detail: domain vocabulary, state ownership/transitions, config/defaults, typed failures, recovery paths, safety invariants, and validation profiles.
+14. Every implementation-impact contract detail from the TDD is represented in tasks-plan work or explicitly deferred/non-goal in PRD/TDD.
+15. Any `--deep-research` pass includes live web research, the external-source minimum, operator-practice discovery when relevant, a short visible Deep Research Summary, the required memo sections, and PRD/TDD revisions before tasks-plan generation.
+16. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
+17. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
+18. Any `--deep-research` pass includes an auditable Evidence Ledger, Finding-to-Artifact Delta, and Deep Research Completion Stamp.
+19. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
+20. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
+21. Any `$plan-and-execute --pro-analysis` pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
+22. Any `$plan-and-execute --pro-analysis` completion stamp says `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
+23. Any adopted implementation-impact Pro finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
+24. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
+25. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
 
 ## For every issue identified
 
