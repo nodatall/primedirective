@@ -40,6 +40,7 @@ When present:
 ## Modifier Ownership
 
 - `--check-harness-drift` is valid with `$execute-task` and `$plan-and-execute`; detailed behavior is owned by `skills/shared/references/harness-drift.md`.
+- `--prepare-plan` is valid with `$plan-and-execute`; detailed behavior is owned by `skills/plan-and-execute/SKILL.md`.
 - `--refine-plan` is valid with `$plan-and-execute`; detailed behavior is owned by `skills/plan-refine/SKILL.md`.
 - `--deep-research` is valid with `$plan-work` and `$plan-and-execute`; detailed behavior is owned by `skills/shared/references/planning/deep-research.md`.
 - `--pro-analysis` is valid with `$first-principles-mode`, `$plan-and-execute`, and `$repo-sweep`; detailed behavior is owned by `skills/shared/references/analysis/pro-oracle-escalation.md`.

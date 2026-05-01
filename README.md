@@ -21,7 +21,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `plain-language` | `$plain-language` | None |
-| `plan-and-execute` | `$plan-and-execute` | `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
+| `plan-and-execute` | `$plan-and-execute` | `--prepare-plan`, `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
 | `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--loop`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts` |
@@ -32,6 +32,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, and keep going until it is verified fixed or blocked.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
+- Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
 - Use `$execute-task` when planning artifacts already exist and you want one task, or all remaining tasks with `--one-shot`, implemented.
 - Use `$plan-refine` when planning artifacts exist but need pressure testing before execution.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
@@ -112,6 +113,7 @@ Modifiers:
 
 - `--deep-research`: strengthen planning with web-backed research before task generation and execution.
 - `--pro-analysis`: run ChatGPT Pro browser escalation during planning, then continue only after local synthesis succeeds.
+- `--prepare-plan`: restate the full current plan in plain English, continue if the user confirms it, or ask up to five non-obvious plain-English questions before summarizing and waiting for confirmation.
 - `--refine-plan`: run `$plan-refine` before execution.
 - `--check-harness-drift`: include a compact drift check in the final handoff.
 - `--preserve-artifacts`: keep planning, review, or temporary artifacts that would normally be cleaned up.
