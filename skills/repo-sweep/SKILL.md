@@ -1,6 +1,6 @@
 ---
 name: repo-sweep
-description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes unless `--loop` is present. Supports `--pro-analysis`, `--loop`, and `--preserve-review-artifacts`.
+description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes unless `--loop` is present. Supports `--pro-analysis`, `--loop`, `--swarm`, `--dep-scan`, and `--preserve-review-artifacts`.
 ---
 
 # Repo Sweep Skill
@@ -15,6 +15,8 @@ Supported modifiers:
 
 - `--loop`
 - `--pro-analysis`
+- `--swarm`
+- `--dep-scan`
 - `--preserve-review-artifacts`
 
 ## Required references
@@ -23,8 +25,11 @@ Load these files before running:
 
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
+- `skills/shared/references/review/finding-disposition.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
 - `skills/shared/references/reasoning-budget.md`
+- `skills/shared/references/review/swarm-lanes.md` when `--swarm` is present
+- `skills/shared/references/review/dep-audit-checklist.md` when `--dep-scan` is present
 - `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
 
 ## Scope
@@ -38,6 +43,8 @@ Load these files before running:
 - Do not edit files before the repo-wide report and explicit user approval to proceed with fixes, unless `--loop` is present.
 - With `--loop`, the user has pre-approved the repair loop for verified, fixable findings. Still stop for changes that require a human product, security, schema, billing, customer-visible UX, or public API decision.
 - With `--pro-analysis`, use ChatGPT Pro browser escalation as a Round 1 audit-thesis input through the shared Pro escalation reference. Do not run Oracle in every loop round unless a future modifier explicitly says so.
+- With `--swarm`, run the optional read-only specialized lanes from `swarm-lanes.md` as discovery input before the report. The main agent still verifies, deduplicates, classifies, and owns the final findings.
+- With `--dep-scan`, run the dependency and supply-chain audit from `dep-audit-checklist.md`. If required scanners are unavailable, report the unavailable checks as residual risk instead of silently skipping them.
 - Include all normal review-chain components. For repo sweep, force a comprehensive review pass rather than a shortened provider-specific subset.
 
 ## Workflow
@@ -46,6 +53,7 @@ Load these files before running:
    - Detect repo structure, frameworks, languages, package managers, monorepo layout, and tooling.
    - Read the actual verification sources: manifests, task runners, CI workflows, test configs, lint/typecheck/build scripts, docker files, and migration tooling.
    - Inspect recent churn and file-size hotspots before judging the repo: use git history and line counts to identify the largest files, most frequently changed files, and any overlap between the two. Treat that overlap as an audit-prioritization signal, not as proof of debt.
+   - Identify agent-readiness hotspots: godfiles, duplicated local patterns, unclear module boundaries, missing runnable feedback loops, and places where a future agent would have to infer behavior from scattered or stale clues.
    - Check `git status`, note whether the tree is dirty, and do not revert unrelated changes.
    - Identify missing env vars, broken assumptions, and install blockers.
 2. Run a first-principles no-edit pre-pass.
@@ -60,6 +68,7 @@ Load these files before running:
    - With `--pro-analysis`, run local repo reconnaissance, select context, dry-run the file bundle, run Oracle Pro, and synthesize the Pro result into the audit thesis before continuing to the no-edit audit.
    - Treat the Pro result as external reviewer input, not as source of truth. Verify or qualify Pro claims against local files, commands, probes, and tests.
    - If `--pro-analysis` and `--loop` are both present, use Pro only in Round 1 by default. Subsequent resweeps use fresh local review subagents unless the user explicitly asks for another Pro pass.
+   - If `--swarm` is present, use the swarm lanes as additional candidate-risk generators, not as final authority. Merge their output through the finding disposition rules before reporting or fixing.
 3. Run a no-edit security, config, and API-surface audit.
    - Do not edit code in this step.
    - Inventory entrypoints, routes, jobs, background workers, config defaults, auth boundaries, CORS policy, secret sources, and public state-changing endpoints before touching build or test failures.
@@ -74,6 +83,7 @@ Load these files before running:
    - Destructive data paths: search scripts, tests, migrations, seed/reset/bootstrap jobs, and helper CLIs for `DROP`, `TRUNCATE`, broad `DELETE`, `CASCADE`, reset/recreate commands, and production-like connection strings. Verify they prefer isolated test env vars, positively identify disposable targets before mutating data, and refuse to run against production, shared dev, or ambiguous databases unless the user explicitly approved the exact operation.
    - Public admin, debug, or internal endpoints: verify they are absent, disabled, or properly authenticated.
    - For each check, capture concrete evidence from code, config, logs, command output, or runtime probes. Do not mark a check complete from code reading alone when the behavior can be executed safely. Do not execute destructive paths as proof unless the target is disposable and the command scope is explicit.
+   - When `--dep-scan` is present, run the dependency and supply-chain checklist after the baseline inventory and before the report. Record scanner output, missing tools, lockfile drift, install-script risk, CI action pinning, container base-image posture, license posture, and SBOM posture where applicable.
 5. Run a go-live readiness pass for deployable web/API services.
    - Apply this pass when the repo exposes a production web app, API, worker, upload flow, websocket/realtime feature, background job, database-backed service, or third-party integration. For local-only CLIs, libraries, prototypes, and non-deployable tools, mark the irrelevant items `not applicable` with a short reason.
    - Check load and capacity evidence: load/stress test command, known traffic limit, rate-limit behavior, and the highest-risk bottleneck if no load test exists.
@@ -100,6 +110,8 @@ Load these files before running:
 8. Emit the repo-wide report before repairs.
    - Open with a short `Audit Thesis` paragraph from the first-principles pre-pass.
    - Before making substantive fixes, report the verified findings already discovered, ordered by severity inside clear sections.
+   - Use the finding shape from `finding-disposition.md` for each material finding: severity, disposition, confidence, evidence, impact, and fix path.
+   - Use only these dispositions: `fix`, `needs human decision`, `residual risk`, and `no action`.
    - Use these sections:
      - `Security`
      - `Architecture and Design`
@@ -107,9 +119,10 @@ Load these files before running:
      - `Testing and Verification`
      - `Code Quality and Maintainability`
      - `Performance and Operations`
+     - `Looks Bad But Is Fine`
      - `Needs Human Decision`
      - `Residual Risks`
-   - If a section has no verified findings, say `none verified`.
+   - If a section has no verified findings, say `none verified`. If `Looks Bad But Is Fine` has no entries, say `none found`.
    - Keep the report concise, but do not bury serious production risks behind lower-priority cleanup.
 9. Stop on a hard user gate after the report unless `--loop` is present.
    - After presenting the report, explicitly ask whether the user wants fixes to proceed.
@@ -149,11 +162,11 @@ Rules:
 - Maximum 8 rounds. If the user asks for more, cap at 8 and say so in the final summary.
 - Round 1 still runs the full first-principles no-edit pre-pass, no-edit audit, runtime probes when applicable, and comprehensive review-chain coverage.
 - Emit a concise Round 1 repo-wide report before fixes, but do not ask for approval unless a human decision is required.
-- Fix only verified, in-scope, actionable findings where the repair is clear enough to make without changing product intent or external contracts.
+- Fix only findings with `Disposition: fix`, where the repair is clear enough to make without changing product intent or external contracts.
 - After fixes and validation for a round, start the next sweep in one fresh dedicated review subagent/thread when subagents are available.
 - Each loop review subagent owns detection for that round only. The main agent owns orchestration, edits, verification, loop stop decisions, artifact cleanup, and the final user summary.
 - Do not reuse the previous round's reviewer as evidence that the current state is clean. A clean stop requires a fresh resweep after the latest fixes.
-- Stop early when a fresh resweep finds no verified in-scope findings that should be fixed.
+- Stop early when a fresh resweep finds no remaining `Disposition: fix` findings.
 - Stop early when all remaining findings require a human decision, cannot be reproduced, cannot be safely fixed, or are explicitly out of scope.
 - Do not create new branches, commits, pushes, or PRs unless the user separately asked for those git actions.
 - Do not loop on cosmetic preferences, speculative risks, or issues where the only remaining action is broader product redesign.
@@ -161,8 +174,8 @@ Rules:
 Loop round shape:
 
 1. `Detect`: run the sweep/review pass for the current repo state.
-2. `Classify`: split findings into fix-now, human-decision, residual-risk, and no-action.
-3. `Fix`: address fix-now findings with the smallest correct changes.
+2. `Classify`: split findings into `fix`, `needs human decision`, `residual risk`, and `no action`.
+3. `Fix`: address `fix` findings with the smallest correct changes.
 4. `Verify`: run targeted checks plus any repo-health commands affected by the fixes.
 5. `Resweep`: spawn a fresh review subagent for the next detection round, unless max rounds or a stop condition was reached.
 
@@ -200,9 +213,10 @@ Before any fixes, output the repo-wide report in this order:
 5. Testing and Verification
 6. Code Quality and Maintainability
 7. Performance and Operations
-8. Needs Human Decision
-9. Residual Risks
-10. Fix Recommendation
+8. Looks Bad But Is Fine
+9. Needs Human Decision
+10. Residual Risks
+11. Fix Recommendation
 
 After approved fixes, output only:
 
