@@ -392,7 +392,7 @@ For one-shot execution only:
 - Start final review scope discovery with concise commands such as `git diff --stat`, `git diff --name-only`, and targeted hunk reads. Do not re-dump every large diff or replay every historical focused test unless evidence is missing, stale, or contradicted.
 - Review the focused verification evidence recorded during the implementation loop, then run the strongest practical broad validation needed for final confidence.
 - If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.
-- Keep the final full-branch review log until any requested harness drift report is generated. Keep it afterward only when `--preserve-review-artifacts` is active.
+- Keep the final full-branch review log through the hard finalization gate so the gate can verify that review actually happened. Keep it afterward only when `--preserve-review-artifacts` is active or when a requested harness drift report still needs it.
 - Do not issue a terminal user handoff before this final full-branch review and Step 9 finalization are complete, unless a real blocker prevents continuation.
 
 ## Step 9: Finalization
@@ -419,6 +419,7 @@ Operational translation:
   - `tasks/tasks-plan-<plan-key>.md`
 - Run the hard finalization gate from `skills/shared/references/execution/finalization-gate.md`, including unchecked-task search, archive verification, final `git status --porcelain=v1`, and comparison against `tasks/tmp/finalization-baseline-<plan-key>.status`.
 - If archiving, checklist updates, cleanup, implementation, or tests created uncommitted changes, commit them before terminal handoff. Pre-existing dirty entries from the kickoff baseline may remain, but no new uncommitted run work may remain.
+- If the last user-visible message would only explain that final review, commit, PR creation, or finalization remains, suppress it and keep executing those closeout steps. That message is a failed terminal handoff unless an external blocker prevents continuation.
 - Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`, unless the `$plan-and-execute` existing non-base branch exception applies.
 - Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`, unless the `$plan-and-execute` existing non-base branch exception applies.
 - Exception: `$plan-and-execute` does not open a PR by default when it started on an existing non-base branch. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL. This exception skips PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.

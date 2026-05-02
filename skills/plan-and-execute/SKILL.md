@@ -91,10 +91,12 @@ Load these files before running:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default
    - if the skill created a branch from main/base, use normal branch execution and open a PR at the end
    - use compact worker packets, focused validation per sub-task, no per-sub-task review chains, and one final full-branch review
+   - when implementation and focused validation are complete, continue directly into final broad validation, final full-branch review, review remediation, cleanup/archive, commit, and the finalization gate; do not hand off a validated-but-unreviewed or dirty branch as incomplete workflow state
 8. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include the actual compact report inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict; do not satisfy this by only mentioning an archived report path. Then continue normal cleanup unless `--preserve-artifacts` is present.
 9. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
 10. If `--preserve-artifacts` is present, keep temp planning, refinement, and review artifacts and list them in the final handoff.
 11. Run the hard finalization gate from `finalization-gate.md` before any terminal handoff. The existing non-base branch path skips default PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
+12. Treat any final response shaped like "implementation complete, validation passed, artifacts archived, remaining work is final review/commit/finalization" as an invalid terminal handoff. Continue into those closeout steps instead unless a real blocker prevents them.
 
 ## Branch and PR rules
 

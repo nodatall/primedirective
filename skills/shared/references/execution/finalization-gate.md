@@ -30,7 +30,17 @@ If a pre-existing dirty file overlaps the planned implementation surface, treat 
 
 Run this gate immediately before any final user-visible completion message:
 
-1. Re-open the task plan before archiving, or the archived task plan after archiving, and verify no unchecked task entries remain:
+1. For one-shot execution and `$plan-and-execute`, verify the final full-branch review evidence exists and is complete:
+
+   ```sh
+   review_log="tasks/tmp/review-task-final-<plan-key>.md"
+   test -f "$review_log"
+   rg -n "^[[:space:]]*- \[ \]" "$review_log"
+   ```
+
+   No output from the `rg` command means the review-log checklist check passed. If the review log is missing, contains unchecked prompt entries, or records unresolved blocker/material/final-audit issues without accepted-risk or blocked status, do not hand off. Run or finish the final full-branch review first.
+
+2. Re-open the task plan before archiving, or the archived task plan after archiving, and verify no unchecked task entries remain:
 
    ```sh
    task_file="tasks/tasks-plan-<plan-key>.md"
@@ -40,7 +50,7 @@ Run this gate immediately before any final user-visible completion message:
 
    No output means the unchecked-task check passed. If this command finds any unchecked task entry, do not hand off. Continue execution unless a real blocker prevents progress.
 
-2. Verify the PRD, TDD, and task plan are archived unless the user requested preservation:
+3. Verify the PRD, TDD, and task plan are archived unless the user requested preservation:
 
    ```sh
    test -n "$(find tasks/archive -path "*/prd-<plan-key>.md" -type f -print -quit)"
@@ -48,19 +58,21 @@ Run this gate immediately before any final user-visible completion message:
    test -n "$(find tasks/archive -path "*/tasks-plan-<plan-key>.md" -type f -print -quit)"
    ```
 
-3. Run the final status check:
+4. Run the final status check:
 
    ```sh
    git status --porcelain=v1
    ```
 
-4. Compare final status to `tasks/tmp/finalization-baseline-<plan-key>.status`.
+5. Compare final status to `tasks/tmp/finalization-baseline-<plan-key>.status`.
    - Pre-existing dirty entries from the baseline may remain.
    - No new uncommitted entries from the run may remain.
    - Archive moves, checklist updates, cleanup edits, implementation edits, and test edits created by the run must be committed before handoff.
    - If the baseline file itself is the only new status entry, remove it and rerun the final status check before handoff.
 
-5. If finalization itself changes files, commit those changes before terminal handoff.
+6. If finalization itself changes files, commit those changes before terminal handoff.
+
+If this gate would fail only because final review, commit, archiving, final status/baseline comparison, push, or PR creation has not been attempted yet, that is not a blocker to report. Continue the missing closeout work instead of handing the checklist back to the user.
 
 ## Existing Branch Exception
 
