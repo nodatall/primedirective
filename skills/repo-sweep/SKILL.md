@@ -53,7 +53,8 @@ Load these files before running:
    - Detect repo structure, frameworks, languages, package managers, monorepo layout, and tooling.
    - Read the actual verification sources: manifests, task runners, CI workflows, test configs, lint/typecheck/build scripts, docker files, and migration tooling.
    - Inspect recent churn and file-size hotspots before judging the repo: use git history and line counts to identify the largest files, most frequently changed files, and any overlap between the two. Treat that overlap as an audit-prioritization signal, not as proof of debt.
-   - Identify agent-readiness hotspots: godfiles, duplicated local patterns, unclear module boundaries, missing runnable feedback loops, and places where a future agent would have to infer behavior from scattered or stale clues.
+   - Identify maintainability hotspots: godfiles, duplicated local patterns, unclear module boundaries, brittle abstractions, hard-to-test paths, missing runnable feedback loops, and places where a future agent would have to infer behavior from scattered or stale clues.
+   - Do not report technical debt from size, churn, or style alone. A debt finding needs exact files or lines, a concrete maintenance cost, user or engineering impact, and a credible fix path.
    - Check `git status`, note whether the tree is dirty, and do not revert unrelated changes.
    - Identify missing env vars, broken assumptions, and install blockers.
 2. Run a first-principles no-edit pre-pass.
@@ -112,6 +113,7 @@ Load these files before running:
    - Before making substantive fixes, report the verified findings already discovered, ordered by severity inside clear sections.
    - Use the finding shape from `finding-disposition.md` for each material finding: severity, disposition, confidence, evidence, impact, and fix path.
    - Use only these dispositions: `fix`, `needs human decision`, `residual risk`, and `no action`.
+   - Classify technical debt findings by the actual failure mode. Default to `Code Quality and Maintainability`; use `Architecture and Design` for boundary, coupling, ownership, abstraction, or god-object problems; use `Testing and Verification` for missing or brittle safety nets; use `Performance and Operations` for runtime cost or operational fragility; use `Looks Bad But Is Fine` for inspected hotspots that look concerning but have no verified cost.
    - Use these sections:
      - `Security`
      - `Architecture and Design`
