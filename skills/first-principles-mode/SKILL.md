@@ -10,6 +10,7 @@ Run a deliberately deep, adaptive, read-only analysis pass before offering imple
 Load these references before starting:
 
 - `skills/first-principles-mode/references/analysis-rubric.md`
+- `skills/shared/references/analysis/verification-pivot.md`
 - `skills/shared/references/plain-language.md`
 
 If `--deep-research` is present, also load `skills/shared/references/planning/deep-research.md` and use its evidence standard without generating PRD/TDD/tasks-plan artifacts. Because first-principles mode has no planning memo by default, the visible answer/log must carry the audit trail through the First-Principles Deep Research Summary described below.
@@ -49,6 +50,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 - If the same request also asks for edits, debugging, refactors, or fixes, complete the analytical pass first and stop there. Wait for an explicit follow-up before changing files.
 - Back conclusions with file-backed evidence or other observable artifacts from the repo.
 - State confidence and the key uncertainty when they materially affect the conclusion.
+- When current evidence cannot separate the leading explanations, use `skills/shared/references/analysis/verification-pivot.md`: say the analysis is blocked by missing evidence and name the smallest probe, log, deterministic test, replay, or harness needed next.
 - With `--deep-research`, use live web research to check current sources, operator practice, newer ideas, and external contradictions before finalizing the analysis.
 - With `--pro-analysis`, use the Oracle Pro escalation reference after local reconnaissance. Oracle is an implementation detail: choose context, dry-run, run the Pro pass, then synthesize against local evidence.
 
@@ -89,6 +91,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
    - Ask what would falsify it.
    - Look for hidden assumptions, missing constraints, or a broader framing that changes the problem shape.
    - If the evidence remains mixed, keep the answer mixed.
+   - If current evidence cannot separate materially different explanations, use the verification pivot: stop theorizing, state the missing evidence plainly, and name the smallest verification step that would separate the explanations.
 10. Recompose the findings into one coherent answer that starts plain and becomes more technical only as needed.
 11. Choose the smallest user-facing output shape that preserves the conclusion, confidence, and decisive evidence.
    - Keep internal subquestions, discarded hypotheses, and intermediate reasoning private unless surfacing them will materially help the user.
@@ -147,6 +150,7 @@ Formatting rules:
 - Do not over-index on one file or subsystem before mapping the broader system.
 - Do not stay trapped inside the user's initial framing if the evidence suggests the problem is misframed.
 - Do not lead with verification minutiae unless they are central to the causal explanation.
+- Do not hide material uncertainty inside a polished best-guess memo; use the verification pivot when missing evidence is the real blocker.
 - Do not confuse a symptom list with a mechanism.
 - Do not confuse polish with search.
 - Do not present multiple hypotheses that are only superficial variations of the same story.

@@ -9,6 +9,8 @@ Run a bounded reproduce/fix/retry loop for one concrete broken behavior.
 
 This skill is for targeted repair, not repo-wide audit or planned multi-task execution. Use `$repo-sweep --loop` for broad repository sweeps, `$execute-task` for planned task artifacts, and `$review-chain` for review-only work.
 
+Load `skills/shared/references/analysis/verification-pivot.md` before starting.
+
 ## Activation
 
 Invoke explicitly with `$fix-loop`.
@@ -50,7 +52,7 @@ The user should not need to say "keep trying until it works." That is the core c
    - Rerun the same failing flow, not only a convenient adjacent check.
    - Read fresh output/logs/state after each attempt.
    - Classify the result as fixed, same failure, changed failure, or blocked.
-   - If the same hypothesis fails twice, stop patching that hypothesis and widen diagnosis before another edit.
+   - If the same hypothesis fails twice, or if the next patch would be another guess, use the verification pivot before another fix attempt: add the smallest useful log, deterministic test, replay, behavior probe, or harness that would expose the missing evidence.
    - If a temporary behavior probe is needed, put it under `/codex-scripts/`; promote it into a real test only when it is worth keeping.
 5. Verify the actual behavior.
    - Backend/API: rerun the concrete request, job, webhook, CLI, or test path and inspect persisted side effects when relevant.
@@ -73,6 +75,7 @@ Keep the handoff short and evidence-based:
 - rounds completed and why the loop stopped
 - exact verification commands or flows run
 - visual/log/runtime evidence when relevant
+- any verification pivot used, including the missing evidence and probe result
 - remaining blocker, skipped check, or residual risk if not fully verified
 
 Do not claim success until the actual failing flow or a clearly stated substitute check has passed.

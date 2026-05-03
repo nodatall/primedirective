@@ -17,6 +17,7 @@ Use this table when you already know the skill name. The detailed sections below
 | --- | --- | --- |
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
+| `deep-research-prompt` | `$deep-research-prompt` | None |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
@@ -29,7 +30,8 @@ Use this table when you already know the skill name. The detailed sections below
 
 ## Which Skill Do I Use?
 
-- Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, and keep going until it is verified fixed or blocked.
+- Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
+- Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
 - Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
@@ -37,7 +39,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$plan-refine` when planning artifacts exist but need pressure testing before execution.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
 - Use `$repo-sweep` when you want a broad repository audit, production-readiness pass, and optional repair loop.
-- Use `$first-principles-mode` when the main need is deep read-only analysis, not edits.
+- Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
 - Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches.
 - Use `$plain-language` when you want a shorter, clearer, plainer answer or rewrite.
@@ -60,6 +62,14 @@ Request options:
 
 - Optional branch name: inspect and clean only that branch instead of scanning all safe merged candidates.
 
+### `$deep-research-prompt`
+
+Creates a paste-ready prompt for ChatGPT.com Deep Research from the current thread. It assumes you will manually select the relevant GitHub repo, files, or project context in ChatGPT before starting the research.
+
+Modifiers:
+
+- None.
+
 ### `$execute-task`
 
 Implements work from existing `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` artifacts.
@@ -78,7 +88,7 @@ Modifiers:
 
 ### `$fix-loop`
 
-Targets one concrete broken behavior. It reproduces the failure, patches the root cause, reruns the actual failing flow, reads fresh evidence, and repeats until the behavior is verified fixed or blocked.
+Targets one concrete broken behavior. It reproduces the failure, patches the root cause, reruns the actual failing flow, reads fresh evidence, and repeats until the behavior is verified fixed or blocked. If repeated patches would be guesses, it adds the smallest useful log, deterministic test, replay, behavior probe, or harness before another fix attempt.
 
 Request options:
 
@@ -90,7 +100,7 @@ Modifiers:
 
 ### `$first-principles-mode`
 
-Runs a deep, read-only analysis pass. It is for mechanism-level judgment, competing explanations, root-cause reasoning, or plan critique before deciding what to build or change.
+Runs a deep, read-only analysis pass. It is for mechanism-level judgment, competing explanations, root-cause reasoning, or plan critique before deciding what to build or change. When the evidence cannot separate plausible explanations, it should stop and name the smallest verification step needed next.
 
 Modifiers:
 
