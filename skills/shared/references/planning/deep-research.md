@@ -136,6 +136,22 @@ Before the first external search:
 19. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
 20. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation, except when the caller is `$plan-and-execute --deep-research`; in that direct orchestration flow, adopt the findings into the artifacts and continue unless the change is a true blocker that is unsafe, contradictory, or impossible to default.
 
+## Context Discipline
+
+Deep research is context-expensive. Keep the active working set small while still meeting the evidence bar.
+
+- Search broadly, but open and analyze sources in small batches of 2-4 sources at a time.
+- After each batch, immediately write compact findings into `tasks/tmp/research-plan-<plan-key>.md` before opening more sources.
+- Do not paste raw source text, long excerpts, or full search-result dumps into the visible thread or working context.
+- Keep Evidence Ledger rows claim-focused: source metadata, supported claims, freshness, authority, and disposition. Do not copy large passages into the ledger.
+- Use one- or two-sentence source notes unless a longer note is required to resolve a real conflict.
+- When a source does not change the plan, record the rejection or non-use reason briefly and move on.
+- Before moving from one research bucket to the next, collapse that bucket into adopted, rejected, deferred, and still-open findings in the memo.
+- When PRD/TDD revision begins, rely on the completed research memo and cited source URLs. Do not reload every raw source page unless a specific claim needs rechecking.
+- Keep visible `Deep Research Summary` output short; put detailed evidence in the memo.
+
+If the active context is becoming too large during research, reduce source batch size and summarize the already-reviewed batch into the memo before continuing. Do not stop the workflow solely to manage context.
+
 ## Minimum evidence bar
 
 Before deep research may be considered complete, gather and record:
