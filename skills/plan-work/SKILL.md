@@ -95,7 +95,7 @@ Load these files before running:
 - If the target repo lacks meaningful validation or formatting enforcement for its stack, make that gap explicit in PRD, TDD, and tasks-plan instead of assuming those checks exist.
 - When planned work would materially benefit from missing validation tooling, add explicit bootstrap work for the config files, scripts, CI wiring, and hook integration needed for that repo before downstream feature tasks rely on them.
 - When the missing validation/tooling should be installed as first-time repo setup, make the earliest bootstrap task executable via `$bootstrap-repo-rules [--with-hooks]`.
-- Make expected red/green ownership explicit in the generated artifacts: identify which planned sub-tasks should begin with a failing targeted test first, and note only the slices that are expected to need a justified exception.
+- Make expected red/green ownership explicit in the generated artifacts: identify which planned sub-tasks should begin with a failing targeted test first, and note only the slices that are expected to need a justified exception. Execution records the actual `test_first_evidence` in the sub-task contract after repo inspection.
 - With `--deep-research`, research defaults to `Tech + Delivery`: technical design, migration/rollout/rollback, security/ops, and verification strategy.
 - With `--deep-research`, live web research is mandatory and the working memo must include at least 5 substantive external primary web sources.
 - With `--deep-research`, scour current operator practice and new ideas from strong practitioners, not only official documentation; record operator-practice sources and dispositions for ideas considered.

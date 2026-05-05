@@ -3,6 +3,7 @@
 Mandatory review behavior for task execution and explicit review commands.
 
 Use `skills/shared/references/review/review-calibration.md` as calibration context for task-based review rounds. The calibration examples are guidance for reviewer judgment; they do not add user-facing approval steps.
+Use `skills/shared/references/review/finding-disposition.md` when reporting material findings, assigning disposition, or deciding whether a repair is authorized.
 
 See `skills/shared/references/contract-ownership.md` for shared contract ownership. This file owns review topology, prompt profile selection, review logs, and final review/finalization sequencing.
 
@@ -59,7 +60,7 @@ For task-based execution or task-scoped review, evaluate changes against:
 - `tasks/tmp/plan-task-<task-id>.md` when it exists for the reviewed sub-task
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
-Also verify, when `tasks/tmp/plan-task-<task-id>.md` exists, that the implementation followed the recorded local reference pattern, used a failing-test-first loop when practical, and justified any exception or trust-boundary handling recorded there.
+Also verify, when `tasks/tmp/plan-task-<task-id>.md` exists, that the implementation followed the recorded local reference pattern, used a failing-test-first loop when practical, recorded credible `test_first_evidence`, and justified any exception or trust-boundary handling recorded there.
 Use the contract's `acceptance_checks` as the reviewer-facing behavior list. Treat missing, vague, or unexercised acceptance checks as a review issue when they affect confidence in the slice.
 
 ## Review scopes
@@ -132,6 +133,7 @@ Rationale:
 Every applicable review round must explicitly verify:
 
 - whether the slice was driven by a failing targeted test first when the work was practically testable
+- whether the sub-task contract includes `test_first_evidence` for practically testable work, including the pre-change command, observed failure, exercised production path, and post-change command
 - whether any skipped red/green loop has a recorded and justified exception in the sub-task contract
 - whether an existing repo-local implementation or test pattern was followed when one existed
 - whether any newly introduced pattern or deliberate deviation is justified by the actual slice constraints
@@ -156,14 +158,14 @@ Review a second time over the same review scope.
 ### Prompt C
 
 ```text
-Code Quality Pass: Review and Refactor
+Code Quality Pass: Detect Maintainability Findings
 Goal: Ensure the current code is high quality and fully finished.
 Criteria:
 Compact: Remove dead code, redundancy, and over-abstraction.
 Concise: Simplify verbose logic and use idiomatic patterns.
 Clean: Maintain consistent naming, clear structure, and proper formatting.
 Capable: Handle edge cases, fail gracefully, and perform well.
-Output: Show the refactored code with brief explanations of changes.
+Action: Report only concrete maintainability findings with evidence, impact, and smallest safe fix path. Do not refactor, rewrite, delete, or edit code in the review subagent.
 ```
 
 ### Prompt D
@@ -179,7 +181,7 @@ Error handling that silently swallows failures.
 Async code that doesn't actually await.
 Validation that doesn't validate.
 Any code path that hasn't been executed and verified.
-Action: Report findings honestly, flagging anything functional but unproven. Immediately fix every issue, from most complicated to simplest, using review-log TODO items to track progress.
+Action: Report findings honestly, flagging anything functional but unproven. Do not fix issues in the review subagent. Include the evidence needed for the main agent to decide whether each finding is `fix`, `needs human decision`, `residual risk`, or `no action`.
 ```
 
 ### Prompt E
@@ -195,7 +197,7 @@ Over-generic solutions for specific problems.
 Redundant null checks and type assertions.
 Enterprise patterns in simple scripts.
 Filler words and hedging in strings/docs.
-Action: Keep what adds value; delete what adds noise.
+Action: Report only cruft that creates real maintenance cost, review confusion, behavior risk, or user-facing quality loss. Do not delete or rewrite code in the review subagent. Defer cosmetic cleanup unless it blocks acceptance or keeps a material fix coherent.
 ```
 
 ### Prompt F
@@ -209,7 +211,7 @@ Invalid inputs and failure paths.
 Integration points with real dependencies where practical.
 Concurrent or async behavior where relevant.
 Actual outputs and side effects, not just passing assertions.
-Action: Identify missing or weak coverage, add the highest-value tests, run them, and record exactly what was executed and what remains unverified.
+Action: Identify missing or weak coverage, name the highest-value test or probe to add, and record exactly what was executed and what remains unverified. Do not add tests in the review subagent.
 ```
 
 ### Prompt G
@@ -251,7 +253,7 @@ Whether the change can access private data.
 Whether the change accepts or is exposed to untrusted input.
 Whether the change can send data externally or invoke outbound tools/actions.
 For deployable web/API services, also check applicable go-live risks: load or capacity evidence, horizontal-scale assumptions, server-memory sessions, direct app-server uploads, synchronous email or slow third-party calls in request paths, queue/worker retries and idempotency, database indexes and multi-step-write transactions, startup migration race safety, backup/restore evidence, compression/CDN/static asset handling, health checks, graceful shutdown, outbound HTTP timeouts, circuit breakers or degradation behavior, centralized logs, alerting, websocket state handling, and incident runbooks.
-Action: Report concrete evidence for each applicable item, flag gaps explicitly, and fix any production-readiness issues that are in scope for this change. Fail this prompt when the change combines access to private data, exposure to untrusted input, and outbound capability without a hard separation boundary or a human approval gate.
+Action: Report concrete evidence for each applicable item and flag gaps explicitly. Do not patch in the review subagent. Fail this prompt when the change combines access to private data, exposure to untrusted input, and outbound capability without a hard separation boundary or a human approval gate.
 ```
 
 ### Prompt I
@@ -277,8 +279,8 @@ Action: Give an honest assessment, list any remaining issues or accepted risks e
 For each prompt required by the active prompt profile, execute one-by-one in sequence:
 
 1. Run prompt.
-2. Record findings.
-3. Record fixes made.
+2. Record findings using the shared material finding shape when a finding affects completion, safety, correctness, or verification confidence.
+3. Record repair authorization and fixes made by the main agent, or `none during review` when the review phase is read-only.
 4. Record tests run (or `not run` + reason).
 5. Move to next prompt.
 
@@ -286,7 +288,9 @@ Rules:
 
 - Do not ask permission between prompts.
 - Complete one full round per review cycle.
-- If a prompt introduces code changes, continue to remaining prompts in same round.
+- Review subagents must not edit files, refactor, delete code, or add tests. They discover findings and evidence only.
+- The main agent owns disposition and repair. Repairs are authorized only when the parent workflow permits them: standard `$execute-task` sub-task review, `$execute-task --one-shot` final review for in-scope correctness fixes, `$repo-sweep --loop`, or repo-sweep after explicit user approval. A standalone `$review-chain` is report-first unless the user explicitly asked for fixes.
+- If the main agent repairs a finding during an authorized execution context, rerun the relevant checks and continue to remaining prompts in the same round.
 - Do not mark prompts complete retroactively from one combined pass.
 - If a prompt is outside the active prompt profile, mark it `not applicable` with a short reason rather than leaving it incomplete.
 - Compare the implementation against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists; treat unexplained contract drift as a finding.
@@ -338,8 +342,8 @@ Checklist (in order):
 Per prompt entry include:
 
 - `finding_count: 0` or `finding_count: <n>`
-- concrete findings
-- fixes made
+- concrete findings, using the shared material finding shape when applicable
+- disposition and fixes made by the main agent, or `none during review`
 - tests run
 - `harness_lift` entries only when a harness component changed implementation, caught a real issue, prevented likely drift, or provided meaningful confidence not available from cheaper checks
 - applicability when prompt is optional

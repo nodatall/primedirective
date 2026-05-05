@@ -51,6 +51,7 @@ Load these files before running:
 - `skills/shared/references/planning/improve-plan.md`
 - `skills/first-principles-mode/SKILL.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
+- `skills/shared/references/review/finding-disposition.md`
 - `skills/shared/references/reasoning-budget.md`
 
 ## Workflow
@@ -107,6 +108,8 @@ Load these files before running:
    - Produce structured findings before editing:
      - `id`
      - `severity`: `blocker`, `material`, or `minor`
+     - `execution_gate`: `blocks execution`, `fix before completion`, or `no action`
+     - `disposition`: `fix`, `needs human decision`, `residual risk`, or `no action`
      - `artifact`: `prd`, `tdd`, `tasks-plan`, or `cross-artifact`
      - `issue`
      - `why_it_matters`
@@ -115,10 +118,14 @@ Load these files before running:
    - Treat `blocker` as an issue that prevents execution.
    - Treat `material` as an issue that changes behavior, technical direction, sequencing, verification, rollout, safety, or implementer clarity.
    - Treat `minor` as wording, formatting, local clarity, or polish that does not change execution risk.
+   - Keep `blocker` / `material` / `minor` as the local stop-rule severities, but use `finding-disposition.md` when reporting material findings outside `$plan-refine`.
    - Set `previous_reviewer_round_had_blocker_or_material` from reviewer findings only; challenger-only objections do not set it.
-   - Do not apply challenger-derived fixes unless the reviewer promoted the related `challenge_id` to a `blocker` or `material` finding. The only exception is a minor coherence edit needed after applying an accepted blocker/material fix.
-   - Apply fixes for all `blocker` and `material` findings.
-   - Apply `minor` fixes only when the edit is necessary to keep the artifacts coherent after material changes.
+   - Do not apply challenger-derived fixes unless the reviewer promoted the related `challenge_id` to a `blocker` or `material` finding with `disposition: fix`. The only exception is a minor coherence edit needed after applying an accepted blocker/material fix.
+   - Apply fixes only for findings with `disposition: fix`.
+   - For `needs human decision`, stop this pre-execution refinement run before editing and report the exact user decision required. This stop behavior applies to `$plan-refine` before execution starts; it does not authorize a mid-run stop inside `$execute-task --one-shot`.
+   - For `residual risk`, do not edit around the finding; record the missing evidence, blocker, or external dependency in the refinement log and stop this pre-execution refinement run unless every blocker/material finding has already been fixed or safely downgraded by the reviewer.
+   - Do not apply `no action` findings.
+   - Apply `minor` fixes only when the edit is necessary to keep the artifacts coherent after material changes with `disposition: fix`.
    - Update only PRD, TDD, tasks-plan, and the refinement log.
    - Do not invent exact APIs, schemas, classes, routes, file names, helper names, or test paths unless the source plan or repo inspection already supports them.
    - Preserve useful source-plan substance. Do not remove scope just because it is hard.
@@ -149,7 +156,7 @@ Load these files before running:
     - For standalone `$plan-refine`, delete the log after a successful run unless `--preserve-refine-artifacts` is active.
     - For `$plan-and-execute --refine-plan`, keep the log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless preservation is active.
     - Keep the log when the run stops with unresolved blockers, material findings, max rounds, or churn.
-18. Before returning control to `$plan-and-execute`, print a short `Refinement Findings Summary`: material fixes, promoted challenger fixes, remaining blockers, and whether execution is ready.
+18. Before returning control to `$plan-and-execute`, print a short `Refinement Findings Summary`: material fixes, promoted challenger fixes, remaining blockers, execution gate status, and whether execution is ready.
 
 ## Critique Standard
 

@@ -47,6 +47,7 @@ Load these files before running:
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
+- `skills/shared/references/review/finding-disposition.md`
 - `skills/shared/references/harness-drift.md`
 
 ## Workflow
@@ -56,13 +57,13 @@ Load these files before running:
 3. Run kickoff branch setup from `review-protocol.md` Step 1 rules. By default, create/switch to a new feature branch and carry/commit the required planning artifacts there when they are the only uncommitted kickoff files. If `--stay-on-current-branch` is present, keep the current non-base branch and apply the current-branch kickoff rules instead.
 4. Execute according to mode:
    - Standard mode: implement the requested task/sub-task in the main agent.
-   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent reads the full planning context, creates a compact implementation packet from `tasks/tmp/plan-task-<task-id>.md`, spawns one worker subagent with that packet, waits for completion, integrates the result, owns task updates and commit, and moves directly to the next sub-task. Do not run per-sub-task review chains in one-shot mode; run one final `full-branch` review after all sub-tasks are complete.
+   - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent reads the full planning context, creates a compact implementation packet from `tasks/tmp/plan-task-<task-id>.md`, assigns `worker_model_tier` from `task-management.md`, spawns one worker subagent with that packet, waits for completion, integrates the result, owns task updates and commit, and moves directly to the next sub-task. Do not run per-sub-task review chains in one-shot mode; run one final `full-branch` review after all sub-tasks are complete.
 5. For each completed sub-task:
   - create/update `tasks/tmp/plan-task-<task-id>.md` with the sub-task contract before coding, then keep it current as implementation and review findings refine the slice
   - identify repo-local implementation, test, and validation reference patterns before coding, record the chosen pattern in the sub-task contract, and justify any deliberate deviation
   - for high-risk slices, run the agent-owned pre-coding contract critique from `task-management.md` and tighten the contract before implementation starts
   - write or update the targeted test first when the slice is practically testable
-  - run the targeted test command and confirm the intended failure before implementation begins
+  - run the targeted test command, confirm the intended failure before implementation begins, and record `test_first_evidence` in the sub-task contract
   - implement the change using PRD + TDD + tasks-plan + exact sub-task block + the chosen local pattern in standard mode, or using the compact implementation packet from `task-management.md` in one-shot mode
   - rerun the targeted verification until the slice passes
   - in standard mode, expand to any additional relevant repo-defined checks for the touched surface such as lint, format-check, typecheck, test, or build
@@ -90,8 +91,9 @@ Load these files before running:
 ## Execution defaults
 
 - Follow `reasoning-budget.md`: standard-mode implementation uses the current execution agent's appropriate implementation tier, one-shot implementation workers use strong reasoning, final review subagents use the strongest appropriate reasoning tier, and mechanical chores use medium/standard reasoning.
+- In one-shot mode, the main orchestrator may mark a worker packet `worker_model_tier: spark_candidate` only for simple mechanical slices that satisfy `task-management.md`. The orchestrator and final review stay on the normal strong/strongest tiers; Spark routing is never a global `$execute-task` mode.
 - Treat a failing-test-first red/green loop as the default for code-bearing, practically testable slices.
-- A test-first exception is allowed only when a failing-first loop is not practical for that exact slice; record the exception reason in `tasks/tmp/plan-task-<task-id>.md` before implementation starts.
+- A test-first exception is allowed only when a failing-first loop is not practical for that exact slice; record the exception reason in `test_first_plan` and `test_first_evidence` in `tasks/tmp/plan-task-<task-id>.md` before implementation starts.
 - Prefer existing tests. If no test covers the path, create a temporary script under `/codex-scripts/` that imports or copies the relevant production code and exercises the changed behavior. Keep `/codex-scripts/` gitignored unless the probe is promoted into a real test.
 - New contract critique, acceptance checks, review calibration, and harness drift checks are agent-owned. Do not add mandatory human approval steps or extra user-facing checkpoints to use them.
 - Before coding, search the repo for similar implementations and tests, follow an existing local pattern when it is a good fit, and record why any new pattern or deviation is necessary.

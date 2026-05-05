@@ -26,6 +26,7 @@ Load these files before running:
 
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
+- `skills/shared/references/review/finding-disposition.md`
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/reasoning-budget.md`
 
@@ -38,9 +39,11 @@ Load these files before running:
    - Follow `reasoning-budget.md`: explicit review runs should use the strongest appropriate reasoning tier for the selected model family or budget.
 5. Treat Prompt G as required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior. Otherwise record it as not applicable with a reason.
 6. Treat Prompt H as required when the change is deploy-bound, materially affects operations, infrastructure, migrations, security posture, or runtime observability, or touches agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise record it as not applicable with a reason.
-7. Record findings, fixes, and test evidence for each prompt, comparing the change against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists, including acceptance checks, the recorded test-first plan, local reference patterns, and any trust-boundary notes.
+7. Record findings, disposition, and test evidence for each prompt, comparing the change against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists, including acceptance checks, the recorded test-first plan, `test_first_evidence`, local reference patterns, and any trust-boundary notes.
 8. Enforce completion gates, including unresolved TODO checks.
 9. Provide summary and delete review log only after all review checks pass, unless `--preserve-review-artifacts` was supplied.
+
+Default behavior is report-first. Do not patch files from standalone `$review-chain` unless the user explicitly asked for fixes in the same request. If fixes are requested, the main agent applies them after the review findings are recorded; the review subagent remains detect-only.
 
 ## Scope
 
@@ -51,6 +54,6 @@ Load these files before running:
 
 Follow `review-protocol.md` for review logs, prompt completion, and cleanup.
 
-Final review output must lead with findings. For each finding, include severity, file or artifact reference, issue, impact, and suggested fix. If there are no findings, say that clearly and list any residual test, visual, deployment, or review-scope gaps.
+Final review output must lead with findings. For each material finding, use the shared finding shape from `finding-disposition.md`: severity, execution gate, disposition, confidence, scope, evidence, impact, fix path, and owner. If there are no findings, say that clearly and list any residual test, visual, deployment, or review-scope gaps.
 
 After findings, keep the summary brief: prompts run, Prompt G/H applicability, fixes made during review, validation commands run, remaining accepted risks or blockers, and whether review artifacts were deleted or preserved.

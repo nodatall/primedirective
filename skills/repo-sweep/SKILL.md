@@ -105,13 +105,13 @@ Load these files before running:
    - Use the prompts from `review-protocol.md` as required review components for the repo sweep.
    - For repo sweep, force the comprehensive `full-chain` coverage: Prompt A through Prompt I, one prompt at a time.
    - Treat Prompt G and Prompt H with the same applicability rules as the normal review chain, but record them explicitly as executed or `not applicable`.
-   - Record findings, fixes attempted, and test or probe evidence for each prompt, even when the fix field is `none during no-edit phase`.
+   - Record findings, repair authorization, and test or probe evidence for each prompt. During the pre-fix no-edit phase, the fix field must be `none during no-edit phase`.
    - Enforce the normal review-chain completion gates during reporting: do not mark the review phase complete while material verified findings are still hidden, unclassified, or hand-waved.
    - During this pre-fix review phase, use the prompts to deepen evidence collection and categorization, not to edit files.
 8. Emit the repo-wide report before repairs.
    - Open with a short `Audit Thesis` paragraph from the first-principles pre-pass.
    - Before making substantive fixes, report the verified findings already discovered, ordered by severity inside clear sections.
-   - Use the finding shape from `finding-disposition.md` for each material finding: severity, disposition, confidence, evidence, impact, and fix path.
+   - Use the finding shape from `finding-disposition.md` for each material finding: severity, execution gate, disposition, confidence, scope, evidence, impact, fix path, and owner.
    - Use only these dispositions: `fix`, `needs human decision`, `residual risk`, and `no action`.
    - Classify technical debt findings by the actual failure mode. Default to `Code Quality and Maintainability`; use `Architecture and Design` for boundary, coupling, ownership, abstraction, or god-object problems; use `Testing and Verification` for missing or brittle safety nets; use `Performance and Operations` for runtime cost or operational fragility; use `Looks Bad But Is Fine` for inspected hotspots that look concerning but have no verified cost.
    - Use these sections:

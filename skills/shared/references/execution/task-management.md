@@ -35,8 +35,8 @@ See `skills/shared/references/contract-ownership.md` for shared contract ownersh
 - If kickoff begins with only `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` uncommitted, commit them on the active execution branch before the first implementation sub-task.
 - For each sub-task:
   1. Main agent selects the next unchecked sub-task in file order.
-  2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` as the sub-task contract before coding starts, including acceptance checks, reference pattern choice, test-first plan, and any required trust-boundary notes.
-  3. Main agent spawns one worker subagent with the compact implementation packet, not the full PRD/TDD/task-plan files by default.
+  2. Main agent creates/updates `tasks/tmp/plan-task-<task-id>.md` as the sub-task contract before coding starts, including acceptance checks, reference pattern choice, test-first plan, test-first evidence placeholder, and any required trust-boundary notes.
+  3. Main agent marks the compact implementation packet with `worker_model_tier: spark_candidate` or `worker_model_tier: strong_required`, then spawns one worker subagent with that packet, not the full PRD/TDD/task-plan files by default.
   4. Worker implements one sub-task only and returns control.
   5. Main agent integrates the result, reruns the focused verification for that slice, marks the checklist complete, and creates the commit.
   6. Main agent immediately re-opens `tasks/tasks-plan-<plan-key>.md` after that commit and re-scans for the next unchecked sub-task in file order.
@@ -84,8 +84,30 @@ For each worker, pass only:
 - local reference patterns
 - focused test-first plan and verification command
 - trust-boundary, frontend, migration, or rollout notes only when relevant
+- `worker_model_tier`: `spark_candidate` or `strong_required`
 
 Do not pass full PRD, TDD, or task-plan text to every one-shot worker by default. This keeps repeated worker startup context small while preserving exact local implementation detail in `tasks/tmp/plan-task-<task-id>.md`.
+
+## One-shot worker model routing
+
+The main orchestrator stays on the normal strong model tier because it owns full-plan coherence, task boundaries, review decisions, commits, and finalization. Final review stays on the strongest appropriate tier. Worker model routing applies only to individual one-shot implementation worker packets.
+
+Use `worker_model_tier: spark_candidate` only when all of these are true:
+
+- the slice is simple, mechanical, and narrowly scoped
+- the local reference pattern is obvious and recorded
+- the packet names one primary changed surface
+- the packet names one primary verification command class
+- no product, architecture, security, migration, trust-boundary, schema, public API, billing, frontend design judgment, or ambiguous debugging decision is required
+- the worker should not need full PRD/TDD/task-plan context to understand intent
+
+Use `worker_model_tier: strong_required` for everything else, including frontend design judgment, auth/security, data shape, migrations, public contracts, broad refactors, unclear failures, integration slices, and any slice where the worker escape hatch is likely.
+
+For OpenAI/Codex workers, `spark_candidate` may use `gpt-5.3-codex-spark` or the closest available fast coding model. This is an optimization, not a completion gate. If the selected model is unavailable, run the worker as `strong_required`.
+
+Claude users should ignore `spark_candidate` as a model-selection directive unless their environment has an explicitly configured equivalent fast worker model. In Claude-only runs, treat `spark_candidate` as a note that the slice is simple, but still use the normal implementation-worker model/tier.
+
+Escalate a Spark-routed slice back to the main agent or a stronger worker when Spark fails focused verification, expands the intended scope, needs full artifact context, hits ambiguity, changes the wrong surface, or asks for a decision outside the packet. Do not repeatedly retry Spark on the same failed slice.
 
 Worker escape hatch:
 
@@ -107,6 +129,7 @@ Final review exception:
    - acceptance_checks: concrete behaviors the reviewer must verify, including at least one user-visible or system-visible success path and any relevant failure path, edge case, or state transition
    - reference_patterns: repo-local paths or symbols for the implementation, test, and validation examples being followed; record `none found` only after searching, and justify any deliberate deviation from the closest usable pattern
    - test_first_plan: the targeted test to add or update first and the exact command expected to fail before implementation; if failing-first is not practical, record the exception reason here before coding starts
+   - test_first_evidence: before coding, initialize this as `pending` or `not applicable` with the exception reason; after the failure-first command runs, record the exact pre-change command, observed failing assertion or symptom, production path exercised, post-change command, and whether the same check passed after implementation
    - verify: the exact checks that will prove the slice works
 4. Add `trust_boundary_notes` only when the slice touches agents, secrets, untrusted input, or outbound actions. Record the boundary, approval gate, or separation rule that implementation and review must preserve.
 5. For frontend-facing work, also record:
@@ -114,10 +137,11 @@ Final review exception:
    - visual direction or design intent
    - anti-goals to avoid generic or off-brand output
 6. Before coding, search the repo for similar implementations, tests, and validation commands or config, record the chosen local pattern in `reference_patterns`, and justify any decision to introduce a new pattern instead of following the existing one.
-7. Default to a red/green loop for code-bearing, practically testable slices: add or update the targeted test first, run the failure-first command, then implement. Only skip that order when the recorded `test_first_plan` exception makes the reason explicit.
+7. Default to a red/green loop for code-bearing, practically testable slices: add or update the targeted test first, run the failure-first command, record `test_first_evidence`, then implement. Only skip that order when the recorded `test_first_plan` and `test_first_evidence` exception make the reason explicit.
 8. Prefer existing tests. If no test covers the path, create a temporary script under `/codex-scripts/` that imports or copies the relevant production code and exercises the changed behavior. Keep `/codex-scripts/` gitignored unless the probe is promoted into a real test.
-9. Update the contract when implementation or review reveals a better-scoped slice, a better local pattern, or a missing verification step.
-10. Delete temp plan docs only after they are no longer needed for review and any requested harness drift check has completed: after the standard sub-task review completes, or after the final full-branch review and drift report complete in one-shot mode, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
+9. Review should reject fake test-first evidence when the pre-change failure does not exercise the changed production path, the failing command is missing, the post-change command is missing, or the evidence is only a broad unrelated suite failure.
+10. Update the contract when implementation or review reveals a better-scoped slice, a better local pattern, or a missing verification step.
+11. Delete temp plan docs only after they are no longer needed for review and any requested harness drift check has completed: after the standard sub-task review completes, or after the final full-branch review and drift report complete in one-shot mode, unless `--preserve-review-artifacts` was supplied on the parent execution trigger.
 
 ## Pre-coding contract critique
 
