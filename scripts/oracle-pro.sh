@@ -18,15 +18,16 @@ Usage:
 Prime Directive wrapper for ChatGPT Pro browser escalation via Oracle.
 
 Defaults can be overridden with:
-  ORACLE_PRO_MODEL                 default: gpt-5.4-pro
-  ORACLE_PRO_MODEL_STRATEGY        optional: select/current/ignore; use ignore when ChatGPT hides the model picker
+  ORACLE_PRO_MODEL                 default: gpt-5.5-pro
+  ORACLE_PRO_MODEL_STRATEGY        default: select for dry-run/run/render, ignore for setup; set current to reuse browser state
   ORACLE_PRO_THINKING              default: extended; set off/none/0 to skip UI selection
   ORACLE_PRO_BROWSER_TIMEOUT        default: 3600s
   ORACLE_PRO_PROFILE_DIR            default: ~/.oracle/browser-profile
   ORACLE_PRO_REPAIR_PROFILE         default: 1; set 0 to skip Chrome crash-state repair
   ORACLE_PRO_BUNDLE_FILES           default: 1
   ORACLE_PRO_KEEP_TMP               default: 0; set 1 to keep wrapper temp files
-  ORACLE_BIN                        default: oracle if installed, else npx -y @steipete/oracle
+  ORACLE_PRO_PACKAGE_SPEC           default: @steipete/oracle@0.10.0 when ORACLE_BIN is unset
+  ORACLE_BIN                        default: oracle if installed, else npx -y ${ORACLE_PRO_PACKAGE_SPEC}
 
 If no --file/--include/--path input is provided, the wrapper defaults to --file .
 USAGE
@@ -47,14 +48,14 @@ if [[ -n "${ORACLE_BIN:-}" ]]; then
 elif command -v oracle >/dev/null 2>&1; then
   ORACLE_CMD=(oracle)
 else
-  ORACLE_CMD=(npx -y @steipete/oracle)
+  ORACLE_CMD=(npx -y "${ORACLE_PRO_PACKAGE_SPEC:-@steipete/oracle@0.10.0}")
 fi
 
 export ORACLE_BROWSER_PROFILE_DIR="${ORACLE_PRO_PROFILE_DIR:-${HOME}/.oracle/browser-profile}"
 
 common_args=(
   --engine browser
-  --model "${ORACLE_PRO_MODEL:-gpt-5.4-pro}"
+  --model "${ORACLE_PRO_MODEL:-gpt-5.5-pro}"
   --browser-manual-login
   --browser-attachments "${ORACLE_PRO_ATTACHMENTS:-auto}"
   --browser-timeout "${ORACLE_PRO_BROWSER_TIMEOUT:-3600s}"
@@ -100,12 +101,14 @@ append_thinking_if_enabled() {
   esac
 }
 
-append_model_strategy_if_configured() {
+append_model_strategy() {
+  local default_strategy="${1:-}"
+
   if [[ "$has_model_strategy_input" -eq 1 ]]; then
     return
   fi
 
-  local strategy="${ORACLE_PRO_MODEL_STRATEGY:-}"
+  local strategy="${ORACLE_PRO_MODEL_STRATEGY:-$default_strategy}"
   if [[ -z "$strategy" ]]; then
     return
   fi
@@ -212,11 +215,16 @@ by itself mean the browser is signed out.
 Recovery for setup checks:
   ./scripts/oracle-pro.sh setup --force
 
-Recovery for a run when the prompt box is visible but the picker is hidden:
+The wrapper tries to select the requested ChatGPT model on live runs so it does
+not inherit arbitrary browser state. If you explicitly want to reuse whatever
+the browser currently has selected, rerun with:
+  ORACLE_PRO_MODEL_STRATEGY=current ./scripts/oracle-pro.sh run -p "<prompt>" --file .
+
+If the prompt box is visible but UI controls drift, rerun with:
   ORACLE_PRO_MODEL_STRATEGY=ignore ORACLE_PRO_THINKING=off ./scripts/oracle-pro.sh run -p "<prompt>" --file .
 
-This skips forced model and thinking-time selection, so record the run as using
-the current ChatGPT browser mode rather than a verified model-picker selection.
+This skips forced model and thinking-time selection and records the run as using
+the current ChatGPT browser mode rather than a verified picker selection.
 EOF
   fi
 }
@@ -248,11 +256,7 @@ run_with_private_tmpdir() {
 case "$action" in
   setup)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --browser-keep-browser)
-    if [[ "$has_model_strategy_input" -eq 0 && -z "${ORACLE_PRO_MODEL_STRATEGY:-}" ]]; then
-      CMD+=(--browser-model-strategy ignore)
-    else
-      append_model_strategy_if_configured
-    fi
+    append_model_strategy ignore
     CMD+=(--slug "${SETUP_SESSION_ID}" -p "Prime Directive Oracle Pro setup check. Reply with OK when this message is received.")
     CMD+=("$@")
     run_with_private_tmpdir
@@ -269,7 +273,7 @@ case "$action" in
     ;;
   dry-run)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --dry-run summary --files-report)
-    append_model_strategy_if_configured
+    append_model_strategy select
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
@@ -277,7 +281,7 @@ case "$action" in
     ;;
   dry-run-json)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --dry-run json --files-report)
-    append_model_strategy_if_configured
+    append_model_strategy select
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
@@ -285,7 +289,7 @@ case "$action" in
     ;;
   run)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}")
-    append_model_strategy_if_configured
+    append_model_strategy select
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
@@ -293,7 +297,7 @@ case "$action" in
     ;;
   render)
     CMD=("${ORACLE_CMD[@]}" "${common_args[@]}" --render --copy-markdown)
-    append_model_strategy_if_configured
+    append_model_strategy select
     append_thinking_if_enabled
     append_default_files_if_needed
     CMD+=("$@")
