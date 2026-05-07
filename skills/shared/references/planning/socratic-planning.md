@@ -277,6 +277,9 @@ When transforming a rich source plan into PRD, TDD, and tasks-plan:
 8. Ensure the tasks-plan is derived from finalized PRD and TDD, not directly from the raw source plan.
 9. If `--deep-research` is active, draft PRD and TDD first, then apply research findings to revise them before generating tasks-plan.
 10. If `--deep-research` is active, complete the evidence bar and working memo in `deep-research.md` before tasks-plan generation begins.
+11. If the source plan includes an explicit checklist, numbered roadmap, or phrases such as "full plan", "everything", "all at once", "not a tiny slice", or "whole roadmap", preserve that list as a source acceptance checklist.
+12. Do not mark checklist items complete through placeholders, fallback interfaces, diagnostics-only behavior, or "future work" language unless the checklist item itself requested only that limited behavior.
+13. If safety, source-policy, time, or reviewability means the full checklist should not execute in one run, stop and ask for a scope decision before artifact generation instead of silently narrowing.
 
 When transforming a sparse prompt into PRD, TDD, and tasks-plan:
 
@@ -307,6 +310,7 @@ Legacy `prd-key`/`prd-id` wording must be rejected and corrected.
 - Deep-research planning requested: lock the intake summary first, present the three-paragraph summary checkpoint from the locked decisions when `--direct` is not active, generate initial PRD/TDD drafts, run the deep research pass to improve them, and present one revised standalone checkpoint only if research materially changes the summary meaning before generating tasks-plan and `--direct` is not active.
 - Sparse request provided: ask enough questions to reach decision completeness, present the summary checkpoint, then generate PRD/TDD/tasks-plan.
 - Direct from-thread request provided: skip questions and checkpoint gates, generate PRD/TDD/tasks-plan from the thread plan, write assumptions into the artifacts, and stop only for true blockers.
+- Direct from-thread request contains a full-plan checklist: preserve the checklist and make task `done_when` conditions prove the requested capability shipped; if that is unsafe or too large, treat it as a true blocker and ask before task generation.
 - Source plan contains unresolved ambiguity: convert to explicit default or ask until resolved.
 - Source plan contains detailed route/schema/test content: preserve it during normalization.
 - No build trigger after planning: hard stop with accepted build commands only.

@@ -73,6 +73,9 @@ Load these files before running:
 - With `--direct`, write a concise `Source Interpretation` or assumptions note into the generated artifacts instead of stopping for low-impact clarification.
 - Use `skills/shared/references/plain-language.md` for user-facing questions, recommended defaults, sparse-prompt interpretations, and the three-paragraph checkpoint.
 - With `--from-thread`, preserve the important plan decisions already discussed in the current conversation and treat them as source material.
+- With `--from-thread --direct`, prefer the latest user-authored or user-approved plan over earlier assistant summaries when they disagree.
+- If the source says to implement the full plan, every source checklist item must appear as a requirement, task, explicit non-goal, or user-approved deferral. Do not downgrade a requested capability into scaffolding, diagnostics, an interface, or a follow-up unless the source plan itself asked only for that limited step.
+- If preserving the full source checklist would create an unsafe or impractical execution unit, stop before artifact generation and ask whether to use `--prepare-plan`, split the plan, or provide a narrower source plan. Do not solve the conflict by silently choosing a conservative slice.
 - If prior harness drift notes are present in the source material, preserved artifacts, or archived handoffs, use them as calibration input for task granularity and verification expectations. Do not run a drift audit during planning and do not add user checkpoints because of drift notes.
 - Do not use lean-mode branching. Simpler work produces shorter docs naturally.
 - Do not leave `Open questions` or `Open technical questions` in final artifacts.

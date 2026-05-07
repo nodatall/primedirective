@@ -68,9 +68,13 @@ Load these files before running:
    - no summary checkpoint gate
    - ask only for a true blocker where the core objective is missing, contradictory, or unsafe to infer
    - write assumptions into the artifacts instead of stopping for low-impact clarification
+   - before drafting PRD/TDD, identify the latest user-approved source plan in the thread; if it conflicts with earlier assistant summaries, the latest user-approved plan wins
+   - when the source plan says "full plan", "everything", "all at once", "not a tiny slice", "whole roadmap", or equivalent, treat each concrete source-plan item as in scope and as an acceptance obligation, not as optional roadmap context
+   - if the run cannot safely execute every concrete source-plan item, stop before task generation and ask for scope reduction or `--prepare-plan`; do not silently convert the work into a first slice, foundation pass, interface, stub, diagnostic, or follow-up list
    - with `--deep-research`, compose the owner contract in `skills/shared/references/planning/deep-research.md` through `$plan-work`; print the required short Deep Research Summary before task generation or execution
    - with `--pro-analysis`, compose the owner contract in `skills/shared/references/analysis/pro-oracle-escalation.md`; print the required short Pro findings summary before refinement or execution
    - when both `--deep-research` and `--pro-analysis` are active, use the order and gates owned by `pro-oracle-escalation.md`
+   - Pro analysis, deep research, and refinement may add safety gates or sequencing, but they must not narrow an explicit full-plan source into partial completion unless that narrowing is recorded as a blocker needing user decision before execution
 5. Require all three artifacts before execution:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`

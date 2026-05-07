@@ -49,6 +49,11 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 - Sequencing assumptions and dependency notes.
 - Any required migration/backfill/rollout order.
 
+## Source Acceptance Checklist
+- Required when the source plan included an explicit checklist, numbered roadmap, or full-plan/all-at-once language.
+- Each item should be marked `tasked`, `non-goal`, or `user-approved deferral`.
+- `user-approved deferral` requires evidence from the source plan or an explicit user decision, not reviewer caution alone.
+
 ## Tasks
 - [ ] 1.0 Parent task title
   - covers_prd: `FR-001`, `FR-002`
@@ -96,14 +101,19 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 26. If `$plan-and-execute --pro-analysis` is active, use the Pro findings ledger and artifact delta to fold adopted implementation-impact findings into task ordering, task text, `verify`, and `done_when`.
 27. If an adopted Pro finding has implementation impact but should not become a task, it must already be explicitly deferred or marked as a non-goal in PRD/TDD or the Pro synthesis memo before task generation. Do not silently drop adopted Pro findings as decorative evidence.
 28. If `--deep-research` is active, fold research-discovered rollout, migration, verification, and cleanup work into the task ordering and sub-task details.
-29. Save `tasks/tasks-plan-<plan-key>.md`.
-30. Stop and wait for build trigger.
+29. If the source plan contains an explicit checklist, numbered roadmap, or full-plan/all-at-once language, add `## Source Acceptance Checklist` before tasks and map every concrete item to `tasked`, `non-goal`, or `user-approved deferral`.
+30. For source-checklist items marked `tasked`, make `done_when` prove the requested capability is actually implemented. Do not satisfy "implement OCR", "real adapter", "replace scoring", "run campaigns", or similar capability language with a stub, fallback interface, diagnostic marker, partial hook, or one representative campaign unless the source checklist explicitly allowed that narrower result.
+31. If a source-checklist item is too broad, unsafe, or unverifiable for one run, hard-stop before coding and ask the user to split or confirm the deferral. Do not bury it as follow-up work in the task plan.
+32. Save `tasks/tasks-plan-<plan-key>.md`.
+33. Stop and wait for build trigger.
 
 ## Coverage rule
 
 No requirement from PRD or TDD may disappear during task generation.
 
 If something is intentionally omitted from tasks, it must already be explicitly marked as out of scope, deferred, or non-goal in PRD/TDD before task generation.
+
+When the source plan had a source acceptance checklist, omitted items must also be marked `non-goal` or `user-approved deferral` in the task plan checklist. Reviewer caution, Pro advice, or implementation convenience is not enough to defer an item the user asked to implement fully.
 
 Contract details are requirements when they affect implementation. Do not let state machines, config defaults, error classes, invariants, recovery paths, operator intervention points, or validation profiles remain only as descriptive TDD prose if they require code, tests, docs, or runtime behavior.
 

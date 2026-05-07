@@ -84,6 +84,8 @@ Do not drop product-facing detail just because the source heading name differs f
 10. Do not omit sections. If a section is truly not relevant, fill it with one explicit, concise note rather than leaving it out.
 11. When `--deep-research` is active, treat the first PRD draft as a staging artifact for research review, then update it only with adopted product-facing findings before tasks-plan generation.
 12. When `--direct` is active, include a concise `Source Interpretation / Assumptions` note in the closest relevant section instead of stopping for low-impact clarification.
+13. If the source plan contains a checklist or explicit full-plan language, include a `Source Acceptance Checklist` or equivalent PRD section that preserves every concrete requested capability and marks each item as in scope, non-goal, or user-approved deferral.
+14. Do not convert a requested capability into a weaker success criterion such as "add interface", "record diagnostic", "document follow-up", or "prepare hook" unless the source plan requested that weaker outcome.
 
 ## Build gate reminder
 
