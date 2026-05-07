@@ -398,6 +398,8 @@ For one-shot execution only:
 - If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.
 - Keep the final full-branch review log through the hard finalization gate so the gate can verify that review actually happened. Keep it afterward only when `--preserve-review-artifacts` is active or when a requested harness drift report still needs it.
 - Do not issue a terminal user handoff before this final full-branch review and Step 9 finalization are complete, unless a real blocker prevents continuation.
+- After implementation validation passes, a user-facing recap of changed files, tests, generated artifacts, or sources is treated as a terminal handoff. Suppress it until the final review log exists, all required review prompts are checked off, material findings have disposition, and Step 9 finalization has completed.
+- If an implementation summary has already been drafted before final review, discard it as stale and continue with final review; the final handoff must be written only from post-review and post-finalization evidence.
 
 ## Step 9: Finalization
 
@@ -416,6 +418,7 @@ Operational translation:
 - Treat this re-opened task-file check as a hard liveness gate, not as an invitation to summarize partial progress. If unchecked sub-tasks remain, return to execution immediately.
 - Treat user-visible recap patterns such as completed-item lists, passing-verify lists, "already started X", or "remaining unchecked work is Y" as terminal-style handoff attempts when they would be the last message before more execution. If unchecked sub-tasks remain, do not emit that recap; continue execution instead.
 - Treat any user-visible one-shot message before this Step 9 finalization completes as potentially terminal or stall-inducing. Do not emit mid-run progress updates; only interrupt the run early for a real blocker that requires explicit user action.
+- Treat "What Changed", "Validation", "Planning/Artifacts", "Sources used", and similar completion-shaped sections as final-handoff sections. They are invalid before final review, review remediation, task/archive updates, commits, and the hard finalization gate are complete.
 - If all checkboxes in task list are complete, archive:
   - Create `tasks/archive/<yyyy-mm-dd>-<plan-key>/` using the local current date in ISO format (`YYYY-MM-DD`)
   - `tasks/prd-<plan-key>.md`

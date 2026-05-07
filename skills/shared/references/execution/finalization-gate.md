@@ -30,6 +30,8 @@ If a pre-existing dirty file overlaps the planned implementation surface, treat 
 
 Run this gate immediately before any final user-visible completion message:
 
+Before running the numbered checks, classify the next user-visible message you are tempted to send. If it would summarize implementation changes, tests, generated artifacts, sources, or remaining closeout work, treat it as a terminal completion message and run this gate first. Do not send an implementation recap as a progress update after the last implementation validation passes.
+
 1. For one-shot execution and `$plan-and-execute`, verify the final full-branch review evidence exists and is complete:
 
    ```sh
@@ -73,6 +75,8 @@ Run this gate immediately before any final user-visible completion message:
 6. If finalization itself changes files, commit those changes before terminal handoff.
 
 If this gate would fail only because final review, commit, archiving, final status/baseline comparison, push, or PR creation has not been attempted yet, that is not a blocker to report. Continue the missing closeout work instead of handing the checklist back to the user.
+
+The final completion handoff must be based on post-gate evidence. Include the final review outcome, disposition of any material findings, final validation, archive or preservation result, commit/PR or documented existing-branch exception status, and final working-tree status.
 
 ## Existing Branch Exception
 

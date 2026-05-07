@@ -92,11 +92,13 @@ Load these files before running:
    - if the skill created a branch from main/base, use normal branch execution and open a PR at the end
    - use compact worker packets, focused validation per sub-task, no per-sub-task review chains, and one final full-branch review
    - when implementation and focused validation are complete, continue directly into final broad validation, final full-branch review, review remediation, cleanup/archive, commit, and the finalization gate; do not hand off a validated-but-unreviewed or dirty branch as incomplete workflow state
+   - after the last implementation validation passes, treat any user-facing implementation recap as blocked until the post-implementation closeout evidence exists: final full-branch review log complete, all in-scope review findings dispositioned and fixed or explicitly accepted, task checklist complete, PRD/TDD/tasks-plan archived unless preservation is requested, new run-created changes committed, final status compared against the baseline, and finalization gate passed
+   - if the next message you are about to send would list "What changed" or "Validation" before that evidence exists, do not send it; run the missing closeout step instead
 8. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include the actual compact report inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict; do not satisfy this by only mentioning an archived report path. Then continue normal cleanup unless `--preserve-artifacts` is present.
 9. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
 10. If `--preserve-artifacts` is present, keep temp planning, refinement, and review artifacts and list them in the final handoff.
 11. Run the hard finalization gate from `finalization-gate.md` before any terminal handoff. The existing non-base branch path skips default PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
-12. Treat any final response shaped like "implementation complete, validation passed, artifacts archived, remaining work is final review/commit/finalization" as an invalid terminal handoff. Continue into those closeout steps instead unless a real blocker prevents them.
+12. Treat any final response shaped like "implemented X, validation passed, changed files are Y" before final review, review remediation, archive, commit, baseline comparison, and finalization as an invalid terminal handoff. Continue into those closeout steps instead unless a real blocker prevents them.
 
 ## Branch and PR rules
 
@@ -112,6 +114,8 @@ Do not stop after artifact generation. The run is terminal only when:
 
 - all planned work is implemented, validated, final-reviewed, cleaned up, committed, archived, passed through the finalization gate, and handed off, or
 - a real blocker prevents safe continuation and the exact required user action is stated.
+
+The terminal handoff must name the final review result, final commit or explicit existing-branch commit status, archive/preservation result, final validation result, and working-tree status. A handoff that only names implementation changes and tests is incomplete.
 
 ## Relationship to underlying skills
 
