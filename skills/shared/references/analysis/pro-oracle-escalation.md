@@ -15,7 +15,7 @@ Use the repo wrapper, not raw Oracle commands:
 
 Resolve the script from the Prime Directive checkout, not from the target project being analyzed. When the current working directory is another repo, invoke the wrapper by its Prime Directive source path while keeping `cwd` in the target repo so `--file .` attaches the target project.
 
-The wrapper owns browser mode, model, thinking-time selection, manual-login profile reuse, upload bundling, timeouts, local temp cleanup, and Oracle invocation details. If no `--file` input is provided, it defaults to `--file .`.
+The wrapper owns browser mode, model, thinking-time selection, manual-login profile reuse, upload bundling, timeouts, local temp cleanup, and Oracle invocation details. If no `--file` input is provided, it defaults to `--file .`. The wrapper prints a safe invocation summary before setup, dry-run, run, and render actions; preserve that summary in the Pro memo when Pro analysis is part of a planning workflow.
 
 First-time setup is:
 
@@ -25,7 +25,7 @@ First-time setup is:
 
 This opens or reuses the persistent Oracle browser profile. The user may need to sign in to ChatGPT in that browser once. After setup, normal Pro runs should reuse the same profile.
 
-Setup intentionally skips thinking-time UI selection and model-picker selection because it is only a login/profile check. Normal dry-run, run, and render actions try to select the requested ChatGPT model by default so they do not inherit arbitrary browser state, and they use extended thinking unless you override it. Use `ORACLE_PRO_MODEL_STRATEGY=current` only when you explicitly want to reuse the browser's current mode, `ORACLE_PRO_THINKING=heavy` only when that option exists, or rerun with `ORACLE_PRO_THINKING=off` if the thinking-time control is unavailable.
+Setup intentionally skips thinking-time UI selection and model-picker selection because it is only a login/profile check. Normal dry-run, run, and render actions try to select the requested ChatGPT model by default so they do not inherit arbitrary browser state, and they use extended thinking unless you override it. Use `ORACLE_PRO_MODEL_STRATEGY=current` only when you explicitly want to reuse the browser's current mode, `ORACLE_PRO_THINKING=heavy` only when that option exists, or rerun with `ORACLE_PRO_THINKING=off` only as an explicitly degraded fallback if the thinking-time control is unavailable.
 
 If ChatGPT is logged in but Oracle reports that it cannot locate the model selector, this is usually ChatGPT UI drift or a hidden picker, not proof that the profile is signed out. Normal runs try to select the requested model first. If a real run needs a fully UI-light fallback because the prompt box is visible but live controls drift, use:
 
@@ -34,6 +34,8 @@ ORACLE_PRO_MODEL_STRATEGY=ignore ORACLE_PRO_THINKING=off ./scripts/oracle-pro.sh
 ```
 
 This skips forced model and thinking-time selection. Record the result as using the current ChatGPT browser mode rather than a verified picker selection.
+
+For any workflow invoked with `--pro-analysis`, a degraded fallback is not an extended Pro-thinking pass. If the real `run` did not request extended thinking, or if the wrapper invocation summary cannot be found, the Pro synthesis may still be recorded for diagnostic value, but it must not set `pro_synthesis_complete: yes` until a real run with `thinking=extended` has been completed and synthesized. If the model picker or thinking-time UI is unavailable, stop and report the degraded mode instead of silently treating current browser state as Pro analysis.
 
 For setup, dry-run, run, and render actions, the wrapper gives Oracle a private `TMPDIR` and deletes it after Oracle exits. This removes local `attachments-bundle.txt` files created for browser uploads. Set `ORACLE_PRO_KEEP_TMP=1` only when debugging the generated bundle locally.
 
@@ -84,16 +86,17 @@ After `oracle-pro.sh run` returns, read the Pro answer and synthesize it before 
 For `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with:
 
 - context bundle summary: files or scope sent to Pro, token estimate if known, and any excluded risky/noisy paths
+- Oracle invocation evidence: copied wrapper invocation summary for the real `run`, including `action`, `model`, `model_strategy`, and `thinking`
 - Pro findings ledger: stable finding ID, Pro claim, local verification evidence, disposition (`adopted`, `rejected`, `deferred`), and disposition reason
 - conflict reconciliation: conflicts with repo evidence, the deep-research memo, PRD, or TDD, and how each conflict was resolved
 - artifact delta: PRD/TDD sections changed, task-plan inputs created, and source-backed claims independently verified when Pro suggested external sources
-- Pro synthesis completion stamp containing `oracle_result_read`, `findings_reconciled`, `artifact_changes_applied`, `unresolved_blockers`, and `pro_synthesis_complete`
+- Pro synthesis completion stamp containing `oracle_result_read`, `oracle_action_run`, `oracle_extended_thinking`, `findings_reconciled`, `artifact_changes_applied`, `unresolved_blockers`, and `pro_synthesis_complete`
 
 Before setting `pro_synthesis_complete: yes`, print a short `Pro Findings Summary` in the visible thread/log: adopted, rejected/deferred, blockers, and artifact changes.
 
-Set `pro_synthesis_complete: yes` only when the Pro answer was read, every material Pro finding has a disposition, adopted findings have been applied to PRD/TDD or converted into explicit task-plan inputs, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
+Set `pro_synthesis_complete: yes` only when the Pro answer was read, the invocation evidence shows the synthesized answer came from `action=run` with `thinking=extended`, every material Pro finding has a disposition, adopted findings have been applied to PRD/TDD or converted into explicit task-plan inputs, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
 
-If `pro_synthesis_complete` is missing or not `yes`, stop. Do not generate `tasks-plan`, run `$plan-refine`, or execute.
+If `oracle_action_run`, `oracle_extended_thinking`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not generate `tasks-plan`, run `$plan-refine`, or execute.
 
 Use this order:
 
@@ -150,6 +153,6 @@ For `$first-principles-mode --pro-analysis`, stop after synthesis unless the use
 
 For `$plan-and-execute --pro-analysis`, apply the synthesized findings into planning artifacts and continue execution unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
 
-For `$plan-and-execute --pro-analysis`, raw Oracle output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_synthesis_complete: yes` before downstream planning continues.
+For `$plan-and-execute --pro-analysis`, raw Oracle output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `oracle_action_run: yes`, `oracle_extended_thinking: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
 
 For `$repo-sweep --pro-analysis`, use the synthesized findings as Round 1 audit-thesis input before the no-edit audit and review-chain report. If `--loop` is also present, do not rerun Pro every loop round by default; use fresh local review subagents for resweeps unless the user explicitly asks for another Pro pass.

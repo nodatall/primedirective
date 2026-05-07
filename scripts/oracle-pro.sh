@@ -43,6 +43,10 @@ shift
 
 SETUP_SESSION_ID="${ORACLE_PRO_SETUP_SESSION_ID:-prime-directive-oracle-pro-setup}"
 
+EFFECTIVE_MODEL="${ORACLE_PRO_MODEL:-gpt-5.5-pro}"
+EFFECTIVE_MODEL_STRATEGY=""
+EFFECTIVE_THINKING="not-requested"
+
 if [[ -n "${ORACLE_BIN:-}" ]]; then
   ORACLE_CMD=("${ORACLE_BIN}")
 elif command -v oracle >/dev/null 2>&1; then
@@ -55,7 +59,7 @@ export ORACLE_BROWSER_PROFILE_DIR="${ORACLE_PRO_PROFILE_DIR:-${HOME}/.oracle/bro
 
 common_args=(
   --engine browser
-  --model "${ORACLE_PRO_MODEL:-gpt-5.5-pro}"
+  --model "${EFFECTIVE_MODEL}"
   --browser-manual-login
   --browser-attachments "${ORACLE_PRO_ATTACHMENTS:-auto}"
   --browser-timeout "${ORACLE_PRO_BROWSER_TIMEOUT:-3600s}"
@@ -72,13 +76,43 @@ fi
 
 has_file_input=0
 has_model_strategy_input=0
+has_thinking_input=0
+requested_model_strategy=""
+requested_thinking=""
+pending_model_strategy=0
+pending_thinking=0
 for arg in "$@"; do
+  if [[ "$pending_model_strategy" -eq 1 ]]; then
+    has_model_strategy_input=1
+    requested_model_strategy="$arg"
+    pending_model_strategy=0
+    continue
+  fi
+
+  if [[ "$pending_thinking" -eq 1 ]]; then
+    has_thinking_input=1
+    requested_thinking="$arg"
+    pending_thinking=0
+    continue
+  fi
+
   case "$arg" in
     -f|--file|--files|--include|--path|--paths|--file=*|--files=*|--include=*|--path=*|--paths=*)
       has_file_input=1
       ;;
-    --browser-model-strategy|--browser-model-strategy=*)
+    --browser-model-strategy)
+      pending_model_strategy=1
+      ;;
+    --browser-model-strategy=*)
       has_model_strategy_input=1
+      requested_model_strategy="${arg#--browser-model-strategy=}"
+      ;;
+    --browser-thinking-time)
+      pending_thinking=1
+      ;;
+    --browser-thinking-time=*)
+      has_thinking_input=1
+      requested_thinking="${arg#--browser-thinking-time=}"
       ;;
   esac
 done
@@ -90,12 +124,19 @@ append_default_files_if_needed() {
 }
 
 append_thinking_if_enabled() {
+  if [[ "$has_thinking_input" -eq 1 ]]; then
+    EFFECTIVE_THINKING="${requested_thinking:-explicit-argument}"
+    return
+  fi
+
   local thinking="${ORACLE_PRO_THINKING:-extended}"
   case "$thinking" in
     ""|0|off|none|false|disabled)
+      EFFECTIVE_THINKING="off"
       return
       ;;
     *)
+      EFFECTIVE_THINKING="$thinking"
       CMD+=(--browser-thinking-time "$thinking")
       ;;
   esac
@@ -105,21 +146,36 @@ append_model_strategy() {
   local default_strategy="${1:-}"
 
   if [[ "$has_model_strategy_input" -eq 1 ]]; then
+    EFFECTIVE_MODEL_STRATEGY="${requested_model_strategy:-explicit-argument}"
     return
   fi
 
   local strategy="${ORACLE_PRO_MODEL_STRATEGY:-$default_strategy}"
   if [[ -z "$strategy" ]]; then
+    EFFECTIVE_MODEL_STRATEGY="none"
     return
   fi
 
   case "$strategy" in
     select|current|ignore)
+      EFFECTIVE_MODEL_STRATEGY="$strategy"
       CMD+=(--browser-model-strategy "$strategy")
       ;;
     *)
       echo "Invalid ORACLE_PRO_MODEL_STRATEGY: $strategy (expected select, current, or ignore)" >&2
       exit 2
+      ;;
+  esac
+}
+
+print_invocation_summary() {
+  case "$action" in
+    setup|dry-run|dry-run-json|run|render)
+      printf 'Oracle Pro wrapper invocation: action=%s model=%s model_strategy=%s thinking=%s\n' \
+        "$action" \
+        "$EFFECTIVE_MODEL" \
+        "${EFFECTIVE_MODEL_STRATEGY:-unset}" \
+        "${EFFECTIVE_THINKING:-unset}" >&2
       ;;
   esac
 }
@@ -238,6 +294,7 @@ run_with_private_tmpdir() {
   output_file="$(mktemp "${run_tmpdir%/}/oracle-output.XXXXXX")"
 
   repair_chrome_crash_state
+  print_invocation_summary
   TMPDIR="$run_tmpdir" "${CMD[@]}" 2>&1 | tee "$output_file" || status=${PIPESTATUS[0]}
 
   if [[ "$status" -ne 0 ]]; then

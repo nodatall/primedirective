@@ -165,6 +165,7 @@ Evaluate and improve when `$plan-and-execute --pro-analysis` was used:
 
 - Whether `tasks/tmp/pro-analysis-<plan-key>.md` is available for audit.
 - Whether the Pro answer was read after `oracle-pro.sh run` completed rather than treated as a background launch.
+- Whether the Pro memo includes Oracle invocation evidence from the real run and confirms `oracle_action_run: yes` and `oracle_extended_thinking: yes`.
 - Whether raw Oracle output was reduced into a Pro findings ledger with local verification evidence and dispositions.
 - Whether the Pro synthesis completion stamp exists and says `pro_synthesis_complete: yes`.
 - Whether any Pro finding conflicts with repo evidence, PRD, TDD, or the deep-research memo, and whether each conflict was reconciled before tasks-plan generation.
@@ -198,7 +199,7 @@ The improved plan must explicitly satisfy all of these:
 19. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
 20. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
 21. Any `$plan-and-execute --pro-analysis` pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
-22. Any `$plan-and-execute --pro-analysis` completion stamp says `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
+22. Any `$plan-and-execute --pro-analysis` completion stamp says `oracle_action_run: yes`, `oracle_extended_thinking: yes`, and `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
 23. Any adopted implementation-impact Pro finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
 24. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
 25. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
@@ -218,7 +219,7 @@ Do not dump option menus on the user unless business intent is ambiguous.
 
 If a `--deep-research` pass fails the mandatory web-backed evidence bar, if its Deep Research Completion Stamp says `evidence_bar_met: no`, or if PRD/TDD were not revised from the adopted findings before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the research step to be redone before execution begins.
 
-If a `$plan-and-execute --pro-analysis` pass lacks a Pro synthesis memo, if its completion stamp is missing or does not say `pro_synthesis_complete: yes`, or if adopted Pro findings were not applied to PRD/TDD or explicitly mapped into task-plan inputs before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the Pro synthesis step to be redone before execution begins.
+If a `$plan-and-execute --pro-analysis` pass lacks a Pro synthesis memo, if it lacks Oracle invocation evidence for a real run with extended thinking, if its completion stamp is missing or does not say `oracle_action_run: yes`, `oracle_extended_thinking: yes`, and `pro_synthesis_complete: yes`, or if adopted Pro findings were not applied to PRD/TDD or explicitly mapped into task-plan inputs before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the Pro synthesis step to be redone before execution begins.
 
 ## Escalation policy (rare)
 
