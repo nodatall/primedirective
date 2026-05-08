@@ -140,6 +140,7 @@ Every applicable review round must explicitly verify:
 - whether the contract's acceptance checks were exercised with meaningful evidence, not just asserted
 - whether the core user or system interaction is actually wired end-to-end rather than display-only, stubbed, or mocked away
 - whether any recorded `trust_boundary_notes` are still true in the implemented change
+- for `full-branch` task-based reviews, whether any material code finding points to a reusable agent-loop failure that should be changed in future planning, worker packets, validation cadence, or review prompts
 
 ## Prompts A-I
 
@@ -271,8 +272,43 @@ Could any test, seed, reset, migration, bootstrap, or maintenance path mutate sh
 Was anything skipped, deferred, or left implicit?
 What assumptions remain and should be documented?
 What is most likely to break in production?
-Action: Give an honest assessment, list any remaining issues or accepted risks explicitly, and do not mark the review complete while unresolved in-scope issues remain.
+Which part of the agent loop, if any, made the most important remaining issue more likely?
+Action: Give an honest assessment, list any remaining issues or accepted risks explicitly, and do not mark the review complete while unresolved in-scope issues remain. For task-based `full-branch` reviews, also include the Agent-Loop Backprop output described below.
 ```
+
+## Agent-Loop Backprop
+
+For task-based `full-branch` review rounds, include a short Agent-Loop Backprop section after the code findings.
+
+Purpose:
+
+- Identify which upstream agent step made a material code defect, spec miss, weak verification, or confidence gap more likely.
+- Propose the smallest future workflow change that would reduce recurrence.
+- Keep process critique tied to evidence from this branch, not generic advice.
+
+Classify each entry by likely source:
+
+- `spec_intake`: original plan/spec was incomplete, ambiguous, or not preserved.
+- `task_decomposition`: PRD/TDD/tasks-plan failed to carry a required behavior, invariant, or acceptance check.
+- `worker_packet`: the sub-task packet omitted context, local pattern, trust boundary, or done condition needed by the worker.
+- `implementation_loop`: the implementation skipped or weakened red/green, local pattern matching, focused validation, or integration checks.
+- `review_context`: the final review lacked artifacts, diff scope, runtime evidence, screenshots, or validation output needed for confidence.
+- `finalization_loop`: checklist, archive, commit, PR, baseline, or cleanup sequencing allowed a premature handoff risk.
+
+For each agent-loop entry, record:
+
+- linked code finding or confidence gap
+- source classification
+- evidence from the branch or review log
+- proposed future loop change
+- whether it is `blocking_via_code_finding`, `advisory`, or `workflow_patch_candidate`
+
+Blocking rule:
+
+- Agent-loop findings do not block terminal handoff by themselves.
+- If an agent-loop finding explains a blocker/material code issue, the underlying code issue controls the stop/fix decision.
+- Advisory process nits without a linked material defect, spec miss, or confidence gap should be omitted.
+- Do not edit Prime Directive skills or repo workflow docs from inside a target repo run unless the task itself is to change those workflow docs. Record workflow changes as proposals for a later Prime Directive maintenance task.
 
 ## Prompt execution protocol (required)
 
@@ -343,6 +379,7 @@ Per prompt entry include:
 
 - `finding_count: 0` or `finding_count: <n>`
 - concrete findings, using the shared material finding shape when applicable
+- `agent_loop_findings: none` or concrete Agent-Loop Backprop entries for task-based `full-branch` rounds
 - disposition and fixes made by the main agent, or `none during review`
 - tests run
 - `harness_lift` entries only when a harness component changed implementation, caught a real issue, prevented likely drift, or provided meaningful confidence not available from cheaper checks
@@ -359,6 +396,7 @@ Completion gates:
 - Minimum 1 full round complete.
 - No unresolved LARP remediation TODO items.
 - No unresolved final-audit issues without explicit accepted-risk or blocked status.
+- No unresolved blocker/material code findings hidden as agent-loop findings.
 - Tests passing or explicitly justified.
 
 Deletion gate:
@@ -395,6 +433,7 @@ For one-shot execution only:
 - Unlike one-shot worker handoffs, final review must receive full PRD, TDD, task plan, and still-relevant temp contracts so it can check global intent, cross-task coherence, and accepted risks.
 - Start final review scope discovery with concise commands such as `git diff --stat`, `git diff --name-only`, and targeted hunk reads. Do not re-dump every large diff or replay every historical focused test unless evidence is missing, stale, or contradicted.
 - Review the focused verification evidence recorded during the implementation loop, then run the strongest practical broad validation needed for final confidence.
+- Include Agent-Loop Backprop in the final review log. This is required only for task-based `full-branch` review rounds, and should stay tied to material code findings or confidence gaps rather than producing generic process commentary.
 - If the branch includes frontend-facing work, Prompt G must be executed in this final round before completion.
 - Keep the final full-branch review log through the hard finalization gate so the gate can verify that review actually happened. Keep it afterward only when `--preserve-review-artifacts` is active or when a requested harness drift report still needs it.
 - Do not issue a terminal user handoff before this final full-branch review and Step 9 finalization are complete, unless a real blocker prevents continuation.
@@ -432,6 +471,7 @@ Operational translation:
 - Exception: `$plan-and-execute` does not open a PR by default when it started on an existing non-base branch. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL. This exception skips PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
 - If the existing non-base branch already has an open PR, do not push to it, update it, or require its scope to match the new plan by default. Report any visible PR scope mismatch in the final handoff so the user can decide whether to push later, move the commits, or close/update the PR.
 - Include summary, test evidence, and known risks/follow-ups in the PR body.
+- Include material Agent-Loop Backprop proposals in the terminal handoff or PR body when they explain a defect that was fixed, a residual accepted risk, or a workflow patch candidate worth preserving.
 - Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation or the `$plan-and-execute` existing non-base branch exception applies.
 - Only after these steps, or the documented `$plan-and-execute` existing non-base branch exception path, may one-shot execution produce its terminal completion handoff.
 

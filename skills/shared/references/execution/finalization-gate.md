@@ -76,7 +76,7 @@ Before running the numbered checks, classify the next user-visible message you a
 
 If this gate would fail only because final review, commit, archiving, final status/baseline comparison, push, or PR creation has not been attempted yet, that is not a blocker to report. Continue the missing closeout work instead of handing the checklist back to the user.
 
-The final completion handoff must be based on post-gate evidence. Include the final review outcome, disposition of any material findings, final validation, archive or preservation result, commit/PR or documented existing-branch exception status, and final working-tree status.
+The final completion handoff must be based on post-gate evidence. Include the final review outcome, disposition of any material findings, material Agent-Loop Backprop proposals when final review produced them, final validation, archive or preservation result, commit/PR or documented existing-branch exception status, and final working-tree status.
 
 ## Existing Branch Exception
 

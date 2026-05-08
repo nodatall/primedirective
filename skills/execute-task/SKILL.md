@@ -74,7 +74,7 @@ Load these files before running:
   - mark checklist updates in `tasks/tasks-plan-<plan-key>.md`
   - create a dedicated commit for the sub-task
   - in one-shot mode, immediately re-open `tasks/tasks-plan-<plan-key>.md` after the commit, identify the next unchecked sub-task in file order, and continue directly when one exists
-6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round automatically using the active prompt profile from `review-protocol.md` in one fresh review subagent before finalization. This is the review round that must satisfy Prompt G for frontend-facing work.
+6. In one-shot mode, after all sub-tasks are complete, run one final `full-branch` review round automatically using the active prompt profile from `review-protocol.md` in one fresh review subagent before finalization. This is the review round that must satisfy Prompt G for frontend-facing work and include Agent-Loop Backprop for any material defect, spec miss, weak verification, or confidence gap that traces back to the execution loop.
 7. Run finalization from `review-protocol.md` Step 9 rules and the hard gate from `finalization-gate.md` only after all unchecked sub-tasks in the task plan are complete. Do not treat one-shot execution as finished until the feature branch is pushed and the PR has been created, unless an orchestration skill such as `$plan-and-execute` explicitly uses the existing non-base branch no-PR terminal behavior. That exception skips default PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
 8. Before any terminal handoff in one-shot mode, re-open `tasks/tasks-plan-<plan-key>.md` and confirm there are no remaining unchecked sub-tasks anywhere in the file. If any remain, continue execution instead of handing off unless a real blocker prevents further progress.
 9. In one-shot mode, do not stop after an intermediate sub-task merely to report status, preserve a clean commit boundary, or hand off remaining work. Only stop early for a real blocker that cannot be resolved inside the current run.
@@ -105,6 +105,7 @@ Load these files before running:
 - Before terminal handoff in one-shot mode, run the finalization gate from `finalization-gate.md`; a clean-looking branch summary is not a substitute for the archived-artifact, unchecked-task, commit, and final-status checks.
 - Treat a handoff that says "implementation complete, tests passed, reports runnable, generated artifacts changed, or remaining work is review/commit/finalization" as a failed finalization attempt, not as an acceptable terminal outcome. Continue the closeout sequence unless the blocker is external and named.
 - The terminal handoff must include closeout evidence: final review result, disposition of material findings, final validation, commit/PR or existing-branch no-PR status, archive/preservation status, and final working-tree status.
+- Include material Agent-Loop Backprop proposals in the terminal handoff when final review found a linked code defect, residual accepted risk, weak verification path, or workflow patch candidate. Omit generic process nits.
 - Do not invent lint, format, hook, or similar repo tooling mid-execution unless the planned task explicitly includes introducing that tooling or the user asks for it.
 
 ## Output
@@ -117,6 +118,7 @@ Keep the final user-facing summary compact and include:
 - commits created and PR URL, or the documented existing-branch exception details
 - validation commands run, including any visual evidence or harness drift result when applicable
 - archived artifact path or preserved artifact paths
+- material Agent-Loop Backprop proposals from the final review, if any
 - remaining blockers, accepted risks, or skipped checks with reasons
 - final working-tree status relative to the kickoff baseline
 
