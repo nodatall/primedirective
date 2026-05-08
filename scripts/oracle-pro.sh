@@ -18,9 +18,9 @@ Usage:
 Prime Directive wrapper for ChatGPT Pro browser escalation via Oracle.
 
 Defaults can be overridden with:
-  ORACLE_PRO_MODEL                 default: gpt-5.5-pro
+  ORACLE_PRO_MODEL                 default: Extended Pro (ChatGPT browser label; Oracle stores gpt-5.5-pro)
   ORACLE_PRO_MODEL_STRATEGY        default: select for dry-run/run/render, ignore for setup; set current to reuse browser state
-  ORACLE_PRO_THINKING              default: extended; set off/none/0 to skip UI selection
+  ORACLE_PRO_THINKING              default: extended; default Extended Pro model label skips the separate thinking UI click
   ORACLE_PRO_BROWSER_TIMEOUT        default: 3600s
   ORACLE_PRO_PROFILE_DIR            default: ~/.oracle/browser-profile
   ORACLE_PRO_REPAIR_PROFILE         default: 1; set 0 to skip Chrome crash-state repair
@@ -43,7 +43,7 @@ shift
 
 SETUP_SESSION_ID="${ORACLE_PRO_SETUP_SESSION_ID:-prime-directive-oracle-pro-setup}"
 
-EFFECTIVE_MODEL="${ORACLE_PRO_MODEL:-gpt-5.5-pro}"
+EFFECTIVE_MODEL="${ORACLE_PRO_MODEL:-Extended Pro}"
 EFFECTIVE_MODEL_STRATEGY=""
 EFFECTIVE_THINKING="not-requested"
 
@@ -129,6 +129,11 @@ append_thinking_if_enabled() {
     return
   fi
 
+  if [[ -z "${ORACLE_PRO_THINKING+x}" ]] && model_label_requests_extended_pro; then
+    EFFECTIVE_THINKING="extended"
+    return
+  fi
+
   local thinking="${ORACLE_PRO_THINKING:-extended}"
   case "$thinking" in
     ""|0|off|none|false|disabled)
@@ -138,6 +143,19 @@ append_thinking_if_enabled() {
     *)
       EFFECTIVE_THINKING="$thinking"
       CMD+=(--browser-thinking-time "$thinking")
+      ;;
+  esac
+}
+
+model_label_requests_extended_pro() {
+  local lower_model
+  lower_model="$(printf '%s' "$EFFECTIVE_MODEL" | tr '[:upper:]' '[:lower:]')"
+  case "$lower_model" in
+    *"extended pro"*|*"pro extended"*)
+      return 0
+      ;;
+    *)
+      return 1
       ;;
   esac
 }
