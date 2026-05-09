@@ -18,6 +18,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
+| `deliver` | `$deliver` | None |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
@@ -32,6 +33,7 @@ Use this table when you already know the skill name. The detailed sections below
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
+- Use `$deliver` when you want one readable execution plan, a refinement pass, user approval, then iterative implementation without PRD/TDD/tasks-plan artifacts.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
 - Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
@@ -65,6 +67,14 @@ Request options:
 ### `$deep-research-prompt`
 
 Creates a paste-ready prompt for ChatGPT.com Deep Research from the current thread. It assumes you will manually select the relevant GitHub repo, files, or project context in ChatGPT before starting the research.
+
+Modifiers:
+
+- None.
+
+### `$deliver`
+
+Creates or loads one plain-language execution plan, refines that plan until no material backlog issues remain, asks for user approval, then works through the plan one item at a time. It creates a feature branch when starting from a base branch, and uses focused validation, useful commits, plan updates, and final review without generating PRD/TDD/tasks-plan artifacts.
 
 Modifiers:
 

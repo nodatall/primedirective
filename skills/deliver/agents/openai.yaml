@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deliver"
+  short_description: "Plan simply, execute iteratively"
+  default_prompt: "Use $deliver to turn this source material into a readable execution plan, refine it, get approval, and deliver it step by step."
