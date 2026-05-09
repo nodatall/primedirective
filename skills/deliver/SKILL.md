@@ -118,6 +118,7 @@ Rules:
    - Create a tiny active-step note only when it helps execution. Keep it private and disposable.
    - Identify repo-local implementation and validation patterns before editing.
    - Use worker agents when useful and available for a bounded item; the orchestrator owns integration, validation, plan updates, and commits.
+   - Give each worker a compact active-step packet, not the whole planning history.
    - For tiny or tightly coupled items, implement in the main agent.
 7. Verify each useful step.
    - Run the narrow check that proves the current item.
@@ -136,6 +137,8 @@ Rules:
    - Keep moving through unchecked items after each commit.
    - Stop only for a required user decision, a missing environment/service/credential, an unsafe/destructive action needing approval, an unresolved material plan contradiction, or a verification blocker.
 11. Run final review before declaring completion.
+   - Use the final full-branch review path from `review-protocol.md`.
+   - Use the execution plan as the scope artifact instead of PRD/TDD/tasks-plan.
    - Use a fresh final reviewer when available.
    - Review the diff against the execution plan, plan updates, and relevant validation evidence.
    - Fix in-scope material findings, rerun relevant checks, and update the plan before the final handoff.
@@ -163,3 +166,45 @@ For the final handoff:
 - name any skipped checks, blockers, or residual risk
 
 Do not claim the plan is complete until all in-scope checkboxes are done or explicitly deferred by the user, focused validation has run, and final review is complete.
+
+## Worker Packet
+
+When using a worker agent, pass one bounded item with only the context needed to implement it correctly:
+
+```md
+# Active Step Packet
+
+Plan: tasks/execution-plan-<plan-key>.md
+Step: <exact phase and checkbox text>
+
+Goal:
+<one sentence from the plan when useful>
+
+Do:
+<the one checkbox/item this worker owns>
+
+Done when:
+<include only when the checkbox text is not enough>
+
+Relevant context:
+- <only useful What We Know or Decision notes for this step>
+- <important constraints from the approved plan>
+
+Repo context:
+- Current branch:
+- Relevant files or surfaces to inspect first:
+- Existing local pattern to follow:
+- Unrelated dirty files to avoid:
+
+Validation:
+- Focused command or flow to run:
+- UI/app inspection needed: yes/no
+
+Rules:
+- Do not edit outside this step unless required and reported.
+- Do not mark other plan items done.
+- Do not commit.
+- Return changed files, validation run, result, and blockers.
+```
+
+The orchestrator keeps ownership of the full plan, next-step selection, worker integration, final validation judgment, checkbox updates, commits, and plan changes.
