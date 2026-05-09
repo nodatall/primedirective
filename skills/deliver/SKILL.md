@@ -100,7 +100,9 @@ Rules:
    - Keep future items readable rather than fully specified.
 4. Refine the plan before user review.
    - Run at least one refinement round.
-   - Continue only while material backlog issues remain.
+   - Continue while material backlog issues remain.
+   - If a refinement round finds material issues or changes the plan, run another refinement round after those edits.
+   - Stop only after a full post-edit refinement round finds no material backlog issues.
    - Stop after 8 rounds even if issues remain.
    - Use a fresh reviewer subagent when available; otherwise perform the reviewer pass in the main agent and record that no fresh reviewer was available.
    - The reviewer checks for missing source items, vague checkboxes, bad order, duplicate work, oversized steps, hidden dependencies, contradictions, and unclear next step.
