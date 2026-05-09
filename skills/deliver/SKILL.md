@@ -136,6 +136,9 @@ Rules:
    - Keep the plan readable. Do not add detailed logs, commit SHAs, or validation transcripts unless they are needed to understand the next step.
 10. Continue until done or blocked.
    - Keep moving through unchecked items after each commit.
+   - After implementation starts, do not send a user-facing recap, handoff, or "please review" message while unchecked in-scope items remain.
+   - If the next message would summarize completed work before all in-scope checkboxes are done or explicitly deferred, do not send it; reopen the plan, identify the next unchecked item, and continue.
+   - A completed phase, passing focused check, or useful commit is not a stopping point when later unchecked items remain.
    - Stop only for a required user decision, a missing environment/service/credential, an unsafe/destructive action needing approval, an unresolved material plan contradiction, or a verification blocker.
 11. Run final review before declaring completion.
    - Use the final full-branch review path from `review-protocol.md`.
