@@ -32,7 +32,6 @@ Use these files:
 
 - Durable plan: `tasks/execution-plan-<plan-key>.md`
 - Optional active-step note: `tasks/tmp/active-step-<plan-key>-<step>.md`
-- Optional refinement log: `tasks/tmp/deliver-refine-<plan-key>.md`
 - Completed plan archive: `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`
 
 The durable plan is for the user to read and edit. Keep it low-friction. Do not turn it into an audit log.
@@ -106,7 +105,8 @@ Rules:
    - Stop after 8 rounds even if issues remain.
    - Use a fresh reviewer subagent when available; otherwise perform the reviewer pass in the main agent and record that no fresh reviewer was available.
    - The reviewer checks for missing source items, vague checkboxes, bad order, duplicate work, oversized steps, hidden dependencies, contradictions, and unclear next step.
-   - Edit only the execution plan and optional refinement log during refinement.
+   - Edit only the execution plan during refinement.
+   - Do not create a refinement notes file or separate refinement markdown artifact.
    - If 8 rounds end with unresolved material issues, stop and show the exact blocker instead of starting implementation.
 5. Ask for user review once.
    - Show the final readable plan or summarize it with the file path.
@@ -143,7 +143,7 @@ Rules:
    - Move `tasks/execution-plan-<plan-key>.md` to `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`.
    - Archive only after final review findings are dispositioned and any required remediation has been verified.
    - Leave the archived plan readable; do not rewrite it into an audit log during archive.
-   - Remove disposable active-step and refinement temp files unless they are still needed to explain an unresolved blocker.
+   - Remove disposable active-step temp files unless they are still needed to explain an unresolved blocker.
 
 ## Output
 
