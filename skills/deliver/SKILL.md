@@ -117,9 +117,10 @@ Rules:
    - Choose the next unchecked item in plan order unless new evidence makes a different next item clearly better; update the plan first when order changes.
    - Create a tiny active-step note only when it helps execution. Keep it private and disposable.
    - Identify repo-local implementation and validation patterns before editing.
-   - Use worker agents when useful and available for a bounded item; the orchestrator owns integration, validation, plan updates, and commits.
+   - For each non-trivial implementation item, create an active-step packet and assign one worker agent when worker agents are available.
+   - Do not let the orchestrator absorb implementation by default. The orchestrator owns next-step selection, worker packet creation, integration, validation judgment, plan updates, and commits.
    - Give each worker a compact active-step packet, not the whole planning history.
-   - For tiny or tightly coupled items, implement in the main agent.
+   - The orchestrator may implement directly only for tiny edits, tightly coupled integration/remediation, or when worker agents are unavailable. Record the reason when no worker is used for a non-trivial item.
 7. Verify each useful step.
    - Run the narrow check that proves the current item.
    - For UI, layout, styling, or rendered-content changes, inspect the affected UI when practical and capture visual evidence.
@@ -169,7 +170,7 @@ Do not claim the plan is complete until all in-scope checkboxes are done or expl
 
 ## Worker Packet
 
-When using a worker agent, pass one bounded item with only the context needed to implement it correctly:
+Use worker agents by default for non-trivial implementation items. Pass one bounded item with only the context needed to implement it correctly:
 
 ```md
 # Active Step Packet
@@ -207,4 +208,4 @@ Rules:
 - Return changed files, validation run, result, and blockers.
 ```
 
-The orchestrator keeps ownership of the full plan, next-step selection, worker integration, final validation judgment, checkbox updates, commits, and plan changes.
+The orchestrator keeps ownership of the full plan, next-step selection, worker packet creation, worker integration, final validation judgment, checkbox updates, commits, and plan changes. It should not hand a worker the whole backlog or ask the worker to choose the next item.
