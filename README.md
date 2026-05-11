@@ -74,7 +74,7 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, refines that plan until no material backlog issues remain, asks for user approval, then works through the plan one item at a time. It creates a feature branch when starting from a base branch, and uses focused validation, useful commits, plan updates, and final review without generating PRD/TDD/tasks-plan artifacts.
+Creates or loads one plain-language execution plan, refines that plan until no material backlog issues remain, asks for user approval, then works through every unchecked plan item one at a time. It creates a feature branch when starting from a base branch, and uses focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate without generating PRD/TDD/tasks-plan artifacts.
 
 Modifiers:
 

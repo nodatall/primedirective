@@ -15,6 +15,7 @@ Load these references before starting:
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/analysis/verification-pivot.md`
 - `skills/shared/references/review/review-protocol.md` before the final review
+- `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
 
 ## Activation
 
@@ -92,6 +93,7 @@ Rules:
    - Name the branch from the plan key when obvious, such as `deliver/<plan-key>`, unless the repo's branch naming convention suggests a better local pattern.
    - If detached `HEAD`, stop and ask.
    - If unrelated or dangerous overlapping changes exist, stop and ask before carrying them onto the new branch.
+   - Capture the finalization baseline from `skills/shared/references/execution/finalization-gate.md` after branch-state decisions and before writing the execution plan or implementation changes.
 3. Create or load the plain-language plan.
    - If no plan exists, write `tasks/execution-plan-<plan-key>.md`.
    - Preserve every concrete source item unless it is a duplicate, contradiction, or user-approved removal.
@@ -136,6 +138,9 @@ Rules:
    - Keep the plan readable. Do not add detailed logs, commit SHAs, or validation transcripts unless they are needed to understand the next step.
 10. Continue until done or blocked.
    - Keep moving through unchecked items after each commit.
+   - Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`, not the current phase, section, or next coherent slice.
+   - After every useful commit or plan update, immediately re-open the execution plan, scan the whole file for the next unchecked checkbox in file order, and start it when one exists.
+   - Do not stop after completing a phase such as `1. ...` or at any section boundary while unchecked checkboxes remain later in the file.
    - After implementation starts, do not send a user-facing recap, handoff, or "please review" message while unchecked in-scope items remain.
    - If the next message would summarize completed work before all in-scope checkboxes are done or explicitly deferred, do not send it; reopen the plan, identify the next unchecked item, and continue.
    - A completed phase, passing focused check, or useful commit is not a stopping point when later unchecked items remain.
@@ -143,6 +148,7 @@ Rules:
 11. Run final review before declaring completion.
    - Use the final full-branch review path from `review-protocol.md`.
    - Use the execution plan as the scope artifact instead of PRD/TDD/tasks-plan.
+   - Write the final review log to `tasks/tmp/review-deliver-final-<plan-key>.md` unless a repo-local convention requires a different temp path.
    - Use a fresh final reviewer when available.
    - Review the diff against the execution plan, plan updates, and relevant validation evidence.
    - Fix in-scope material findings, rerun relevant checks, and update the plan before the final handoff.
@@ -151,6 +157,11 @@ Rules:
    - Archive only after final review findings are dispositioned and any required remediation has been verified.
    - Leave the archived plan readable; do not rewrite it into an audit log during archive.
    - Remove disposable active-step temp files unless they are still needed to explain an unresolved blocker.
+13. Run the finalization gate before the final handoff.
+   - Use the `$deliver` / readable execution-plan path in `skills/shared/references/execution/finalization-gate.md`.
+   - The unchecked-checkbox search must inspect the entire execution plan or archived execution plan, not only the last phase worked.
+   - If any unchecked in-scope checkbox remains, continue execution instead of handing off unless one of the real blockers from step 10 prevents progress.
+   - If final review, archive movement, checklist updates, implementation edits, validation edits, or cleanup created uncommitted changes, commit them before handing off.
 
 ## Output
 

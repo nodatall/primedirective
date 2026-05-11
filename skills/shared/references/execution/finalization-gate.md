@@ -1,6 +1,6 @@
 # Finalization Gate
 
-Portable hard gate for `$execute-task --one-shot` and `$plan-and-execute`.
+Portable hard gate for `$execute-task --one-shot`, `$plan-and-execute`, and `$deliver`.
 
 This gate uses normal shell commands and repo artifacts only. It does not depend on a Prime Directive script being available in the target repository.
 
@@ -12,6 +12,7 @@ Capture the current dirty state before the workflow creates new task artifacts o
 
 - `$plan-and-execute`: capture after branch-state decisions and before PRD/TDD/tasks-plan generation.
 - `$execute-task`: capture after resolving `<plan-key>` and before the first execution edit.
+- `$deliver`: capture after branch-state decisions and before writing the readable execution plan or implementation changes.
 
 ```sh
 mkdir -p tasks/tmp
@@ -32,32 +33,39 @@ Run this gate immediately before any final user-visible completion message:
 
 Before running the numbered checks, classify the next user-visible message you are tempted to send. If it would summarize implementation changes, tests, generated artifacts, sources, or remaining closeout work, treat it as a terminal completion message and run this gate first. Do not send an implementation recap as a progress update after the last implementation validation passes.
 
-1. For one-shot execution and `$plan-and-execute`, verify the final full-branch review evidence exists and is complete:
+1. For one-shot execution, `$plan-and-execute`, and `$deliver`, verify the final full-branch review evidence exists and is complete:
 
    ```sh
    review_log="tasks/tmp/review-task-final-<plan-key>.md"
+   # For $deliver, use:
+   # review_log="tasks/tmp/review-deliver-final-<plan-key>.md"
    test -f "$review_log"
    rg -n "^[[:space:]]*- \[ \]" "$review_log"
    ```
 
    No output from the `rg` command means the review-log checklist check passed. If the review log is missing, contains unchecked prompt entries, or records unresolved blocker/material/final-audit issues without accepted-risk or blocked status, do not hand off. Run or finish the final full-branch review first.
 
-2. Re-open the task plan before archiving, or the archived task plan after archiving, and verify no unchecked task entries remain:
+2. Re-open the task plan before archiving, or the archived task plan after archiving, and verify no unchecked task entries remain. For `$deliver`, use the readable execution plan instead:
 
    ```sh
    task_file="tasks/tasks-plan-<plan-key>.md"
    test -f "$task_file" || task_file="$(find tasks/archive -path "*/tasks-plan-<plan-key>.md" -type f -print -quit)"
+   # For $deliver, use:
+   # task_file="tasks/execution-plan-<plan-key>.md"
+   # test -f "$task_file" || task_file="$(find tasks/archive -path "*/execution-plan-<plan-key>.md" -type f -print -quit)"
    rg -n "^[[:space:]]*- \[ \]" "$task_file"
    ```
 
-   No output means the unchecked-task check passed. If this command finds any unchecked task entry, do not hand off. Continue execution unless a real blocker prevents progress.
+   No output means the unchecked-task check passed. If this command finds any unchecked task entry, do not hand off. Continue execution unless a real blocker prevents progress. For `$deliver`, the scan covers the entire readable execution plan, not only the last phase or current section.
 
-3. Verify the PRD, TDD, and task plan are archived unless the user requested preservation:
+3. Verify the PRD, TDD, and task plan are archived unless the user requested preservation. For `$deliver`, verify the readable execution plan is archived:
 
    ```sh
    test -n "$(find tasks/archive -path "*/prd-<plan-key>.md" -type f -print -quit)"
    test -n "$(find tasks/archive -path "*/tdd-<plan-key>.md" -type f -print -quit)"
    test -n "$(find tasks/archive -path "*/tasks-plan-<plan-key>.md" -type f -print -quit)"
+   # For $deliver, use:
+   # test -n "$(find tasks/archive -path "*/execution-plan-<plan-key>.md" -type f -print -quit)"
    ```
 
 4. Run the final status check:
@@ -76,7 +84,7 @@ Before running the numbered checks, classify the next user-visible message you a
 
 If this gate would fail only because final review, commit, archiving, final status/baseline comparison, push, or PR creation has not been attempted yet, that is not a blocker to report. Continue the missing closeout work instead of handing the checklist back to the user.
 
-The final completion handoff must be based on post-gate evidence. Include the final review outcome, disposition of any material findings, material Agent-Loop Backprop proposals when final review produced them, final validation, archive or preservation result, commit/PR or documented existing-branch exception status, and final working-tree status.
+The final completion handoff must be based on post-gate evidence. Include the final review outcome, disposition of any material findings, material Agent-Loop Backprop proposals when final review produced them, final validation, archive or preservation result, commit/PR or documented existing-branch/no-PR status, and final working-tree status.
 
 ## Existing Branch Exception
 
