@@ -144,6 +144,8 @@ Rules:
    - After implementation starts, do not send a user-facing recap, handoff, or "please review" message while unchecked in-scope items remain.
    - If the next message would summarize completed work before all in-scope checkboxes are done or explicitly deferred, do not send it; reopen the plan, identify the next unchecked item, and continue.
    - A completed phase, passing focused check, or useful commit is not a stopping point when later unchecked items remain.
+   - After the last checkbox is checked, implementation is still not terminal. Continue directly into final review, review remediation, archive movement, commit of any closeout changes, and the finalization gate.
+   - A user-visible "What changed" plus "Validation" recap before final review, archive, commit, and finalization is an invalid terminal handoff. Suppress it and keep executing closeout unless a real blocker prevents the next closeout action.
    - Stop only for a required user decision, a missing environment/service/credential, an unsafe/destructive action needing approval, an unresolved material plan contradiction, or a verification blocker.
 11. Run final review before declaring completion.
    - Use the final full-branch review path from `review-protocol.md`.
@@ -152,11 +154,13 @@ Rules:
    - Use a fresh final reviewer when available.
    - Review the diff against the execution plan, plan updates, and relevant validation evidence.
    - Fix in-scope material findings, rerun relevant checks, and update the plan before the final handoff.
+   - Skipping final review is allowed only when a real blocker prevents it; in that case, stop with the blocker and do not claim completion.
 12. Archive the execution plan after final review is complete.
    - Move `tasks/execution-plan-<plan-key>.md` to `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`.
    - Archive only after final review findings are dispositioned and any required remediation has been verified.
    - Leave the archived plan readable; do not rewrite it into an audit log during archive.
    - Remove disposable active-step temp files unless they are still needed to explain an unresolved blocker.
+   - Commit the archive move and any final review, checklist, cleanup, implementation, or validation edits before the final handoff.
 13. Run the finalization gate before the final handoff.
    - Use the `$deliver` / readable execution-plan path in `skills/shared/references/execution/finalization-gate.md`.
    - The unchecked-checkbox search must inspect the entire execution plan or archived execution plan, not only the last phase worked.

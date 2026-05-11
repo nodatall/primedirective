@@ -390,6 +390,39 @@ def validate_deep_research_completion_stamp(errors: list[str]) -> None:
             fail(errors, "PD-DEEP-RESEARCH-STAMP-OWNER", f"skills/shared/references/planning/deep-research.md missing completion-stamp token: {token}")
 
 
+def validate_deliver_terminal_gate(errors: list[str]) -> None:
+    deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
+    finalization_gate = (ROOT / "skills/shared/references/execution/finalization-gate.md").read_text()
+
+    deliver_tokens = [
+        "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
+        "After every useful commit or plan update, immediately re-open the execution plan",
+        "After the last checkbox is checked, implementation is still not terminal.",
+        "review-deliver-final-<plan-key>.md",
+        "Skipping final review is allowed only when a real blocker prevents it",
+        "Commit the archive move and any final review, checklist, cleanup, implementation, or validation edits before the final handoff.",
+        "Run the finalization gate before the final handoff.",
+        "If any unchecked in-scope checkbox remains, continue execution instead of handing off",
+    ]
+    for token in deliver_tokens:
+        if token not in deliver:
+            fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
+
+    finalization_tokens = [
+        "Portable hard gate for `$execute-task --one-shot`, `$plan-and-execute`, and `$deliver`.",
+        "review-deliver-final-<plan-key>.md",
+        "execution-plan-<plan-key>.md",
+        "For `$deliver`, the scan covers the entire readable execution plan",
+    ]
+    for token in finalization_tokens:
+        if token not in finalization_gate:
+            fail(
+                errors,
+                "PD-DELIVER-FINALIZATION-GATE",
+                f"skills/shared/references/execution/finalization-gate.md missing deliver gate token: {token}",
+            )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory-only", action="store_true", help="print stale-mirror inventory and exit")
@@ -404,6 +437,7 @@ def main() -> int:
     validate_owner_paths(errors)
     validate_plan_refine_completion_gate(errors)
     validate_deep_research_completion_stamp(errors)
+    validate_deliver_terminal_gate(errors)
     validate_mirrors(errors)
 
     if errors:
