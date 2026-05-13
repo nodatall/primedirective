@@ -419,7 +419,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "## Goal Plan Delegation",
         "$plan-to-goal` owns the `tasks/goal-plan-<plan-key>.md` format",
         "Do not execute a goal plan as a normal `$deliver` checklist.",
-        "say whether `$deliver` chose a normal execution plan or a goal plan",
+        "if `$deliver` chose a goal plan, say that it is a goal plan",
     ]
     for token in deliver_goal_tokens:
         if token not in deliver:

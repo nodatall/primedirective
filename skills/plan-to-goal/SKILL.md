@@ -138,7 +138,7 @@ Acceptance criteria:
 2. Inspect the target repo enough to avoid inventing a goal that ignores obvious local constraints.
 3. Inspect `git status --short` before writing files and do not overwrite unrelated changes.
 4. Decide whether the source is goal-shaped using the Goal Candidate Test.
-5. If it is not goal-shaped, say it should remain a normal execution plan and stop.
+5. If it is not goal-shaped, stop without writing a goal plan and name the blocking reason briefly.
 6. Run the Weak Goal Gate.
 7. If the gate fails, stop with the missing items. Do not write a goal-plan file.
 8. Write or update `tasks/goal-plan-<plan-key>.md`.

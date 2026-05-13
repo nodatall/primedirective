@@ -195,7 +195,7 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
 For the initial review gate:
 
 - link the plan file
-- say whether `$deliver` chose a normal execution plan or a goal plan
+- if `$deliver` chose a goal plan, say that it is a goal plan
 - say refinement completed or name unresolved issues
 - ask the user to correct anything wrong, missing, or out of order
 
