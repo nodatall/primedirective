@@ -28,6 +28,8 @@ Examples:
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
+After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
+
 ## Artifacts
 
 Use these files:
@@ -128,7 +130,8 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - If a refinement round finds material issues or changes the plan, run another refinement round after those edits.
    - Stop only after a full post-edit refinement round finds no material backlog issues.
    - Stop after 8 rounds even if issues remain.
-   - Use a fresh reviewer subagent when available; otherwise perform the reviewer pass in the main agent and record that no fresh reviewer was available.
+   - Use a fresh reviewer subagent only when subagents are explicitly authorized for this run; otherwise perform the reviewer pass in the main agent.
+   - Do not mention whether a subagent was or was not used in the user-facing review request unless it creates a real blocker or residual risk.
    - The reviewer checks for missing source items, vague checkboxes, bad order, duplicate work, oversized steps, hidden dependencies, contradictions, and unclear next step.
    - Edit only the execution plan during refinement.
    - Do not create a refinement notes file or separate refinement markdown artifact.
@@ -138,6 +141,7 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - Ask: `Please review this before I start. Tell me what is wrong, missing, or out of order.`
    - Do not begin implementation until the user approves or corrects the plan.
    - If the user corrects the plan, update it and rerun refinement only if the correction introduces material backlog risk.
+   - Plan discussion does not clear `$deliver` activation. If the user approves after back-and-forth plan review, continue to step 7 for the active execution plan.
 7. Execute one item at a time.
    - Choose the next unchecked item in plan order unless new evidence makes a different next item clearly better; update the plan first when order changes.
    - Create a tiny active-step note only when it helps execution. Keep it private and disposable.
@@ -160,6 +164,7 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - Split, reorder, add, remove, or clarify items when implementation evidence changes the right path.
    - Keep the plan readable. Do not add detailed logs, commit SHAs, or validation transcripts unless they are needed to understand the next step.
 11. Continue until done or blocked.
+   - If the current turn starts from a generic approval or resume message while an active unarchived `$deliver` execution plan exists, re-open that plan and scan the entire unchecked remainder before doing or reporting anything else.
    - Keep moving through unchecked items after each commit.
    - Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`, not the current phase, section, or next coherent slice.
    - After every useful commit or plan update, immediately re-open the execution plan, scan the whole file for the next unchecked checkbox in file order, and start it when one exists.

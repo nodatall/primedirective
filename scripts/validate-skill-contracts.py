@@ -401,6 +401,8 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
+        "Later user messages such as `implement`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
+        "If the current turn starts from a generic approval or resume message while an active unarchived `$deliver` execution plan exists",
         "After every useful commit or plan update, immediately re-open the execution plan",
         "After the last checkbox is checked, implementation is still not terminal.",
         "review-deliver-final-<plan-key>.md",
@@ -408,6 +410,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Commit the archive move and any final review, checklist, cleanup, implementation, or validation edits before the final handoff.",
         "Run the finalization gate before the final handoff.",
         "If any unchecked in-scope checkbox remains, continue execution instead of handing off",
+        "Do not mention whether a subagent was or was not used in the user-facing review request",
     ]
     for token in deliver_tokens:
         if token not in deliver:
