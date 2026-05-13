@@ -410,7 +410,10 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Commit the archive move and any final review, checklist, cleanup, implementation, or validation edits before the final handoff.",
         "Run the finalization gate before the final handoff.",
         "If any unchecked in-scope checkbox remains, continue execution instead of handing off",
+        "Use a fresh reviewer subagent by default when subagents are available.",
+        "Assign one worker agent by default when worker agents are available.",
         "Do not mention whether a subagent was or was not used in the user-facing review request",
+        "Do not mention whether worker agents were or were not used",
     ]
     for token in deliver_tokens:
         if token not in deliver:

@@ -130,7 +130,7 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - If a refinement round finds material issues or changes the plan, run another refinement round after those edits.
    - Stop only after a full post-edit refinement round finds no material backlog issues.
    - Stop after 8 rounds even if issues remain.
-   - Use a fresh reviewer subagent only when subagents are explicitly authorized for this run; otherwise perform the reviewer pass in the main agent.
+   - Use a fresh reviewer subagent by default when subagents are available.
    - Do not mention whether a subagent was or was not used in the user-facing review request unless it creates a real blocker or residual risk.
    - The reviewer checks for missing source items, vague checkboxes, bad order, duplicate work, oversized steps, hidden dependencies, contradictions, and unclear next step.
    - Edit only the execution plan during refinement.
@@ -146,10 +146,12 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - Choose the next unchecked item in plan order unless new evidence makes a different next item clearly better; update the plan first when order changes.
    - Create a tiny active-step note only when it helps execution. Keep it private and disposable.
    - Identify repo-local implementation and validation patterns before editing.
-   - For each non-trivial implementation item, create an active-step packet and assign one worker agent when worker agents are available.
+   - For each non-trivial implementation item, create an active-step packet.
+   - Assign one worker agent by default when worker agents are available.
    - Do not let the orchestrator absorb implementation by default. The orchestrator owns next-step selection, worker packet creation, integration, validation judgment, plan updates, and commits.
    - Give each worker a compact active-step packet, not the whole planning history.
-   - The orchestrator may implement directly only for tiny edits, tightly coupled integration/remediation, or when worker agents are unavailable. Record the reason when no worker is used for a non-trivial item.
+   - When worker agents are unavailable, the orchestrator implements directly.
+   - Do not mention whether worker agents were or were not used unless it creates a real blocker or residual risk.
 8. Verify each useful step.
    - Run the narrow check that proves the current item.
    - For UI, layout, styling, or rendered-content changes, inspect the affected UI when practical and capture visual evidence.
@@ -217,7 +219,7 @@ Do not claim the plan is complete until all in-scope checkboxes are done or expl
 
 ## Worker Packet
 
-Use worker agents by default for non-trivial implementation items. Pass one bounded item with only the context needed to implement it correctly:
+Use worker agents by default for non-trivial implementation items when worker agents are available. Pass one bounded item with only the context needed to implement it correctly:
 
 ```md
 # Active Step Packet
