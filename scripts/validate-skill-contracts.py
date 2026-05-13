@@ -29,6 +29,7 @@ REQUIRED_CONTRACTS = {
     "dep-audit-checklist": "skills/shared/references/review/dep-audit-checklist.md",
     "swarm-lanes": "skills/shared/references/review/swarm-lanes.md",
     "plan-refine": "skills/plan-refine/SKILL.md",
+    "plan-to-goal": "skills/plan-to-goal/SKILL.md",
     "plan-and-execute": "skills/plan-and-execute/SKILL.md",
     "execute-task": "skills/execute-task/SKILL.md",
     "harness-drift": "skills/shared/references/harness-drift.md",
@@ -392,7 +393,11 @@ def validate_deep_research_completion_stamp(errors: list[str]) -> None:
 
 def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
+    plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
+    execute_task = (ROOT / "skills/execute-task/SKILL.md").read_text()
+    plan_to_goal = (ROOT / "skills/plan-to-goal/SKILL.md").read_text()
     finalization_gate = (ROOT / "skills/shared/references/execution/finalization-gate.md").read_text()
+    readme = (ROOT / "README.md").read_text()
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
@@ -408,10 +413,72 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in deliver:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
+    deliver_goal_tokens = [
+        "skills/plan-to-goal/SKILL.md",
+        "Durable goal plan: `tasks/goal-plan-<plan-key>.md`",
+        "## Goal Plan Delegation",
+        "$plan-to-goal` owns the `tasks/goal-plan-<plan-key>.md` format",
+        "Do not execute a goal plan as a normal `$deliver` checklist.",
+        "say whether `$deliver` chose a normal execution plan or a goal plan",
+    ]
+    for token in deliver_goal_tokens:
+        if token not in deliver:
+            fail(errors, "PD-DELIVER-GOAL-PLAN", f"skills/deliver/SKILL.md missing goal-plan token: {token}")
+
+    plan_to_goal_tokens = [
+        "name: plan-to-goal",
+        "tasks/goal-plan-<plan-key>.md",
+        "## Weak Goal Gate",
+        "Not goal-ready yet.",
+        "Done-when criteria that are measurable.",
+        "Verification command, artifact, or observable behavior.",
+        "If the gate fails, stop with the missing items. Do not write a goal-plan file.",
+        "Target and baseline:",
+        "Work backward from the target when choosing diagnostics and patches.",
+        "Keep the `/goal` prompt compact.",
+        "under 4,000 characters",
+        "State Recording",
+        "If validation results decide the next implementation step",
+        "badness-prior training task",
+        "calculate the plausible maximum",
+    ]
+    for token in plan_to_goal_tokens:
+        if token not in plan_to_goal:
+            fail(errors, "PD-PLAN-TO-GOAL", f"skills/plan-to-goal/SKILL.md missing token: {token}")
+
+    plan_and_execute_goal_tokens = [
+        "skills/plan-to-goal/SKILL.md",
+        "Before one-shot execution, check whether the generated or refined artifacts are goal-shaped",
+        "Do not continue into `$execute-task --one-shot` after creating a goal plan.",
+        "Do not add this preflight to `$execute-task`",
+    ]
+    for token in plan_and_execute_goal_tokens:
+        if token not in plan_and_execute:
+            fail(errors, "PD-PLAN-EXECUTE-GOAL-FORK", f"skills/plan-and-execute/SKILL.md missing goal-fork token: {token}")
+
+    forbidden_execute_task_tokens = [
+        "plan-to-goal",
+        "goal-shaped",
+        "goal plan",
+    ]
+    for token in forbidden_execute_task_tokens:
+        if token in execute_task:
+            fail(errors, "PD-EXECUTE-TASK-NO-GOAL-FORK", f"skills/execute-task/SKILL.md should not contain goal-fork token: {token}")
+
+    readme_tokens = [
+        "goal-plan prompt for adaptive evidence loops",
+        "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
+        "tasks/goal-plan-<plan-key>.md",
+    ]
+    for token in readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-DELIVER-README-GOAL-PLAN", f"README.md missing deliver goal-plan token: {token}")
+
     finalization_tokens = [
         "Portable hard gate for `$execute-task --one-shot`, `$plan-and-execute`, and `$deliver`.",
         "review-deliver-final-<plan-key>.md",
         "execution-plan-<plan-key>.md",
+        "goal plan",
         "For `$deliver`, the scan covers the entire readable execution plan",
     ]
     for token in finalization_tokens:

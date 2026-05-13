@@ -27,6 +27,7 @@ Load these files before running:
 - `skills/shared/references/contract-ownership.md`
 - `skills/plan-work/SKILL.md`
 - `skills/plan-refine/SKILL.md`
+- `skills/plan-to-goal/SKILL.md` when generated or refined artifacts are goal-shaped
 - `skills/execute-task/SKILL.md`
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
 - `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
@@ -91,18 +92,23 @@ Load these files before running:
    - continue into execution only when the stamp says `plan_refine_complete: yes`, `ready_for_execution: yes`, `fresh_reviewer_rounds` is at least `1`, and `reviewer_stop_gate: no_unresolved_blocker_or_material`
    - print the short `Refinement Findings Summary` before execution; do not paste the full refinement log unless the user asks
    - keep the refinement log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless `--preserve-artifacts` is present
-7. Execute the generated or refined plan in one-shot mode:
+7. Before one-shot execution, check whether the generated or refined artifacts are goal-shaped:
+   - Load `skills/plan-to-goal/SKILL.md` when validation results would decide the next implementation step, the plan is an inspect -> patch -> validate loop, or the work should optimize against a measurable baseline, benchmark, comparator, ceiling, or target.
+   - If the plan is goal-shaped, use `$plan-to-goal plan-key=<plan-key>` semantics to write `tasks/goal-plan-<plan-key>.md`, then stop for user review with the goal-plan path.
+   - Do not continue into `$execute-task --one-shot` after creating a goal plan.
+   - Do not add this preflight to `$execute-task`; `$plan-and-execute` owns this combined planning-to-execution fork.
+8. Execute the generated or refined plan in one-shot mode:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default
    - if the skill created a branch from main/base, use normal branch execution and open a PR at the end
    - use compact worker packets, focused validation per sub-task, no per-sub-task review chains, and one final full-branch review
    - when implementation and focused validation are complete, continue directly into final broad validation, final full-branch review, review remediation, cleanup/archive, commit, and the finalization gate; do not hand off a validated-but-unreviewed or dirty branch as incomplete workflow state
    - after the last implementation validation passes, treat any user-facing implementation recap as blocked until the post-implementation closeout evidence exists: final full-branch review log complete, all in-scope review findings dispositioned and fixed or explicitly accepted, task checklist complete, PRD/TDD/tasks-plan archived unless preservation is requested, new run-created changes committed, final status compared against the baseline, and finalization gate passed
    - if the next message you are about to send would list "What changed" or "Validation" before that evidence exists, do not send it; run the missing closeout step instead
-8. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include the actual compact report inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict; do not satisfy this by only mentioning an archived report path. Then continue normal cleanup unless `--preserve-artifacts` is present.
-9. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
-10. If `--preserve-artifacts` is present, keep temp planning, refinement, and review artifacts and list them in the final handoff.
-11. Run the hard finalization gate from `finalization-gate.md` before any terminal handoff. The existing non-base branch path skips default PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
-12. Treat any final response shaped like "implemented X, validation passed, changed files are Y" before final review, review remediation, archive, commit, baseline comparison, and finalization as an invalid terminal handoff. Continue into those closeout steps instead unless a real blocker prevents them.
+9. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include the actual compact report inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict; do not satisfy this by only mentioning an archived report path. Then continue normal cleanup unless `--preserve-artifacts` is present.
+10. Archive PRD, TDD, and tasks-plan under `tasks/archive/<yyyy-mm-dd>-<plan-key>/` after completion and after any requested harness drift report has been generated.
+11. If `--preserve-artifacts` is present, keep temp planning, refinement, and review artifacts and list them in the final handoff.
+12. Run the hard finalization gate from `finalization-gate.md` before any terminal handoff. The existing non-base branch path skips default PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
+13. Treat any final response shaped like "implemented X, validation passed, changed files are Y" before final review, review remediation, archive, commit, baseline comparison, and finalization as an invalid terminal handoff. Continue into those closeout steps instead unless a real blocker prevents them.
 
 ## Branch and PR rules
 
@@ -123,6 +129,6 @@ The terminal handoff must name the final review result, final commit or explicit
 
 ## Relationship to underlying skills
 
-This skill is a thin orchestrator. Do not duplicate planning or execution logic. Use `$plan-work --from-thread --direct` semantics for artifact generation and `$execute-task --one-shot` semantics for implementation, with this skill's branch and PR defaults taking precedence.
+This skill is a thin orchestrator. Do not duplicate planning, goal drafting, or execution logic. Use `$plan-work --from-thread --direct` semantics for artifact generation, `$plan-to-goal` semantics for the goal-shaped fork before execution, and `$execute-task --one-shot` semantics for implementation, with this skill's branch and PR defaults taking precedence.
 
 See `skills/shared/references/contract-ownership.md` for the contract ownership model. This skill owns only the combined workflow order and branch/PR defaults unique to `$plan-and-execute`.

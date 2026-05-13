@@ -12,7 +12,7 @@ Capture the current dirty state before the workflow creates new task artifacts o
 
 - `$plan-and-execute`: capture after branch-state decisions and before PRD/TDD/tasks-plan generation.
 - `$execute-task`: capture after resolving `<plan-key>` and before the first execution edit.
-- `$deliver`: capture after branch-state decisions and before writing the readable execution plan or implementation changes.
+- `$deliver`: capture after branch-state decisions and before writing the readable execution plan, goal plan, or implementation changes.
 
 ```sh
 mkdir -p tasks/tmp

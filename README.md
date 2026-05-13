@@ -25,6 +25,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `plain-language` | `$plain-language` | None |
 | `plan-and-execute` | `$plan-and-execute` | `--prepare-plan`, `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
+| `plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]` | `plan-key=<plan-key>` or source material in the thread |
 | `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
 | `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--loop`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts` |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
@@ -33,10 +34,11 @@ Use this table when you already know the skill name. The detailed sections below
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
-- Use `$deliver` when you want one readable execution plan, a refinement pass, user approval, then iterative implementation without PRD/TDD/tasks-plan artifacts.
+- Use `$deliver` when you want one readable execution plan, or a goal-plan prompt for adaptive evidence loops, with refinement and user approval before execution starts.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
 - Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
+- Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with a compact paste-ready `/goal` prompt.
 - Use `$execute-task` when planning artifacts already exist and you want one task, or all remaining tasks with `--one-shot`, implemented.
 - Use `$plan-refine` when planning artifacts exist but need pressure testing before execution.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
@@ -74,7 +76,7 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, refines that plan until no material backlog issues remain, asks for user approval, then works through every unchecked plan item one at a time. It creates a feature branch when starting from a base branch, and uses focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate without generating PRD/TDD/tasks-plan artifacts.
+Creates or loads one plain-language execution plan, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Normal execution plans are refined until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Modifiers:
 
@@ -95,6 +97,19 @@ Modifiers:
 - `--stay-on-current-branch`: do not create or switch branches before execution.
 - `--check-harness-drift`: include a compact check for whether execution drifted from the harness/plan contract.
 - `--preserve-review-artifacts`: keep temporary review artifacts instead of cleaning them after success.
+
+### `$plan-to-goal`
+
+Converts messy source material, a readable execution plan, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`. The goal plan includes a compact paste-ready `/goal` prompt, target/baseline guidance when metrics exist, state-recording guidance for long runs, and review wording that asks the user to say `start this as a goal`.
+
+Request options:
+
+- `plan-key=<plan-key>`: build the goal plan from an existing PRD/TDD/tasks-plan set.
+- Source material in the thread: build the goal plan from the current conversation or pasted plan.
+
+Modifiers:
+
+- None.
 
 ### `$fix-loop`
 
