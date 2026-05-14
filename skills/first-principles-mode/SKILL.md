@@ -1,6 +1,6 @@
 ---
 name: first-principles-mode
-description: Run a deep, adaptive, read-only analysis pass that widens the search space, tests competing explanations, and synthesizes the best mechanism-level answer before implementation judgment. Supports `--deep-research` for web-backed operator/current-practice research and `--pro-analysis` for ChatGPT Pro browser escalation through the repo wrapper.
+description: Run a deep, adaptive, read-only analysis pass that widens the search space, uses a default adversarial council with rebuttal rounds to test competing explanations, and synthesizes the best mechanism-level answer before implementation judgment. Supports `--deep-research` for web-backed operator/current-practice research and `--pro-analysis` for ChatGPT Pro browser escalation through the repo wrapper.
 ---
 
 # First-Principles Mode Skill
@@ -40,6 +40,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 - Prefer conceptual models, system logic, incentives, boundaries, hidden constraints, and failure dynamics before implementation judgment.
 - Widen the search space before refining the answer.
 - Generate materially different candidate explanations or approaches when more than one path is plausible. Avoid cosmetic variants of the same idea.
+- Use the adversarial council protocol by default for hard, ambiguous, high-leverage, or repeated-failure questions.
 - Try to disconfirm the leading explanation before settling on it.
 - Separate observation, inference, and synthesis internally, and surface the distinction when it matters.
 - Explain in plain language first, then add technical detail.
@@ -87,17 +88,25 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
    - Use filtered whole-repo context for small or broad questions; use curated files for large or narrow questions.
    - Stop before sending only when the dry-run or local inspection reveals likely secrets, private data, or an obviously wrong context bundle.
    - Treat the Pro result as external analysis to verify and synthesize, not as source of truth.
-9. Run an explicit adversarial pass against the current best view.
-   - Ask what would falsify it.
-   - Look for hidden assumptions, missing constraints, or a broader framing that changes the problem shape.
-   - If the evidence remains mixed, keep the answer mixed.
+9. Run the default adversarial council.
+   - Use separate read-only lanes for materially different points of view. When subagents are available, assign lanes to subagents; otherwise run the same lane structure internally.
+   - Start with independent lane memos before any rebuttal so the lanes do not converge too early.
+   - Use 3-5 lanes chosen for the problem. Default lenses: mechanism/root-cause analyst, skeptic/adversary, systems/architecture analyst, operator/pragmatist, and contrarian/reframe analyst.
+   - Each lane should produce a short memo with its claim, decisive evidence, strongest counterevidence, biggest uncertainty, falsifier, and smallest next verification step.
+   - Run two rebuttal rounds by default. Each lane attacks the weakest assumptions, missing evidence, and bad tradeoffs in the other lanes.
+   - Run a third rebuttal round only when the second rebuttal surfaces a new blocker, a new evidence need, or a genuinely different framing.
+   - Stop rebuttals early only if they repeat the same objections, collapse into preference differences, or no longer change at least one of: leading explanation, confidence band, decisive evidence gap, or next verification step.
+   - Preserve serious minority reports when a losing view found a risk the winning view cannot fully dismiss.
    - If current evidence cannot separate materially different explanations, use the verification pivot: stop theorizing, state the missing evidence plainly, and name the smallest verification step that would separate the explanations.
+   - Before final synthesis, build an internal evidence matrix that maps surviving claims to support, counterevidence, falsifier, and verification need. Use this matrix to avoid choosing the most polished lane instead of the best-supported one.
 10. Recompose the findings into one coherent answer that starts plain and becomes more technical only as needed.
 11. Choose the smallest user-facing output shape that preserves the conclusion, confidence, and decisive evidence.
    - Keep internal subquestions, discarded hypotheses, and intermediate reasoning private unless surfacing them will materially help the user.
+   - Do not include a debate transcript. Synthesize what survived the council.
+   - Include a compact Council Audit Summary only when the council materially changed the conclusion, confidence, or next verification step.
    - Prefer a tight causal memo over a report template when the thesis is clear.
    - Expand only when ambiguity, confidence, or decision risk justifies it.
-11. Stop after the analysis pass. Do not move into implementation, patching, or task execution.
+12. Stop after the analysis pass. Do not move into implementation, patching, or task execution.
 
 ## Output Contract
 

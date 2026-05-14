@@ -391,6 +391,50 @@ def validate_deep_research_completion_stamp(errors: list[str]) -> None:
             fail(errors, "PD-DEEP-RESEARCH-STAMP-OWNER", f"skills/shared/references/planning/deep-research.md missing completion-stamp token: {token}")
 
 
+def validate_first_principles_adversarial_council(errors: list[str]) -> None:
+    first_principles = (ROOT / "skills/first-principles-mode/SKILL.md").read_text()
+    rubric = (ROOT / "skills/first-principles-mode/references/analysis-rubric.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+
+    skill_tokens = [
+        "default adversarial council",
+        "Start with independent lane memos",
+        "Use 3-5 lanes",
+        "claim, decisive evidence, strongest counterevidence",
+        "Run two rebuttal rounds by default.",
+        "Run a third rebuttal round only when",
+        "leading explanation, confidence band, decisive evidence gap, or next verification step",
+        "Preserve serious minority reports",
+        "internal evidence matrix",
+        "compact Council Audit Summary only when",
+        "Do not include a debate transcript.",
+    ]
+    for token in skill_tokens:
+        if token not in first_principles:
+            fail(errors, "PD-FIRST-PRINCIPLES-COUNCIL", f"skills/first-principles-mode/SKILL.md missing adversarial-council token: {token}")
+
+    rubric_tokens = [
+        "run the default adversarial council",
+        "Start with independent lane memos",
+        "Require rebuttal rounds.",
+        "Use two rebuttal rounds by default",
+        "Synthesize from an internal evidence matrix",
+        "Council Audit Summary only when",
+        "parallel memos without rebuttal",
+    ]
+    for token in rubric_tokens:
+        if token not in rubric:
+            fail(errors, "PD-FIRST-PRINCIPLES-COUNCIL-RUBRIC", f"skills/first-principles-mode/references/analysis-rubric.md missing adversarial-council token: {token}")
+
+    readme_tokens = [
+        "default adversarial council",
+        "independent lanes and rebuttal rounds",
+    ]
+    for token in readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-FIRST-PRINCIPLES-COUNCIL-README", f"README.md missing first-principles council token: {token}")
+
+
 def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
     plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
@@ -510,6 +554,7 @@ def main() -> int:
     validate_owner_paths(errors)
     validate_plan_refine_completion_gate(errors)
     validate_deep_research_completion_stamp(errors)
+    validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
     validate_mirrors(errors)
 

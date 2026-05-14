@@ -12,6 +12,7 @@ The answer should:
 - explain how the system works
 - identify why the observed behavior emerges
 - compare materially different plausible explanations or approaches before settling
+- run the default adversarial council for hard, ambiguous, high-leverage, or repeated-failure questions
 - separate evidence from inference and synthesis
 - try to falsify the leading view before finalizing it
 - report material uncertainty honestly
@@ -102,8 +103,15 @@ Mark the difference between:
 - inference: what that likely means
 - synthesis: the best combined explanation
 
-Run at least one explicit disconfirmation pass.
+Run the adversarial council before final synthesis.
 
+- Start with independent lane memos so alternative views do not collapse too early.
+- Require rebuttal rounds. The value is in attacking assumptions, missing evidence, and bad tradeoffs, not just writing parallel memos.
+- Use two rebuttal rounds by default and a third only when the second round finds a new blocker, new evidence need, or genuinely different framing.
+- Each lane memo should include claim, decisive evidence, strongest counterevidence, biggest uncertainty, falsifier, and smallest next verification step.
+- Stop rebuttals when another round would not change the leading explanation, confidence band, decisive evidence gap, or next verification step.
+- Synthesize from an internal evidence matrix, not from memo polish.
+- Include a compact Council Audit Summary only when the council materially changed the conclusion, confidence, or next verification step.
 - Ask what evidence would weaken the current best view.
 - Look for hidden constraints, incentives, or boundary conditions that the leading explanation may be skipping.
 - If the prompt is about finding alternatives, look for options that change the shape of the problem rather than merely tuning the current approach.
@@ -142,6 +150,7 @@ Watch for these failure modes:
 
 - broad-sounding language without a real breadth pass
 - polished prose that never tested alternatives
+- parallel memos without rebuttal
 - multiple hypotheses that are really the same idea wearing different words
 - excessive detail that does not change the conclusion
 - overstated confidence from partial evidence

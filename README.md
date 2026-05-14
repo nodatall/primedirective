@@ -125,7 +125,7 @@ Modifiers:
 
 ### `$first-principles-mode`
 
-Runs a deep, read-only analysis pass. It is for mechanism-level judgment, competing explanations, root-cause reasoning, or plan critique before deciding what to build or change. When the evidence cannot separate plausible explanations, it should stop and name the smallest verification step needed next.
+Runs a deep, read-only analysis pass. It is for mechanism-level judgment, competing explanations, root-cause reasoning, or plan critique before deciding what to build or change. It uses a default adversarial council with independent lanes and rebuttal rounds before synthesis. When the evidence cannot separate plausible explanations, it should stop and name the smallest verification step needed next.
 
 Modifiers:
 
