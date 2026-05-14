@@ -27,14 +27,25 @@ Examples:
 
 ## Goal Candidate Test
 
-Prefer a goal plan when any of these are true:
+Use a goal plan only when the source is open-ended enough that a stable checklist would be dishonest and the agent can run a real adaptive loop inside the goal.
+
+Goal plans require a real adaptive loop:
 
 - If validation results decide the next implementation step, prefer a goal plan.
 - The work is inspect -> patch -> validate -> inspect again until confidence or a blocker.
 - The success condition is proving a path works, exhausting a search space, improving coverage until recoverable options are exhausted, or diagnosing why repeated attempts still fail.
 - The plan has a fixed holdout artifact, benchmark, comparator, baseline, ceiling, or target metric that should guide iterative work.
 
-Do not use a goal plan for a straightforward feature, bug fix, copy edit, cleanup, PR response, or one-pass checklist where the final task list is already stable.
+Goal mode also requires feedback cadence that fits autonomous iteration. Do not use a goal plan when the decisive evidence comes mainly from a slow, paid, approval-gated, nightly, or externally scheduled run that the agent cannot repeat several times before the next operator decision. In that case, write a normal execution plan or tasks plan that builds the harness, proves the plumbing with cheap checks, and prepares the one decision run for human approval.
+
+Do not use a goal plan for a straightforward feature, bug fix, copy edit, cleanup, PR response, one-pass checklist, or experiment setup where the implementation work is nameable and the main unknown is what a later operator-approved run will show.
+
+When the source is ambiguous, default to normal planning. Convert to a goal plan only when the plan cannot honestly name the remaining implementation steps until after the next validation result and that validation loop is practical to run repeatedly inside the goal.
+
+AutoProphet example:
+
+- Goal candidate: "Keep diagnosing and patching the badness-prior training path using existing artifacts and a fixed holdout comparison until score collapse is fixed or a blocker is proven."
+- Not a goal candidate: "Design and build the R1 multi-arm probe, prove arm tagging and budgets with cheap offline/smoke checks, then prepare one paid 2-4 hour decision run for approval before the next nightly."
 
 ## Artifact
 

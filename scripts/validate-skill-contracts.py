@@ -467,6 +467,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "skills/plan-to-goal/SKILL.md",
         "Durable goal plan: `tasks/goal-plan-<plan-key>.md`",
         "## Goal Plan Delegation",
+        "slow, paid, approval-gated, nightly, or externally scheduled run",
         "$plan-to-goal` owns the `tasks/goal-plan-<plan-key>.md` format",
         "Do not execute a goal plan as a normal `$deliver` checklist.",
         "if `$deliver` chose a goal plan, say that it is a goal plan",
@@ -479,6 +480,10 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "name: plan-to-goal",
         "tasks/goal-plan-<plan-key>.md",
         "## Weak Goal Gate",
+        "Use a goal plan only when the source is open-ended enough that a stable checklist would be dishonest and the agent can run a real adaptive loop inside the goal.",
+        "Goal mode also requires feedback cadence that fits autonomous iteration.",
+        "slow, paid, approval-gated, nightly, or externally scheduled run",
+        "2-4 hour decision run",
         "Not goal-ready yet.",
         "Done-when criteria that are measurable.",
         "Verification command, artifact, or observable behavior.",
@@ -499,6 +504,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     plan_and_execute_goal_tokens = [
         "skills/plan-to-goal/SKILL.md",
         "Before one-shot execution, check whether the generated or refined artifacts are goal-shaped",
+        "decisive evidence depends on a slow, paid, approval-gated, nightly, or externally scheduled run",
         "Do not continue into `$execute-task --one-shot` after creating a goal plan.",
         "Do not add this preflight to `$execute-task`",
     ]

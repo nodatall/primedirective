@@ -91,10 +91,12 @@ Rules:
 
 Before drafting a normal execution plan, check whether the source is goal-shaped:
 
-- Validation results decide the next implementation step.
+- The plan cannot honestly name the remaining implementation steps until after the next validation result.
 - The work is inspect -> patch -> validate -> inspect again until confidence or a blocker.
 - The success condition is proving a path works, exhausting a search space, improving coverage until recoverable options are exhausted, or diagnosing why repeated attempts still fail.
 - The plan has a fixed holdout artifact, benchmark, comparator, baseline, ceiling, or target metric that should guide iterative work.
+
+Even when the source sounds like an evidence loop, do not choose goal mode unless the agent can run multiple useful validation loops inside the goal. If the decisive evidence depends on a slow, paid, approval-gated, nightly, or externally scheduled run, write a normal execution plan that prepares the harness, cheap checks, smoke run, and human-approved decision run instead.
 
 If the source is goal-shaped, use `$plan-to-goal` instead of writing a normal `$deliver` checklist. `$plan-to-goal` owns the `tasks/goal-plan-<plan-key>.md` format, compact `/goal` prompt, target/baseline rules, state-recording guidance, and review wording.
 

@@ -93,7 +93,8 @@ Load these files before running:
    - print the short `Refinement Findings Summary` before execution; do not paste the full refinement log unless the user asks
    - keep the refinement log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless `--preserve-artifacts` is present
 7. Before one-shot execution, check whether the generated or refined artifacts are goal-shaped:
-   - Load `skills/plan-to-goal/SKILL.md` when validation results would decide the next implementation step, the plan is an inspect -> patch -> validate loop, or the work should optimize against a measurable baseline, benchmark, comparator, ceiling, or target.
+   - Load `skills/plan-to-goal/SKILL.md` only when the plan cannot honestly name the remaining implementation steps until after the next validation result, the plan is an inspect -> patch -> validate loop, or the work should optimize against a measurable baseline, benchmark, comparator, ceiling, or target.
+   - Do not convert the plan into a goal when the decisive evidence depends on a slow, paid, approval-gated, nightly, or externally scheduled run that the agent cannot repeat several times before the next operator decision. Keep that as a normal tasks plan with cheap checks, smoke coverage, and decision-run readiness.
    - If the plan is goal-shaped, use `$plan-to-goal plan-key=<plan-key>` semantics to write `tasks/goal-plan-<plan-key>.md`, then stop for user review with the goal-plan path.
    - Do not continue into `$execute-task --one-shot` after creating a goal plan.
    - Do not add this preflight to `$execute-task`; `$plan-and-execute` owns this combined planning-to-execution fork.
