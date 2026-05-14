@@ -445,8 +445,14 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
+        "`$deliver plan` creates or refines `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction in the plan, then stops for review.",
+        "When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent",
+        "When a plan document contains the Deliver implementation instruction, that document is enough to route implementation back through this skill.",
         "plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`",
         "Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
+        "Deliver implementation instruction:",
+        "Include the exact Deliver implementation instruction near the top of every normal execution plan.",
+        "Tell the user they can say `implement the doc` when it looks right.",
         "Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`.",
         "Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.",
         "do not treat the absence of a canonical execution plan as permission to skip final review, archive movement, or the finalization gate.",

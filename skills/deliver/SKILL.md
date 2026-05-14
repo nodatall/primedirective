@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Create or load one plain-language execution plan, or create a goal-plan prompt when the source is really an evidence loop, then refine it, ask the user to approve the readable plan, and execute normal plans one item at a time with focused validation, useful commits, plan updates, and final review. Use when invoked with `$deliver`, plain `deliver` phrases such as `implement deliver`, or when the user wants lightweight planned execution without PRD/TDD/tasks-plan artifacts.
+description: Create or load one plain-language execution plan, or create a goal-plan prompt when the source is really an evidence loop, then refine it, ask the user to approve the readable plan, and execute normal plans one item at a time with focused validation, useful commits, plan updates, and final review. Use when invoked with `$deliver`, plain `deliver` phrases, or when the user asks to implement a Deliver execution plan doc.
 ---
 
 # Deliver Skill
@@ -20,16 +20,25 @@ Load these references before starting:
 
 ## Activation
 
-Invoke explicitly with `$deliver` or plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
+Invoke explicitly with `$deliver`, `$deliver plan`, or plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
+
+After long planning conversations, prefer a self-identifying document flow:
+
+- `$deliver plan` creates or refines `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction in the plan, then stops for review.
+- When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent while the visible, attached, referenced, or active document is a Deliver execution plan, load this skill, load that exact plan, treat it as the approved scope, and start implementation at step 7. Continue through focused validation, final review, archive movement, commit, and the finalization gate before the final handoff.
 
 Examples:
 
 - `$deliver` with a thread plan above it.
+- `$deliver plan` with a thread plan above it.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
 - `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
+- `implement the doc` when the opened or referenced doc contains the Deliver implementation instruction.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
 After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
+
+When a plan document contains the Deliver implementation instruction, that document is enough to route implementation back through this skill. Do not require the user to say `$deliver execute <plan-path>`. If the user asks to implement the document, load the document, scan every checkbox, and run the closeout path in this file. If the document is not already named `tasks/execution-plan-<plan-key>.md`, first import it into that canonical filename unless doing so would change scope.
 
 ## Artifacts
 
@@ -57,6 +66,9 @@ Goal: <one sentence>
 
 Please review this before I start.
 Tell me what is wrong, missing, or out of order.
+
+Deliver implementation instruction:
+When asked to implement this doc, load the `$deliver` skill, use this file as the approved execution plan, scan every checkbox, and continue through final review, archive movement, commit, and finalization before the final handoff.
 
 ## What We Know
 
@@ -87,6 +99,7 @@ Rules:
 - Avoid checkboxes inside checkboxes.
 - Add `What We Know`, phase `Goal`, or `Decision notes` only when they reduce confusion.
 - Add `Done when` only when the checkbox text is too vague to define completion.
+- Include the exact Deliver implementation instruction near the top of every normal execution plan.
 - Do not add `Status`, `Result`, or `Commit` lines by default.
 - Keep validation evidence and commit details in the final handoff or git history unless the evidence changes the plan.
 
@@ -128,6 +141,7 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - If no plan exists, write `tasks/execution-plan-<plan-key>.md`.
    - If the latest approved source is a non-canonical plan-like file such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, a pasted checklist, or review notes, treat it as source material and convert the in-scope work into `tasks/execution-plan-<plan-key>.md` before implementation starts.
    - Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.
+   - If the user asked to implement a non-canonical plan-like document, import the in-scope content into `tasks/execution-plan-<plan-key>.md`, then continue as an implementation request unless the import exposed a scope contradiction.
    - Preserve every concrete source item unless it is a duplicate, contradiction, or user-approved removal.
    - Phrase steps as user-readable outcomes or actions, not implementation jargon.
    - Keep future items readable rather than fully specified.
@@ -146,10 +160,12 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
 6. Ask for user review once.
    - Show the final readable plan or summarize it with the file path.
    - Ask: `Please review this before I start. Tell me what is wrong, missing, or out of order.`
+   - Tell the user they can say `implement the doc` when it looks right.
    - Do not begin implementation until the user approves or corrects the plan.
    - If the user corrects the plan, update it and rerun refinement only if the correction introduces material backlog risk.
    - Plan discussion does not clear `$deliver` activation. If the user approves after back-and-forth plan review, continue to step 7 for the active execution plan.
 7. Execute one item at a time.
+   - `implement the doc` starts here after loading the canonical execution plan and confirming the branch/finalization baseline from earlier steps is available or recapturing it if needed.
    - Choose the next unchecked item in plan order unless new evidence makes a different next item clearly better; update the plan first when order changes.
    - Create a tiny active-step note only when it helps execution. Keep it private and disposable.
    - Identify repo-local implementation and validation patterns before editing.
