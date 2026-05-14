@@ -445,7 +445,11 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
-        "Later user messages such as `implement`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
+        "plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`",
+        "Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
+        "Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`.",
+        "Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.",
+        "do not treat the absence of a canonical execution plan as permission to skip final review, archive movement, or the finalization gate.",
         "If the current turn starts from a generic approval or resume message while an active unarchived `$deliver` execution plan exists",
         "After every useful commit or plan update, immediately re-open the execution plan",
         "After the last checkbox is checked, implementation is still not terminal.",

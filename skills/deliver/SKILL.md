@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Create or load one plain-language execution plan, or create a goal-plan prompt when the source is really an evidence loop, then refine it, ask the user to approve the readable plan, and execute normal plans one item at a time with focused validation, useful commits, plan updates, and final review. Use when invoked with `$deliver`, or when the user wants lightweight planned execution without PRD/TDD/tasks-plan artifacts.
+description: Create or load one plain-language execution plan, or create a goal-plan prompt when the source is really an evidence loop, then refine it, ask the user to approve the readable plan, and execute normal plans one item at a time with focused validation, useful commits, plan updates, and final review. Use when invoked with `$deliver`, plain `deliver` phrases such as `implement deliver`, or when the user wants lightweight planned execution without PRD/TDD/tasks-plan artifacts.
 ---
 
 # Deliver Skill
@@ -20,15 +20,16 @@ Load these references before starting:
 
 ## Activation
 
-Invoke explicitly with `$deliver`.
+Invoke explicitly with `$deliver` or plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
 
 Examples:
 
 - `$deliver` with a thread plan above it.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
+- `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
-After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
+After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
 
 ## Artifacts
 
@@ -42,6 +43,8 @@ Use these files:
 The durable plan is for the user to read and edit. Keep it low-friction. Do not turn it into an audit log.
 
 Use `tasks/goal-plan-<plan-key>.md` only through `$plan-to-goal`. A goal plan is a paste-ready `/goal` prompt plus enough readable context to review the loop before it starts. It is not a normal execution checklist and should not be archived by the `$deliver` finalization gate unless the user explicitly converts it into a normal execution plan.
+
+Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`. Do not implement directly against them. If the user invokes deliver from one of those artifacts, import or convert the in-scope checklist into `tasks/execution-plan-<plan-key>.md` before implementation, then use that execution plan for unchecked-item scans, final review scope, archive movement, and finalization.
 
 ## Plan Format
 
@@ -123,6 +126,8 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - If the user says not to use goal mode, convert the source into a normal execution plan and continue with step 4.
 4. Create or load the plain-language plan.
    - If no plan exists, write `tasks/execution-plan-<plan-key>.md`.
+   - If the latest approved source is a non-canonical plan-like file such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, a pasted checklist, or review notes, treat it as source material and convert the in-scope work into `tasks/execution-plan-<plan-key>.md` before implementation starts.
+   - Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.
    - Preserve every concrete source item unless it is a duplicate, contradiction, or user-approved removal.
    - Phrase steps as user-readable outcomes or actions, not implementation jargon.
    - Keep future items readable rather than fully specified.
@@ -169,6 +174,7 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - Keep the plan readable. Do not add detailed logs, commit SHAs, or validation transcripts unless they are needed to understand the next step.
 11. Continue until done or blocked.
    - If the current turn starts from a generic approval or resume message while an active unarchived `$deliver` execution plan exists, re-open that plan and scan the entire unchecked remainder before doing or reporting anything else.
+   - If the current turn starts with `implement deliver` or another deliver resume phrase and the only available scope artifact is non-canonical, first convert it into `tasks/execution-plan-<plan-key>.md`; do not treat the absence of a canonical execution plan as permission to skip final review, archive movement, or the finalization gate.
    - Keep moving through unchecked items after each commit.
    - Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`, not the current phase, section, or next coherent slice.
    - After every useful commit or plan update, immediately re-open the execution plan, scan the whole file for the next unchecked checkbox in file order, and start it when one exists.
