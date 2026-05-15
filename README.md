@@ -18,7 +18,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
-| `deliver` | `$deliver` | None |
+| `deliver` | `$deliver` | `--pro-analysis` |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
@@ -34,7 +34,7 @@ Use this table when you already know the skill name. The detailed sections below
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
-- Use `$deliver` when you want one readable execution plan, or a goal-plan prompt for adaptive evidence loops, with refinement and user approval before execution starts.
+- Use `$deliver` when you want one readable execution plan, or a goal-plan prompt for adaptive evidence loops, with optional Pro pressure, refinement, and user approval before execution starts.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
 - Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
@@ -76,11 +76,11 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Normal execution plans are refined until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Normal execution plans can optionally get ChatGPT Pro pressure before refinement, are refined until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Modifiers:
 
-- None.
+- `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask for approval only after the Pro synthesis gate succeeds.
 
 ### `$execute-task`
 
@@ -290,6 +290,7 @@ The contract validator checks public skill rows, modifier/request-option drift, 
 Prime Directive can use ChatGPT Pro browser mode as an internal escalation path for:
 
 - `$first-principles-mode --pro-analysis`
+- `$deliver --pro-analysis`
 - `$plan-and-execute --pro-analysis`
 - `$repo-sweep --pro-analysis`
 

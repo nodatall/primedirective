@@ -79,6 +79,7 @@ MIRROR_CHECKS = [
         "owner": {"skills/shared/references/analysis/pro-oracle-escalation.md"},
         "allowed": {
             "skills/shared/references/contract-ownership.md",
+            "skills/deliver/SKILL.md",
             "skills/plan-and-execute/SKILL.md",
             "skills/shared/references/planning/generate-tasks.md",
             "skills/shared/references/planning/improve-plan.md",
@@ -468,6 +469,12 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Assign one worker agent by default when worker agents are available.",
         "Do not mention whether a subagent was or was not used in the user-facing review request",
         "Do not mention whether worker agents were or were not used",
+        "Supported modifiers:",
+        "`--pro-analysis`",
+        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-oracle-escalation.md` after the normal execution plan exists and before the refinement loop.",
+        "tasks/tmp/pro-analysis-<plan-key>.md",
+        "Pro Findings Summary",
+        "Hard-stop before refinement if the Pro synthesis gate is incomplete.",
     ]
     for token in deliver_tokens:
         if token not in deliver:
@@ -485,6 +492,21 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     for token in deliver_goal_tokens:
         if token not in deliver:
             fail(errors, "PD-DELIVER-GOAL-PLAN", f"skills/deliver/SKILL.md missing goal-plan token: {token}")
+
+    pro_reference = (ROOT / "skills/shared/references/analysis/pro-oracle-escalation.md").read_text()
+    task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
+    pro_deliver_reference_tokens = [
+        "$deliver --pro-analysis",
+        "For `$deliver --pro-analysis`, the normal execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
+        "For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
+        "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review",
+    ]
+    for token in pro_deliver_reference_tokens:
+        if token not in pro_reference:
+            fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-oracle-escalation.md missing deliver pro-analysis token: {token}")
+    pro_deliver_task_contract_token = "`--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, `$plan-and-execute`, and `$repo-sweep`"
+    if pro_deliver_task_contract_token not in task_file_contract:
+        fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/execution/task-file-contract.md missing deliver pro-analysis token: {pro_deliver_task_contract_token}")
 
     plan_to_goal_tokens = [
         "name: plan-to-goal",
@@ -533,8 +555,10 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
+        "`deliver` | `$deliver` | `--pro-analysis`",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
+        "$deliver --pro-analysis",
     ]
     for token in readme_tokens:
         if token not in readme:

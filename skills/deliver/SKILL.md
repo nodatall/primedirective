@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Create or load one plain-language execution plan, or create a goal-plan prompt when the source is really an evidence loop, then refine it, ask the user to approve the readable plan, and execute normal plans one item at a time with focused validation, useful commits, plan updates, and final review. Use when invoked with `$deliver`, plain `deliver` phrases, or when the user asks to implement a Deliver execution plan doc.
+description: Create or load one plain-language execution plan, or create a goal-plan prompt when the source is really an evidence loop, then refine it, ask the user to approve the readable plan, and execute normal plans one item at a time with focused validation, useful commits, plan updates, and final review. Supports `--pro-analysis` for ChatGPT Pro browser escalation before refinement. Use when invoked with `$deliver`, plain `deliver` phrases, or when the user asks to implement a Deliver execution plan doc.
 ---
 
 # Deliver Skill
@@ -13,6 +13,7 @@ Load these references before starting:
 
 - `skills/shared/references/plain-language.md`
 - `skills/plan-to-goal/SKILL.md` when the source is goal-shaped
+- `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/analysis/verification-pivot.md`
 - `skills/shared/references/review/review-protocol.md` before the final review
@@ -21,6 +22,10 @@ Load these references before starting:
 ## Activation
 
 Invoke explicitly with `$deliver`, `$deliver plan`, or plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
+
+Supported modifiers:
+
+- `--pro-analysis`
 
 After long planning conversations, prefer a self-identifying document flow:
 
@@ -31,6 +36,7 @@ Examples:
 
 - `$deliver` with a thread plan above it.
 - `$deliver plan` with a thread plan above it.
+- `$deliver --pro-analysis` when a lightweight readable plan should get ChatGPT Pro pressure before refinement and user review.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
 - `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
 - `implement the doc` when the opened or referenced doc contains the Deliver implementation instruction.
@@ -118,6 +124,21 @@ If the source is goal-shaped, use `$plan-to-goal` instead of writing a normal `$
 
 After `$plan-to-goal` writes the goal plan, stop for user review. Do not start normal `$deliver` implementation unless the user rejects goal mode or asks to convert it into an execution plan.
 
+## Pro Analysis
+
+When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-oracle-escalation.md` after the normal execution plan exists and before the refinement loop.
+
+Rules:
+
+- Run local reconnaissance first and use the plan plus relevant repo context to choose a Pro context bundle.
+- Use the Prime Directive wrapper, not raw Oracle commands.
+- Write the synthesis memo to `tasks/tmp/pro-analysis-<plan-key>.md`.
+- Reduce the Pro answer into a findings ledger with local verification/disposition for each material finding.
+- Apply adopted findings directly into `tasks/execution-plan-<plan-key>.md` before refinement.
+- Print a short `Pro Findings Summary` before refinement and user review.
+- Do not start refinement, user review, or implementation if the Pro memo is missing, lacks Oracle invocation evidence for a real extended-thinking run, leaves material findings undispositioned, leaves adopted findings unapplied, or does not end with `pro_synthesis_complete: yes`.
+- A degraded Pro fallback may be recorded for diagnostics, but it is not a completed `--pro-analysis` pass and must block normal `$deliver --pro-analysis` progress until resolved or the user explicitly drops the modifier.
+
 ## Workflow
 
 1. Establish source material.
@@ -145,6 +166,12 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
    - Preserve every concrete source item unless it is a duplicate, contradiction, or user-approved removal.
    - Phrase steps as user-readable outcomes or actions, not implementation jargon.
    - Keep future items readable rather than fully specified.
+4.5. If `--pro-analysis` is present, run Pro analysis before refinement.
+   - Load `skills/shared/references/analysis/pro-oracle-escalation.md`.
+   - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the Pro input.
+   - Write and verify `tasks/tmp/pro-analysis-<plan-key>.md`.
+   - Apply adopted Pro findings into the execution plan before step 5.
+   - Hard-stop before refinement if the Pro synthesis gate is incomplete.
 5. Refine the plan before user review.
    - Run at least one refinement round.
    - Continue while material backlog issues remain.

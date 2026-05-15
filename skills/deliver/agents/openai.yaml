@@ -1,4 +1,4 @@
 interface:
   display_name: "Deliver"
   short_description: "Plan simply, execute iteratively"
-  default_prompt: "Use $deliver to turn this source material into a readable execution plan, or a goal-plan prompt when it is an adaptive evidence loop, then refine it and get approval before execution starts."
+  default_prompt: "Use $deliver to turn this source material into a readable execution plan, or a goal-plan prompt when it is an adaptive evidence loop, then refine it and get approval before execution starts. Add --pro-analysis when the plan should get ChatGPT Pro pressure before refinement."

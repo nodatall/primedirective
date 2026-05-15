@@ -1,6 +1,6 @@
 # Pro Oracle Escalation
 
-Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro-analysis`, `$plan-and-execute --pro-analysis`, or `$repo-sweep --pro-analysis`.
+Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro-analysis`, `$deliver --pro-analysis`, `$plan-and-execute --pro-analysis`, or `$repo-sweep --pro-analysis`.
 
 ## Wrapper
 
@@ -63,11 +63,13 @@ Run local reconnaissance first. Pro escalation does not replace Codex repo inspe
 
 ## Plan-And-Execute Gates
 
-These gates apply when the caller is `$plan-and-execute --pro-analysis`.
+These gates apply when the caller is `$deliver --pro-analysis` or `$plan-and-execute --pro-analysis`.
 
 ### Pre-Oracle gate
 
 Before running `oracle-pro.sh dry-run`, `oracle-pro.sh run`, or `oracle-pro.sh render`, confirm the plan key and the current planning phase.
+
+For `$deliver --pro-analysis`, the normal execution plan must already exist as `tasks/execution-plan-<plan-key>.md`. Use that plan plus selected repo context as the Oracle input. Do not run Pro against only the raw conversation when a deliver plan has not yet been created.
 
 When `--deep-research` is also active, the gate is hard:
 
@@ -83,31 +85,31 @@ If any pre-Oracle check fails, stop. Do not run Oracle dry-run as a substitute f
 
 After `oracle-pro.sh run` returns, read the Pro answer and synthesize it before generating tasks or starting refinement.
 
-For `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with:
+For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with:
 
 - context bundle summary: files or scope sent to Pro, token estimate if known, and any excluded risky/noisy paths
 - Oracle invocation evidence: copied wrapper invocation summary for the real `run`, including `action`, `model`, `model_strategy`, and `thinking`
 - Pro findings ledger: stable finding ID, Pro claim, local verification evidence, disposition (`adopted`, `rejected`, `deferred`), and disposition reason
 - conflict reconciliation: conflicts with repo evidence, the deep-research memo, PRD, or TDD, and how each conflict was resolved
-- artifact delta: PRD/TDD sections changed, task-plan inputs created, and source-backed claims independently verified when Pro suggested external sources
+- artifact delta: execution-plan sections changed for `$deliver`, or PRD/TDD sections changed and task-plan inputs created for `$plan-and-execute`; source-backed claims independently verified when Pro suggested external sources
 - Pro synthesis completion stamp containing `oracle_result_read`, `oracle_action_run`, `oracle_extended_thinking`, `findings_reconciled`, `artifact_changes_applied`, `unresolved_blockers`, and `pro_synthesis_complete`
 
 Before setting `pro_synthesis_complete: yes`, print a short `Pro Findings Summary` in the visible thread/log: adopted, rejected/deferred, blockers, and artifact changes.
 
-Set `pro_synthesis_complete: yes` only when the Pro answer was read, the invocation evidence shows the synthesized answer came from `action=run` with `thinking=extended`, every material Pro finding has a disposition, adopted findings have been applied to PRD/TDD or converted into explicit task-plan inputs, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
+Set `pro_synthesis_complete: yes` only when the Pro answer was read, the invocation evidence shows the synthesized answer came from `action=run` with `thinking=extended`, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan or to PRD/TDD/task-plan inputs for `$plan-and-execute`, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
 
-If `oracle_action_run`, `oracle_extended_thinking`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not generate `tasks-plan`, run `$plan-refine`, or execute.
+If `oracle_action_run`, `oracle_extended_thinking`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not refine a `$deliver` plan, generate `tasks-plan`, run `$plan-refine`, or execute.
 
 Use this order:
 
 1. Read the request and infer the analysis target.
 2. Inspect repo shape with fast local commands such as `pwd`, `git status --short`, `rg --files`, top-level docs, manifests, CI config, and the files most likely to own the behavior.
-3. For `$plan-and-execute --pro-analysis`, satisfy the pre-Oracle gate above before any dry-run with selected plan context.
+3. For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, satisfy the pre-Oracle gate above before any dry-run with selected plan context.
 4. Decide whether the run needs whole-repo or curated context.
 5. Run a dry-run token/file report before the real Pro call.
 6. Send the chosen bundle only after the dry-run looks reasonable.
 7. Read the Pro result and synthesize it against local evidence before answering or changing artifacts.
-8. For `$plan-and-execute --pro-analysis`, satisfy the post-Oracle synthesis gate before tasks-plan generation, refinement, or execution.
+8. For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, satisfy the post-Oracle synthesis gate before refinement, tasks-plan generation, or execution.
 
 Prefer filtered whole-repo context when the repo is small or the question is broad, architectural, product-level, or cross-cutting:
 
@@ -151,8 +153,10 @@ Treat the Pro answer as an external reviewer, not as source of truth.
 
 For `$first-principles-mode --pro-analysis`, stop after synthesis unless the user separately asked for edits.
 
+For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+
 For `$plan-and-execute --pro-analysis`, apply the synthesized findings into planning artifacts and continue execution unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
 
-For `$plan-and-execute --pro-analysis`, raw Oracle output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `oracle_action_run: yes`, `oracle_extended_thinking: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
+For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, raw Oracle output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `oracle_action_run: yes`, `oracle_extended_thinking: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
 
 For `$repo-sweep --pro-analysis`, use the synthesized findings as Round 1 audit-thesis input before the no-edit audit and review-chain report. If `--loop` is also present, do not rerun Pro every loop round by default; use fresh local review subagents for resweeps unless the user explicitly asks for another Pro pass.
