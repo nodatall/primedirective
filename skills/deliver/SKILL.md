@@ -13,7 +13,7 @@ Load these references before starting:
 
 - `skills/shared/references/plain-language.md`
 - `skills/plan-to-goal/SKILL.md` when the source is goal-shaped
-- `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
+- `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/analysis/verification-pivot.md`
 - `skills/shared/references/review/review-protocol.md` before the final review
@@ -126,17 +126,17 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
 
 ## Pro Analysis
 
-When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-oracle-escalation.md` after the normal execution plan exists and before the refinement loop.
+When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the normal execution plan exists and before the refinement loop.
 
 Rules:
 
 - Run local reconnaissance first and use the plan plus relevant repo context to choose a Pro context bundle.
-- Use the Prime Directive wrapper, not raw Oracle commands.
+- Use the visible ChatGPT browser-driver workflow, not a private browser profile.
 - Write the synthesis memo to `tasks/tmp/pro-analysis-<plan-key>.md`.
 - Reduce the Pro answer into a findings ledger with local verification/disposition for each material finding.
 - Apply adopted findings directly into `tasks/execution-plan-<plan-key>.md` before refinement.
 - Print a short `Pro Findings Summary` before refinement and user review.
-- Do not start refinement, user review, or implementation if the Pro memo is missing, lacks Oracle invocation evidence for a real extended-thinking run, leaves material findings undispositioned, leaves adopted findings unapplied, or does not end with `pro_synthesis_complete: yes`.
+- Do not start refinement, user review, or implementation if the Pro memo is missing, lacks browser evidence for a real Pro browser run, leaves material findings undispositioned, leaves adopted findings unapplied, or does not end with `pro_synthesis_complete: yes`.
 - A degraded Pro fallback may be recorded for diagnostics, but it is not a completed `--pro-analysis` pass and must block normal `$deliver --pro-analysis` progress until resolved or the user explicitly drops the modifier.
 
 ## Workflow
@@ -167,7 +167,7 @@ Rules:
    - Phrase steps as user-readable outcomes or actions, not implementation jargon.
    - Keep future items readable rather than fully specified.
 4.5. If `--pro-analysis` is present, run Pro analysis before refinement.
-   - Load `skills/shared/references/analysis/pro-oracle-escalation.md`.
+   - Load `skills/shared/references/analysis/pro-browser-analysis.md`.
    - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the Pro input.
    - Write and verify `tasks/tmp/pro-analysis-<plan-key>.md`.
    - Apply adopted Pro findings into the execution plan before step 5.

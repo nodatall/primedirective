@@ -70,7 +70,7 @@ Load these files before running:
    - Treat the plan as Pro-backed when `tasks/tmp/pro-analysis-<plan-key>.md` exists or the TDD contains a durable Pro synthesis digest or `pro_synthesis_complete` value.
    - Prefer `tasks/tmp/pro-analysis-<plan-key>.md` when it still exists.
    - Otherwise read the durable Pro synthesis digest from `tasks/tdd-<plan-key>.md`.
-   - Stop immediately if the Pro synthesis memo or TDD digest is missing `oracle_action_run: yes`, `oracle_extended_thinking: yes`, or `pro_synthesis_complete: yes`; do not refine around a failed, degraded, or missing Pro synthesis gate.
+   - Stop immediately if the Pro synthesis memo or TDD digest is missing `pro_browser_run: yes`, `pro_model_selected: yes`, or `pro_synthesis_complete: yes`; do not refine around a failed, degraded, or missing Pro synthesis gate.
    - If Pro analysis was used but neither the Pro synthesis memo nor a durable TDD digest is available, stop and report the missing Pro synthesis evidence instead of guessing.
 5. Stay on the current branch. Do not create, switch, rename, commit, or push branches.
 6. Inspect `git status --short`.

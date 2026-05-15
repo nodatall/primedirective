@@ -185,7 +185,7 @@ Count these source types toward the external primary minimum:
 Do not count these toward the external primary minimum:
 
 - repo-local files, tests, docs, issues, or PRs
-- Pro/Oracle output, AI answers, search-result pages, snippets, summaries, or copied citations that were not independently opened
+- Pro browser output, AI answers, search-result pages, snippets, summaries, or copied citations that were not independently opened
 - generic blogs, tutorials, Q&A, forum posts, social posts, marketing pages, press, or vendor sales copy
 - duplicate mirrors, archived copies, or repeated pages from the same source that do not add a distinct claim
 - sources that are stale, version-mismatched, or not current enough for the claim being supported

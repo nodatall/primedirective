@@ -208,7 +208,6 @@ Modifiers:
 - `skills/` canonical skills and shared references
 - `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
 - `scripts/install-claude-skills.sh` idempotent Claude skills installer
-- `scripts/oracle-pro.sh` ChatGPT Pro browser escalation wrapper for Prime Directive analysis flows
 - `scripts/validate-skill-contracts.py` skill metadata and contract ownership validator
 
 ## Install For Codex
@@ -285,22 +284,15 @@ HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 
 The contract validator checks public skill rows, modifier/request-option drift, owner-path rows, and known stale mirrors. The installers are expected to be idempotent.
 
-## Optional ChatGPT Pro Escalation
+## Optional ChatGPT Pro Analysis
 
-Prime Directive can use ChatGPT Pro browser mode as an internal escalation path for:
+Prime Directive can use a visible ChatGPT Pro browser pass as an internal escalation path for:
 
 - `$first-principles-mode --pro-analysis`
 - `$deliver --pro-analysis`
 - `$plan-and-execute --pro-analysis`
 - `$repo-sweep --pro-analysis`
 
-The public workflow stays on those skill modifiers. The implementation detail is the repo wrapper:
+The public workflow stays on those skill modifiers. The implementation detail is direct browser control of the user's already-authenticated ChatGPT session: use Chrome automation first, and fall back to Computer Use when the visible UI is easier to operate than DOM selectors.
 
-```bash
-./scripts/oracle-pro.sh setup
-./scripts/oracle-pro.sh session
-./scripts/oracle-pro.sh dry-run -p "Analyze this repo" --file .
-./scripts/oracle-pro.sh run -p "Analyze this repo" --file .
-```
-
-Run setup once when the browser profile needs ChatGPT login. If setup reports a duplicate running session, use `./scripts/oracle-pro.sh session` to reattach or `./scripts/oracle-pro.sh setup --force` to start a fresh setup check. The setup action skips model-picker and thinking-time UI selection because it is only a login/profile check. Normal dry-run/run/render actions now try to select the requested ChatGPT model by default so they do not inherit arbitrary browser state such as a leftover Thinking or Playwright mode, and they use extended thinking unless you override it. The default model request is the ChatGPT browser label `Extended Pro`; Oracle stores that as `gpt-5.5-pro`, but the wrapper avoids a separate best-effort thinking-time click on the default path so the UI is not first set to Extended Pro and then downgraded by a later control pass. The wrapper prints a safe invocation summary showing action, model, model strategy, and thinking mode; `--pro-analysis` planning gates require the real run to show extended thinking before the Pro synthesis can be marked complete. Set `ORACLE_PRO_MODEL_STRATEGY=current` only when you explicitly want to reuse the browser's current mode, `ORACLE_PRO_THINKING=heavy` only when that option exists, or `ORACLE_PRO_MODEL_STRATEGY=ignore ORACLE_PRO_THINKING=off` if ChatGPT hides or drifts the live controls and you want a fully UI-light fallback. That fallback is degraded mode, not a completed extended-thinking Pro pass. When `ORACLE_BIN` is unset, the wrapper uses `npx -y @steipete/oracle@0.10.0`; Oracle upstream now expects Node 24+. The wrapper owns Oracle defaults for browser mode, Pro model, manual-login profile reuse, file bundling, timeouts, dry-run previews, and local temp cleanup. Set `ORACLE_PRO_KEEP_TMP=1` to keep the wrapper temp directory for debugging.
+The Pro pass is not complete until the answer is read and reduced into `tasks/tmp/pro-analysis-<plan-key>.md` with browser evidence, a findings ledger, artifact deltas, and a completion stamp containing `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes`. If the browser cannot select the model, submit the bundle, wait for completion, or capture the answer, treat the Pro gate as failed rather than silently continuing.

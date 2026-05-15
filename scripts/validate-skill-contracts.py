@@ -19,7 +19,7 @@ REQUIRED_CONTRACTS = {
     "task-plan-generation": "skills/shared/references/planning/generate-tasks.md",
     "plan-improvement": "skills/shared/references/planning/improve-plan.md",
     "deep-research": "skills/shared/references/planning/deep-research.md",
-    "pro-analysis": "skills/shared/references/analysis/pro-oracle-escalation.md",
+    "pro-analysis": "skills/shared/references/analysis/pro-browser-analysis.md",
     "task-file-contract": "skills/shared/references/execution/task-file-contract.md",
     "task-management": "skills/shared/references/execution/task-management.md",
     "finalization-gate": "skills/shared/references/execution/finalization-gate.md",
@@ -62,7 +62,7 @@ MIRROR_CHECKS = [
         "error": "PD-CONTRACT-MIRROR-DEEP-RESEARCH",
         "owner": {"skills/shared/references/planning/deep-research.md"},
         "allowed": {
-            "skills/shared/references/analysis/pro-oracle-escalation.md",
+            "skills/shared/references/analysis/pro-browser-analysis.md",
             "skills/shared/references/contract-ownership.md",
             "skills/first-principles-mode/SKILL.md",
             "skills/plan-and-execute/SKILL.md",
@@ -76,7 +76,7 @@ MIRROR_CHECKS = [
     {
         "key": "pro-synthesis-stamp-detail",
         "error": "PD-CONTRACT-MIRROR-PRO",
-        "owner": {"skills/shared/references/analysis/pro-oracle-escalation.md"},
+        "owner": {"skills/shared/references/analysis/pro-browser-analysis.md"},
         "allowed": {
             "skills/shared/references/contract-ownership.md",
             "skills/deliver/SKILL.md",
@@ -86,7 +86,7 @@ MIRROR_CHECKS = [
             "skills/plan-refine/SKILL.md",
         },
         "single": ["pro_synthesis_complete: yes"],
-        "together": ["oracle_result_read", "findings_reconciled"],
+        "together": ["pro_result_read", "findings_reconciled"],
     },
     {
         "key": "finalization-baseline-detail",
@@ -471,7 +471,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Do not mention whether worker agents were or were not used",
         "Supported modifiers:",
         "`--pro-analysis`",
-        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-oracle-escalation.md` after the normal execution plan exists and before the refinement loop.",
+        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the normal execution plan exists and before the refinement loop.",
         "tasks/tmp/pro-analysis-<plan-key>.md",
         "Pro Findings Summary",
         "Hard-stop before refinement if the Pro synthesis gate is incomplete.",
@@ -493,7 +493,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in deliver:
             fail(errors, "PD-DELIVER-GOAL-PLAN", f"skills/deliver/SKILL.md missing goal-plan token: {token}")
 
-    pro_reference = (ROOT / "skills/shared/references/analysis/pro-oracle-escalation.md").read_text()
+    pro_reference = (ROOT / "skills/shared/references/analysis/pro-browser-analysis.md").read_text()
     task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
     pro_deliver_reference_tokens = [
         "$deliver --pro-analysis",
@@ -503,7 +503,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     ]
     for token in pro_deliver_reference_tokens:
         if token not in pro_reference:
-            fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-oracle-escalation.md missing deliver pro-analysis token: {token}")
+            fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-browser-analysis.md missing deliver pro-analysis token: {token}")
     pro_deliver_task_contract_token = "`--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, `$plan-and-execute`, and `$repo-sweep`"
     if pro_deliver_task_contract_token not in task_file_contract:
         fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/execution/task-file-contract.md missing deliver pro-analysis token: {pro_deliver_task_contract_token}")

@@ -30,7 +30,7 @@ Load these files before running:
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/review/swarm-lanes.md` when `--swarm` is present
 - `skills/shared/references/review/dep-audit-checklist.md` when `--dep-scan` is present
-- `skills/shared/references/analysis/pro-oracle-escalation.md` when `--pro-analysis` is present
+- `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
 
 ## Scope
 
@@ -42,7 +42,7 @@ Load these files before running:
 - Prefer verified findings over plausible theory.
 - Do not edit files before the repo-wide report and explicit user approval to proceed with fixes, unless `--loop` is present.
 - With `--loop`, the user has pre-approved the repair loop for verified, fixable findings. Still stop for changes that require a human product, security, schema, billing, customer-visible UX, or public API decision.
-- With `--pro-analysis`, use ChatGPT Pro browser escalation as a Round 1 audit-thesis input through the shared Pro escalation reference. Do not run Oracle in every loop round unless a future modifier explicitly says so.
+- With `--pro-analysis`, use ChatGPT Pro browser analysis as a Round 1 audit-thesis input through the shared Pro browser reference. Do not run Pro in every loop round unless a future modifier explicitly says so.
 - With `--swarm`, run the optional read-only specialized lanes from `swarm-lanes.md` as discovery input before the report. The main agent still verifies, deduplicates, classifies, and owns the final findings.
 - With `--dep-scan`, run the dependency and supply-chain audit from `dep-audit-checklist.md`. If required scanners are unavailable, report the unavailable checks as residual risk instead of silently skipping them.
 - Include all normal review-chain components. For repo sweep, force a comprehensive review pass rather than a shortened provider-specific subset.
@@ -66,7 +66,7 @@ Load these files before running:
    - Look for evidence that would disconfirm the leading risk story before settling on it.
    - Keep the standalone first-principles skill's read-only posture, but do not stop after this pre-pass. In repo sweep, continue into the no-edit audit and review-chain evidence collection, then stop before fixes at the normal approval gate.
    - Carry one concise audit thesis into the repo-wide report so the findings are organized around mechanism, not only around file-local defects.
-   - With `--pro-analysis`, run local repo reconnaissance, select context, dry-run the file bundle, run Oracle Pro, and synthesize the Pro result into the audit thesis before continuing to the no-edit audit.
+   - With `--pro-analysis`, run local repo reconnaissance, select context, drive the visible ChatGPT Pro browser pass, and synthesize the Pro result into the audit thesis before continuing to the no-edit audit.
    - Treat the Pro result as external reviewer input, not as source of truth. Verify or qualify Pro claims against local files, commands, probes, and tests.
    - If `--pro-analysis` and `--loop` are both present, use Pro only in Round 1 by default. Subsequent resweeps use fresh local review subagents unless the user explicitly asks for another Pro pass.
    - If `--swarm` is present, use the swarm lanes as additional candidate-risk generators, not as final authority. Merge their output through the finding disposition rules before reporting or fixing.

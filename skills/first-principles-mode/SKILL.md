@@ -15,7 +15,7 @@ Load these references before starting:
 
 If `--deep-research` is present, also load `skills/shared/references/planning/deep-research.md` and use its evidence standard without generating PRD/TDD/tasks-plan artifacts. Because first-principles mode has no planning memo by default, the visible answer/log must carry the audit trail through the First-Principles Deep Research Summary described below.
 
-If `--pro-analysis` is present, also load `skills/shared/references/analysis/pro-oracle-escalation.md`.
+If `--pro-analysis` is present, also load `skills/shared/references/analysis/pro-browser-analysis.md`.
 
 ## Activation
 
@@ -53,7 +53,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 - State confidence and the key uncertainty when they materially affect the conclusion.
 - When current evidence cannot separate the leading explanations, use `skills/shared/references/analysis/verification-pivot.md`: say the analysis is blocked by missing evidence and name the smallest probe, log, deterministic test, replay, or harness needed next.
 - With `--deep-research`, use live web research to check current sources, operator practice, newer ideas, and external contradictions before finalizing the analysis.
-- With `--pro-analysis`, use the Oracle Pro escalation reference after local reconnaissance. Oracle is an implementation detail: choose context, dry-run, run the Pro pass, then synthesize against local evidence.
+- With `--pro-analysis`, use the Pro browser analysis reference after local reconnaissance. Choose context, run the visible ChatGPT browser pass, then synthesize against local evidence.
 
 ## Workflow
 
@@ -84,7 +84,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
    - Include enough detail in that summary for the user to audit whether `--deep-research` actually ran, not just that a few searches happened.
    - If the evidence bar was not met, say `--deep-research was requested but not completed to standard`, then explain the unmet checks and clearly label any web work as a limited cross-check.
 8. If `--pro-analysis` is present, run the Pro escalation after the local breadth pass has identified the problem shape and likely context.
-   - Use `./scripts/oracle-pro.sh dry-run` first.
+   - Prepare the smallest safe context bundle that can still answer the question.
    - Use filtered whole-repo context for small or broad questions; use curated files for large or narrow questions.
    - Stop before sending only when the dry-run or local inspection reveals likely secrets, private data, or an obviously wrong context bundle.
    - Treat the Pro result as external analysis to verify and synthesize, not as source of truth.

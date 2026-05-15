@@ -17,7 +17,7 @@ Invoke explicitly with `$deep-research-prompt`.
 2. Identify the plan, feature, architecture, or implementation direction being discussed.
 3. Write one paste-ready ChatGPT Deep Research prompt.
 4. Assume the user will manually select the relevant GitHub repo, files, or project context in ChatGPT before starting Deep Research.
-5. Do not run web research, Oracle, local repo analysis, or implementation.
+5. Do not run web research, Pro browser analysis, local repo analysis, or implementation.
 6. Do not ask questions unless the thread has no usable plan or target at all.
 
 ## Prompt Requirements
