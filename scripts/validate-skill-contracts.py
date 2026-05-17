@@ -480,6 +480,17 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in deliver:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
+    deliver_discussion_tokens = [
+        "$deliver discuss` creates or resumes `tasks/planning-discussion-<plan-key>.md`",
+        "The living planning doc is for discussion. Keep it as plain as possible",
+        "Do not refine, execute, or commit implementation work from the living planning doc.",
+        "If the user asks to promote the living planning doc, convert it into `tasks/execution-plan-<plan-key>.md` and continue with step 5.",
+        "Promotion plus refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.",
+    ]
+    for token in deliver_discussion_tokens:
+        if token not in deliver:
+            fail(errors, "PD-DELIVER-DISCUSSION-MODE", f"skills/deliver/SKILL.md missing discussion-mode token: {token}")
+
     deliver_goal_tokens = [
         "skills/plan-to-goal/SKILL.md",
         "Durable goal plan: `tasks/goal-plan-<plan-key>.md`",
@@ -555,7 +566,8 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
-        "`deliver` | `$deliver` | `--pro-analysis`",
+        "`deliver` | `$deliver` or `$deliver discuss` | `--pro-analysis`",
+        "tasks/planning-discussion-<plan-key>.md",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
         "$deliver --pro-analysis",

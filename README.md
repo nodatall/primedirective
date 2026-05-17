@@ -18,7 +18,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
-| `deliver` | `$deliver` | `--pro-analysis` |
+| `deliver` | `$deliver` or `$deliver discuss` | `--pro-analysis` |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
@@ -34,6 +34,7 @@ Use this table when you already know the skill name. The detailed sections below
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
+- Use `$deliver discuss` when you want to talk through a problem while Codex keeps a plain living plan doc current, without executing yet.
 - Use `$deliver` when you want one readable execution plan, or a goal-plan prompt for adaptive evidence loops, with optional Pro pressure, refinement, and user approval before execution starts.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
@@ -76,7 +77,11 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Normal execution plans can optionally get ChatGPT Pro pressure before refinement, are refined until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, keeps a plain living plan doc during `$deliver discuss`, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Normal execution plans can optionally get ChatGPT Pro pressure before refinement, are refined until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+
+Request options:
+
+- `discuss`: create or resume `tasks/planning-discussion-<plan-key>.md`, keep it updated during planning conversation, and stop before refinement or implementation. When the user asks to promote it, convert it into `tasks/execution-plan-<plan-key>.md`, refine it, and ask for one more review before implementation.
 
 Modifiers:
 
