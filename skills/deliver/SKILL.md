@@ -5,7 +5,7 @@ description: Discuss, create, or load one plain-language execution plan, or crea
 
 # Deliver Skill
 
-Run lightweight planned execution from one readable plan document, maintain a plain living plan during planning discussion, or create one readable goal-plan prompt when the request is better handled by Codex goal mode.
+Run lightweight planned execution from one readable plan document, maintain a plain draft execution-plan checklist during planning discussion, or create one readable goal-plan prompt when the request is better handled by Codex goal mode.
 
 This skill is a separate workflow from `$plan-work`, `$plan-and-execute`, and `$execute-task`. Do not generate PRD, TDD, or full tasks-plan artifacts unless the user explicitly switches workflows.
 
@@ -29,7 +29,7 @@ Supported modifiers:
 
 After long planning conversations, prefer a self-identifying document flow:
 
-- `$deliver discuss` creates or resumes `tasks/planning-discussion-<plan-key>.md`, keeps it current during the planning conversation, and does not refine or execute until the user asks to turn it into a deliver plan.
+- `$deliver discuss` creates or resumes a draft checklist at `tasks/execution-plan-<plan-key>.md`, keeps it current during the planning conversation, embeds the draft discussion instruction near the top, and does not refine or execute until the user asks to turn it into a final deliver plan.
 - `$deliver plan` creates or refines `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction in the plan, then stops for review.
 - When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent while the visible, attached, referenced, or active document is a Deliver execution plan, load this skill, load that exact plan, treat it as the approved scope, and start implementation at step 7. Continue through focused validation, final review, archive movement, commit, and the finalization gate before the final handoff.
 
@@ -40,12 +40,12 @@ Examples:
 - `$deliver plan` with a thread plan above it.
 - `$deliver --pro-analysis` when a lightweight readable plan should get ChatGPT Pro pressure before refinement and user review.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
-- `turn this into a deliver plan` after a `$deliver discuss` conversation has produced a living planning doc.
+- `turn this into a deliver plan` after a `$deliver discuss` conversation has produced a draft execution-plan checklist.
 - `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
 - `implement the doc` when the opened or referenced doc contains the Deliver implementation instruction.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
-After `$deliver discuss` has created or loaded a living planning doc in the thread, the planning-discussion workflow stays active until the user asks to promote it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/planning-discussion-<plan-key>.md` when they materially change the current plan. If the user says `turn this into a deliver plan`, `deliver this`, `make the plan`, or equivalent, promote the living planning doc into the canonical execution plan, refine it, and stop for user review before implementation.
+After `$deliver discuss` has created or loaded a draft execution plan in the thread, the planning-discussion workflow stays active until the user asks to finalize it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `turn this into a deliver plan`, `deliver this`, `make the plan`, or equivalent, refine the same execution-plan file in place, replace the draft discussion instruction with the Deliver implementation instruction, and stop for user review before implementation.
 
 After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
 
@@ -55,13 +55,12 @@ When a plan document contains the Deliver implementation instruction, that docum
 
 Use these files:
 
-- Living planning doc: `tasks/planning-discussion-<plan-key>.md`
-- Durable plan: `tasks/execution-plan-<plan-key>.md`
+- Draft discussion plan and durable plan: `tasks/execution-plan-<plan-key>.md`
 - Durable goal plan: `tasks/goal-plan-<plan-key>.md`
 - Optional active-step note: `tasks/tmp/active-step-<plan-key>-<step>.md`
 - Completed plan archive: `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`
 
-The living planning doc is for discussion. Keep it as plain as possible: short full sentences, concrete words, and only the structure needed to make the current plan easy to read. It is not approved implementation scope.
+The draft discussion plan is for discussion. Keep it as plain as possible: short full sentences, concrete words, and only the structure needed to make the current plan easy to read. It is not approved implementation scope until it has been refined, carries the Deliver implementation instruction, and the user approves implementation.
 
 The durable plan is for the user to read and edit. Keep it low-friction. Do not turn it into an audit log.
 
@@ -71,13 +70,17 @@ Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*
 
 ## Plan Format
 
-For a living planning doc, prefer this plain shape:
+For a draft discussion plan, prefer this checklist shape:
 
 ```md
 # <Plan Name>
 
-This is a planning discussion doc.
+This is a draft Deliver plan.
 It is not approved for implementation yet.
+
+Draft discussion instruction:
+When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.
+When asked to turn this into a deliver plan, load the `$deliver` skill, refine this same file in place, replace this instruction with the Deliver implementation instruction, and ask for review before implementation.
 
 ## The Problem
 
@@ -89,7 +92,7 @@ It is not approved for implementation yet.
 
 ## Decisions So Far
 
-- <Decision and reason, only when useful.>
+- <Positive decision and reason, only when useful.>
 
 ## Still Unclear
 
@@ -97,27 +100,34 @@ It is not approved for implementation yet.
 
 ## Ideas We Rejected
 
-- <Rejected idea and plain reason, only when useful.>
+- <Rejected idea and plain reason, only when useful to avoid reintroducing it.>
 
-## Rough Steps
+## Steps
 
-- <Plain step.>
-- <Plain step.>
+### 1. <Plain-language phase>
 
-## Ready To Turn Into A Deliver Plan?
+- [ ] <work item>
+- [ ] <work item>
 
-<yes/no/not yet, with one sentence explaining why.>
+### 2. <Next phase>
+
+- [ ] <work item>
 ```
 
-Living planning doc rules:
+Draft discussion plan rules:
 
 - Write for fast human reading.
 - Use short full sentences and concrete words.
 - Avoid implementation jargon unless it is the clearest word; define it in plain language when needed.
 - Do not add PRD, TDD, task-plan, status-log, or audit-log structure.
 - Update the doc after meaningful discussion changes the current plan, a decision is made, an option is rejected, or a blocker becomes clear.
-- Do not refine, execute, or commit implementation work from the living planning doc.
-- Promote it into `tasks/execution-plan-<plan-key>.md` before implementation can start.
+- Treat user removals as edits to the current plan, not as content to preserve. Delete removed items from `Current Best Plan` and `Steps`.
+- Do not turn removed scope into repeated `do not...` reminders. If a rejected or out-of-scope idea must be retained to avoid reintroducing it, keep one concise entry in `Ideas We Rejected` or phrase the active decision positively in `Decisions So Far`.
+- Keep `Current Best Plan` and `Steps` focused only on what the user currently wants to do.
+- Use phases plus checkboxes even while the plan is still draft, so the same doc can become the execution plan.
+- Keep the draft discussion instruction near the top until the user asks to turn the draft into a final deliver plan.
+- Do not refine, execute, or commit implementation work from the draft discussion plan.
+- Refine this same `tasks/execution-plan-<plan-key>.md` file in place before implementation can start.
 
 Prefer this shape:
 
@@ -214,15 +224,20 @@ Rules:
    - Do not execute a goal plan as a normal `$deliver` checklist.
    - If the user approves and explicitly asks to start the goal from this thread, start the goal using the prompt when goal mode is available; otherwise provide the exact `/goal` prompt from the file.
    - If the user says not to use goal mode, convert the source into a normal execution plan and continue with step 4.
-3.5. If this is planning discussion mode, create or update the living planning doc.
-   - Use `tasks/planning-discussion-<plan-key>.md`.
-   - Keep the doc plain and current, not fully specified.
-   - Record the current best plan, decisions, open questions, rejected ideas, rough steps, and readiness.
+3.5. If this is planning discussion mode, create or update the draft execution plan.
+   - Use `tasks/execution-plan-<plan-key>.md`.
+   - If an older `tasks/planning-discussion-<plan-key>.md` exists and no matching execution plan exists, import its current in-scope content into `tasks/execution-plan-<plan-key>.md` and continue with the execution-plan file.
+   - Keep the doc plain, current, and checklist-shaped, not fully specified.
+   - Embed the draft discussion instruction near the top so the document routes future discussion or finalization back through `$deliver`.
+   - Record the current best plan, decisions, open questions, checklist steps, and readiness.
+   - Record rejected ideas only when they are still useful to prevent accidental reintroduction.
+   - When the user removes scope, delete or compress the old plan text instead of preserving it as negative instructions.
    - After updating the doc, stop with a short pointer to the file and continue the discussion. Do not run refinement and do not execute.
-   - If the user asks to promote the living planning doc, convert it into `tasks/execution-plan-<plan-key>.md` and continue with step 5.
+   - If the user asks to finalize the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft discussion instruction with the Deliver implementation instruction, and continue with step 5.
 4. Create or load the plain-language plan.
    - If no plan exists, write `tasks/execution-plan-<plan-key>.md`.
-   - If the approved source is `tasks/planning-discussion-<plan-key>.md`, promote its current best plan, decisions, open questions, rejected ideas, and rough steps into `tasks/execution-plan-<plan-key>.md`.
+   - If the approved source is an older `tasks/planning-discussion-<plan-key>.md`, import its current best plan, decisions, unresolved questions that still affect execution, and checklist-worthy steps into `tasks/execution-plan-<plan-key>.md`.
+   - Do not carry rejected or removed scope into execution-plan work items. Include rejected ideas only as concise decision notes when they are necessary to prevent accidental reintroduction.
    - If the latest approved source is a non-canonical plan-like file such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, a pasted checklist, or review notes, treat it as source material and convert the in-scope work into `tasks/execution-plan-<plan-key>.md` before implementation starts.
    - Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.
    - If the user asked to implement a non-canonical plan-like document, import the in-scope content into `tasks/execution-plan-<plan-key>.md`, then continue as an implementation request unless the import exposed a scope contradiction.
@@ -251,7 +266,7 @@ Rules:
    - Show the final readable plan or summarize it with the file path.
    - Ask: `Please review this before I start. Tell me what is wrong, missing, or out of order.`
    - Tell the user they can say `implement the doc` when it looks right.
-   - If this plan came from a living planning doc, stop here even if the user asked to `deliver this`. Promotion plus refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.
+   - If this plan came from `$deliver discuss`, stop here even if the user asked to `deliver this`. In-place finalization plus refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.
    - Do not begin implementation until the user approves or corrects the plan.
    - If the user corrects the plan, update it and rerun refinement only if the correction introduces material backlog risk.
    - Plan discussion does not clear `$deliver` activation. If the user approves after back-and-forth plan review, continue to step 7 for the active execution plan.
