@@ -481,17 +481,20 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
     deliver_discussion_tokens = [
-        "$deliver discuss` creates or resumes a draft checklist at `tasks/execution-plan-<plan-key>.md`",
+        "$deliver discuss` creates or resumes a simple bullet-point draft at `tasks/execution-plan-<plan-key>.md`",
         "Draft discussion instruction:",
         "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
-        "When asked to turn this into a deliver plan, load the `$deliver` skill, refine this same file in place, replace this instruction with the Deliver implementation instruction, and ask for review before implementation.",
+        "When asked to turn this into a deliver plan, load the `$deliver` skill, rewrite this same file into the normal checklist execution-plan shape, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
         "The draft discussion plan is for discussion. Keep it as plain as possible",
+        "Write the body like the answer to: \"give me the plan we have so far in simple bullet points.\"",
+        "Do not add PRD, TDD, task-plan, status-log, audit-log, readiness, checklist structure, or topical section headers such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.",
+        "After the title and draft discussion instruction, use only a flat bullet list by default.",
         "Treat user removals as edits to the current plan, not as content to preserve.",
         "Do not turn removed scope into repeated `do not...` reminders.",
         "Do not carry rejected or removed scope into execution-plan work items.",
-        "Use phases plus checkboxes even while the plan is still draft, so the same doc can become the execution plan.",
+        "Do not use checkboxes, phase headings, or a separate rejected-ideas section by default in the draft.",
         "Do not refine, execute, or commit implementation work from the draft discussion plan.",
-        "If the user asks to finalize the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft discussion instruction with the Deliver implementation instruction, and continue with step 5.",
+        "If the user asks to finalize the draft into a deliver plan, rewrite the same `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, replace the draft discussion instruction with the Deliver implementation instruction, and continue with step 5.",
         "In-place finalization plus refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.",
     ]
     for token in deliver_discussion_tokens:
@@ -574,8 +577,9 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
         "`deliver` | `$deliver` or `$deliver discuss` | `--pro-analysis`",
-        "draft checklist at `tasks/execution-plan-<plan-key>.md`",
-        "The draft includes a `$deliver` next-step instruction near the top.",
+        "simple bullet-point draft at `tasks/execution-plan-<plan-key>.md`",
+        "The draft includes a `$deliver` next-step instruction near the top",
+        "then a flat bullet list without topical section headers.",
         "Removed scope should be deleted or compressed instead of preserved as repeated negative instructions.",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
