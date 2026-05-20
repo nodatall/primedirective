@@ -446,10 +446,10 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
-        "`$deliver plan` creates or refines `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction in the plan, then stops for review.",
+        "`$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent rewrites the same file into the normal checklist execution-plan shape",
         "When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent",
         "When a plan document contains the Deliver implementation instruction, that document is enough to route implementation back through this skill.",
-        "plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`",
+        "plain-language deliver requests such as `deliver`, `refine it`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`",
         "Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
         "Deliver implementation instruction:",
         "Include the exact Deliver implementation instruction near the top of every normal execution plan.",
@@ -480,26 +480,28 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in deliver:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
-    deliver_discussion_tokens = [
-        "$deliver discuss` creates or resumes a simple bullet-point draft at `tasks/execution-plan-<plan-key>.md`",
-        "Draft discussion instruction:",
+    deliver_draft_tokens = [
+        "$deliver` creates or resumes a simple numbered draft at `tasks/execution-plan-<plan-key>.md`",
+        "$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.",
+        "Draft instruction:",
         "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
-        "When asked to turn this into a deliver plan, load the `$deliver` skill, rewrite this same file into the normal checklist execution-plan shape, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
-        "The draft discussion plan is for discussion. Keep it as plain as possible",
-        "Write the body like the answer to: \"give me the plan we have so far in simple bullet points.\"",
+        "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, rewrite this same file into the normal checklist execution-plan shape, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
+        "The draft plan is for discussion. Keep it as plain as possible",
+        "Write the body like the answer to: \"give me the plan we have so far in simple numbered points.\"",
         "Do not add PRD, TDD, task-plan, status-log, audit-log, readiness, checklist structure, or topical section headers such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.",
-        "After the title and draft discussion instruction, use only a flat bullet list by default.",
+        "After the title and draft instruction, use only a flat numbered list by default.",
         "Treat user removals as edits to the current plan, not as content to preserve.",
         "Do not turn removed scope into repeated `do not...` reminders.",
         "Do not carry rejected or removed scope into execution-plan work items.",
+        "Write open questions as numbered items, prefixed with `Open question:` when useful, so they are easy to reference without adding a separate section.",
         "Do not use checkboxes, phase headings, or a separate rejected-ideas section by default in the draft.",
-        "Do not refine, execute, or commit implementation work from the draft discussion plan.",
-        "If the user asks to finalize the draft into a deliver plan, rewrite the same `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, replace the draft discussion instruction with the Deliver implementation instruction, and continue with step 5.",
-        "In-place finalization plus refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.",
+        "Do not refine, execute, or commit implementation work from the draft plan.",
+        "If the user asks to refine the draft into a deliver plan, rewrite the same `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, replace the draft instruction with the Deliver implementation instruction, and continue with step 5.",
+        "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.",
     ]
-    for token in deliver_discussion_tokens:
+    for token in deliver_draft_tokens:
         if token not in deliver:
-            fail(errors, "PD-DELIVER-DISCUSSION-MODE", f"skills/deliver/SKILL.md missing discussion-mode token: {token}")
+            fail(errors, "PD-DELIVER-DRAFT-MODE", f"skills/deliver/SKILL.md missing draft-mode token: {token}")
 
     deliver_goal_tokens = [
         "skills/plan-to-goal/SKILL.md",
@@ -576,11 +578,10 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
-        "`deliver` | `$deliver` or `$deliver discuss` | `--pro-analysis`",
-        "simple bullet-point draft at `tasks/execution-plan-<plan-key>.md`",
-        "The draft includes a `$deliver` next-step instruction near the top",
-        "then a flat bullet list without topical section headers.",
-        "Removed scope should be deleted or compressed instead of preserved as repeated negative instructions.",
+        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias",
+        "one readable draft plan that can stay current while you talk through it",
+        "`refine` or `plan`: rewrite the active draft in `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape",
+        "`discuss`: legacy alias for creating or updating the same simple numbered draft. Do not treat it as a separate workflow.",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
         "$deliver --pro-analysis",

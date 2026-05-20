@@ -1,11 +1,11 @@
 ---
 name: deliver
-description: Discuss, create, or load one plain-language execution plan, or create a goal-plan prompt when the source is really an evidence loop, then refine it, ask the user to approve the readable plan, and execute normal plans one item at a time with focused validation, useful commits, plan updates, and final review. Supports `--pro-analysis` for ChatGPT Pro browser escalation before refinement. Use when invoked with `$deliver`, `$deliver discuss`, plain `deliver` phrases, or when the user asks to implement a Deliver execution plan doc.
+description: Create or update one plain-language draft plan, refine it only when asked, ask the user to approve the refined plan, or execute an approved Deliver plan one item at a time with focused validation, useful commits, plan updates, and final review. Supports `--pro-analysis` for ChatGPT Pro browser escalation before refinement. Use when invoked with `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`, plain `deliver` phrases, plain `refine it` after an active Deliver draft, or when the user asks to implement a Deliver execution plan doc.
 ---
 
 # Deliver Skill
 
-Run lightweight planned execution from one readable plan document, maintain a plain bullet-point draft during planning discussion, or create one readable goal-plan prompt when the request is better handled by Codex goal mode.
+Run lightweight planned execution from one readable plan document. The normal path is draft -> refine -> approve -> implement.
 
 This skill is a separate workflow from `$plan-work`, `$plan-and-execute`, and `$execute-task`. Do not generate PRD, TDD, or full tasks-plan artifacts unless the user explicitly switches workflows.
 
@@ -21,31 +21,32 @@ Load these references before starting:
 
 ## Activation
 
-Invoke explicitly with `$deliver`, `$deliver discuss`, `$deliver plan`, or plain-language deliver requests such as `deliver`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
+Invoke explicitly with `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`, or plain-language deliver requests such as `deliver`, `refine it`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
 
 Supported modifiers:
 
 - `--pro-analysis`
 
-After long planning conversations, prefer a self-identifying document flow:
+Use one self-identifying document flow:
 
-- `$deliver discuss` creates or resumes a simple bullet-point draft at `tasks/execution-plan-<plan-key>.md`, keeps it current during the planning conversation, embeds the draft discussion instruction near the top, and does not refine or execute until the user asks to turn it into a final deliver plan.
-- `$deliver plan` creates or refines `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction in the plan, then stops for review.
+- `$deliver` creates or resumes a simple numbered draft at `tasks/execution-plan-<plan-key>.md`, keeps it current while the user talks through the plan, embeds the draft instruction near the top, and does not refine or execute yet.
+- `$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent rewrites the same file into the normal checklist execution-plan shape, embeds the Deliver implementation instruction, runs refinement, then stops for review.
+- `$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.
 - When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent while the visible, attached, referenced, or active document is a Deliver execution plan, load this skill, load that exact plan, treat it as the approved scope, and start implementation at step 7. Continue through focused validation, final review, archive movement, commit, and the finalization gate before the final handoff.
 
 Examples:
 
 - `$deliver` with a thread plan above it.
-- `$deliver discuss` when the user wants to talk through the work and keep a plain current plan as the conversation changes.
-- `$deliver plan` with a thread plan above it.
+- `$deliver` when the user wants to talk through the work and keep a plain current plan as the conversation changes.
+- `$deliver refine` or `$deliver plan` when the current draft is ready to tighten into a reviewable execution plan.
 - `$deliver --pro-analysis` when a lightweight readable plan should get ChatGPT Pro pressure before refinement and user review.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
-- `turn this into a deliver plan` after a `$deliver discuss` conversation has produced a simple bullet-point draft.
+- `turn this into a deliver plan` after a `$deliver` conversation has produced a simple numbered draft.
 - `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
 - `implement the doc` when the opened or referenced doc contains the Deliver implementation instruction.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
-After `$deliver discuss` has created or loaded a draft execution plan in the thread, the planning-discussion workflow stays active until the user asks to finalize it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `turn this into a deliver plan`, `deliver this`, `make the plan`, or equivalent, rewrite the same execution-plan file into the normal checklist shape, replace the draft discussion instruction with the Deliver implementation instruction, refine it, and stop for user review before implementation.
+After `$deliver` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver refine`, `$deliver plan`, or equivalent, rewrite the same execution-plan file into the normal checklist shape, replace the draft instruction with the Deliver implementation instruction, refine it, and stop for user review before implementation.
 
 After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
 
@@ -55,12 +56,12 @@ When a plan document contains the Deliver implementation instruction, that docum
 
 Use these files:
 
-- Draft discussion plan and durable plan: `tasks/execution-plan-<plan-key>.md`
+- Draft plan and durable plan: `tasks/execution-plan-<plan-key>.md`
 - Durable goal plan: `tasks/goal-plan-<plan-key>.md`
 - Optional active-step note: `tasks/tmp/active-step-<plan-key>-<step>.md`
 - Completed plan archive: `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`
 
-The draft discussion plan is for discussion. Keep it as plain as possible: short full sentences, concrete words, and only the structure needed to make the current plan easy to read. It is not approved implementation scope until it has been refined, carries the Deliver implementation instruction, and the user approves implementation.
+The draft plan is for discussion. Keep it as plain as possible: short full sentences, concrete words, and only the structure needed to make the current plan easy to read. It is not approved implementation scope until it has been refined, carries the Deliver implementation instruction, and the user approves implementation.
 
 The durable plan is for the user to read and edit. Keep it low-friction. Do not turn it into an audit log.
 
@@ -70,7 +71,7 @@ Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*
 
 ## Plan Format
 
-For a draft discussion plan, prefer this simple bullet shape:
+For a draft plan, prefer this simple numbered-list shape:
 
 ```md
 # <Plan Name>
@@ -78,32 +79,33 @@ For a draft discussion plan, prefer this simple bullet shape:
 This is a draft Deliver plan.
 It is not approved for implementation yet.
 
-Draft discussion instruction:
+Draft instruction:
 When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.
-When asked to turn this into a deliver plan, load the `$deliver` skill, rewrite this same file into the normal checklist execution-plan shape, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.
+When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, rewrite this same file into the normal checklist execution-plan shape, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.
 
-- <Main plan point.>
-- <Decision, constraint, or likely work item, phrased positively.>
-- <Another current plan point.>
-- <Question, risk, or missing fact, only when useful.>
+1. <Main plan point.>
+2. <Decision, constraint, or likely work item, phrased positively.>
+3. <Another current plan point.>
+4. Open question: <Question, risk, or missing fact, only when useful.>
 ```
 
-Draft discussion plan rules:
+Draft plan rules:
 
 - Write for fast human reading.
 - Use short full sentences and concrete words.
 - Avoid implementation jargon unless it is the clearest word; define it in plain language when needed.
-- Write the body like the answer to: "give me the plan we have so far in simple bullet points."
+- Write the body like the answer to: "give me the plan we have so far in simple numbered points."
 - Do not add PRD, TDD, task-plan, status-log, audit-log, readiness, checklist structure, or topical section headers such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.
-- After the title and draft discussion instruction, use only a flat bullet list by default.
+- After the title and draft instruction, use only a flat numbered list by default.
 - Update the doc after meaningful discussion changes the current plan, a decision is made, an option is rejected, or a blocker becomes clear.
-- Treat user removals as edits to the current plan, not as content to preserve. Delete removed items from the bullet list.
-- Do not turn removed scope into repeated `do not...` reminders. If a rejected or out-of-scope idea must be retained to avoid reintroducing it, keep one concise bullet and phrase the active plan positively.
-- Keep the bullets focused only on what the user currently wants to do.
+- Treat user removals as edits to the current plan, not as content to preserve. Delete removed items from the numbered list and renumber the remaining items.
+- Do not turn removed scope into repeated `do not...` reminders. If a rejected or out-of-scope idea must be retained to avoid reintroducing it, keep one concise numbered item and phrase the active plan positively.
+- Keep the numbered items focused only on what the user currently wants to do.
+- Write open questions as numbered items, prefixed with `Open question:` when useful, so they are easy to reference without adding a separate section.
 - Do not use checkboxes, phase headings, or a separate rejected-ideas section by default in the draft.
-- Keep the draft discussion instruction near the top until the user asks to turn the draft into a final deliver plan.
-- Do not refine, execute, or commit implementation work from the draft discussion plan.
-- When finalizing, rewrite this same `tasks/execution-plan-<plan-key>.md` file into the normal checklist execution-plan shape before implementation can start.
+- Keep the draft instruction near the top until the user asks to refine the draft into a final deliver plan.
+- Do not refine, execute, or commit implementation work from the draft plan.
+- When refining, rewrite this same `tasks/execution-plan-<plan-key>.md` file into the normal checklist execution-plan shape before implementation can start.
 
 Prefer this shape:
 
@@ -200,16 +202,16 @@ Rules:
    - Do not execute a goal plan as a normal `$deliver` checklist.
    - If the user approves and explicitly asks to start the goal from this thread, start the goal using the prompt when goal mode is available; otherwise provide the exact `/goal` prompt from the file.
    - If the user says not to use goal mode, convert the source into a normal execution plan and continue with step 4.
-3.5. If this is planning discussion mode, create or update the draft execution plan.
+3.5. Create or update the draft execution plan when the request is still plan discussion.
    - Use `tasks/execution-plan-<plan-key>.md`.
    - If an older `tasks/planning-discussion-<plan-key>.md` exists and no matching execution plan exists, import its current in-scope content into `tasks/execution-plan-<plan-key>.md` and continue with the execution-plan file.
-   - Keep the doc plain, current, and bullet-pointed, not fully specified.
-   - Embed the draft discussion instruction near the top so the document routes future discussion or finalization back through `$deliver`.
-   - Record the plan so far as a flat bullet list, including decisions, current constraints, likely work items, and open questions only when useful.
+   - Keep the doc plain, current, and numbered, not fully specified.
+   - Embed the draft instruction near the top so the document routes future discussion or refinement back through `$deliver`.
+   - Record the plan so far as a flat numbered list, including decisions, current constraints, likely work items, and open questions only when useful.
    - Record rejected ideas only when they are still useful to prevent accidental reintroduction.
    - When the user removes scope, delete or compress the old plan text instead of preserving it as negative instructions.
    - After updating the doc, stop with a short pointer to the file and continue the discussion. Do not run refinement and do not execute.
-   - If the user asks to finalize the draft into a deliver plan, rewrite the same `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, replace the draft discussion instruction with the Deliver implementation instruction, and continue with step 5.
+   - If the user asks to refine the draft into a deliver plan, rewrite the same `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, replace the draft instruction with the Deliver implementation instruction, and continue with step 5.
 4. Create or load the plain-language plan.
    - If no plan exists, write `tasks/execution-plan-<plan-key>.md`.
    - If the approved source is an older `tasks/planning-discussion-<plan-key>.md`, import its current in-scope plan, decisions, unresolved questions that still affect execution, and likely work items into `tasks/execution-plan-<plan-key>.md`.
@@ -242,7 +244,7 @@ Rules:
    - Show the final readable plan or summarize it with the file path.
    - Ask: `Please review this before I start. Tell me what is wrong, missing, or out of order.`
    - Tell the user they can say `implement the doc` when it looks right.
-   - If this plan came from `$deliver discuss`, stop here even if the user asked to `deliver this`. In-place finalization plus refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.
+   - If this plan came from a draft Deliver plan, stop here even if the user asked to `deliver this`. In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.
    - Do not begin implementation until the user approves or corrects the plan.
    - If the user corrects the plan, update it and rerun refinement only if the correction introduces material backlog risk.
    - Plan discussion does not clear `$deliver` activation. If the user approves after back-and-forth plan review, continue to step 7 for the active execution plan.

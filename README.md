@@ -18,7 +18,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
-| `deliver` | `$deliver` or `$deliver discuss` | `--pro-analysis` |
+| `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
@@ -34,8 +34,8 @@ Use this table when you already know the skill name. The detailed sections below
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
-- Use `$deliver discuss` when you want to talk through a problem while Codex keeps a plain bullet-point draft current, without executing yet.
-- Use `$deliver` when you want one readable execution plan, or a goal-plan prompt for adaptive evidence loops, with optional Pro pressure, refinement, and user approval before execution starts.
+- Use `$deliver` when you want one readable draft plan that can stay current while you talk through it, or a goal-plan prompt for adaptive evidence loops.
+- Use `$deliver refine` or say `refine it` when the draft is ready to become a reviewed execution plan; implementation still waits for approval.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
 - Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
@@ -77,11 +77,12 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, keeps a plain bullet-point draft during `$deliver discuss`, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Normal execution plans can optionally get ChatGPT Pro pressure before refinement, are refined until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language draft plan, keeps that same draft current while the user talks through changes, refines it only when asked, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Refined execution plans can optionally get ChatGPT Pro pressure before refinement, are checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
-- `discuss`: create or resume a simple bullet-point draft at `tasks/execution-plan-<plan-key>.md`, keep it updated to reflect the current plan during planning conversation, and stop before refinement or implementation. The draft includes a `$deliver` next-step instruction near the top, then a flat bullet list without topical section headers. Removed scope should be deleted or compressed instead of preserved as repeated negative instructions. When the user asks to finalize it, rewrite the same file into the normal checklist execution-plan shape, replace the draft instruction with the Deliver implementation instruction, and ask for one more review before implementation.
+- `refine` or `plan`: rewrite the active draft in `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, refine it, and ask for review before implementation.
+- `discuss`: legacy alias for creating or updating the same simple numbered draft. Do not treat it as a separate workflow.
 
 Modifiers:
 
