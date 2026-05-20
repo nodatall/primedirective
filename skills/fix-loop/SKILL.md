@@ -15,6 +15,8 @@ Load `skills/shared/references/analysis/verification-pivot.md` before starting.
 
 Invoke explicitly with `$fix-loop`.
 
+Use this skill for plain-language requests to diagnose, root-cause, and fix one concrete broken behavior, even when the user does not type `$fix-loop`.
+
 Examples:
 
 - `$fix-loop checkout is 500ing locally`
