@@ -222,6 +222,7 @@ Rules:
    - Keep the doc plain, current, and checklist-shaped, not fully specified.
    - Embed the draft instruction near the top so the document routes future discussion or refinement back through `$deliver`.
    - Record the plan so far as phases and unchecked checkboxes, including decisions, current constraints, likely work items, and open questions only when useful.
+   - Shape broad work into high-level implementation slices in dependency order. Put contracts, types, validators, data shape, and other lower-level foundations before the concrete features, UI, integration, or polish that depend on them.
    - Record rejected ideas only when they are still useful to prevent accidental reintroduction.
    - When the user removes scope, delete or compress the old plan text instead of preserving it as negative instructions.
    - After updating the doc, stop with a short pointer to the file and continue the discussion. Do not run refinement and do not execute.
@@ -236,6 +237,7 @@ Rules:
    - Preserve every concrete source item unless it is a duplicate, contradiction, or user-approved removal.
    - Phrase steps as user-readable outcomes or actions, not implementation jargon.
    - Keep future items readable rather than fully specified.
+   - Keep the main plan high level. Detailed files, tests, commands, and done conditions belong in the active-step packet when execution reaches that slice.
 4.5. If `--pro-analysis` is present, run Pro analysis before refinement.
    - Load `skills/shared/references/analysis/pro-browser-analysis.md`.
    - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the Pro input.
@@ -251,6 +253,7 @@ Rules:
    - Use a fresh reviewer subagent by default when subagents are available.
    - Do not mention whether a subagent was or was not used in the user-facing review request unless it creates a real blocker or residual risk.
    - The reviewer checks for missing source items, vague checkboxes, bad order, duplicate work, oversized steps, hidden dependencies, contradictions, and unclear next step.
+   - The reviewer also checks that the plan is sliced in dependency order without turning the main plan into a per-file implementation script.
    - Edit only the execution plan during refinement.
    - Do not create a refinement notes file or separate refinement markdown artifact.
    - If 8 rounds end with unresolved material issues, stop and show the exact blocker instead of starting implementation.
@@ -285,6 +288,7 @@ Rules:
 10. Update the plan after each item.
    - Check off completed items.
    - Split, reorder, add, remove, or clarify items when implementation evidence changes the right path.
+   - Write findings back into the plan only when they change a later slice, clarify a future decision, or prevent likely rework.
    - Keep the plan readable. Do not add detailed logs, commit SHAs, or validation transcripts unless they are needed to understand the next step.
 11. Continue until done or blocked.
    - If the current turn starts from a generic approval or resume message while an active unarchived `$deliver` execution plan exists, re-open that plan and scan the entire unchecked remainder before doing or reporting anything else.
