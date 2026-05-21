@@ -21,20 +21,15 @@ Supported modifiers:
 
 Treat the current user request as the planning payload. It may be a sparse idea or a fully fleshed-out source plan. Default to rich-plan intake unless the request is clearly sparse. With `--from-thread`, treat the current conversation above the trigger as the source plan.
 
-## Required references
+## References
 
-Load these files before running:
+Load references by path, not all up front:
 
-- `skills/shared/references/planning/socratic-planning.md`
-- `skills/shared/references/planning/deep-research.md`
-- `skills/shared/references/planning/create-prd.md`
-- `skills/shared/references/planning/create-tdd.md`
-- `skills/shared/references/planning/generate-tasks.md`
-- `skills/shared/references/planning/improve-plan.md`
-- `skills/shared/references/execution/task-file-contract.md`
-- `skills/shared/references/reasoning-budget.md`
-- `skills/shared/references/harness-drift.md`
-- `skills/shared/references/plain-language.md`
+- Always load `skills/shared/references/execution/task-file-contract.md`, `skills/shared/references/reasoning-budget.md`, `skills/shared/references/planning/create-prd.md`, `skills/shared/references/planning/create-tdd.md`, `skills/shared/references/planning/generate-tasks.md`, and `skills/shared/references/planning/improve-plan.md`.
+- Load `skills/shared/references/planning/socratic-planning.md` for normal, sparse, or `--grill` planning. In `--direct` mode, load only the preflight/guard portions needed to confirm direct mode is allowed.
+- Load `skills/shared/references/planning/deep-research.md` only when `--deep-research` is present.
+- Load `skills/shared/references/harness-drift.md` only when prior drift notes are present in the source material, preserved artifacts, or archived handoffs.
+- Load `skills/shared/references/plain-language.md` for user-facing questions, recommended defaults, sparse-prompt interpretations, and summary checkpoints.
 
 ## Workflow
 

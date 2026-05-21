@@ -57,6 +57,8 @@ The goal plan is a review artifact. It must include a compact paste-ready `/goal
 
 Keep the `/goal` prompt compact. Target roughly 2,800 characters and keep it under 4,000 characters. Put rationale, examples, and long evidence outside the prompt in the surrounding goal-plan doc.
 
+Every goal plan must include a `Resume State` section that gives the next agent one obvious place to resume from after compaction, interruption, or handoff.
+
 ## Weak Goal Gate
 
 Before writing a goal plan, verify that the source has enough shape for autonomous goal work:
@@ -124,6 +126,8 @@ Acceptance criteria:
 - <evidence-based stopping rule>
 - <validation command or artifact exists>
 - <no-go safety boundary>
+
+Keep the `Resume State` section in this goal plan current after meaningful checkpoints.
 ```
 
 ## Why This Is A Goal
@@ -134,13 +138,21 @@ Acceptance criteria:
 
 - <Existing plan, run id, artifact, failing behavior, command, benchmark, comparator, ceiling, or target metric.>
 
+## Resume State
+
+- Current status: todo
+- Current phase: <not started, investigating, patching, validating, blocked, or done>
+- Last completed step: <what is already finished and validated, or none yet>
+- Active step: <what is currently being worked on, or none yet>
+- Next exact action: <the next command, file, artifact, or decision to inspect>
+- Blockers: <none, or exact blocker and required user/external action>
+- Last validation: <command, artifact, or observable result, or none yet>
+- Protected paths: <files, directories, data, branches, or services the goal must not touch>
+- Evidence paths: <logs, screenshots, reports, temp files, or artifacts that matter for resuming>
+
 ## Boundaries
 
 - <What must not change while the goal runs.>
-
-## State Recording
-
-- <Where the goal should record current evidence, blocker, next action, and validation result when the run is long or resume-prone.>
 ````
 
 ## Workflow
@@ -156,8 +168,9 @@ Acceptance criteria:
 9. Preserve concrete source constraints: fixed artifacts, commands to reuse, no-new-run requirements, shadow-only boundaries, promotion bans, safety constraints, and stop conditions.
 10. Include measurable baseline, target, ceiling, benchmark, or comparator when available. If missing and central to the goal, add a clear first-loop instruction to measure the baseline before optimizing.
 11. Keep the embedded `/goal` prompt compact. Put supporting rationale outside it.
-12. Refine the goal plan for missing evidence, absent baseline or target metrics, vague stopping rules, unsafe side effects, unclear validation commands, missing state recording, and missing boundaries.
-13. Stop for user review. Do not start the goal unless the user explicitly says to start it.
+12. Fill `Resume State` with the initial status, current phase, next exact action, blockers, last validation, protected paths, and evidence paths. Use `none yet` only when that is true.
+13. Refine the goal plan for missing evidence, absent baseline or target metrics, vague stopping rules, unsafe side effects, unclear validation commands, weak resume state, and missing boundaries.
+14. Stop for user review. Do not start the goal unless the user explicitly says to start it.
 
 ## Examples
 

@@ -166,6 +166,7 @@ Compact: Remove dead code, redundancy, and over-abstraction.
 Concise: Simplify verbose logic and use idiomatic patterns.
 Clean: Maintain consistent naming, clear structure, and proper formatting.
 Capable: Handle edge cases, fail gracefully, and perform well.
+Structurally improving: Do not approve changes that pass tests but make future work harder by moving complexity instead of deleting it, growing already-large files without a clear cohesion reason, leaking domain logic across boundaries, or adding shallow pass-through layers.
 Action: Report only concrete maintainability findings with evidence, impact, and smallest safe fix path. Do not refactor, rewrite, delete, or edit code in the review subagent.
 ```
 
@@ -192,6 +193,10 @@ Clean Up Slop: Remove Cruft
 Goal: Remove AI-generated cruft and over-engineering.
 Target:
 Unnecessary abstractions and wrapper functions.
+Thin pass-through modules, adapters, hooks, or services that do not remove complexity and only hide where logic lives.
+Complexity moved into helpers, configuration, callbacks, generated glue, or call sites instead of being simplified.
+Domain logic leaked into UI, routing, storage, CLI, test fixtures, or orchestration layers where an existing boundary should own it.
+Files pushed past roughly 1,000 lines, or already-large files made larger, without a strong locality reason and a credible split-or-delete path.
 Verbose comments that restate the obvious.
 Defensive code for impossible conditions.
 Over-generic solutions for specific problems.
@@ -212,6 +217,8 @@ Invalid inputs and failure paths.
 Integration points with real dependencies where practical.
 Concurrent or async behavior where relevant.
 Actual outputs and side effects, not just passing assertions.
+Tests should exercise the same interface callers use and should usually survive internal refactors.
+Do not count tests that simply restate implementation details, constants, helper internals, or copied literals as meaningful coverage or red/green evidence.
 Action: Identify missing or weak coverage, name the highest-value test or probe to add, and record exactly what was executed and what remains unverified. Do not add tests in the review subagent.
 ```
 
@@ -226,6 +233,7 @@ Default Scope Rule:
 Require this prompt for frontend-facing `full-branch` review rounds and for explicit review runs that cover frontend work.
 Action:
 Use Playwright MCP by default to open the changed UI, exercise the affected flows, resize for relevant breakpoints, and capture screenshots of all changed screens and states.
+For changed interactive controls, record interaction evidence instead of relying on screenshots alone: click affected buttons, select relevant menu options, exercise changed keyboard shortcuts, and confirm the resulting UI, API, storage, or log state when applicable.
 When motion, timing, or multi-step interaction matters, also capture video or trace evidence using the Playwright CLI workflow.
 After evidence is captured, close transient browser tabs, windows, and contexts opened only for review. Preserve only sessions that are explicitly named as persistent, such as manual-login, debugging, or long-running external workflows.
 Review the captured evidence for visual regressions, broken layout, missing states, incorrect copy, and obvious accessibility issues visible in the UI.

@@ -30,6 +30,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
 | `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--loop`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts` |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
+| `ship-branch` | `$ship-branch` | None |
 
 ## Which Skill Do I Use?
 
@@ -50,6 +51,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches.
 - Use `$create-architecture` when a non-trivial repo needs a concrete `docs/ARCHITECTURE.md`, or before boundary-affecting work when that file is missing.
 - Use `$plain-language` when you want a shorter, clearer, plainer answer or rewrite.
+- Use `$ship-branch` when the current feature branch should be pushed, PR'd, merged, deleted locally/remotely, and the checkout returned to the base branch.
 
 ## Skill Details
 
@@ -217,6 +219,14 @@ Request options:
 Modifiers:
 
 - `--preserve-review-artifacts`: keep review logs instead of cleaning them after success.
+
+### `$ship-branch`
+
+Finishes the current feature branch. It handles dirty work first by showing a compact status/diff summary and asking whether to commit or stash, then pushes the branch, creates or reuses a PR, merges it, deletes the remote branch, switches back to the base branch, pulls the merged base, and deletes the local branch.
+
+Modifiers:
+
+- None.
 
 ## Layout
 

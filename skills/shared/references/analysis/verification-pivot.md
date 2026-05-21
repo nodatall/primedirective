@@ -42,7 +42,7 @@ Use one of these shapes when appropriate:
 - Add a focused log at the decision point that records inputs, selected branch, rejected branch, and reason.
 - Add a deterministic test that builds the needed state and triggers the behavior without relying on a long manual run.
 - Add a replay or fixture that feeds known inputs through the path and captures the output contract.
-- Add a narrow behavior probe under `/codex-scripts/` when the observation is temporary or exploratory.
+- Add a narrow behavior probe under `/agent-scratch/` when the observation is temporary or exploratory.
 - Inspect persisted artifacts, database rows, generated reports, provider responses, or UI/browser state that the current theory depends on.
 
 Do not call broad test suites, long exploratory runs, or another generation batch a verification pivot unless they expose the missing decision signal.
@@ -51,7 +51,7 @@ Do not call broad test suites, long exploratory runs, or another generation batc
 
 Read-only skills should stop after naming the pivot unless the user separately asks for implementation.
 
-Execution skills may build the smallest probe, run it, inspect fresh evidence, and then continue. Temporary probes belong in `/codex-scripts/`; promote them into real tests only when the check should remain part of the repo.
+Execution skills may build the smallest probe, run it, inspect fresh evidence, and then continue. Temporary probes belong in `/agent-scratch/`; promote them into real tests only when the check should remain part of the repo.
 
 ## Anti-Patterns
 
