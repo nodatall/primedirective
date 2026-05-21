@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Architecture"
+  short_description: "Create repo architecture docs"
+  default_prompt: "Use $create-architecture to create or update docs/ARCHITECTURE.md for this repo. Inspect the actual repo shape, keep the doc concrete and stack-native, and avoid extra document ceremony."

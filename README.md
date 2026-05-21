@@ -17,6 +17,7 @@ Use this table when you already know the skill name. The detailed sections below
 | --- | --- | --- |
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
+| `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
 | `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
@@ -34,8 +35,8 @@ Use this table when you already know the skill name. The detailed sections below
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
-- Use `$deliver` when you want one readable draft plan that can stay current while you talk through it, or a goal-plan prompt for adaptive evidence loops.
-- Use `$deliver refine` or say `refine it` when the draft is ready to become a reviewed execution plan; implementation still waits for approval.
+- Use `$deliver` when you want one readable draft checklist plan that can stay current while you talk through it, or a goal-plan prompt for adaptive evidence loops.
+- Use `$deliver refine` or say `refine it` when the draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
 - Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
@@ -47,6 +48,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
 - Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches.
+- Use `$create-architecture` when a non-trivial repo needs a concrete `docs/ARCHITECTURE.md`, or before boundary-affecting work when that file is missing.
 - Use `$plain-language` when you want a shorter, clearer, plainer answer or rewrite.
 
 ## Skill Details
@@ -67,6 +69,14 @@ Request options:
 
 - Optional branch name: inspect and clean only that branch instead of scanning all safe merged candidates.
 
+### `$create-architecture`
+
+Creates or updates a repo-specific `docs/ARCHITECTURE.md`. It records actual module boundaries, dependency direction, composition roots, shared-code rules, testing boundaries, architecture checks, and accepted deviations. Use it for non-trivial repos, greenfield architecture baselines, or before boundary-affecting work when no architecture doc exists.
+
+Modifiers:
+
+- None.
+
 ### `$deep-research-prompt`
 
 Creates a paste-ready prompt for ChatGPT.com Deep Research from the current thread. It assumes you will manually select the relevant GitHub repo, files, or project context in ChatGPT before starting the research.
@@ -77,16 +87,16 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language draft plan, keeps that same draft current while the user talks through changes, refines it only when asked, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Refined execution plans can optionally get ChatGPT Pro pressure before refinement, are checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language draft checklist plan, keeps that same draft current while the user talks through changes, refines it only when asked, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist plans can optionally get ChatGPT Pro pressure before refinement. After refinement, the plan is checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
-- `refine` or `plan`: rewrite the active draft in `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, refine it, and ask for review before implementation.
-- `discuss`: legacy alias for creating or updating the same simple numbered draft. Do not treat it as a separate workflow.
+- `refine` or `plan`: keep the active draft checklist in `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, refine it, and ask for review before implementation.
+- `discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.
 
 Modifiers:
 
-- `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask for approval only after the Pro synthesis gate succeeds.
+- `--pro-analysis`: run ChatGPT Pro browser escalation after the draft checklist plan exists, synthesize findings into the plan, then refine and ask for approval only after the Pro synthesis gate succeeds.
 
 ### `$execute-task`
 

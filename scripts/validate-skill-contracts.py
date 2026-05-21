@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_CONTRACTS = {
     "public-skill-metadata": "README.md; skills/*/SKILL.md",
+    "architecture-guidance": "skills/shared/references/architecture/architecture-guidance.md",
     "planning-intake": "skills/shared/references/planning/socratic-planning.md",
     "prd-generation": "skills/shared/references/planning/create-prd.md",
     "tdd-generation": "skills/shared/references/planning/create-tdd.md",
@@ -446,7 +447,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
-        "`$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent rewrites the same file into the normal checklist execution-plan shape",
+        "`$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file",
         "When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent",
         "When a plan document contains the Deliver implementation instruction, that document is enough to route implementation back through this skill.",
         "plain-language deliver requests such as `deliver`, `refine it`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`",
@@ -471,7 +472,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Do not mention whether worker agents were or were not used",
         "Supported modifiers:",
         "`--pro-analysis`",
-        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the normal execution plan exists and before the refinement loop.",
+        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the draft checklist plan exists and before the refinement loop.",
         "tasks/tmp/pro-analysis-<plan-key>.md",
         "Pro Findings Summary",
         "Hard-stop before refinement if the Pro synthesis gate is incomplete.",
@@ -481,22 +482,22 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
     deliver_draft_tokens = [
-        "$deliver` creates or resumes a simple numbered draft at `tasks/execution-plan-<plan-key>.md`",
+        "$deliver` creates or resumes a draft checklist plan at `tasks/execution-plan-<plan-key>.md`",
         "$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.",
         "Draft instruction:",
         "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
-        "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, rewrite this same file into the normal checklist execution-plan shape, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
+        "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
         "The draft plan is for discussion. Keep it as plain as possible",
-        "Write the body like the answer to: \"give me the plan we have so far in simple numbered points.\"",
-        "Do not add PRD, TDD, task-plan, status-log, audit-log, readiness, checklist structure, or topical section headers such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.",
-        "After the title and draft instruction, use only a flat numbered list by default.",
+        "Please review this before I refine it.",
+        "Use phases plus checkboxes from the start, even while the plan is still rough.",
+        "Keep draft checkboxes concrete enough to discuss, but do not pretend every implementation detail is final.",
+        "Do not add PRD, TDD, task-plan, status-log, audit-log, readiness, or topical section headers such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.",
         "Treat user removals as edits to the current plan, not as content to preserve.",
         "Do not turn removed scope into repeated `do not...` reminders.",
         "Do not carry rejected or removed scope into execution-plan work items.",
-        "Write open questions as numbered items, prefixed with `Open question:` when useful, so they are easy to reference without adding a separate section.",
-        "Do not use checkboxes, phase headings, or a separate rejected-ideas section by default in the draft.",
+        "Write open questions as checkboxes, prefixed with `Open question:` when useful, so they are easy to resolve or remove during discussion.",
         "Do not refine, execute, or commit implementation work from the draft plan.",
-        "If the user asks to refine the draft into a deliver plan, rewrite the same `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape, replace the draft instruction with the Deliver implementation instruction, and continue with step 5.",
+        "If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.5 when `--pro-analysis` is present or step 5 otherwise.",
         "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.",
     ]
     for token in deliver_draft_tokens:
@@ -520,7 +521,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
     pro_deliver_reference_tokens = [
         "$deliver --pro-analysis",
-        "For `$deliver --pro-analysis`, the normal execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
+        "For `$deliver --pro-analysis`, the draft checklist plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
         "For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
         "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review",
     ]
@@ -579,9 +580,9 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
         "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias",
-        "one readable draft plan that can stay current while you talk through it",
-        "`refine` or `plan`: rewrite the active draft in `tasks/execution-plan-<plan-key>.md` into the normal checklist execution-plan shape",
-        "`discuss`: legacy alias for creating or updating the same simple numbered draft. Do not treat it as a separate workflow.",
+        "one readable draft checklist plan that can stay current while you talk through it",
+        "`refine` or `plan`: keep the active draft checklist in `tasks/execution-plan-<plan-key>.md`",
+        "`discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
         "$deliver --pro-analysis",
@@ -606,6 +607,77 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             )
 
 
+def validate_architecture_guidance(errors: list[str]) -> None:
+    reference = (ROOT / "skills/shared/references/architecture/architecture-guidance.md").read_text()
+    create_architecture = (ROOT / "skills/create-architecture/SKILL.md").read_text()
+    bootstrap = (ROOT / "skills/bootstrap-repo-rules/SKILL.md").read_text()
+    deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
+    execute_task = (ROOT / "skills/execute-task/SKILL.md").read_text()
+    plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
+    review_chain = (ROOT / "skills/review-chain/SKILL.md").read_text()
+    repo_sweep = (ROOT / "skills/repo-sweep/SKILL.md").read_text()
+    contract_ownership = (ROOT / "skills/shared/references/contract-ownership.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+    agents = (ROOT / "AGENTS.md").read_text()
+
+    reference_tokens = [
+        "## Boundary-Affecting Work",
+        "Small local edits inside one existing boundary are not boundary-affecting.",
+        "## Non-Trivial Repo Signal",
+        "## Architecture Doctrine",
+        "## Architecture Document Template",
+        "docs/ARCHITECTURE.md",
+        "Accepted Deviations",
+        "Do not build or require a universal cross-stack architecture validator from this reference.",
+    ]
+    for token in reference_tokens:
+        if token not in reference:
+            fail(errors, "PD-ARCHITECTURE-REFERENCE", f"skills/shared/references/architecture/architecture-guidance.md missing token: {token}")
+
+    create_architecture_tokens = [
+        "name: create-architecture",
+        "Invoke explicitly with `$create-architecture`.",
+        "skills/shared/references/architecture/architecture-guidance.md",
+        "Existing repo mode",
+        "Greenfield mode",
+        "docs/ARCHITECTURE.md",
+        "Do not create a second document unless the repo already has its own convention.",
+    ]
+    for token in create_architecture_tokens:
+        if token not in create_architecture:
+            fail(errors, "PD-CREATE-ARCHITECTURE-SKILL", f"skills/create-architecture/SKILL.md missing token: {token}")
+
+    consumer_checks = [
+        ("skills/bootstrap-repo-rules/SKILL.md", bootstrap, "suggest or invoke `$create-architecture`"),
+        ("skills/deliver/SKILL.md", deliver, "For boundary-affecting implementation work"),
+        ("skills/execute-task/SKILL.md", execute_task, "Before boundary-affecting execution"),
+        ("skills/plan-and-execute/SKILL.md", plan_and_execute, "before boundary-affecting planning or execution"),
+        ("skills/review-chain/SKILL.md", review_chain, "forbidden dependency edges"),
+        ("skills/repo-sweep/SKILL.md", repo_sweep, "label those findings as inferred rather than contract drift"),
+    ]
+    for path, text, local_token in consumer_checks:
+        for token in ["skills/shared/references/architecture/architecture-guidance.md", "docs/ARCHITECTURE.md", local_token]:
+            if token not in text:
+                fail(errors, "PD-ARCHITECTURE-CONSUMER", f"{path} missing architecture token: {token}")
+
+    metadata_tokens = [
+        "`create-architecture` | `$create-architecture` | None",
+        "Use `$create-architecture` when a non-trivial repo needs a concrete `docs/ARCHITECTURE.md`",
+        "Creates or updates a repo-specific `docs/ARCHITECTURE.md`.",
+    ]
+    for token in metadata_tokens:
+        if token not in readme:
+            fail(errors, "PD-CREATE-ARCHITECTURE-README", f"README.md missing create-architecture token: {token}")
+
+    ownership_token = "`architecture-guidance` | `skills/shared/references/architecture/architecture-guidance.md`"
+    if ownership_token not in contract_ownership:
+        fail(errors, "PD-ARCHITECTURE-OWNERSHIP", f"skills/shared/references/contract-ownership.md missing token: {ownership_token}")
+
+    agents_token = "Before boundary-affecting work, read `docs/ARCHITECTURE.md` when it exists."
+    if agents_token not in agents:
+        fail(errors, "PD-ARCHITECTURE-AGENTS", f"AGENTS.md missing architecture token: {agents_token}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory-only", action="store_true", help="print stale-mirror inventory and exit")
@@ -622,6 +694,7 @@ def main() -> int:
     validate_deep_research_completion_stamp(errors)
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
+    validate_architecture_guidance(errors)
     validate_mirrors(errors)
 
     if errors:

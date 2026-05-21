@@ -42,6 +42,7 @@ Activation examples:
 Load these files before running:
 
 - `skills/shared/references/execution/task-file-contract.md`
+- `skills/shared/references/architecture/architecture-guidance.md` when execution is boundary-affecting or `docs/ARCHITECTURE.md` exists
 - `skills/shared/references/execution/task-management.md`
 - `skills/shared/references/execution/finalization-gate.md`
 - `skills/shared/references/reasoning-budget.md`
@@ -58,14 +59,16 @@ Load these files before running:
 4. Execute according to mode:
    - Standard mode: implement the requested task/sub-task in the main agent.
    - One-shot mode: treat the entire unchecked remainder of the task plan as the execution scope; if kickoff carried uncommitted planning artifacts, commit them before the first implementation sub-task, then for each sub-task in file order the main agent reads the full planning context, creates a compact implementation packet from `tasks/tmp/plan-task-<task-id>.md`, assigns `worker_model_tier` from `task-management.md`, spawns one worker subagent with that packet, waits for completion, integrates the result, owns task updates and commit, and moves directly to the next sub-task. Do not run per-sub-task review chains in one-shot mode; run one final `full-branch` review after all sub-tasks are complete.
+   - Before boundary-affecting execution, compose `architecture-guidance.md`; if `docs/ARCHITECTURE.md` exists, read it and follow the repo's boundary contract, and if the repo is non-trivial but the doc is missing, create or update it with `$create-architecture` unless this is a small local fix inside one existing boundary.
 5. For each completed sub-task:
   - create/update `tasks/tmp/plan-task-<task-id>.md` with the sub-task contract before coding, then keep it current as implementation and review findings refine the slice
   - identify repo-local implementation, test, and validation reference patterns before coding, record the chosen pattern in the sub-task contract, and justify any deliberate deviation
   - for high-risk slices, run the agent-owned pre-coding contract critique from `task-management.md` and tighten the contract before implementation starts
   - write or update the targeted test first when the slice is practically testable
   - run the targeted test command, confirm the intended failure before implementation begins, and record `test_first_evidence` in the sub-task contract
-  - implement the change using PRD + TDD + tasks-plan + exact sub-task block + the chosen local pattern in standard mode, or using the compact implementation packet from `task-management.md` in one-shot mode
-  - rerun the targeted verification until the slice passes
+	  - implement the change using PRD + TDD + tasks-plan + exact sub-task block + the chosen local pattern in standard mode, or using the compact implementation packet from `task-management.md` in one-shot mode
+	  - when intentionally changing a boundary, update `docs/ARCHITECTURE.md` in the same run
+	  - rerun the targeted verification until the slice passes
   - in standard mode, expand to any additional relevant repo-defined checks for the touched surface such as lint, format-check, typecheck, test, or build
   - in one-shot mode, follow the focused-validation cadence from `task-management.md`: run the narrow check needed for the current slice, defer broader checks to parent-section boundaries or finalization unless the slice touches shared behavior, exposes collateral risk, or the focused check fails in a way that requires broader diagnosis
   - in standard mode, run one `sub-task` review round automatically using the active prompt profile from `review-protocol.md`, in a fresh review subagent when subagents are available
