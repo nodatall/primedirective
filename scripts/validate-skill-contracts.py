@@ -678,6 +678,41 @@ def validate_architecture_guidance(errors: list[str]) -> None:
         fail(errors, "PD-ARCHITECTURE-AGENTS", f"AGENTS.md missing architecture token: {agents_token}")
 
 
+def validate_ship_branch(errors: list[str]) -> None:
+    skill = (ROOT / "skills/ship-branch/SKILL.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+
+    skill_tokens = [
+        "name: ship-branch",
+        "Invoke explicitly with `$ship-branch`",
+        "Use `$cleanup-merged-branches` for broad cleanup scans.",
+        "If there are unstaged, staged, or untracked changes, print a compact summary before doing anything",
+        "Ask the user whether to commit the changes or stash them.",
+        "Do not auto-commit, auto-stage, or auto-stash dirty work.",
+        "Compare the branch to the resolved base with `git log --oneline <base>..HEAD`.",
+        "Use `git push -u origin <current-branch>`.",
+        "Use `gh pr view --head <current-branch>` to find an existing PR.",
+        "Use a normal ready PR by default because this skill's purpose is to merge.",
+        "Merge with the repo's normal merge path.",
+        "Delete the local shipped branch with `git branch -d <branch>`.",
+        "Never use `git branch -D`.",
+        "Never run `git reset --hard`.",
+        "Never delete local or remote branches until the PR merge is confirmed.",
+    ]
+    for token in skill_tokens:
+        if token not in skill:
+            fail(errors, "PD-SHIP-BRANCH", f"skills/ship-branch/SKILL.md missing token: {token}")
+
+    readme_tokens = [
+        "`ship-branch` | `$ship-branch` | None",
+        "Use `$ship-branch` when the current feature branch should be pushed, PR'd, merged, deleted locally/remotely, and the checkout returned to the base branch.",
+        "Finishes the current feature branch.",
+    ]
+    for token in readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-SHIP-BRANCH-README", f"README.md missing ship-branch token: {token}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory-only", action="store_true", help="print stale-mirror inventory and exit")
@@ -695,6 +730,7 @@ def main() -> int:
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
     validate_architecture_guidance(errors)
+    validate_ship_branch(errors)
     validate_mirrors(errors)
 
     if errors:
