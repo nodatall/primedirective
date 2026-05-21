@@ -212,6 +212,8 @@ Invalid inputs and failure paths.
 Integration points with real dependencies where practical.
 Concurrent or async behavior where relevant.
 Actual outputs and side effects, not just passing assertions.
+Tests should exercise the same interface callers use and should usually survive internal refactors.
+Do not count tests that simply restate implementation details, constants, helper internals, or copied literals as meaningful coverage or red/green evidence.
 Action: Identify missing or weak coverage, name the highest-value test or probe to add, and record exactly what was executed and what remains unverified. Do not add tests in the review subagent.
 ```
 

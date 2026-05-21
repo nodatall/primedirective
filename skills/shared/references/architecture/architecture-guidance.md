@@ -37,8 +37,12 @@ Disposable spikes, one-off scripts, tiny single-purpose CLIs, and obvious local 
 - Avoid feature-to-feature dependencies. Features should communicate through the composition root, callbacks, events, interfaces, shared domain types, or explicit service boundaries.
 - Keep the main app, server startup, CLI command, or worker bootstrap as a small composition root. It wires concrete dependencies and feature entrypoints together; it should not collect business logic.
 - Hide feature internals behind small public APIs such as builders, routes, commands, service interfaces, package exports, or module entrypoints.
+- Prefer deep modules over pass-through abstractions. A module earns its boundary when callers get meaningful behavior through a smaller interface; it is shallow when its public surface is nearly as complex as its implementation.
+- Use the deletion test when judging extracted, shared, or adapter-like modules: if deleting the module makes complexity disappear, it was probably a pass-through; if the same complexity reappears across callers, the boundary was probably earning its keep.
 - Prefer explicit dependency passing or constructor injection. Global containers, framework magic, and singletons can provide defaults, but tests and callers should be able to inject dependencies directly.
+- Treat the module interface as the main test surface. Tests should exercise observable behavior through the same surface callers use and should usually survive internal refactors.
 - Preserve test seams. A new boundary should have a believable unit, contract, module integration, or end-to-end test strategy that does not require booting the whole app for simple behavior.
+- Do not introduce ports, adapters, or interface layers only for ceremony. A single adapter usually marks a hypothetical seam; prefer a real seam only when at least two adapters are justified, such as production plus local test, or when an external runtime boundary forces the separation.
 
 ## Module And Folder Shape
 
