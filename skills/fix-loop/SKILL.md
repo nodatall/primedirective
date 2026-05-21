@@ -55,7 +55,7 @@ The user should not need to say "keep trying until it works." That is the core c
    - Read fresh output/logs/state after each attempt.
    - Classify the result as fixed, same failure, changed failure, or blocked.
    - If the same hypothesis fails twice, or if the next patch would be another guess, use the verification pivot before another fix attempt: add the smallest useful log, deterministic test, replay, behavior probe, or harness that would expose the missing evidence.
-   - If a temporary behavior probe is needed, put it under `/codex-scripts/`; promote it into a real test only when it is worth keeping.
+   - If a temporary behavior probe is needed, put it under `/agent-scratch/`; promote it into a real test only when it is worth keeping.
 5. Verify the actual behavior.
    - Backend/API: rerun the concrete request, job, webhook, CLI, or test path and inspect persisted side effects when relevant.
    - Frontend/UI: run the app when practical, inspect the affected state in a browser or app, and capture visual evidence for layout, clipping, spacing, copy, responsiveness, and console errors.

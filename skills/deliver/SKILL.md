@@ -277,7 +277,7 @@ Rules:
    - Run the narrow check that proves the current item.
    - For UI, layout, styling, or rendered-content changes, inspect the affected UI when practical and capture visual evidence.
    - If a check fails, classify the failure layer before patching again.
-   - If another patch would be a guess, use the verification pivot: add the smallest useful log, deterministic test, replay, or temporary probe under `/codex-scripts/`.
+   - If another patch would be a guess, use the verification pivot: add the smallest useful log, deterministic test, replay, or temporary probe under `/agent-scratch/`.
 9. Commit useful completed work.
    - Commit each completed useful item or coherent group of tightly coupled items.
    - Do not commit unrelated user changes.

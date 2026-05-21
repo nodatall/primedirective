@@ -1,6 +1,6 @@
 .DS_Store
 .codex/environments/
-/codex-scripts/
+/agent-scratch/
 apps/board/data/
 apps/board/artifacts/
 apps/board/worktrees/

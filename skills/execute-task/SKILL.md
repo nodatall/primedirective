@@ -98,7 +98,7 @@ Load these files before running:
 - In one-shot mode, the main orchestrator may mark a worker packet `worker_model_tier: spark_candidate` only for simple mechanical slices that satisfy `task-management.md`. The orchestrator and final review stay on the normal strong/strongest tiers; Spark routing is never a global `$execute-task` mode.
 - Treat a failing-test-first red/green loop as the default for code-bearing, practically testable slices.
 - A test-first exception is allowed only when a failing-first loop is not practical for that exact slice; record the exception reason in `test_first_plan` and `test_first_evidence` in `tasks/tmp/plan-task-<task-id>.md` before implementation starts.
-- Prefer existing tests. If no test covers the path, create a temporary script under `/codex-scripts/` that imports or copies the relevant production code and exercises the changed behavior. Keep `/codex-scripts/` gitignored unless the probe is promoted into a real test.
+- Prefer existing tests. If no test covers the path, create a temporary probe under `/agent-scratch/` that imports or copies the relevant production code and exercises the changed behavior. Keep `/agent-scratch/` gitignored unless the probe is promoted into a real test.
 - New contract critique, acceptance checks, review calibration, and harness drift checks are agent-owned. Do not add mandatory human approval steps or extra user-facing checkpoints to use them.
 - Before coding, search the repo for similar implementations and tests, follow an existing local pattern when it is a good fit, and record why any new pattern or deviation is necessary.
 - Before coding, inspect the repo's actual validation commands and config rather than assuming standard names exist.
