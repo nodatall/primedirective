@@ -166,6 +166,7 @@ Compact: Remove dead code, redundancy, and over-abstraction.
 Concise: Simplify verbose logic and use idiomatic patterns.
 Clean: Maintain consistent naming, clear structure, and proper formatting.
 Capable: Handle edge cases, fail gracefully, and perform well.
+Structurally improving: Do not approve changes that pass tests but make future work harder by moving complexity instead of deleting it, growing already-large files without a clear cohesion reason, leaking domain logic across boundaries, or adding shallow pass-through layers.
 Action: Report only concrete maintainability findings with evidence, impact, and smallest safe fix path. Do not refactor, rewrite, delete, or edit code in the review subagent.
 ```
 
@@ -192,6 +193,10 @@ Clean Up Slop: Remove Cruft
 Goal: Remove AI-generated cruft and over-engineering.
 Target:
 Unnecessary abstractions and wrapper functions.
+Thin pass-through modules, adapters, hooks, or services that do not remove complexity and only hide where logic lives.
+Complexity moved into helpers, configuration, callbacks, generated glue, or call sites instead of being simplified.
+Domain logic leaked into UI, routing, storage, CLI, test fixtures, or orchestration layers where an existing boundary should own it.
+Files pushed past roughly 1,000 lines, or already-large files made larger, without a strong locality reason and a credible split-or-delete path.
 Verbose comments that restate the obvious.
 Defensive code for impossible conditions.
 Over-generic solutions for specific problems.
