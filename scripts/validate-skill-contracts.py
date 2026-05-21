@@ -548,7 +548,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Work backward from the target when choosing diagnostics and patches.",
         "Keep the `/goal` prompt compact.",
         "under 4,000 characters",
-        "State Recording",
+        "Resume State",
         "If validation results decide the next implementation step",
         "badness-prior training task",
         "calculate the plausible maximum",
