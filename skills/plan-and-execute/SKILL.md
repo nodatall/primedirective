@@ -20,25 +20,17 @@ Supported modifiers:
 - `--check-harness-drift`
 - `--preserve-artifacts`
 
-## Required references
+## References
 
-Load these files before running:
+Load references by path, not all up front:
 
-- `skills/shared/references/contract-ownership.md`
-- `skills/plan-work/SKILL.md`
-- `skills/plan-refine/SKILL.md`
+- Always load `skills/shared/references/contract-ownership.md`, `skills/plan-work/SKILL.md`, `skills/execute-task/SKILL.md`, `skills/shared/references/execution/task-file-contract.md`, `skills/shared/references/execution/task-management.md`, `skills/shared/references/execution/finalization-gate.md`, `skills/shared/references/reasoning-budget.md`, and `skills/shared/references/review/review-protocol.md`.
+- Load `skills/plan-refine/SKILL.md` and `skills/shared/references/review/review-calibration.md` when `--refine-plan` is present or final review is about to run.
 - `skills/shared/references/architecture/architecture-guidance.md` when planning or execution is boundary-affecting or `docs/ARCHITECTURE.md` exists
 - `skills/plan-to-goal/SKILL.md` when generated or refined artifacts are goal-shaped
-- `skills/execute-task/SKILL.md`
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
-- `skills/shared/references/execution/task-file-contract.md`
-- `skills/shared/references/execution/task-management.md`
-- `skills/shared/references/execution/finalization-gate.md`
-- `skills/shared/references/reasoning-budget.md`
-- `skills/shared/references/review/review-protocol.md`
-- `skills/shared/references/review/review-calibration.md`
-- `skills/shared/references/harness-drift.md`
+- `skills/shared/references/harness-drift.md` when `--check-harness-drift` is present
 - `skills/shared/references/plain-language.md` when `--prepare-plan` is present
 
 ## Workflow
@@ -65,7 +57,7 @@ Load these files before running:
    - If detached `HEAD`, stop and ask.
    - If the worktree has unrelated or dangerous overlapping changes, stop and ask.
    - Capture the finalization baseline from `finalization-gate.md` after branch-state decisions and before generating PRD/TDD/tasks-plan artifacts.
-4. Generate planning artifacts using `$plan-work --from-thread --direct` behavior, adding `--deep-research` when that modifier is present:
+4. Generate planning artifacts using `$plan-work --from-thread --direct` behavior, adding `--deep-research` when that modifier is present. `$plan-work` owns artifact-generation detail; this skill owns only the combined-run gates below:
    - no Socratic question loop
    - no summary checkpoint gate
    - ask only for a true blocker where the core objective is missing, contradictory, or unsafe to infer
@@ -84,11 +76,9 @@ Load these files before running:
    - `tasks/tasks-plan-<plan-key>.md`
 6. If `--refine-plan` is present, run the `$plan-refine plan-key=<plan-key>` improvement loop before execution:
    - use the generated plan key explicitly
-   - use `$plan-refine`'s normal default round cap, internal challenger lane, fresh read-only challenger/reviewer requirements, reviewer-owned severity gate, and artifact-editing rules
-   - apply fixes for reviewer blocker and material findings in the PRD, TDD, and tasks-plan before execution
-   - hard-stop execution when `$plan-refine` fails because required refinement gates fail, required fresh subagents are unavailable, challenge dispositions are incomplete, unsafe blockers remain, or max rounds end with unresolved reviewer blocker/material findings
-   - treat churn as recoverable only when no unresolved reviewer blocker/material findings remain and the refinement log records the safest concrete artifact fix, accepted assumption, or accepted residual risk
-   - ask the user only when the remaining issue is unsafe, impossible to infer, or would change external scope in a way the artifacts cannot safely default
+   - let `$plan-refine` own its challenger/reviewer loop, round cap, severity gate, artifact-editing rules, and stop discipline
+   - apply only the artifact fixes `$plan-refine` returns as ready for execution
+   - hard-stop execution when `$plan-refine` reports a failed gate, missing required subagent, unresolved unsafe blocker, or max-round stop with unresolved blocker/material findings
    - after `$plan-refine` returns, audit `tasks/tmp/plan-refine-<plan-key>.md` before any implementation edit
    - hard-stop when the refinement log is missing, lacks a `Refinement Completion Stamp`, lacks round evidence from at least one fresh reviewer subagent, or looks like a hand-written risk note rather than a real `$plan-refine` run
    - continue into execution only when the stamp says `plan_refine_complete: yes`, `ready_for_execution: yes`, `fresh_reviewer_rounds` is at least `1`, and `reviewer_stop_gate: no_unresolved_blocker_or_material`

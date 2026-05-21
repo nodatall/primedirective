@@ -5,6 +5,7 @@ Prime Directive contracts should have one owner. Consumers may include short ori
 ## Rules
 
 - Public skills own their activation, supported modifiers, and unique orchestration choices.
+- A `SKILL.md` should stay focused on activation, routing, and the main workflow path. Heavy checklists, templates, rubrics, schemas, and edge-case detail should live in reference files loaded only when that path needs them.
 - Shared references own reusable contracts that multiple skills compose.
 - Higher-level skills reference lower-level owners instead of restating detailed child behavior.
 - Tiny mirrors are allowed only when they help local readability; they should name the owner path.
@@ -38,7 +39,8 @@ Prime Directive contracts should have one owner. Consumers may include short ori
 | `plan-to-goal` | `skills/plan-to-goal/SKILL.md` | `skills/deliver/SKILL.md`, `skills/plan-and-execute/SKILL.md`, README | Owns goal-candidate detection, `tasks/goal-plan-<plan-key>.md`, compact `/goal` prompt shape, target/baseline guidance, state recording, and review wording. |
 | `plan-and-execute` | `skills/plan-and-execute/SKILL.md` | README, skill users | Owns orchestration order plus branch/PR defaults unique to the combined workflow. |
 | `execute-task` | `skills/execute-task/SKILL.md` | `skills/plan-and-execute/SKILL.md`, skill users | Owns public execution activation and mode-level delegation into task management/review/finalization. |
-| `deliver` | `skills/deliver/SKILL.md` | README, skill users | Owns plain living planning docs, plain-language execution-plan creation, lightweight refinement, user review gate, item-by-item execution, plan updates, and final review unique to `$deliver`. |
+| `deliver` | `skills/deliver/SKILL.md; skills/deliver/references/*.md` | README, skill users | `SKILL.md` owns activation, routing, and gates; references own plan format and worker-packet detail unique to `$deliver`. |
+| `repo-sweep` | `skills/repo-sweep/SKILL.md; skills/repo-sweep/references/*.md` | README, skill users | `SKILL.md` owns activation, modifiers, phase order, and stop gates; references own detailed sweep checks, loop rules, and report formats unique to `$repo-sweep`. |
 | `harness-drift` | `skills/shared/references/harness-drift.md` | `skills/plan-work/SKILL.md`, `skills/execute-task/SKILL.md`, `skills/plan-and-execute/SKILL.md` | Owns drift-check report shape and decision rules. |
 | `reasoning-budget` | `skills/shared/references/reasoning-budget.md` | all Prime Directive workflow skills | Owns reasoning tier mapping by workflow role. |
 

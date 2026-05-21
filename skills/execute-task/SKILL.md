@@ -37,19 +37,14 @@ Activation examples:
 - One-shot on the current branch: `$execute-task --one-shot --stay-on-current-branch plan-key=<plan-key>`
 - One-shot with harness drift check: `$execute-task --one-shot --check-harness-drift plan-key=<plan-key>`
 
-## Required references
+## References
 
-Load these files before running:
+Load references by path, not all up front:
 
-- `skills/shared/references/execution/task-file-contract.md`
+- Always load `skills/shared/references/execution/task-file-contract.md`, `skills/shared/references/execution/task-management.md`, `skills/shared/references/execution/finalization-gate.md`, `skills/shared/references/reasoning-budget.md`, and `skills/shared/references/review/review-protocol.md`.
 - `skills/shared/references/architecture/architecture-guidance.md` when execution is boundary-affecting or `docs/ARCHITECTURE.md` exists
-- `skills/shared/references/execution/task-management.md`
-- `skills/shared/references/execution/finalization-gate.md`
-- `skills/shared/references/reasoning-budget.md`
-- `skills/shared/references/review/review-protocol.md`
-- `skills/shared/references/review/review-calibration.md`
-- `skills/shared/references/review/finding-disposition.md`
-- `skills/shared/references/harness-drift.md`
+- `skills/shared/references/review/review-calibration.md` and `skills/shared/references/review/finding-disposition.md` before review reporting
+- `skills/shared/references/harness-drift.md` when `--check-harness-drift` is present
 
 ## Workflow
 
