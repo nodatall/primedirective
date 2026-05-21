@@ -27,6 +27,7 @@ Load these files before running:
 - `skills/shared/references/contract-ownership.md`
 - `skills/plan-work/SKILL.md`
 - `skills/plan-refine/SKILL.md`
+- `skills/shared/references/architecture/architecture-guidance.md` when planning or execution is boundary-affecting or `docs/ARCHITECTURE.md` exists
 - `skills/plan-to-goal/SKILL.md` when generated or refined artifacts are goal-shaped
 - `skills/execute-task/SKILL.md`
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
@@ -75,7 +76,8 @@ Load these files before running:
    - with `--deep-research`, compose the owner contract in `skills/shared/references/planning/deep-research.md` through `$plan-work`; print the required short Deep Research Summary before task generation or execution
    - with `--pro-analysis`, compose the owner contract in `skills/shared/references/analysis/pro-browser-analysis.md`; print the required short Pro findings summary before refinement or execution
    - when both `--deep-research` and `--pro-analysis` are active, use the order and gates owned by `pro-browser-analysis.md`
-   - Pro analysis, deep research, and refinement may add safety gates or sequencing, but they must not narrow an explicit full-plan source into partial completion unless that narrowing is recorded as a blocker needing user decision before execution
+	   - Pro analysis, deep research, and refinement may add safety gates or sequencing, but they must not narrow an explicit full-plan source into partial completion unless that narrowing is recorded as a blocker needing user decision before execution
+	   - before boundary-affecting planning or execution, compose `architecture-guidance.md`; if `docs/ARCHITECTURE.md` exists, read it and incorporate its boundary contract, and if the repo is non-trivial but the doc is missing, create or update it with `$create-architecture` unless the source plan is only a small local fix inside one existing boundary
 5. Require all three artifacts before execution:
    - `tasks/prd-<plan-key>.md`
    - `tasks/tdd-<plan-key>.md`
@@ -102,7 +104,8 @@ Load these files before running:
    - if the skill started on a non-base branch, use current-branch execution and do not open a PR by default
    - if the skill created a branch from main/base, use normal branch execution and open a PR at the end
    - use compact worker packets, focused validation per sub-task, no per-sub-task review chains, and one final full-branch review
-   - when implementation and focused validation are complete, continue directly into final broad validation, final full-branch review, review remediation, cleanup/archive, commit, and the finalization gate; do not hand off a validated-but-unreviewed or dirty branch as incomplete workflow state
+	   - when implementation and focused validation are complete, continue directly into final broad validation, final full-branch review, review remediation, cleanup/archive, commit, and the finalization gate; do not hand off a validated-but-unreviewed or dirty branch as incomplete workflow state
+	   - when intentionally changing a boundary, update `docs/ARCHITECTURE.md` in the same run
    - after the last implementation validation passes, treat any user-facing implementation recap as blocked until the post-implementation closeout evidence exists: final full-branch review log complete, all in-scope review findings dispositioned and fixed or explicitly accepted, task checklist complete, PRD/TDD/tasks-plan archived unless preservation is requested, new run-created changes committed, final status compared against the baseline, and finalization gate passed
    - if the next message you are about to send would list "What changed" or "Validation" before that evidence exists, do not send it; run the missing closeout step instead
 9. If `--check-harness-drift` is present, keep generated planning artifacts, sub-task contracts, review logs, and relevant temp files available until the compact harness drift report is generated. Include the actual compact report inline in the final handoff under a visible `Harness Drift Check` heading with a one-line verdict; do not satisfy this by only mentioning an archived report path. Then continue normal cleanup unless `--preserve-artifacts` is present.

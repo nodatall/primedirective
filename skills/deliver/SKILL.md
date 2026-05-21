@@ -12,6 +12,7 @@ This skill is a separate workflow from `$plan-work`, `$plan-and-execute`, and `$
 Load these references before starting:
 
 - `skills/shared/references/plain-language.md`
+- `skills/shared/references/architecture/architecture-guidance.md` when implementation work is boundary-affecting or `docs/ARCHITECTURE.md` exists
 - `skills/plan-to-goal/SKILL.md` when the source is goal-shaped
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
 - `skills/shared/references/reasoning-budget.md`
@@ -68,6 +69,10 @@ The durable plan is for the user to read and edit. Keep it low-friction. Do not 
 Use `tasks/goal-plan-<plan-key>.md` only through `$plan-to-goal`. A goal plan is a paste-ready `/goal` prompt plus enough readable context to review the loop before it starts. It is not a normal execution checklist and should not be archived by the `$deliver` finalization gate unless the user explicitly converts it into a normal execution plan.
 
 Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`. Do not implement directly against them. If the user invokes deliver from one of those artifacts, import or convert the in-scope checklist into `tasks/execution-plan-<plan-key>.md` before implementation, then use that execution plan for unchecked-item scans, final review scope, archive movement, and finalization.
+
+## Architecture Awareness
+
+For boundary-affecting implementation work, compose `skills/shared/references/architecture/architecture-guidance.md`. If `docs/ARCHITECTURE.md` exists, read it before planning or coding and follow its module responsibilities, allowed dependencies, composition roots, shared-code rules, and testing boundaries. If the repo is non-trivial and the architecture doc is missing, create or update it with `$create-architecture` before making the boundary change unless the user asked for a small local fix inside one existing boundary. When intentionally changing a boundary, update `docs/ARCHITECTURE.md` in the same run.
 
 ## Plan Format
 

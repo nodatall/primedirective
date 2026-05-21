@@ -20,6 +20,7 @@ Supported modifier:
 Load these files before running:
 
 - `skills/shared/references/bootstrap/repo-rules-decision-matrix.md`
+- `skills/shared/references/architecture/architecture-guidance.md`
 - `skills/shared/references/bootstrap/validation-and-handoff-contract.md`
 
 ## Scope
@@ -34,6 +35,7 @@ Load these files before running:
 1. Establish the repo's real stack and current gaps.
    - Detect languages, frameworks, package managers, monorepo boundaries, task runners, CI workflows, and any existing git-hook setup using `repo-rules-decision-matrix.md`.
    - Inventory current lint, format, typecheck, test, and build commands plus the config files behind them.
+   - Use `architecture-guidance.md` to decide whether the repo is non-trivial enough to suggest or invoke `$create-architecture` when `docs/ARCHITECTURE.md` is missing.
    - If the repo already has meaningful rules for the primary stack, do not restart from scratch. Fill only the missing gaps unless the user asks for a reset.
 2. Choose stack-appropriate tooling.
    - Follow `repo-rules-decision-matrix.md` for scope, tool selection, and monorepo rules.
@@ -42,6 +44,8 @@ Load these files before running:
    - Create or update the needed config files.
    - Add manifest scripts or task-runner targets for lint, format-check, format, typecheck where applicable, test, and build or verify.
    - Keep the initial rule set conservative enough to land cleanly while still preventing obvious code-quality drift.
+   - For non-trivial repos that lack `docs/ARCHITECTURE.md`, suggest or invoke `$create-architecture`; for tiny throwaway repos, disposable spikes, one-off scripts, or obvious local fixes, defer architecture docs unless the user asks.
+   - Recommend mechanical architecture checks only when the ecosystem has an obvious low-risk fit, such as existing import linting, Nx tags, ArchUnit, Import Linter, Go `internal/` and `cmd/`, or existing lint rules.
 4. Wire CI so the rules actually matter.
    - Add or update the repo's main validation workflow so pull requests and the main branch run the new commands.
    - Reuse existing CI patterns in the repo when available.

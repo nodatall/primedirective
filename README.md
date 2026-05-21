@@ -17,6 +17,7 @@ Use this table when you already know the skill name. The detailed sections below
 | --- | --- | --- |
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
+| `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
 | `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias |
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
@@ -47,6 +48,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
 - Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches.
+- Use `$create-architecture` when a non-trivial repo needs a concrete `docs/ARCHITECTURE.md`, or before boundary-affecting work when that file is missing.
 - Use `$plain-language` when you want a shorter, clearer, plainer answer or rewrite.
 
 ## Skill Details
@@ -66,6 +68,14 @@ Safely deletes merged feature branches locally and on `origin` after checking th
 Request options:
 
 - Optional branch name: inspect and clean only that branch instead of scanning all safe merged candidates.
+
+### `$create-architecture`
+
+Creates or updates a repo-specific `docs/ARCHITECTURE.md`. It records actual module boundaries, dependency direction, composition roots, shared-code rules, testing boundaries, architecture checks, and accepted deviations. Use it for non-trivial repos, greenfield architecture baselines, or before boundary-affecting work when no architecture doc exists.
+
+Modifiers:
+
+- None.
 
 ### `$deep-research-prompt`
 

@@ -26,6 +26,7 @@ Load these files before running:
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
 - `skills/shared/references/review/finding-disposition.md`
+- `skills/shared/references/architecture/architecture-guidance.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
 - `skills/shared/references/reasoning-budget.md`
 - `skills/shared/references/review/swarm-lanes.md` when `--swarm` is present
@@ -51,9 +52,12 @@ Load these files before running:
 
 1. Establish the baseline.
    - Detect repo structure, frameworks, languages, package managers, monorepo layout, and tooling.
+   - Read `docs/ARCHITECTURE.md` when it exists and use it as the repo's boundary contract.
    - Read the actual verification sources: manifests, task runners, CI workflows, test configs, lint/typecheck/build scripts, docker files, and migration tooling.
    - Inspect recent churn and file-size hotspots before judging the repo: use git history and line counts to identify the largest files, most frequently changed files, and any overlap between the two. Treat that overlap as an audit-prioritization signal, not as proof of debt.
    - Identify maintainability hotspots: godfiles, duplicated local patterns, unclear module boundaries, brittle abstractions, hard-to-test paths, missing runnable feedback loops, and places where a future agent would have to infer behavior from scattered or stale clues.
+   - Use `architecture-guidance.md` to compare the repo against `docs/ARCHITECTURE.md` when it exists, flagging stale docs, missing modules, forbidden dependency edges, undocumented entrypoints, expired deviations, and shared-code drift.
+   - When `docs/ARCHITECTURE.md` is missing, still report generic architecture smells when evidence supports them, but label those findings as inferred rather than contract drift.
    - Do not report technical debt from size, churn, or style alone. A debt finding needs exact files or lines, a concrete maintenance cost, user or engineering impact, and a credible fix path.
    - Check `git status`, note whether the tree is dirty, and do not revert unrelated changes.
    - Identify missing env vars, broken assumptions, and install blockers.

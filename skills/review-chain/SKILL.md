@@ -27,6 +27,7 @@ Load these files before running:
 - `skills/shared/references/review/review-protocol.md`
 - `skills/shared/references/review/review-calibration.md`
 - `skills/shared/references/review/finding-disposition.md`
+- `skills/shared/references/architecture/architecture-guidance.md` when `docs/ARCHITECTURE.md` exists or the review touches boundary-affecting changes
 - `skills/shared/references/execution/task-file-contract.md`
 - `skills/shared/references/reasoning-budget.md`
 
@@ -37,11 +38,12 @@ Load these files before running:
 3. For task-scoped review, use PRD + TDD + tasks-plan as scope context when those artifacts exist.
 4. Select the active prompt profile from `review-protocol.md`, then execute its prompts sequentially, one prompt at a time.
    - Follow `reasoning-budget.md`: explicit review runs should use the strongest appropriate reasoning tier for the selected model family or budget.
-5. Treat Prompt G as required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior. Otherwise record it as not applicable with a reason.
-6. Treat Prompt H as required when the change is deploy-bound, materially affects operations, infrastructure, migrations, security posture, or runtime observability, or touches agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise record it as not applicable with a reason.
-7. Record findings, disposition, and test evidence for each prompt, comparing the change against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists, including acceptance checks, the recorded test-first plan, `test_first_evidence`, local reference patterns, and any trust-boundary notes.
-8. Enforce completion gates, including unresolved TODO checks.
-9. Provide summary and delete review log only after all review checks pass, unless `--preserve-review-artifacts` was supplied.
+5. When `docs/ARCHITECTURE.md` exists or the diff is boundary-affecting, compose `architecture-guidance.md` and compare the change against the architecture doc. Flag stale docs, missing modules, forbidden dependency edges, undocumented entrypoints, expired deviations, and shared-code drift.
+6. Treat Prompt G as required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior. Otherwise record it as not applicable with a reason.
+7. Treat Prompt H as required when the change is deploy-bound, materially affects operations, infrastructure, migrations, security posture, or runtime observability, or touches agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise record it as not applicable with a reason.
+8. Record findings, disposition, and test evidence for each prompt, comparing the change against the task contract when `tasks/tmp/plan-task-<task-id>.md` exists, including acceptance checks, the recorded test-first plan, `test_first_evidence`, local reference patterns, and any trust-boundary notes.
+9. Enforce completion gates, including unresolved TODO checks.
+10. Provide summary and delete review log only after all review checks pass, unless `--preserve-review-artifacts` was supplied.
 
 Default behavior is report-first. Do not patch files from standalone `$review-chain` unless the user explicitly asked for fixes in the same request. If fixes are requested, the main agent applies them after the review findings are recorded; the review subagent remains detect-only.
 

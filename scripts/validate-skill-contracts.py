@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_CONTRACTS = {
     "public-skill-metadata": "README.md; skills/*/SKILL.md",
+    "architecture-guidance": "skills/shared/references/architecture/architecture-guidance.md",
     "planning-intake": "skills/shared/references/planning/socratic-planning.md",
     "prd-generation": "skills/shared/references/planning/create-prd.md",
     "tdd-generation": "skills/shared/references/planning/create-tdd.md",
@@ -606,6 +607,77 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             )
 
 
+def validate_architecture_guidance(errors: list[str]) -> None:
+    reference = (ROOT / "skills/shared/references/architecture/architecture-guidance.md").read_text()
+    create_architecture = (ROOT / "skills/create-architecture/SKILL.md").read_text()
+    bootstrap = (ROOT / "skills/bootstrap-repo-rules/SKILL.md").read_text()
+    deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
+    execute_task = (ROOT / "skills/execute-task/SKILL.md").read_text()
+    plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
+    review_chain = (ROOT / "skills/review-chain/SKILL.md").read_text()
+    repo_sweep = (ROOT / "skills/repo-sweep/SKILL.md").read_text()
+    contract_ownership = (ROOT / "skills/shared/references/contract-ownership.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+    agents = (ROOT / "AGENTS.md").read_text()
+
+    reference_tokens = [
+        "## Boundary-Affecting Work",
+        "Small local edits inside one existing boundary are not boundary-affecting.",
+        "## Non-Trivial Repo Signal",
+        "## Architecture Doctrine",
+        "## Architecture Document Template",
+        "docs/ARCHITECTURE.md",
+        "Accepted Deviations",
+        "Do not build or require a universal cross-stack architecture validator from this reference.",
+    ]
+    for token in reference_tokens:
+        if token not in reference:
+            fail(errors, "PD-ARCHITECTURE-REFERENCE", f"skills/shared/references/architecture/architecture-guidance.md missing token: {token}")
+
+    create_architecture_tokens = [
+        "name: create-architecture",
+        "Invoke explicitly with `$create-architecture`.",
+        "skills/shared/references/architecture/architecture-guidance.md",
+        "Existing repo mode",
+        "Greenfield mode",
+        "docs/ARCHITECTURE.md",
+        "Do not create a second document unless the repo already has its own convention.",
+    ]
+    for token in create_architecture_tokens:
+        if token not in create_architecture:
+            fail(errors, "PD-CREATE-ARCHITECTURE-SKILL", f"skills/create-architecture/SKILL.md missing token: {token}")
+
+    consumer_checks = [
+        ("skills/bootstrap-repo-rules/SKILL.md", bootstrap, "suggest or invoke `$create-architecture`"),
+        ("skills/deliver/SKILL.md", deliver, "For boundary-affecting implementation work"),
+        ("skills/execute-task/SKILL.md", execute_task, "Before boundary-affecting execution"),
+        ("skills/plan-and-execute/SKILL.md", plan_and_execute, "before boundary-affecting planning or execution"),
+        ("skills/review-chain/SKILL.md", review_chain, "forbidden dependency edges"),
+        ("skills/repo-sweep/SKILL.md", repo_sweep, "label those findings as inferred rather than contract drift"),
+    ]
+    for path, text, local_token in consumer_checks:
+        for token in ["skills/shared/references/architecture/architecture-guidance.md", "docs/ARCHITECTURE.md", local_token]:
+            if token not in text:
+                fail(errors, "PD-ARCHITECTURE-CONSUMER", f"{path} missing architecture token: {token}")
+
+    metadata_tokens = [
+        "`create-architecture` | `$create-architecture` | None",
+        "Use `$create-architecture` when a non-trivial repo needs a concrete `docs/ARCHITECTURE.md`",
+        "Creates or updates a repo-specific `docs/ARCHITECTURE.md`.",
+    ]
+    for token in metadata_tokens:
+        if token not in readme:
+            fail(errors, "PD-CREATE-ARCHITECTURE-README", f"README.md missing create-architecture token: {token}")
+
+    ownership_token = "`architecture-guidance` | `skills/shared/references/architecture/architecture-guidance.md`"
+    if ownership_token not in contract_ownership:
+        fail(errors, "PD-ARCHITECTURE-OWNERSHIP", f"skills/shared/references/contract-ownership.md missing token: {ownership_token}")
+
+    agents_token = "Before boundary-affecting work, read `docs/ARCHITECTURE.md` when it exists."
+    if agents_token not in agents:
+        fail(errors, "PD-ARCHITECTURE-AGENTS", f"AGENTS.md missing architecture token: {agents_token}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory-only", action="store_true", help="print stale-mirror inventory and exit")
@@ -622,6 +694,7 @@ def main() -> int:
     validate_deep_research_completion_stamp(errors)
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
+    validate_architecture_guidance(errors)
     validate_mirrors(errors)
 
     if errors:
