@@ -228,6 +228,7 @@ Default Scope Rule:
 Require this prompt for frontend-facing `full-branch` review rounds and for explicit review runs that cover frontend work.
 Action:
 Use Playwright MCP by default to open the changed UI, exercise the affected flows, resize for relevant breakpoints, and capture screenshots of all changed screens and states.
+For changed interactive controls, record interaction evidence instead of relying on screenshots alone: click affected buttons, select relevant menu options, exercise changed keyboard shortcuts, and confirm the resulting UI, API, storage, or log state when applicable.
 When motion, timing, or multi-step interaction matters, also capture video or trace evidence using the Playwright CLI workflow.
 After evidence is captured, close transient browser tabs, windows, and contexts opened only for review. Preserve only sessions that are explicitly named as persistent, such as manual-login, debugging, or long-running external workflows.
 Review the captured evidence for visual regressions, broken layout, missing states, incorrect copy, and obvious accessibility issues visible in the UI.
