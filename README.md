@@ -23,6 +23,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
+| `merge-review` | `$merge-review` inside /goal $merge-review | None |
 | `plain-language` | `$plain-language` | None |
 | `plan-and-execute` | `$plan-and-execute` | `--prepare-plan`, `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
@@ -45,6 +46,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$execute-task` when planning artifacts already exist and you want one task, or all remaining tasks with `--one-shot`, implemented.
 - Use `$plan-refine` when planning artifacts exist but need pressure testing before execution.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
+- Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
 - Use `$repo-sweep` when you want a broad repository audit, production-readiness pass, and optional repair loop.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
@@ -149,6 +151,20 @@ Modifiers:
 
 - `--deep-research`: add web-backed operator/current-practice research with an evidence bar.
 - `--pro-analysis`: escalate through the ChatGPT Pro browser wrapper and synthesize the result back into the local analysis.
+
+### `$merge-review`
+
+Runs a goal-backed current-branch merge-readiness loop. Invoke it as:
+
+```text
+/goal $merge-review
+```
+
+It keeps `tasks/merge-review-<branch-slug>.md` current, reviews `origin/main...HEAD`, fixes verified local `Disposition: fix` findings, validates, and starts a fresh rereview until no fixable findings remain or a real blocker is proven. It does not push, create PRs, merge, clean branches, or run a whole-repo production audit.
+
+Modifiers:
+
+- None.
 
 ### `$plain-language`
 

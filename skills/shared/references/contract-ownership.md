@@ -40,6 +40,7 @@ Prime Directive contracts should have one owner. Consumers may include short ori
 | `plan-and-execute` | `skills/plan-and-execute/SKILL.md` | README, skill users | Owns orchestration order plus branch/PR defaults unique to the combined workflow. |
 | `execute-task` | `skills/execute-task/SKILL.md` | `skills/plan-and-execute/SKILL.md`, skill users | Owns public execution activation and mode-level delegation into task management/review/finalization. |
 | `deliver` | `skills/deliver/SKILL.md; skills/deliver/references/*.md` | README, skill users | `SKILL.md` owns activation, routing, and gates; references own plan format and worker-packet detail unique to `$deliver`. |
+| `merge-review` | `skills/merge-review/SKILL.md; skills/merge-review/references/*.md` | README, skill users | `SKILL.md` owns activation, scope, loop shape, and stop gates; references own the state-document template and merge-readiness rubric. |
 | `repo-sweep` | `skills/repo-sweep/SKILL.md; skills/repo-sweep/references/*.md` | README, skill users | `SKILL.md` owns activation, modifiers, phase order, and stop gates; references own detailed sweep checks, loop rules, and report formats unique to `$repo-sweep`. |
 | `harness-drift` | `skills/shared/references/harness-drift.md` | `skills/plan-work/SKILL.md`, `skills/execute-task/SKILL.md`, `skills/plan-and-execute/SKILL.md` | Owns drift-check report shape and decision rules. |
 | `reasoning-budget` | `skills/shared/references/reasoning-budget.md` | all Prime Directive workflow skills | Owns reasoning tier mapping by workflow role. |
