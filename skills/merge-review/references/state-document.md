@@ -1,6 +1,6 @@
 # Merge Review State Document
 
-Use this reference before creating or updating `tasks/merge-review-<branch>.md`.
+Use this reference before creating or updating `tasks/merge-review-<branch-slug>.md`.
 
 The state document is the controlling artifact for `/goal $merge-review`. Keep it current enough that another agent can resume without reading the full conversation.
 
@@ -14,6 +14,7 @@ Goal: Make `<branch>` merge-ready by reviewing `<remote-base>...HEAD`, fixing ve
 ## Branch And Base
 
 - Branch: `<branch>`
+- Branch slug: `<branch-slug>`
 - Base: `<remote-base>`
 - Review scope: `<remote-base>...HEAD`
 - Started at: `<timestamp>`
@@ -90,6 +91,7 @@ Status values:
 
 ## Update Rules
 
+- Build `<branch-slug>` from the current branch name by replacing `/` and other filename-unsafe characters with `-`.
 - Append a round row before starting each fresh review.
 - Add every material finding before fixing it.
 - Close or reclassify findings with evidence; do not silently delete them.

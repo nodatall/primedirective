@@ -32,7 +32,9 @@ Load references by path, not all up front:
 
 Use one durable state document:
 
-- `tasks/merge-review-<branch>.md`
+- `tasks/merge-review-<branch-slug>.md`
+
+Build `<branch-slug>` from the current branch name by replacing `/` and other filename-unsafe characters with `-`. For example, `deliver/merge-review-skill` uses `tasks/merge-review-deliver-merge-review-skill.md`.
 
 The state document is the source of truth for the run. Keep it current after every meaningful review, finding classification, fix batch, validation result, blocker, resume point, and final verdict.
 
@@ -57,7 +59,7 @@ The goal is complete only when all of these are true:
 - Remaining findings, if any, are only `needs human decision`, `residual risk`, or `no action`.
 - Relevant validation commands pass, or failures are recorded as human-blocked or residual with evidence.
 - No uncommitted implementation fixes from the merge-review loop remain. The only allowed dirty file is the state document when the repo treats review artifacts as uncommitted working notes.
-- `tasks/merge-review-<branch>.md` has an up-to-date `Resume State` with `Current status: done`.
+- `tasks/merge-review-<branch-slug>.md` has an up-to-date `Resume State` with `Current status: done`.
 
 Do not stop because one round passed after fixes unless that round was a fresh rereview of the latest branch state.
 
@@ -67,7 +69,7 @@ Do not stop because one round passed after fixes unless that round was a fresh r
    - Run `git status --short --branch`.
    - Detect the current branch and resolved remote base branch.
    - Fetch `origin`.
-   - Record branch, base, starting status, and review scope in `tasks/merge-review-<branch>.md`.
+   - Record branch, branch slug, base, starting status, and review scope in `tasks/merge-review-<branch-slug>.md`.
 2. Collect review context.
    - Inspect `git diff --stat`, `git diff --name-only`, and the relevant committed diff from base to `HEAD`.
    - Read full contents of changed files, not only hunks.
