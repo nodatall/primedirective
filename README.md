@@ -160,7 +160,7 @@ Runs a goal-backed current-branch merge-readiness loop. Invoke it as:
 /goal $merge-review
 ```
 
-It keeps `tasks/merge-review-<branch>.md` current, reviews `origin/main...HEAD`, fixes verified local `Disposition: fix` findings, validates, and starts a fresh rereview until no fixable findings remain or a real blocker is proven. It does not push, create PRs, merge, clean branches, or run a whole-repo production audit.
+It keeps `tasks/merge-review-<branch-slug>.md` current, reviews `origin/main...HEAD`, fixes verified local `Disposition: fix` findings, validates, and starts a fresh rereview until no fixable findings remain or a real blocker is proven. It does not push, create PRs, merge, clean branches, or run a whole-repo production audit.
 
 Modifiers:
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Merge Review"
   short_description: "Loop until branch is merge-ready"
-  default_prompt: "Use /goal $merge-review to make the current branch merge-ready. Keep tasks/merge-review-<branch>.md current, review origin/main...HEAD, fix verified local findings, validate, and rereview until no Disposition: fix findings remain or a real blocker is proven."
+  default_prompt: "Use /goal $merge-review to make the current branch merge-ready. Keep tasks/merge-review-<branch-slug>.md current, review origin/main...HEAD, fix verified local findings, validate, and rereview until no Disposition: fix findings remain or a real blocker is proven."
