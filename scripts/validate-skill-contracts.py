@@ -472,7 +472,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Do not mention whether worker agents were or were not used",
         "Supported modifiers:",
         "`--pro-analysis`",
-        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the draft checklist plan exists and before the refinement loop.",
+        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the readable execution plan exists and before the refinement loop.",
         "tasks/tmp/pro-analysis-<plan-key>.md",
         "Pro Findings Summary",
         "Hard-stop before refinement if the Pro synthesis gate is incomplete.",
@@ -482,8 +482,9 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
     deliver_draft_tokens = [
-        "$deliver` creates or resumes a draft checklist plan at `tasks/execution-plan-<plan-key>.md`",
+        "$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`",
         "$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.",
+        "Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
         "Draft instruction:",
         "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
         "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
@@ -521,7 +522,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
     pro_deliver_reference_tokens = [
         "$deliver --pro-analysis",
-        "For `$deliver --pro-analysis`, the draft checklist plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
+        "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
         "For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
         "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review",
     ]
@@ -580,8 +581,9 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
         "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias",
-        "one readable draft checklist plan that can stay current while you talk through it",
-        "`refine` or `plan`: keep the active draft checklist in `tasks/execution-plan-<plan-key>.md`",
+        "one readable execution plan refined right away",
+        "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
+        "bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`",
         "`discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",

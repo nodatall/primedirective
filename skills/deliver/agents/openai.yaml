@@ -1,4 +1,4 @@
 interface:
   display_name: "Deliver"
-  short_description: "Draft, refine, then execute"
-  default_prompt: "Use $deliver to create or update one readable draft checklist plan. Keep the same plan current while we talk through changes. When I say refine it, refine the same checklist into a reviewed execution plan and get approval before execution starts. Add --pro-analysis when the plan should get ChatGPT Pro pressure before refinement."
+  short_description: "Plan, refine, then execute"
+  default_prompt: "Use $deliver to create or update one readable execution plan, run --pro-analysis immediately when I include it, refine the plan in the same command, and get approval before execution starts. Use $deliver discuss only when I explicitly want a draft checklist to stay current while we talk through changes."

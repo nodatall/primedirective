@@ -37,8 +37,9 @@ Use this table when you already know the skill name. The detailed sections below
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
-- Use `$deliver` when you want one readable draft checklist plan that can stay current while you talk through it, or a goal-plan prompt for adaptive evidence loops.
-- Use `$deliver refine` or say `refine it` when the draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
+- Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
+- Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
+- Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
 - Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
 - Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
 - Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
@@ -91,16 +92,16 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language draft checklist plan, keeps that same draft current while the user talks through changes, refines it only when asked, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist plans can optionally get ChatGPT Pro pressure before refinement. After refinement, the plan is checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement, the plan is checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
-- `refine` or `plan`: keep the active draft checklist in `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, refine it, and ask for review before implementation.
+- bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask for review before implementation.
 - `discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.
 
 Modifiers:
 
-- `--pro-analysis`: run ChatGPT Pro browser escalation after the draft checklist plan exists, synthesize findings into the plan, then refine and ask for approval only after the Pro synthesis gate succeeds.
+- `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask for approval only after the Pro synthesis gate succeeds.
 
 ### `$execute-task`
 

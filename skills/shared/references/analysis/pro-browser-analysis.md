@@ -48,7 +48,7 @@ These gates apply when the caller is `$deliver --pro-analysis` or `$plan-and-exe
 
 Before starting the ChatGPT browser run, confirm the plan key and the current planning phase.
 
-For `$deliver --pro-analysis`, the draft checklist plan must already exist as `tasks/execution-plan-<plan-key>.md`. Use that plan plus selected repo context as the Pro browser input. Do not run Pro against only the raw conversation when a deliver plan has not yet been created.
+For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`. Use that plan plus selected repo context as the Pro browser input. Do not run Pro against only the raw conversation when a deliver plan has not yet been created, and do not require a separate user review before the Pro pass.
 
 When `--deep-research` is also active, the gate is hard:
 
