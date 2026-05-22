@@ -1,6 +1,6 @@
 ---
 name: merge-review
-description: Run a goal-backed current-branch merge-readiness loop. Use when invoked with `$merge-review`, especially inside `/goal $merge-review`, before a branch should be merged. Reviews `origin/main...HEAD`, records state in `tasks/merge-review-<branch>.md`, fixes verified local findings, validates, and rereviews until no `Disposition: fix` findings remain or a real blocker is proven.
+description: Run a goal-backed current-branch merge-readiness loop. Use when invoked with `$merge-review`, especially inside `/goal $merge-review`, before a branch should be merged. Reviews `origin/main...HEAD`, records state in `tasks/merge-review-<branch-slug>.md`, fixes verified local findings, validates, and rereviews until no `Disposition: fix` findings remain or a real blocker is proven.
 ---
 
 # Merge Review Skill

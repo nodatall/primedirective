@@ -32,7 +32,7 @@ Goal: Create a small public skill surface that clearly routes into a long-runnin
 
 Goal: Give the goal run a persistent source of truth that survives compaction, restart, and handoff.
 
-- [x] Specify the state doc path as `tasks/merge-review-<branch>.md`.
+- [x] Specify the state doc path as `tasks/merge-review-<branch-slug>.md`.
 - [x] Define required sections for branch/base, review scope, end condition, round log, findings, fixes, validation, remaining decisions, residual risks, resume state, and final verdict.
 - [x] Make the state doc the source of truth for the loop, with the `/goal` prompt pointing back to it.
 - [x] Require the state doc to stay current after every meaningful review, fix, validation, blocker, or resume point.
