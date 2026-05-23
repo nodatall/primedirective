@@ -26,7 +26,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `plain-language` | `$plain-language` | None |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]` | `plan-key=<plan-key>` or source material in the thread |
-| `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; use `/goal $repo-sweep` for repair/resweep |
+| `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; `--swarm` includes nitpick depth; use `/goal $repo-sweep` for repair/resweep |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
 | `ship-branch` | `$ship-branch` | None |
 
@@ -41,7 +41,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
-- Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop.
+- Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Use `/goal $repo-sweep --swarm --preserve-review-artifacts` when you want a longer nitpicky sweep for maintainability, test quality, code slop, and production risk.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
 - Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches.
@@ -172,7 +172,7 @@ Runs a broad repository audit. It starts with first-principles no-edit analysis,
 Modifiers:
 
 - `--pro-analysis`: use ChatGPT Pro browser escalation as Round 1 audit-thesis input.
-- `--swarm`: add parallel read-only discovery lanes for intent/regression, security/privacy, performance/reliability, and contracts/coverage before the report.
+- `--swarm`: add parallel read-only discovery lanes for intent/regression, security/privacy, performance/reliability, contracts/coverage, and nitpick-depth maintainability/code-quality review before the report.
 - `--dep-scan`: run an explicit dependency and supply-chain audit, reporting unavailable scanners as residual risk.
 - `--preserve-review-artifacts`: keep sweep/review logs instead of cleaning them after success.
 

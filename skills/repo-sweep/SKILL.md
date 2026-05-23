@@ -1,6 +1,6 @@
 ---
 name: repo-sweep
-description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes. Invoke inside `/goal $repo-sweep` for a repair/resweep goal. Supports `--pro-analysis`, `--swarm`, `--dep-scan`, and `--preserve-review-artifacts`.
+description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes. Invoke inside `/goal $repo-sweep` for a repair/resweep goal. Supports `--pro-analysis`, `--swarm`, `--dep-scan`, and `--preserve-review-artifacts`; `--swarm` includes nitpick-depth maintainability review by default.
 ---
 
 # Repo Sweep Skill
@@ -31,7 +31,7 @@ Supported modifiers:
 Load references by path, not all up front:
 
 - Always load `skills/shared/references/review/review-protocol.md`, `skills/shared/references/review/review-calibration.md`, `skills/shared/references/review/finding-disposition.md`, `skills/shared/references/architecture/architecture-guidance.md`, `skills/first-principles-mode/references/analysis-rubric.md`, and `skills/shared/references/reasoning-budget.md`.
-- `skills/shared/references/review/swarm-lanes.md` when `--swarm` is present
+- `skills/shared/references/review/swarm-lanes.md` and `skills/repo-sweep/references/nitpick-depth.md` when `--swarm` is present
 - `skills/shared/references/review/dep-audit-checklist.md` when `--dep-scan` is present
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
 - `skills/repo-sweep/references/high-risk-checks.md` for API, config, security, destructive-path, and runtime-probe checks
@@ -50,7 +50,7 @@ Load references by path, not all up front:
 - Do not edit files before the repo-wide report and explicit user approval to proceed with fixes.
 - Inside `/goal $repo-sweep`, the goal invocation is approval for a bounded repair/resweep loop on verified, fixable findings after the Round 1 report is recorded. Still stop for changes that require a human product, security, schema, billing, customer-visible UX, or public API decision.
 - With `--pro-analysis`, use ChatGPT Pro browser analysis as a Round 1 audit-thesis input through the shared Pro browser reference. Do not run Pro in every resweep round unless a future modifier explicitly says so.
-- With `--swarm`, run the optional read-only specialized lanes from `swarm-lanes.md` as discovery input before the report. The main agent still verifies, deduplicates, classifies, and owns the final findings.
+- With `--swarm`, run the optional read-only specialized lanes from `swarm-lanes.md` plus the nitpick-depth maintainability checks from `nitpick-depth.md` as discovery input before the report. The main agent still verifies, deduplicates, classifies, and owns the final findings.
 - With `--dep-scan`, run the dependency and supply-chain audit from `dep-audit-checklist.md`. If required scanners are unavailable, report the unavailable checks as residual risk instead of silently skipping them.
 - Include all normal review-chain components. For repo sweep, force a comprehensive review pass rather than a shortened provider-specific subset.
 
@@ -80,7 +80,7 @@ Load references by path, not all up front:
    - With `--pro-analysis`, run local repo reconnaissance, select context, drive the visible ChatGPT Pro browser pass, and synthesize the Pro result into the audit thesis before continuing to the no-edit audit.
    - Treat the Pro result as external reviewer input, not as source of truth. Verify or qualify Pro claims against local files, commands, probes, and tests.
    - If `--pro-analysis` is active inside `/goal $repo-sweep`, use Pro only in Round 1 by default. Subsequent resweeps use fresh local review subagents unless the user explicitly asks for another Pro pass.
-   - If `--swarm` is present, use the swarm lanes as additional candidate-risk generators, not as final authority. Merge their output through the finding disposition rules before reporting or fixing.
+   - If `--swarm` is present, use the swarm lanes and nitpick-depth checks as additional candidate-risk generators, not as final authority. Merge their output through the finding disposition rules before reporting or fixing.
 3. Run a no-edit security, config, and API-surface audit.
    - Use `skills/repo-sweep/references/high-risk-checks.md`.
    - Do not edit code in this step.
@@ -99,6 +99,8 @@ Load references by path, not all up front:
 7. Run the normal review chain components as part of the no-edit review phase.
    - Use the prompts from `review-protocol.md` as required review components for the repo sweep.
    - For repo sweep, force the comprehensive `full-chain` coverage: Prompt A through Prompt I, one prompt at a time.
+   - `full-chain` is mandatory for repo sweep even when normal Codex task reviews would select the shorter Codex prompt profile.
+   - With `--swarm`, ensure Prompt C, Prompt D, Prompt E, Prompt F, and Prompt I run even if the rest of the review work is delegated to swarm lanes. Run Prompt G and Prompt H when their normal applicability rules are met.
    - Treat Prompt G and Prompt H with the same applicability rules as the normal review chain, but record them explicitly as executed or `not applicable`.
    - Record findings, repair authorization, and test or probe evidence for each prompt. During the pre-fix no-edit phase, the fix field must be `none during no-edit phase`.
    - Enforce the normal review-chain completion gates during reporting: do not mark the review phase complete while material verified findings are still hidden, unclassified, or hand-waved.
@@ -107,6 +109,7 @@ Load references by path, not all up front:
    - Use `skills/repo-sweep/references/report-format.md`.
    - Open with the `Audit Thesis`.
    - Report verified findings before repairs.
+   - With `--swarm`, include a compact nitpick-depth summary: hotspots inspected, hotspots intentionally not inspected, accepted maintainability/test-quality/product-surface findings, and rejected false positives under `Looks Bad But Fine`.
 9. Stop on a hard user gate after the report unless invoked inside `/goal $repo-sweep`.
    - After presenting the report, explicitly ask whether the user wants fixes to proceed.
    - Do not patch files, change config, or "fix while reviewing" until the user answers yes.
@@ -152,6 +155,7 @@ While working:
 - give short progress updates
 - say what you are running, what failed, and whether you are still in review mode or have started the approved fix phase
 - explicitly say when the first-principles pre-pass is complete and what risk thesis is driving the rest of the audit
+- when `--swarm` is active, explicitly say that nitpick depth is included and which maintainability/code-quality hotspots are being inspected
 - after the no-edit audit and review-chain passes, emit the structured repo-wide report before repairs begin
 - after the report, stop and ask a direct yes-or-no question about whether to proceed with fixes
 

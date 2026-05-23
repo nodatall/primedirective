@@ -123,6 +123,8 @@ Use these prompt sets:
 - `codex-short`: Prompt A, then Prompt G when required, then Prompt H when required, then Prompt I.
 - `full-chain`: Prompts A-I in order, treating Prompts G and H as conditional when not applicable.
 
+Repo-wide skills may override the default prompt profile when their contract requires deeper coverage. `$repo-sweep` forces `full-chain`; `$repo-sweep --swarm` also includes the nitpick-depth maintainability lane owned by `skills/repo-sweep/references/nitpick-depth.md`.
+
 Rationale:
 
 - Codex review runs tend to produce most useful findings in the first broad review plus the closing audit, with Prompt G still valuable for frontend evidence and Prompt H still valuable for deploy-bound changes.
