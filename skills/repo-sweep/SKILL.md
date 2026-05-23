@@ -1,6 +1,6 @@
 ---
 name: repo-sweep
-description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes unless `--loop` is present. Supports `--pro-analysis`, `--loop`, `--swarm`, `--dep-scan`, and `--preserve-review-artifacts`.
+description: Run a full-repository sweep that always starts with a first-principles no-edit audit, then the full review chain, and pauses for approval before fixes. Invoke inside `/goal $repo-sweep` for a repair/resweep goal. Supports `--pro-analysis`, `--swarm`, `--dep-scan`, and `--preserve-review-artifacts`.
 ---
 
 # Repo Sweep Skill
@@ -11,9 +11,16 @@ Run a full-repository sweep that separates first-principles detection from repai
 
 Invoke explicitly with `$repo-sweep`.
 
+Invoke inside a Codex goal when the user wants the bounded repair/resweep loop:
+
+```text
+/goal $repo-sweep
+```
+
+If the user asks for a repo-sweep loop, repeated fixing, or "keep going until clean" outside a goal, prepare or give the exact `/goal $repo-sweep` command instead of using a `--loop` modifier.
+
 Supported modifiers:
 
-- `--loop`
 - `--pro-analysis`
 - `--swarm`
 - `--dep-scan`
@@ -30,7 +37,7 @@ Load references by path, not all up front:
 - `skills/repo-sweep/references/high-risk-checks.md` for API, config, security, destructive-path, and runtime-probe checks
 - `skills/repo-sweep/references/go-live-readiness.md` for deployable service readiness
 - `skills/repo-sweep/references/report-format.md` before emitting the repo-wide report
-- `skills/repo-sweep/references/loop-mode.md` when `--loop` is present
+- `skills/repo-sweep/references/goal-mode.md` when invoked inside `/goal $repo-sweep`
 
 ## Scope
 
@@ -40,9 +47,9 @@ Load references by path, not all up front:
 - Detect before repairing.
 - Always run a first-principles no-edit pre-pass before normal review-chain prompts or fixes.
 - Prefer verified findings over plausible theory.
-- Do not edit files before the repo-wide report and explicit user approval to proceed with fixes, unless `--loop` is present.
-- With `--loop`, the user has pre-approved the repair loop for verified, fixable findings. Still stop for changes that require a human product, security, schema, billing, customer-visible UX, or public API decision.
-- With `--pro-analysis`, use ChatGPT Pro browser analysis as a Round 1 audit-thesis input through the shared Pro browser reference. Do not run Pro in every loop round unless a future modifier explicitly says so.
+- Do not edit files before the repo-wide report and explicit user approval to proceed with fixes.
+- Inside `/goal $repo-sweep`, the goal invocation is approval for a bounded repair/resweep loop on verified, fixable findings after the Round 1 report is recorded. Still stop for changes that require a human product, security, schema, billing, customer-visible UX, or public API decision.
+- With `--pro-analysis`, use ChatGPT Pro browser analysis as a Round 1 audit-thesis input through the shared Pro browser reference. Do not run Pro in every resweep round unless a future modifier explicitly says so.
 - With `--swarm`, run the optional read-only specialized lanes from `swarm-lanes.md` as discovery input before the report. The main agent still verifies, deduplicates, classifies, and owns the final findings.
 - With `--dep-scan`, run the dependency and supply-chain audit from `dep-audit-checklist.md`. If required scanners are unavailable, report the unavailable checks as residual risk instead of silently skipping them.
 - Include all normal review-chain components. For repo sweep, force a comprehensive review pass rather than a shortened provider-specific subset.
@@ -72,7 +79,7 @@ Load references by path, not all up front:
    - Carry one concise audit thesis into the repo-wide report so the findings are organized around mechanism, not only around file-local defects.
    - With `--pro-analysis`, run local repo reconnaissance, select context, drive the visible ChatGPT Pro browser pass, and synthesize the Pro result into the audit thesis before continuing to the no-edit audit.
    - Treat the Pro result as external reviewer input, not as source of truth. Verify or qualify Pro claims against local files, commands, probes, and tests.
-   - If `--pro-analysis` and `--loop` are both present, use Pro only in Round 1 by default. Subsequent resweeps use fresh local review subagents unless the user explicitly asks for another Pro pass.
+   - If `--pro-analysis` is active inside `/goal $repo-sweep`, use Pro only in Round 1 by default. Subsequent resweeps use fresh local review subagents unless the user explicitly asks for another Pro pass.
    - If `--swarm` is present, use the swarm lanes as additional candidate-risk generators, not as final authority. Merge their output through the finding disposition rules before reporting or fixing.
 3. Run a no-edit security, config, and API-surface audit.
    - Use `skills/repo-sweep/references/high-risk-checks.md`.
@@ -100,11 +107,11 @@ Load references by path, not all up front:
    - Use `skills/repo-sweep/references/report-format.md`.
    - Open with the `Audit Thesis`.
    - Report verified findings before repairs.
-9. Stop on a hard user gate after the report unless `--loop` is present.
+9. Stop on a hard user gate after the report unless invoked inside `/goal $repo-sweep`.
    - After presenting the report, explicitly ask whether the user wants fixes to proceed.
    - Do not patch files, change config, or "fix while reviewing" until the user answers yes.
    - If the user declines or does not answer, stop after the report.
-   - With `--loop`, skip this approval gate because the modifier is the approval to proceed with the bounded sweep/fix loop.
+   - Inside `/goal $repo-sweep`, record the Round 1 report in the goal state and continue because the goal invocation is the approval to proceed with the bounded sweep/fix/resweep loop.
 10. After approval, run everything that defines repo health.
    - Run every relevant install, lint, format check, typecheck, test, build, migration, and security command defined by the repo or CI.
    - Treat any failing verification command as top priority.
@@ -127,9 +134,9 @@ Load references by path, not all up front:
 14. Stop only on a real blocker.
    - Ask the user only when the correct fix would change product behavior, auth rules, schema semantics, billing logic, customer-visible UX intent, or public API behavior in a non-obvious way.
 
-## Loop Mode
+## Goal Mode
 
-`--loop` turns repo sweep into a bounded sweep/fix/resweep workflow. Use `skills/repo-sweep/references/loop-mode.md` for the detailed loop rules, round shape, cap, stop conditions, and final output.
+`/goal $repo-sweep` turns repo sweep into a sweep/fix/resweep workflow. Use `skills/repo-sweep/references/goal-mode.md` for the detailed goal-state rules, round shape, stop conditions, and final output.
 
 ## Artifact behavior
 

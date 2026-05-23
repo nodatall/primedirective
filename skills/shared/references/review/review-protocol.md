@@ -333,7 +333,7 @@ Rules:
 - Do not ask permission between prompts.
 - Complete one full round per review cycle.
 - Review subagents must not edit files, refactor, delete code, or add tests. They discover findings and evidence only.
-- The main agent owns disposition and repair. Repairs are authorized only when the parent workflow permits them: standard `$execute-task` sub-task review, `$execute-task --one-shot` final review for in-scope correctness fixes, `$repo-sweep --loop`, or repo-sweep after explicit user approval. A standalone `$review-chain` is report-first unless the user explicitly asked for fixes.
+- The main agent owns disposition and repair. Repairs are authorized only when the parent workflow permits them: standard `$execute-task` sub-task review, `$execute-task --one-shot` final review for in-scope correctness fixes, `/goal $repo-sweep`, or repo-sweep after explicit user approval. A standalone `$review-chain` is report-first unless the user explicitly asked for fixes.
 - If the main agent repairs a finding during an authorized execution context, rerun the relevant checks and continue to remaining prompts in the same round.
 - Do not mark prompts complete retroactively from one combined pass.
 - If a prompt is outside the active prompt profile, mark it `not applicable` with a short reason rather than leaving it incomplete.

@@ -29,7 +29,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]` | `plan-key=<plan-key>` or source material in the thread |
 | `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
-| `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--loop`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts` |
+| `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; use `/goal $repo-sweep` for repair/resweep |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
 | `ship-branch` | `$ship-branch` | None |
 
@@ -48,7 +48,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$plan-refine` when planning artifacts exist but need pressure testing before execution.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
-- Use `$repo-sweep` when you want a broad repository audit, production-readiness pass, and optional repair loop.
+- Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
 - Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches.
@@ -215,12 +215,11 @@ Modifiers:
 
 ### `$repo-sweep`
 
-Runs a broad repository audit. It starts with first-principles no-edit analysis, runs review/security/production-readiness checks, reports findings, and can optionally proceed into a bounded repair/resweep loop.
+Runs a broad repository audit. It starts with first-principles no-edit analysis, runs review/security/production-readiness checks, reports findings, and pauses before fixes. Invoke `/goal $repo-sweep` for the bounded repair/resweep loop.
 
 Modifiers:
 
 - `--pro-analysis`: use ChatGPT Pro browser escalation as Round 1 audit-thesis input.
-- `--loop`: treat the invocation as approval to fix verified, in-scope findings and resweep until clean, blocked, or capped.
 - `--swarm`: add parallel read-only discovery lanes for intent/regression, security/privacy, performance/reliability, and contracts/coverage before the report.
 - `--dep-scan`: run an explicit dependency and supply-chain audit, reporting unavailable scanners as residual risk.
 - `--preserve-review-artifacts`: keep sweep/review logs instead of cleaning them after success.
