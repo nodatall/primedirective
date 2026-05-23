@@ -1,11 +1,11 @@
 ---
 name: deliver
-description: Create or update one plain-language execution plan, run Pro analysis when requested, refine it immediately, ask the user to approve the refined plan, or execute an approved Deliver plan one item at a time with focused validation, useful commits, plan updates, and final review. Supports `--pro-analysis` for ChatGPT Pro browser escalation before refinement. Use when invoked with `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`, plain `deliver` phrases, plain `refine it` after an active Deliver draft, or when the user asks to implement a Deliver execution plan doc.
+description: Create or update one plain-language execution plan, run Pro analysis when requested, refine it immediately, open the refined plan in Roughdraft for review, ask the user to approve the reviewed plan, or execute an approved Deliver plan one item at a time with focused validation, useful commits, plan updates, and final review. Supports `--pro-analysis` for ChatGPT Pro browser escalation before refinement. Use when invoked with `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`, plain `deliver` phrases, plain `refine it` after an active Deliver draft, or when the user asks to implement a Deliver execution plan doc.
 ---
 
 # Deliver Skill
 
-Run lightweight planned execution from one readable plan document. The normal path is plan -> optional Pro analysis -> refine -> approve -> implement. Use draft mode only for explicit discussion/update requests.
+Run lightweight planned execution from one readable plan document. The normal path is plan -> optional Pro analysis -> refine -> Roughdraft review -> approve -> implement. Use draft mode only for explicit discussion/update requests.
 
 This skill is a separate workflow from `$plan-work`, `$plan-and-execute`, and `$execute-task`. Do not generate PRD, TDD, or full tasks-plan artifacts unless the user explicitly switches workflows.
 
@@ -30,8 +30,8 @@ Supported modifiers:
 
 Use one self-identifying document flow:
 
-- `$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction near the top, runs `--pro-analysis` immediately when present, runs refinement immediately, then stops for review before implementation.
-- `$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file, replaces any draft instruction with the Deliver implementation instruction, runs `--pro-analysis` immediately when present, runs refinement, then stops for review.
+- `$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction near the top, runs `--pro-analysis` immediately when present, runs refinement immediately, opens the plan in Roughdraft for review, then stops for approval before implementation.
+- `$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file, replaces any draft instruction with the Deliver implementation instruction, runs `--pro-analysis` immediately when present, runs refinement, opens the plan in Roughdraft for review, then stops for approval.
 - `$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.
 - When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent while the visible, attached, referenced, or active document is a Deliver execution plan, load this skill, load that exact plan, treat it as the approved scope, and start implementation at step 7. Continue through focused validation, final review, archive movement, commit, and the finalization gate before the final handoff.
 
@@ -40,14 +40,14 @@ Examples:
 - `$deliver` with a thread plan above it.
 - `$deliver discuss` when the user explicitly wants to talk through the work and keep a plain current draft as the conversation changes.
 - `$deliver refine` or `$deliver plan` when the current draft is ready to tighten into a reviewable execution plan.
-- `$deliver --pro-analysis` when a lightweight readable plan should immediately get ChatGPT Pro pressure before refinement and user review.
+- `$deliver --pro-analysis` when a lightweight readable plan should immediately get ChatGPT Pro pressure before refinement and Roughdraft review.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
 - `turn this into a deliver plan` after a `$deliver discuss` conversation has produced a draft checklist plan.
 - `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
 - `implement the doc` when the opened or referenced doc contains the Deliver implementation instruction.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
-After `$deliver discuss` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver`, `$deliver refine`, `$deliver plan`, or equivalent, keep the same checklist file, replace the draft instruction with the Deliver implementation instruction, run `--pro-analysis` immediately when present, refine it, and stop for user review before implementation.
+After `$deliver discuss` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver`, `$deliver refine`, `$deliver plan`, or equivalent, keep the same checklist file, replace the draft instruction with the Deliver implementation instruction, run `--pro-analysis` immediately when present, refine it, open it in Roughdraft for review, and stop for approval before implementation.
 
 After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
 
@@ -197,9 +197,15 @@ Rules:
    - Edit only the execution plan during refinement.
    - Do not create a refinement notes file or separate refinement markdown artifact.
    - If 8 rounds end with unresolved material issues, stop and show the exact blocker instead of starting implementation.
-6. Ask for user review once.
-   - Show the final readable plan or summarize it with the file path.
-   - Ask: `Please review this before I start. Tell me what is wrong, missing, or out of order.`
+6. Open the refined plan in Roughdraft for user review.
+   - Run `roughdraft open "/absolute/path/to/tasks/execution-plan-<plan-key>.md"` and leave the command running until the user clicks Done Reviewing.
+   - If Roughdraft is unavailable, fall back to showing the final readable plan or summarizing it with the file path, and say Roughdraft could not be opened.
+   - After Roughdraft exits, re-read `tasks/execution-plan-<plan-key>.md` from disk.
+   - Resolve CriticMarkup comments and suggested changes in the document itself. Preserve Roughdraft attributes for any comment or suggestion that remains unresolved.
+   - Do not run multiple Roughdraft review rounds by default. If Roughdraft edits materially changed scope, order, or risk, rerun refinement internally and update the same plan without reopening Roughdraft.
+   - If the post-review plan still has an unresolved decision that cannot be safely resolved from the document and thread, ask one concise question in chat instead of opening another Roughdraft round.
+   - Reopen Roughdraft only when the user explicitly asks for another Roughdraft pass.
+   - Ask: `Roughdraft review is resolved. Say implement the doc when it looks right.`
    - Tell the user they can say `implement the doc` when it looks right.
    - If this plan came from a draft Deliver plan, stop here even if the user asked to `deliver this`. In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.
    - Do not begin implementation until the user approves or corrects the plan.

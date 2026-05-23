@@ -92,16 +92,16 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement, the plan is checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, opens the refined plan in one Roughdraft review pass, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and Roughdraft review, the plan is checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
-- bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask for review before implementation.
+- bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, open it in Roughdraft for review, and ask for approval before implementation.
 - `discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.
 
 Modifiers:
 
-- `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask for approval only after the Pro synthesis gate succeeds.
+- `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and open Roughdraft review only after the Pro synthesis gate succeeds.
 
 ### `$execute-task`
 
