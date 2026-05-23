@@ -7,7 +7,7 @@ description: Create or update one plain-language execution plan, run Pro analysi
 
 Run lightweight planned execution from one readable plan document. The normal path is plan -> optional Pro analysis -> refine -> Roughdraft review -> approve -> implement. Use draft mode only for explicit discussion/update requests.
 
-This skill is a separate workflow from `$plan-work`, `$plan-and-execute`, and `$execute-task`. Do not generate PRD, TDD, or full tasks-plan artifacts unless the user explicitly switches workflows.
+This skill replaces the retired PRD/TDD/tasks-plan execution stack for new work. Do not generate PRD, TDD, or full tasks-plan artifacts for new `$deliver` plans.
 
 Load references by path, not all up front:
 

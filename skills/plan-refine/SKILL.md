@@ -59,7 +59,7 @@ Load these files before running:
 1. Resolve the planning artifact set from `plan-key=<plan-key>` or the inference rules in `task-file-contract.md`.
    - If exactly one complete PRD/TDD/tasks-plan set exists under `tasks/`, bare `$plan-refine` must infer that `plan-key` and continue.
    - If multiple complete planning sets exist, stop and ask for `plan-key=<plan-key>`.
-2. Stop immediately if any required artifact is missing. Tell the user to complete `$plan-work` first.
+2. Stop immediately if any required artifact is missing. Tell the user the legacy PRD/TDD/tasks-plan set is incomplete, and suggest `$deliver` for new readable execution plans.
 3. If deep research was used for the plan, load the research context before reviewer rounds.
    - Treat the plan as deep-research-backed when `tasks/tmp/research-plan-<plan-key>.md` exists or the TDD contains a durable research digest, Deep Research Completion Stamp, or `evidence_bar_met` value.
    - Prefer `tasks/tmp/research-plan-<plan-key>.md` when it still exists.
@@ -122,7 +122,7 @@ Load these files before running:
    - Set `previous_reviewer_round_had_blocker_or_material` from reviewer findings only; challenger-only objections do not set it.
    - Do not apply challenger-derived fixes unless the reviewer promoted the related `challenge_id` to a `blocker` or `material` finding with `disposition: fix`. The only exception is a minor coherence edit needed after applying an accepted blocker/material fix.
    - Apply fixes only for findings with `disposition: fix`.
-   - For `needs human decision`, stop this pre-execution refinement run before editing and report the exact user decision required. This stop behavior applies to `$plan-refine` before execution starts; it does not authorize a mid-run stop inside `$execute-task --one-shot`.
+   - For `needs human decision`, stop this pre-execution refinement run before editing and report the exact user decision required. This stop behavior applies to `$plan-refine` before execution starts; it does not authorize a mid-run stop inside another implementation workflow.
    - For `residual risk`, do not edit around the finding; record the missing evidence, blocker, or external dependency in the refinement log and stop this pre-execution refinement run unless every blocker/material finding has already been fixed or safely downgraded by the reviewer.
    - Do not apply `no action` findings.
    - Apply `minor` fixes only when the edit is necessary to keep the artifacts coherent after material changes with `disposition: fix`.
@@ -147,16 +147,16 @@ Load these files before running:
     - Keep the refinement log even without `--preserve-refine-artifacts`.
     - Include the last round's remaining blocker/material findings in the final response.
     - Say this max-round stop is evidence for improving `$plan-refine` from the concrete example.
-16. Before reporting successful refinement or allowing a parent `$plan-and-execute --refine-plan` workflow to continue, append the Refinement Completion Stamp below to `tasks/tmp/plan-refine-<plan-key>.md`.
+16. Before reporting successful refinement or allowing any downstream conversion or implementation workflow to use the artifacts, append the Refinement Completion Stamp below to `tasks/tmp/plan-refine-<plan-key>.md`.
     - Do not write a successful stamp until at least one fresh reviewer subagent round has completed.
     - Do not write a successful stamp when the log lacks a round section with the reviewer findings, stop decision, and the challenge brief or valid empty challenge brief for every applicable challenger round.
     - Do not write a successful stamp when required challenge dispositions, research carry-forward checks, or Pro carry-forward checks are missing.
     - If the workflow stops before success, write the stamp with `plan_refine_complete: no` and `ready_for_execution: no`, then include the stop reason.
 17. Clean up `tasks/tmp/plan-refine-<plan-key>.md` according to invocation context.
     - For standalone `$plan-refine`, delete the log after a successful run unless `--preserve-refine-artifacts` is active.
-    - For `$plan-and-execute --refine-plan`, keep the log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless preservation is active.
+    - For downstream conversion or implementation, keep the log available through execution, final full-branch review, and finalization; delete it during final cleanup only after finalization succeeds unless preservation is active.
     - Keep the log when the run stops with unresolved blockers, material findings, max rounds, or churn.
-18. Before returning control to `$plan-and-execute`, print a short `Refinement Findings Summary`: material fixes, promoted challenger fixes, remaining blockers, execution gate status, and whether execution is ready.
+18. Before returning control, print a short `Refinement Findings Summary`: material fixes, promoted challenger fixes, remaining blockers, execution gate status, and whether execution is ready.
 
 ## Critique Standard
 
@@ -171,7 +171,7 @@ The critique must cover:
 - whether every meaningful product requirement has an `FR-*` ID
 - whether every meaningful technical obligation has a `TDR-*` ID
 - whether every task maps back to relevant `FR-*` and `TDR-*` IDs
-- whether unsupported low-level implementation detail should be removed, softened, or deferred to `$execute-task`
+- whether unsupported low-level implementation detail should be removed, softened, or deferred to implementation
 - whether any acceptance criterion lacks test or verification coverage
 - whether migration, backfill, rollback, security, operational, or frontend evidence requirements are missing where relevant
 - whether research-backed decisions from the memo or durable TDD digest were preserved, explicitly superseded, rejected, deferred, or narrowed with a recorded reason
@@ -307,8 +307,8 @@ Final response must include:
 - challenger-sourced material fixes, when any exist
 - unresolved issues or accepted residual risk
 - accepted residual challenge risks, when any exist
-- whether the plan is ready for `$execute-task`
+- whether the plan is ready for downstream conversion or implementation
 - completion stamp status, including `plan_refine_complete`, `ready_for_execution`, `rounds_run`, and `fresh_reviewer_rounds`
-- preserved artifact path when `--preserve-refine-artifacts` is active, when the run stopped before success, or when `$plan-and-execute --refine-plan` is retaining the log through final full-branch review and finalization
+- preserved artifact path when `--preserve-refine-artifacts` is active, when the run stopped before success, or when a downstream workflow is retaining the log through final full-branch review and finalization
 
 Keep the final answer compact. Do not paste the full refinement log unless the user asks for it.

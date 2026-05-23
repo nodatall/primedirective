@@ -115,6 +115,7 @@ print(f"Registered {plugin_name} in {marketplace_path}")
 print(f"Enabled {plugin_config_key} in {config_path}")
 PY
 
+active_skills=()
 for skill_dir in "$ROOT_DIR"/skills/*; do
   if [[ ! -d "$skill_dir" ]]; then
     continue
@@ -123,6 +124,7 @@ for skill_dir in "$ROOT_DIR"/skills/*; do
     continue
   fi
   skill_name="$(basename "$skill_dir")"
+  active_skills+=("$skill_name")
   target_path="${CODEX_SKILLS_DIR}/${skill_name}"
   if [[ -e "$target_path" && ! -L "$target_path" ]]; then
     echo "Skipped skill ${skill_name}: ${target_path} already exists as a real directory"
@@ -130,4 +132,27 @@ for skill_dir in "$ROOT_DIR"/skills/*; do
   fi
   ln -sfn "$skill_dir" "$target_path"
   echo "Linked skill ${skill_name} -> ${target_path}"
+done
+
+for target_path in "$CODEX_SKILLS_DIR"/*; do
+  if [[ ! -L "$target_path" ]]; then
+    continue
+  fi
+  resolved_path="$(readlink "$target_path")"
+  case "$resolved_path" in
+    "$ROOT_DIR"/skills/*)
+      skill_name="$(basename "$target_path")"
+      is_active=false
+      for active_skill in "${active_skills[@]}"; do
+        if [[ "$active_skill" == "$skill_name" ]]; then
+          is_active=true
+          break
+        fi
+      done
+      if [[ "$is_active" == false ]]; then
+        rm "$target_path"
+        echo "Removed retired skill ${skill_name} -> ${target_path}"
+      fi
+      ;;
+  esac
 done

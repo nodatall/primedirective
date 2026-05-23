@@ -19,8 +19,8 @@ Treat this as a current-state research task, not a timeless brainstorming task. 
 
 Planning activation form:
 
-- `$plan-work [--deep-research] [--preserve-planning-artifacts]` with the source plan in the same request
-- `$plan-and-execute [--deep-research] [--preserve-artifacts]` with the source plan already present in the current thread; this composes `$plan-work --from-thread --direct --deep-research` and then continues into execution without a revised-summary checkpoint
+- A workflow that still owns legacy PRD/TDD/tasks-plan generation may activate `--deep-research`.
+- New execution planning should use `$deliver`; do not revive the retired PRD/TDD/tasks-plan public entrypoints for new work.
 
 ## When to run
 
@@ -134,7 +134,7 @@ Before the first external search:
    - update PRD/TDD before tasks-plan generation
    - distill the plan-specific checklist items and decisions worth carrying into this plan's execution
 19. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
-20. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation, except when the caller is `$plan-and-execute --deep-research`; in that direct orchestration flow, adopt the findings into the artifacts and continue unless the change is a true blocker that is unsafe, contradictory, or impossible to default.
+20. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation unless the caller explicitly owns direct orchestration. In a direct orchestration flow, adopt the findings into the artifacts and continue unless the change is a true blocker that is unsafe, contradictory, or impossible to default.
 
 ## Context Discipline
 

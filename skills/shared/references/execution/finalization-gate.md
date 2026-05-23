@@ -1,6 +1,6 @@
 # Finalization Gate
 
-Portable hard gate for `$execute-task --one-shot`, `$plan-and-execute`, and `$deliver`.
+Portable hard gate for `$deliver` and legacy task-artifact execution.
 
 This gate uses normal shell commands and repo artifacts only. It does not depend on a Prime Directive script being available in the target repository.
 
@@ -10,9 +10,8 @@ See `skills/shared/references/contract-ownership.md` for shared contract ownersh
 
 Capture the current dirty state before the workflow creates new task artifacts or implementation changes:
 
-- `$plan-and-execute`: capture after branch-state decisions and before PRD/TDD/tasks-plan generation.
-- `$execute-task`: capture after resolving `<plan-key>` and before the first execution edit.
 - `$deliver`: capture after branch-state decisions and before writing the readable execution plan, goal plan, or implementation changes.
+- Legacy task-artifact execution: capture after resolving `<plan-key>` and before the first execution edit.
 
 ```sh
 mkdir -p tasks/tmp
@@ -33,7 +32,7 @@ Run this gate immediately before any final user-visible completion message:
 
 Before running the numbered checks, classify the next user-visible message you are tempted to send. If it would summarize implementation changes, tests, generated artifacts, sources, or remaining closeout work, treat it as a terminal completion message and run this gate first. Do not send an implementation recap as a progress update after the last implementation validation passes.
 
-1. For one-shot execution, `$plan-and-execute`, and `$deliver`, verify the final full-branch review evidence exists and is complete:
+1. For `$deliver` and legacy task-artifact execution, verify the final full-branch review evidence exists and is complete:
 
    ```sh
    review_log="tasks/tmp/review-task-final-<plan-key>.md"
@@ -85,13 +84,5 @@ Before running the numbered checks, classify the next user-visible message you a
 If this gate would fail only because final review, commit, archiving, final status/baseline comparison, push, or PR creation has not been attempted yet, that is not a blocker to report. Continue the missing closeout work instead of handing the checklist back to the user.
 
 The final completion handoff must be based on post-gate evidence. Include the final review outcome, disposition of any material findings, material Agent-Loop Backprop proposals when final review produced them, final validation, archive or preservation result, commit/PR or documented existing-branch/no-PR status, and final working-tree status.
-
-## Existing Branch Exception
-
-Starting `$plan-and-execute` on an existing non-base branch skips default PR creation only.
-
-It does not skip task completion, final review, archiving, cleanup, commits, validation, baseline comparison, or the final status check.
-
-If that branch already has an open PR, the gate does not require the PR title or scope to match the new plan. Do not push to or mutate the existing PR by default; include any visible mismatch in the final handoff as context for the user's next action.
 
 If the gate fails, do not send a final completion message. Either finish the missing finalization work or stop with a blocker that names the exact failed gate item and the user action required.

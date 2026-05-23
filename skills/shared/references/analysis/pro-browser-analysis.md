@@ -1,6 +1,6 @@
 # Pro Browser Analysis
 
-Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro-analysis`, `$deliver --pro-analysis`, `$plan-and-execute --pro-analysis`, or `$repo-sweep --pro-analysis`.
+Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro-analysis`, `$deliver --pro-analysis`, or `$repo-sweep --pro-analysis`.
 
 ## Browser Driver
 
@@ -40,9 +40,9 @@ Include enough context for a fresh model to reason without the local workspace:
 
 Do not include generated/vendor/build output, secrets, `.env` files, private keys, binary assets unless specifically relevant, or unrelated large fixtures.
 
-## Plan-And-Execute Gates
+## Deliver Gates
 
-These gates apply when the caller is `$deliver --pro-analysis` or `$plan-and-execute --pro-analysis`.
+These gates apply when the caller is `$deliver --pro-analysis`.
 
 ### Pre-Browser Gate
 
@@ -62,33 +62,33 @@ If any pre-browser check fails, stop. Do not run the Pro browser pass as a subst
 
 ### Post-Browser Synthesis Gate
 
-After the browser run completes, read the Pro answer and synthesize it before generating tasks or starting refinement.
+After the browser run completes, read the Pro answer and synthesize it before starting refinement.
 
-For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with:
+For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with:
 
 - context bundle summary: files or scope sent to Pro, rough size if known, and any excluded risky/noisy paths
 - browser run evidence: driver used (`chrome` or `computer-use`), ChatGPT surface used, selected model label, submission method (`paste`, `upload`, or both), response completion evidence, and capture method
 - Pro findings ledger: stable finding ID, Pro claim, local verification evidence, disposition (`adopted`, `rejected`, `deferred`), and disposition reason
-- conflict reconciliation: conflicts with repo evidence, the deep-research memo, PRD, or TDD, and how each conflict was resolved
-- artifact delta: execution-plan sections changed for `$deliver`, or PRD/TDD sections changed and task-plan inputs created for `$plan-and-execute`; source-backed claims independently verified when Pro suggested external sources
+- conflict reconciliation: conflicts with repo evidence, the deep-research memo, or the execution plan, and how each conflict was resolved
+- artifact delta: execution-plan sections changed; source-backed claims independently verified when Pro suggested external sources
 - Pro synthesis completion stamp containing `pro_result_read`, `pro_browser_run`, `pro_model_selected`, `findings_reconciled`, `artifact_changes_applied`, `unresolved_blockers`, and `pro_synthesis_complete`
 
 Before setting `pro_synthesis_complete: yes`, print a short `Pro Findings Summary` in the visible thread/log: adopted, rejected/deferred, blockers, and artifact changes.
 
-Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with a Pro-capable model selected, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan or to PRD/TDD/task-plan inputs for `$plan-and-execute`, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
+Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with a Pro-capable model selected, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
 
-If `pro_result_read`, `pro_browser_run`, `pro_model_selected`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not refine a `$deliver` plan, generate `tasks-plan`, run `$plan-refine`, or execute.
+If `pro_result_read`, `pro_browser_run`, `pro_model_selected`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not refine a `$deliver` plan or execute.
 
 Use this order:
 
 1. Read the request and infer the analysis target.
 2. Inspect repo shape with fast local commands such as `pwd`, `git status --short`, `rg --files`, top-level docs, manifests, CI config, and the files most likely to own the behavior.
-3. For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, satisfy the pre-browser gate above before any Pro browser run with selected plan context.
+3. For `$deliver --pro-analysis`, satisfy the pre-browser gate above before any Pro browser run with selected plan context.
 4. Decide whether the run needs whole-repo or curated context.
 5. Prepare the smallest context bundle that can still answer the question.
 6. Send the chosen bundle through the visible ChatGPT browser only after it looks reasonable and safe.
 7. Read the Pro result and synthesize it against local evidence before answering or changing artifacts.
-8. For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, satisfy the post-browser synthesis gate before refinement, tasks-plan generation, or execution.
+8. For `$deliver --pro-analysis`, satisfy the post-browser synthesis gate before refinement or execution.
 
 ## Synthesis
 
@@ -103,8 +103,6 @@ For `$first-principles-mode --pro-analysis`, stop after synthesis unless the use
 
 For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
 
-For `$plan-and-execute --pro-analysis`, apply the synthesized findings into planning artifacts and continue execution unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
-
-For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, raw Pro browser output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
+For `$deliver --pro-analysis`, raw Pro browser output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
 
 For `$repo-sweep --pro-analysis`, use the synthesized findings as Round 1 audit-thesis input before the no-edit audit and review-chain report. If running inside `/goal $repo-sweep`, do not rerun Pro every resweep round by default; use fresh local review subagents for resweeps unless the user explicitly asks for another Pro pass.

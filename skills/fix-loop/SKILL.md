@@ -7,7 +7,7 @@ description: Reproduce a concrete failing behavior, root-cause it, patch it, rer
 
 Run a bounded reproduce/fix/retry loop for one concrete broken behavior.
 
-This skill is for targeted repair, not repo-wide audit or planned multi-task execution. Use `/goal $repo-sweep` for broad repository repair/resweep goals, `$execute-task` for planned task artifacts, and `$review-chain` for review-only work.
+This skill is for targeted repair, not repo-wide audit or planned multi-step execution. Use `$deliver` for planned implementation, `/goal $repo-sweep` for broad repository repair/resweep goals, and `$review-chain` for review-only work.
 
 Load `skills/shared/references/analysis/verification-pivot.md` before starting.
 

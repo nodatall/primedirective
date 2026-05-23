@@ -112,7 +112,7 @@ Evaluate and improve:
 
 - Whether PRD or TDD invented exact APIs, schemas, classes, algorithms, routes, file names, helper boundaries, or test locations without support from source material or repo inspection.
 - Whether task-plan `output` fields name precise files only when they are known or strongly supported.
-- Whether unsupported technical specifics should be moved into assumptions, softened into high-level constraints, or deferred to `tasks/tmp/plan-task-<task-id>.md` during `$execute-task`.
+- Whether unsupported technical specifics should be moved into assumptions, softened into high-level constraints, or deferred to implementation.
 - Whether the plan remains precise about behavior, constraints, source-of-truth decisions, and verification expectations after unsupported low-level detail is removed.
 - Whether spec-like contract wording uses `must`/`required` only for real obligations, and uses `should`/`may` or explicit assumptions for recommendations and unsupported implementation choices.
 
@@ -161,14 +161,14 @@ Evaluate and improve when `--deep-research` was used:
 
 ### 9. Pro analysis integration review
 
-Evaluate and improve when `$plan-and-execute --pro-analysis` was used:
+Evaluate and improve when a legacy PRD/TDD/tasks-plan set includes Pro analysis evidence:
 
 - Whether `tasks/tmp/pro-analysis-<plan-key>.md` is available for audit.
 - Whether the Pro answer was read after the visible ChatGPT browser run completed rather than treated as a background launch.
 - Whether the Pro memo includes browser evidence from the real run and confirms `pro_browser_run: yes` and `pro_model_selected: yes`.
 - Whether raw Pro browser output was reduced into a Pro findings ledger with local verification evidence and dispositions.
 - Whether the Pro synthesis completion stamp exists and says `pro_synthesis_complete: yes`.
-- Whether any Pro finding conflicts with repo evidence, PRD, TDD, or the deep-research memo, and whether each conflict was reconciled before tasks-plan generation.
+- Whether any Pro finding conflicts with repo evidence, PRD, TDD, or the deep-research memo, and whether each conflict was reconciled before tasks-plan generation or conversion.
 - Whether Pro-suggested external sources that affect source-backed claims were independently opened live and recorded in the Evidence Ledger before influencing the plan.
 - Whether adopted Pro findings were applied into PRD/TDD or converted into explicit task-plan inputs.
 - Whether rejected or deferred Pro findings have reasons instead of disappearing.
@@ -198,8 +198,8 @@ The improved plan must explicitly satisfy all of these:
 18. Any `--deep-research` pass includes an auditable Evidence Ledger, Finding-to-Artifact Delta, and Deep Research Completion Stamp.
 19. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
 20. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
-21. Any `$plan-and-execute --pro-analysis` pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
-22. Any `$plan-and-execute --pro-analysis` completion stamp says `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
+21. Any Pro-backed legacy planning pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
+22. Any Pro-backed legacy planning completion stamp says `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
 23. Any adopted implementation-impact Pro finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
 24. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
 25. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
@@ -219,7 +219,7 @@ Do not dump option menus on the user unless business intent is ambiguous.
 
 If a `--deep-research` pass fails the mandatory web-backed evidence bar, if its Deep Research Completion Stamp says `evidence_bar_met: no`, or if PRD/TDD were not revised from the adopted findings before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the research step to be redone before execution begins.
 
-If a `$plan-and-execute --pro-analysis` pass lacks a Pro synthesis memo, if it lacks browser evidence for a real Pro browser run, if its completion stamp is missing or does not say `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes`, or if adopted Pro findings were not applied to PRD/TDD or explicitly mapped into task-plan inputs before tasks-plan generation, do not improve around the gap. Treat the planning pass as incomplete and require the Pro synthesis step to be redone before execution begins.
+If a Pro-backed legacy planning pass lacks a Pro synthesis memo, if it lacks browser evidence for a real Pro browser run, if its completion stamp is missing or does not say `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes`, or if adopted Pro findings were not applied to PRD/TDD or explicitly mapped into task-plan inputs before tasks-plan generation or conversion, do not improve around the gap. Treat the planning pass as incomplete and require the Pro synthesis step to be redone before execution begins.
 
 ## Escalation policy (rare)
 
@@ -253,5 +253,5 @@ After plan improvements are complete:
 
 Accepted execution activations:
 
-- `$execute-task` with a specific `<task-id>` and optional `<plan-key>` when it can be inferred from `/tasks/`
-- `$execute-task --one-shot` with optional `<plan-key>` when it can be inferred from `/tasks/`
+- `$deliver` after converting the legacy artifact set into a readable execution plan
+- `$plan-to-goal` when the legacy artifact set is better represented as an adaptive goal

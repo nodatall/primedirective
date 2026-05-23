@@ -14,15 +14,10 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_CONTRACTS = {
     "public-skill-metadata": "README.md; skills/*/SKILL.md",
     "architecture-guidance": "skills/shared/references/architecture/architecture-guidance.md",
-    "planning-intake": "skills/shared/references/planning/socratic-planning.md",
-    "prd-generation": "skills/shared/references/planning/create-prd.md",
-    "tdd-generation": "skills/shared/references/planning/create-tdd.md",
-    "task-plan-generation": "skills/shared/references/planning/generate-tasks.md",
     "plan-improvement": "skills/shared/references/planning/improve-plan.md",
     "deep-research": "skills/shared/references/planning/deep-research.md",
     "pro-analysis": "skills/shared/references/analysis/pro-browser-analysis.md",
     "task-file-contract": "skills/shared/references/execution/task-file-contract.md",
-    "task-management": "skills/shared/references/execution/task-management.md",
     "finalization-gate": "skills/shared/references/execution/finalization-gate.md",
     "review-protocol": "skills/shared/references/review/review-protocol.md",
     "review-calibration": "skills/shared/references/review/review-calibration.md",
@@ -31,9 +26,6 @@ REQUIRED_CONTRACTS = {
     "swarm-lanes": "skills/shared/references/review/swarm-lanes.md",
     "plan-refine": "skills/plan-refine/SKILL.md",
     "plan-to-goal": "skills/plan-to-goal/SKILL.md",
-    "plan-and-execute": "skills/plan-and-execute/SKILL.md",
-    "execute-task": "skills/execute-task/SKILL.md",
-    "harness-drift": "skills/shared/references/harness-drift.md",
     "reasoning-budget": "skills/shared/references/reasoning-budget.md",
 }
 
@@ -51,7 +43,6 @@ MIRROR_CHECKS = [
         "error": "PD-CONTRACT-MIRROR-PLAN-REFINE-STAMP",
         "owner": {"skills/plan-refine/SKILL.md"},
         "allowed": {
-            "skills/plan-and-execute/SKILL.md",
             "skills/shared/references/contract-ownership.md",
             "skills/shared/references/execution/task-file-contract.md",
         },
@@ -66,7 +57,6 @@ MIRROR_CHECKS = [
             "skills/shared/references/analysis/pro-browser-analysis.md",
             "skills/shared/references/contract-ownership.md",
             "skills/first-principles-mode/SKILL.md",
-            "skills/plan-and-execute/SKILL.md",
             "skills/shared/references/planning/generate-tasks.md",
             "skills/shared/references/planning/improve-plan.md",
             "skills/plan-refine/SKILL.md",
@@ -81,7 +71,6 @@ MIRROR_CHECKS = [
         "allowed": {
             "skills/shared/references/contract-ownership.md",
             "skills/deliver/SKILL.md",
-            "skills/plan-and-execute/SKILL.md",
             "skills/shared/references/planning/generate-tasks.md",
             "skills/shared/references/planning/improve-plan.md",
             "skills/plan-refine/SKILL.md",
@@ -337,7 +326,6 @@ def validate_mirrors(errors: list[str]) -> None:
 
 def validate_plan_refine_completion_gate(errors: list[str]) -> None:
     plan_refine = (ROOT / "skills/plan-refine/SKILL.md").read_text()
-    plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
     task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
 
     owner_tokens = [
@@ -351,18 +339,6 @@ def validate_plan_refine_completion_gate(errors: list[str]) -> None:
     for token in owner_tokens:
         if token not in plan_refine:
             fail(errors, "PD-PLAN-REFINE-STAMP-OWNER", f"skills/plan-refine/SKILL.md missing completion-stamp token: {token}")
-
-    orchestrator_tokens = [
-        "Refinement Completion Stamp",
-        "plan_refine_complete: yes",
-        "ready_for_execution: yes",
-        "fresh_reviewer_rounds",
-        "reviewer_stop_gate: no_unresolved_blocker_or_material",
-        "before any implementation edit",
-    ]
-    for token in orchestrator_tokens:
-        if token not in plan_and_execute:
-            fail(errors, "PD-PLAN-EXECUTE-REFINE-GATE", f"skills/plan-and-execute/SKILL.md missing refine gate token: {token}")
 
     shared_gate_tokens = [
         "Refinement Completion Stamp",
@@ -439,8 +415,6 @@ def validate_first_principles_adversarial_council(errors: list[str]) -> None:
 
 def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
-    plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
-    execute_task = (ROOT / "skills/execute-task/SKILL.md").read_text()
     plan_to_goal = (ROOT / "skills/plan-to-goal/SKILL.md").read_text()
     finalization_gate = (ROOT / "skills/shared/references/execution/finalization-gate.md").read_text()
     readme = (ROOT / "README.md").read_text()
@@ -527,13 +501,13 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     pro_deliver_reference_tokens = [
         "$deliver --pro-analysis",
         "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
-        "For `$deliver --pro-analysis` and `$plan-and-execute --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
+        "For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
         "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review",
     ]
     for token in pro_deliver_reference_tokens:
         if token not in pro_reference:
             fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-browser-analysis.md missing deliver pro-analysis token: {token}")
-    pro_deliver_task_contract_token = "`--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, `$plan-and-execute`, and `$repo-sweep`"
+    pro_deliver_task_contract_token = "`--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, and `$repo-sweep`"
     if pro_deliver_task_contract_token not in task_file_contract:
         fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/execution/task-file-contract.md missing deliver pro-analysis token: {pro_deliver_task_contract_token}")
 
@@ -562,26 +536,6 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in plan_to_goal:
             fail(errors, "PD-PLAN-TO-GOAL", f"skills/plan-to-goal/SKILL.md missing token: {token}")
 
-    plan_and_execute_goal_tokens = [
-        "skills/plan-to-goal/SKILL.md",
-        "Before one-shot execution, check whether the generated or refined artifacts are goal-shaped",
-        "decisive evidence depends on a slow, paid, approval-gated, nightly, or externally scheduled run",
-        "Do not continue into `$execute-task --one-shot` after creating a goal plan.",
-        "Do not add this preflight to `$execute-task`",
-    ]
-    for token in plan_and_execute_goal_tokens:
-        if token not in plan_and_execute:
-            fail(errors, "PD-PLAN-EXECUTE-GOAL-FORK", f"skills/plan-and-execute/SKILL.md missing goal-fork token: {token}")
-
-    forbidden_execute_task_tokens = [
-        "plan-to-goal",
-        "goal-shaped",
-        "goal plan",
-    ]
-    for token in forbidden_execute_task_tokens:
-        if token in execute_task:
-            fail(errors, "PD-EXECUTE-TASK-NO-GOAL-FORK", f"skills/execute-task/SKILL.md should not contain goal-fork token: {token}")
-
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
         "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias",
@@ -599,7 +553,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-README-GOAL-PLAN", f"README.md missing deliver goal-plan token: {token}")
 
     finalization_tokens = [
-        "Portable hard gate for `$execute-task --one-shot`, `$plan-and-execute`, and `$deliver`.",
+        "Portable hard gate for `$deliver` and legacy task-artifact execution.",
         "review-deliver-final-<plan-key>.md",
         "execution-plan-<plan-key>.md",
         "goal plan",
@@ -619,8 +573,6 @@ def validate_architecture_guidance(errors: list[str]) -> None:
     create_architecture = (ROOT / "skills/create-architecture/SKILL.md").read_text()
     bootstrap = (ROOT / "skills/bootstrap-repo-rules/SKILL.md").read_text()
     deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
-    execute_task = (ROOT / "skills/execute-task/SKILL.md").read_text()
-    plan_and_execute = (ROOT / "skills/plan-and-execute/SKILL.md").read_text()
     review_chain = (ROOT / "skills/review-chain/SKILL.md").read_text()
     repo_sweep = (ROOT / "skills/repo-sweep/SKILL.md").read_text()
     contract_ownership = (ROOT / "skills/shared/references/contract-ownership.md").read_text()
@@ -657,8 +609,6 @@ def validate_architecture_guidance(errors: list[str]) -> None:
     consumer_checks = [
         ("skills/bootstrap-repo-rules/SKILL.md", bootstrap, "suggest or invoke `$create-architecture`"),
         ("skills/deliver/SKILL.md", deliver, "For boundary-affecting implementation work"),
-        ("skills/execute-task/SKILL.md", execute_task, "Before boundary-affecting execution"),
-        ("skills/plan-and-execute/SKILL.md", plan_and_execute, "before boundary-affecting planning or execution"),
         ("skills/review-chain/SKILL.md", review_chain, "forbidden dependency edges"),
         ("skills/repo-sweep/SKILL.md", repo_sweep, "label those findings as inferred rather than contract drift"),
     ]

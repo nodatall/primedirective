@@ -1,53 +1,32 @@
 # Task File Contract
 
-Canonical activation, plan-key, artifact-path, temp-file, archive-file, and execution-entry contract for planning, execution, refinement, and review skills.
+Legacy PRD/TDD/tasks-plan artifact, plan-key, temp-file, archive-file, and refinement-entry contract.
 
-See `skills/shared/references/contract-ownership.md` for the broader contract ownership model. This file owns path and entry gates; it does not own the detailed workflow behavior of `$plan-work`, `$plan-refine`, `$execute-task`, deep research, Pro analysis, review, or finalization.
+See `skills/shared/references/contract-ownership.md` for the broader contract ownership model. This file owns legacy artifact path compatibility and refinement gates; it does not own the detailed workflow behavior of `$deliver`, `$plan-refine`, deep research, Pro analysis, review, or finalization.
 
 ## Accepted Activations
 
-- Planning: `$plan-work`
-- Plan and execute: `$plan-and-execute`
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
-- Standard task execution: `$execute-task` with a specific `task-id=<task-id>` and optional `plan-key=<plan-key>`
-- One-shot execution: `$execute-task --one-shot` with optional `plan-key=<plan-key>`
 - Task review: `$review-chain` with a specific task ID
 - Ad-hoc review: `$review-chain` without a task ID
+- Legacy artifact conversion: `$deliver` or `$plan-to-goal` may use a PRD/TDD/tasks-plan set as source material.
 
 ## Owner References
 
-- `$plan-work` behavior: `skills/plan-work/SKILL.md`
 - `$plan-refine` behavior, challenger schema, severity gate, and stop discipline: `skills/plan-refine/SKILL.md`
-- `$execute-task` activation behavior: `skills/execute-task/SKILL.md`
-- One-shot worker cadence, task-list lifecycle, temp sub-task contract shape, and cleanup phase: `skills/shared/references/execution/task-management.md`
 - Finalization baseline and terminal gate: `skills/shared/references/execution/finalization-gate.md`
 - Review topology and final review behavior: `skills/shared/references/review/review-protocol.md`
 - Deep research details: `skills/shared/references/planning/deep-research.md`
 - Pro analysis details: `skills/shared/references/analysis/pro-browser-analysis.md`
 
-## Execution Branch Modifier
-
-`--stay-on-current-branch` is valid only with `$execute-task`, in standard or one-shot mode.
-
-When present:
-
-- Keep the current non-base branch instead of creating/switching to a new branch from `origin/main`.
-- Do not create, switch, or rename branches during kickoff.
-- Do not use this mode on `main`, `master`, a resolved local base branch, or detached `HEAD`; stop and ask if that is the current state.
-- If the current branch already has an open PR, do not stop solely because the PR title/scope differs from the current plan. Continue locally, do not push or update that PR by default when the parent `$plan-and-execute` existing-branch exception applies, and surface the mismatch in the final handoff.
-- Do not skip execution gates, review rounds, commits, final rebase, push, or PR creation, except for the `$plan-and-execute` existing non-base branch no-PR terminal behavior documented in the review protocol.
-
 ## Modifier Ownership
 
-- `--check-harness-drift` is valid with `$execute-task` and `$plan-and-execute`; detailed behavior is owned by `skills/shared/references/harness-drift.md`.
-- `--prepare-plan` is valid with `$plan-and-execute`; detailed behavior is owned by `skills/plan-and-execute/SKILL.md`.
-- `--refine-plan` is valid with `$plan-and-execute`; detailed behavior is owned by `skills/plan-refine/SKILL.md`.
-- `--deep-research` is valid with `$plan-work` and `$plan-and-execute`; detailed behavior is owned by `skills/shared/references/planning/deep-research.md`.
-- `--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, `$plan-and-execute`, and `$repo-sweep`; detailed behavior is owned by `skills/shared/references/analysis/pro-browser-analysis.md`.
+- `--deep-research` is valid where the invoking skill explicitly supports it; detailed behavior is owned by `skills/shared/references/planning/deep-research.md`.
+- `--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, and `$repo-sweep`; detailed behavior is owned by `skills/shared/references/analysis/pro-browser-analysis.md`.
 
 ## Plan Key Resolution
 
-Resolve `<plan-key>` in this order for plan refinement, standard execution, and one-shot execution:
+Resolve `<plan-key>` in this order for plan refinement and legacy artifact conversion:
 
 1. If the activation includes an explicit `plan-key=<plan-key>`, use it.
 2. Otherwise inspect `tasks/` for complete planning sets:
@@ -55,7 +34,7 @@ Resolve `<plan-key>` in this order for plan refinement, standard execution, and 
    - `tasks/tdd-<plan-key>.md`
    - `tasks/tasks-plan-<plan-key>.md`
 3. If exactly one `<plan-key>` has all three files, infer that key and continue.
-4. If no complete planning set exists, stop immediately and tell the user planning is incomplete.
+4. If no complete planning set exists, stop immediately and tell the user the legacy PRD/TDD/tasks-plan set is incomplete.
 5. If more than one complete planning set exists, stop and ask for an explicit `plan-key=<plan-key>`.
 
 Resolve files exactly as:
@@ -70,9 +49,7 @@ Resolve files exactly as:
 - Pro analysis synthesis memo: `tasks/tmp/pro-analysis-<plan-key>.md`
 - Plan refinement log: `tasks/tmp/plan-refine-<plan-key>.md`
 - Finalization dirty-state baseline: `tasks/tmp/finalization-baseline-<plan-key>.status`
-- Per-sub-task plan doc: `tasks/tmp/plan-task-<task-id>.md`
 - Task review log: `tasks/tmp/review-task-<task-id>.md`
-- One-shot final review log: `tasks/tmp/review-task-final-<plan-key>.md`
 - Ad-hoc review log: `tasks/tmp/review-task-ad-hoc-<yyyy-mm-dd>.md`
 
 ## Archive Workflow Files
@@ -81,21 +58,19 @@ Resolve files exactly as:
 
 Use the local current date in ISO format (`YYYY-MM-DD`) when creating the archive directory.
 
-By default, planning, refinement, and review temporary files are deleted after successful completion unless the matching preservation flag is active. Owner-specific retention rules live with the workflow owner listed above.
+By default, refinement and review temporary files are deleted after successful completion unless the matching preservation flag is active. Owner-specific retention rules live with the workflow owner listed above.
 
-## Execution Artifact Gate
+## Legacy Artifact Gate
 
-Execution requires all three planning artifacts:
+Legacy PRD/TDD/tasks-plan refinement or conversion requires all three planning artifacts:
 
 - `tasks/prd-<plan-key>.md`
 - `tasks/tdd-<plan-key>.md`
 - `tasks/tasks-plan-<plan-key>.md`
 
-If any required planning artifact is missing, stop immediately, do not code, and instruct the user to complete planning first.
+If any required planning artifact is missing, stop immediately, do not code from the partial set, and instruct the user to either provide the full legacy artifact set or use `$deliver` for a new readable execution plan.
 
-When `$plan-and-execute --refine-plan` is active, execution also requires a valid `tasks/tmp/plan-refine-<plan-key>.md` handoff from `skills/plan-refine/SKILL.md`.
-
-Before coding, confirm the refinement log includes:
+Before using a refined legacy set as execution source material, confirm the refinement log includes:
 
 - the `Refinement Completion Stamp`
 - `plan_refine_complete: yes`
@@ -107,14 +82,6 @@ If any of those are missing, stop before implementation. A short risk checklist 
 
 ## Mode Entry Summary
 
-### Standard mode
-
-- Requires `task-id=<task-id>`.
-- `plan-key=<plan-key>` may be explicit or inferred through the resolution rules above.
-- Executes the requested sub-task.
-- Pauses for user confirmation between sub-tasks.
-- Uses the task-management, review-protocol, and finalization owners for detailed behavior.
-
 ### Plan refinement mode
 
 - Requires a complete planning artifact set.
@@ -123,14 +90,12 @@ If any of those are missing, stop before implementation. A short risk checklist 
 - Uses `skills/plan-refine/SKILL.md` for challenger/reviewer behavior, severity rules, stop discipline, and cleanup.
 - Successful parent handoff requires the refinement log completion stamp defined by `skills/plan-refine/SKILL.md`.
 
-### One-shot mode
+### Conversion mode
 
-- Requires `--one-shot`.
 - `plan-key=<plan-key>` may be explicit or inferred through the resolution rules above.
-- Starts at the first unchecked sub-task and continues in file order until no unchecked sub-tasks remain.
-- Uses `skills/shared/references/execution/task-management.md` for worker cadence, task contract shape, checklist updates, and cleanup.
-- Uses `skills/shared/references/review/review-protocol.md` for the final full-branch review.
-- Existing non-base branch mode and `--stay-on-current-branch` skip branch creation only, and the `$plan-and-execute` existing non-base branch exception skips default PR creation only. Neither path skips commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
+- Treats the PRD/TDD/tasks-plan set as source material for `$deliver` or `$plan-to-goal`.
+- Does not execute from `tasks/tasks-plan-<plan-key>.md` directly.
+- Writes any new execution scope into `tasks/execution-plan-<plan-key>.md` or `tasks/goal-plan-<plan-key>.md`.
 
 ## Legacy Syntax
 

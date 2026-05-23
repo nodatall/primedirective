@@ -20,15 +20,12 @@ Use this table when you already know the skill name. The detailed sections below
 | `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
 | `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias |
-| `execute-task` | `$execute-task task-id=<task-id> [plan-key=<plan-key>]` or `$execute-task --one-shot [plan-key=<plan-key>]` | `--one-shot`, `--stay-on-current-branch`, `--check-harness-drift`, `--preserve-review-artifacts`; `plan-key=<plan-key>` when it cannot be inferred |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `merge-review` | `$merge-review` inside /goal $merge-review | None |
 | `plain-language` | `$plain-language` | None |
-| `plan-and-execute` | `$plan-and-execute` | `--prepare-plan`, `--deep-research`, `--pro-analysis`, `--refine-plan`, `--check-harness-drift`, `--preserve-artifacts` |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]` | `plan-key=<plan-key>` or source material in the thread |
-| `plan-work` | `$plan-work` | `--from-thread`, `--direct`, `--grill`, `--deep-research`, `--preserve-planning-artifacts` |
 | `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; use `/goal $repo-sweep` for repair/resweep |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
 | `ship-branch` | `$ship-branch` | None |
@@ -40,12 +37,8 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
 - Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
 - Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
-- Use `$plan-work` when you want PRD/TDD/tasks-plan artifacts but do not want implementation yet.
-- Use `$plan-and-execute` when the thread already has enough direction and you want planning plus execution in one run.
-- Use `$plan-and-execute --prepare-plan` when a plan was discussed in the thread and you want Codex to restate it plainly before the one-shot run starts.
 - Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with a compact paste-ready `/goal` prompt.
-- Use `$execute-task` when planning artifacts already exist and you want one task, or all remaining tasks with `--one-shot`, implemented.
-- Use `$plan-refine` when planning artifacts exist but need pressure testing before execution.
+- Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
 - Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop.
@@ -103,22 +96,6 @@ Modifiers:
 
 - `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and open Roughdraft review only after the Pro synthesis gate succeeds.
 
-### `$execute-task`
-
-Implements work from existing `tasks/prd-<plan-key>.md`, `tasks/tdd-<plan-key>.md`, and `tasks/tasks-plan-<plan-key>.md` artifacts.
-
-Request options:
-
-- `task-id=<task-id>`: run one planned task in standard mode.
-- `plan-key=<plan-key>`: select the artifact set when it cannot be inferred.
-
-Modifiers:
-
-- `--one-shot`: execute all remaining unchecked tasks in order, then run final review/finalization.
-- `--stay-on-current-branch`: do not create or switch branches before execution.
-- `--check-harness-drift`: include a compact check for whether execution drifted from the harness/plan contract.
-- `--preserve-review-artifacts`: keep temporary review artifacts instead of cleaning them after success.
-
 ### `$plan-to-goal`
 
 Converts messy source material, a readable execution plan, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`. The goal plan includes a compact paste-ready `/goal` prompt, target/baseline guidance when metrics exist, state-recording guidance for long runs, and review wording that asks the user to say `start this as a goal`.
@@ -175,22 +152,9 @@ Modifiers:
 
 - None.
 
-### `$plan-and-execute`
-
-Turns the current thread plan into PRD/TDD/tasks-plan artifacts, then executes the work end to end. It is the one-command path when you want planning and implementation together.
-
-Modifiers:
-
-- `--deep-research`: strengthen planning with web-backed research before task generation and execution.
-- `--pro-analysis`: run ChatGPT Pro browser escalation during planning, then continue only after local synthesis succeeds.
-- `--prepare-plan`: restate the full current plan in plain English, continue if the user confirms it, or ask up to five non-obvious plain-English questions before summarizing and waiting for confirmation.
-- `--refine-plan`: run `$plan-refine` before execution.
-- `--check-harness-drift`: include a compact drift check in the final handoff.
-- `--preserve-artifacts`: keep planning, review, or temporary artifacts that would normally be cleaned up.
-
 ### `$plan-refine`
 
-Runs a bounded iterative critique loop over existing PRD/TDD/tasks-plan artifacts. It edits planning artifacts only; it does not implement code.
+Runs a bounded iterative critique loop over legacy PRD/TDD/tasks-plan artifacts. It edits planning artifacts only; it does not implement code. Prefer `$deliver` for new execution plans.
 
 Request options:
 
@@ -200,18 +164,6 @@ Modifiers:
 
 - `--max-rounds=<n>`: set the review loop round cap. The default and hard maximum are 8.
 - `--preserve-refine-artifacts`: keep the temporary refinement log after success.
-
-### `$plan-work`
-
-Creates PRD/TDD/tasks-plan artifacts from a request, source plan, or current thread. It is planning only.
-
-Modifiers:
-
-- `--from-thread`: treat the conversation above the trigger as the source plan.
-- `--direct`: avoid the normal planning-question flow and make reasonable assumptions.
-- `--grill`: ask a tighter clarification sequence before writing artifacts.
-- `--deep-research`: add web-backed research before finalizing the plan.
-- `--preserve-planning-artifacts`: keep temporary planning artifacts that would normally be cleaned up.
 
 ### `$repo-sweep`
 
@@ -332,7 +284,6 @@ Prime Directive can use a visible ChatGPT Pro browser pass as an internal escala
 
 - `$first-principles-mode --pro-analysis`
 - `$deliver --pro-analysis`
-- `$plan-and-execute --pro-analysis`
 - `$repo-sweep --pro-analysis`
 
 The public workflow stays on those skill modifiers. The implementation detail is direct browser control of the user's already-authenticated ChatGPT session: use Chrome automation first, and fall back to Computer Use when the visible UI is easier to operate than DOM selectors.

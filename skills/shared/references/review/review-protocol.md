@@ -16,7 +16,7 @@ Please fetch the latest `origin/main` from github.
 We are going to work on task <task-id> in [tasks/tasks-plan-<plan-key>.md], using [tasks/prd-<plan-key>.md] and [tasks/tdd-<plan-key>.md] as planning context. If local `main` and `origin/main` differ in either direction, stop and ask before creating the feature branch. Otherwise, please create and switch to a new branch from `origin/main`. If the only uncommitted changes are those required planning artifacts for this plan, carry them onto the new branch and commit them there before implementation starts.
 ```
 
-Current-branch kickoff when `$execute-task` includes `--stay-on-current-branch`:
+Current-branch kickoff for legacy task execution:
 
 ```text
 Please fetch the latest `origin/main` from github.
@@ -105,7 +105,7 @@ Supported trigger suffix:
 
 - `--preserve-review-artifacts`
 
-Behavior when present on `$execute-task` or `$review-chain`:
+Behavior when present on `$review-chain` or a legacy task execution workflow:
 
 - Keep review logs under `tasks/tmp/` after successful completion instead of deleting them.
 - For task execution modes, also keep per-sub-task temp plan docs created under `tasks/tmp/`.
@@ -333,7 +333,7 @@ Rules:
 - Do not ask permission between prompts.
 - Complete one full round per review cycle.
 - Review subagents must not edit files, refactor, delete code, or add tests. They discover findings and evidence only.
-- The main agent owns disposition and repair. Repairs are authorized only when the parent workflow permits them: standard `$execute-task` sub-task review, `$execute-task --one-shot` final review for in-scope correctness fixes, `/goal $repo-sweep`, or repo-sweep after explicit user approval. A standalone `$review-chain` is report-first unless the user explicitly asked for fixes.
+- The main agent owns disposition and repair. Repairs are authorized only when the parent workflow permits them: legacy task execution review, `$deliver` final review for in-scope correctness fixes, `/goal $repo-sweep`, or repo-sweep after explicit user approval. A standalone `$review-chain` is report-first unless the user explicitly asked for fixes.
 - If the main agent repairs a finding during an authorized execution context, rerun the relevant checks and continue to remaining prompts in the same round.
 - Do not mark prompts complete retroactively from one combined pass.
 - If a prompt is outside the active prompt profile, mark it `not applicable` with a short reason rather than leaving it incomplete.
@@ -451,7 +451,7 @@ For one-shot execution only:
 ## Step 9: Finalization
 
 ```text
-Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the PRD, TDD, and task plan into `tasks/archive/<yyyy-mm-dd>-<plan-key>/`, then open a pull request unless the `$plan-and-execute` existing non-base branch exception applies. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
+Please pull the latest main from github and rebase. If this is task-based work, mark the task complete. When all tasks are complete, archive the PRD, TDD, and task plan into `tasks/archive/<yyyy-mm-dd>-<plan-key>/`, then open a pull request unless the current parent workflow explicitly documented an existing non-base branch exception. If this is ad-hoc work, skip task completion and open a pull request with ad-hoc scope notes.
 ```
 
 Operational translation:
@@ -474,14 +474,14 @@ Operational translation:
 - Run the hard finalization gate from `skills/shared/references/execution/finalization-gate.md`, including unchecked-task search, archive verification, final `git status --porcelain=v1`, and comparison against `tasks/tmp/finalization-baseline-<plan-key>.status`.
 - If archiving, checklist updates, cleanup, implementation, or tests created uncommitted changes, commit them before terminal handoff. Pre-existing dirty entries from the kickoff baseline may remain, but no new uncommitted run work may remain.
 - If the last user-visible message would only explain that final review, commit, PR creation, or finalization remains, suppress it and keep executing those closeout steps. That message is a failed terminal handoff unless an external blocker prevents continuation.
-- Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`, unless the `$plan-and-execute` existing non-base branch exception applies.
-- Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`, unless the `$plan-and-execute` existing non-base branch exception applies.
-- Exception: `$plan-and-execute` does not open a PR by default when it started on an existing non-base branch. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL. This exception skips PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
+- Push the feature branch to `origin` if it is not already published, for example with `git push -u origin <branch-name>`, unless the current parent workflow explicitly documented an existing non-base branch exception.
+- Open the pull request using the environment's native GitHub/PR integration when available, otherwise use a concrete CLI flow such as `gh pr create`, unless the current parent workflow explicitly documented an existing non-base branch exception.
+- Exception: a parent workflow may explicitly document that it started on an existing non-base branch and will not open a PR by default. In that case, final handoff may complete with branch name, commits, validation, review result, archive path, and working-tree status instead of a PR URL. This exception skips PR creation only; it does not skip commits, checklist completion, final review, archiving, validation, final status checks, or baseline comparison.
 - If the existing non-base branch already has an open PR, do not push to it, update it, or require its scope to match the new plan by default. Report any visible PR scope mismatch in the final handoff so the user can decide whether to push later, move the commits, or close/update the PR.
 - Include summary, test evidence, and known risks/follow-ups in the PR body.
 - Include material Agent-Loop Backprop proposals in the terminal handoff or PR body when they explain a defect that was fixed, a residual accepted risk, or a workflow patch candidate worth preserving.
-- Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation or the `$plan-and-execute` existing non-base branch exception applies.
-- Only after these steps, or the documented `$plan-and-execute` existing non-base branch exception path, may one-shot execution produce its terminal completion handoff.
+- Treat PR creation as a hard completion gate: do not produce the terminal handoff until a PR exists and its URL is available, unless a real blocker prevents PR creation or the current parent workflow explicitly documented an existing non-base branch exception.
+- Only after these steps, or a documented existing non-base branch exception path, may one-shot execution produce its terminal completion handoff.
 
 ## Step 10: Post-Merge Branch Cleanup
 
