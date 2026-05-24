@@ -37,7 +37,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
 - Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
 - Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
-- Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with a compact paste-ready `/goal` prompt.
+- Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc plus a separate compact paste-ready `/goal` prompt.
 - Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
@@ -98,7 +98,7 @@ Modifiers:
 
 ### `$plan-to-goal`
 
-Converts messy source material, a readable execution plan, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`. The goal plan includes a compact paste-ready `/goal` prompt, target/baseline guidance when metrics exist, state-recording guidance for long runs, and review wording that asks the user to say `start this as a goal`.
+Converts messy source material, a readable execution plan, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, then prints a separate compact paste-ready `/goal` prompt that references that file. The goal plan includes target/baseline guidance when metrics exist, state-recording guidance for long runs, and review wording that asks the user to say `start this as a goal`.
 
 Request options:
 
