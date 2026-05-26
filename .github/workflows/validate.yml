@@ -19,3 +19,44 @@ jobs:
           cp "$HOME/.agents/plugins/marketplace.json" "$RUNNER_TEMP/first.json"
           ./scripts/install-codex-plugin.sh
           diff -u "$RUNNER_TEMP/first.json" "$HOME/.agents/plugins/marketplace.json"
+      - name: Validate setup team mode idempotence
+        run: |
+          export HOME="$RUNNER_TEMP/setup-home"
+          ./setup --host codex --team
+          cp "$HOME/.agents/plugins/marketplace.json" "$RUNNER_TEMP/setup-first-marketplace.json"
+          cp "$HOME/.codex/AGENTS.md" "$RUNNER_TEMP/setup-first-codex-agents.md"
+          ./setup --host codex --team
+          diff -u "$RUNNER_TEMP/setup-first-marketplace.json" "$HOME/.agents/plugins/marketplace.json"
+          diff -u "$RUNNER_TEMP/setup-first-codex-agents.md" "$HOME/.codex/AGENTS.md"
+          grep -q "prime-directive-codex-preflight" "$HOME/.codex/AGENTS.md"
+          ./setup --host claude --team
+          cp "$HOME/.claude/settings.json" "$RUNNER_TEMP/setup-first-claude-settings.json"
+          ./setup --host claude --team
+          diff -u "$RUNNER_TEMP/setup-first-claude-settings.json" "$HOME/.claude/settings.json"
+      - name: Validate team init output
+        run: |
+          tmp_repo="$RUNNER_TEMP/team-repo"
+          mkdir -p "$tmp_repo"
+          git -C "$tmp_repo" init -q
+          git -C "$tmp_repo" config user.email "ci@example.invalid"
+          git -C "$tmp_repo" config user.name "CI"
+          (cd "$tmp_repo" && "$GITHUB_WORKSPACE/scripts/prime-directive-team-init.sh" required)
+          test -f "$tmp_repo/AGENTS.md"
+          test -f "$tmp_repo/CLAUDE.md"
+          test -x "$tmp_repo/.claude/hooks/check-prime-directive.sh"
+          grep -q "prime-directive-codex-preflight" "$tmp_repo/AGENTS.md"
+          python3 - "$tmp_repo/.claude/settings.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          settings = json.loads(Path(sys.argv[1]).read_text())
+          hooks = settings.get("hooks", {}).get("PreToolUse", [])
+          matches = [
+              item
+              for entry in hooks
+              for item in entry.get("hooks", [])
+              if "check-prime-directive.sh" in item.get("command", "")
+          ]
+          assert len(matches) == 1, matches
+          PY

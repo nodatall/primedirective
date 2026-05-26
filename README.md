@@ -200,16 +200,35 @@ Modifiers:
 
 - `.codex-plugin/plugin.json` Codex plugin metadata
 - `skills/` canonical skills and shared references
+- `setup` host-aware installer for Codex, Claude, and optional team auto-update
 - `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
 - `scripts/install-claude-skills.sh` idempotent Claude skills installer
+- `scripts/prime-directive-team-init.sh` repo-level AGENTS.md/CLAUDE.md bootstrapper
 - `scripts/validate-skill-contracts.py` skill metadata and contract ownership validator
+
+## Paste Install
+
+Open Codex or Claude in any repo and paste:
+
+```text
+Install Prime Directive: clone https://github.com/nodatall/primedirective.git into ~/.prime-directive/repo if it is missing, otherwise pull latest there. Then run ~/.prime-directive/repo/setup --host auto. Do not vendor Prime Directive's skills/ tree into this project. After install, tell me which Prime Directive skills are available and ask whether I want team mode for this repo.
+```
+
+Equivalent shell:
+
+```bash
+if [ ! -d "$HOME/.prime-directive/repo/.git" ]; then
+  git clone --depth 1 https://github.com/nodatall/primedirective.git "$HOME/.prime-directive/repo"
+fi
+cd "$HOME/.prime-directive/repo" && git pull --ff-only && ./setup --host auto
+```
 
 ## Install For Codex
 
 Run from this repository root:
 
 ```bash
-./scripts/install-codex-plugin.sh
+./setup --host codex
 ```
 
 What it does:
@@ -223,7 +242,7 @@ What it does:
 Update flow:
 
 1. Pull the latest changes in this repo.
-2. Re-run `./scripts/install-codex-plugin.sh` if you added, renamed, or removed skills.
+2. Re-run `./setup --host codex` if you added, renamed, or removed skills.
 3. Restart Codex if the updated skills do not appear immediately.
 
 ## Install For Claude
@@ -231,7 +250,7 @@ Update flow:
 Run from this repository root:
 
 ```bash
-./scripts/install-claude-skills.sh
+./setup --host claude
 ```
 
 What it does:
@@ -246,8 +265,28 @@ Set `CLAUDE_SKILLS_DIR=/custom/path` if your Claude setup expects a different gl
 Update flow:
 
 1. Pull the latest changes in this repo.
-2. Re-run `./scripts/install-claude-skills.sh`.
+2. Re-run `./setup --host claude`.
 3. Restart Claude or open a fresh Claude session if the updated skills do not appear immediately.
+
+## Team Mode
+
+Team mode keeps the global Prime Directive checkout as the source of truth and adds small repo-level instructions so teammates install the same skills without vendoring a `skills/` tree.
+
+From inside a target repo:
+
+```bash
+(cd "$HOME/.prime-directive/repo" && ./setup --host auto --team) && "$HOME/.prime-directive/repo/scripts/prime-directive-team-init.sh" required
+```
+
+Use `optional` instead of `required` if you want the repo to suggest Prime Directive without blocking Claude skill usage.
+
+What it does:
+
+- `./setup --team` enables a Claude SessionStart hook that silently runs a throttled `git pull --ff-only` and reinstall for this Prime Directive checkout
+- for Codex, `./setup --team` adds a managed block to `~/.codex/AGENTS.md` that tells Codex to run `scripts/prime-directive-codex-preflight.sh` before first Prime Directive skill use in a session
+- `scripts/prime-directive-team-init.sh required` adds AGENTS.md and CLAUDE.md install checks to the target repo
+- required mode also adds a Claude project PreToolUse hook that blocks skill usage when Prime Directive is missing
+- Codex does not currently expose the same documented session-start hook surface as Claude, so the Codex hook is instruction-driven rather than a runtime callback
 
 ## Skill Authoring
 
@@ -269,9 +308,11 @@ Useful local checks:
 
 ```bash
 python3 scripts/validate-skill-contracts.py
-./scripts/install-codex-plugin.sh
+./setup --host auto
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
+HOME="$(mktemp -d)" ./setup --host auto --team
+HOME="$(mktemp -d)" ./setup --host auto --team
 HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 ```

@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+HOST="auto"
+TEAM_MODE=0
+NO_TEAM_MODE=0
+QUIET=0
+
+usage() {
+  cat <<'EOF'
+Usage: ./setup [--host auto|codex|claude] [--team|--no-team] [--quiet]
+
+Installs Prime Directive skills for the selected agent host.
+
+Options:
+  --host auto     Install for detected local hosts; defaults to Codex if none are detected.
+  --host codex    Install Codex plugin and ~/.codex/skills links.
+  --host claude   Install ~/.claude/skills links.
+  --team          Enable Claude auto-update hook and Codex preflight instruction.
+  --no-team       Disable the Claude hook and remove the Codex preflight instruction.
+  --quiet         Suppress setup status lines where possible.
+EOF
+}
+
+log() {
+  if [[ "$QUIET" -eq 0 ]]; then
+    echo "$@"
+  fi
+}
+
+run_step() {
+  if [[ "$QUIET" -eq 1 ]]; then
+    "$@" >/dev/null
+  else
+    "$@"
+  fi
+}
+
+update_codex_preflight_instruction() {
+  local action="$1"
+  local codex_agents_path="${CODEX_AGENTS_PATH:-$HOME/.codex/AGENTS.md}"
+  local preflight_path="$ROOT_DIR/scripts/prime-directive-codex-preflight.sh"
+
+  python3 - "$action" "$codex_agents_path" "$preflight_path" <<'PY'
+import sys
+from pathlib import Path
+
+action, agents_arg, preflight_arg = sys.argv[1:4]
+agents_path = Path(agents_arg).expanduser()
+preflight_path = Path(preflight_arg).resolve()
+start = "<!-- prime-directive-codex-preflight:start -->"
+end = "<!-- prime-directive-codex-preflight:end -->"
+
+existing = agents_path.read_text(encoding="utf-8") if agents_path.exists() else ""
+
+def without_block(text: str) -> str:
+    start_index = text.find(start)
+    end_index = text.find(end)
+    if start_index == -1 or end_index == -1 or end_index < start_index:
+        return text
+    end_index += len(end)
+    if end_index < len(text) and text[end_index : end_index + 1] == "\n":
+        end_index += 1
+    if start_index > 0 and text[start_index - 1 : start_index] == "\n":
+        start_index -= 1
+    return text[:start_index].rstrip() + ("\n" if text[:start_index].strip() and text[end_index:].strip() else "") + text[end_index:].lstrip("\n")
+
+new_text = without_block(existing)
+
+if action == "add":
+    block = f'''{start}
+## Prime Directive Codex Preflight
+
+When a request invokes or clearly matches a Prime Directive workflow skill, run this best-effort updater before reading or using the skill for the first time in the session:
+
+```bash
+"{preflight_path}"
+```
+
+If it is missing or fails, continue with the installed skill and mention the update issue only when skill freshness matters.
+{end}
+'''
+    if new_text and not new_text.endswith("\n"):
+        new_text += "\n"
+    if new_text.strip():
+        new_text += "\n" + block
+    else:
+        new_text = block
+elif action == "remove":
+    pass
+else:
+    raise SystemExit(f"unknown action: {action}")
+
+agents_path.parent.mkdir(parents=True, exist_ok=True)
+agents_path.write_text(new_text, encoding="utf-8")
+PY
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --host)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for --host" >&2
+        exit 1
+      fi
+      HOST="$2"
+      shift 2
+      ;;
+    --host=*)
+      HOST="${1#--host=}"
+      shift
+      ;;
+    --team)
+      TEAM_MODE=1
+      shift
+      ;;
+    --no-team)
+      NO_TEAM_MODE=1
+      shift
+      ;;
+    -q|--quiet)
+      QUIET=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+case "$HOST" in
+  auto|codex|claude) ;;
+  *)
+    echo "Unknown --host value: $HOST (expected auto, codex, or claude)" >&2
+    exit 1
+    ;;
+esac
+
+if [[ "$TEAM_MODE" -eq 1 && "$NO_TEAM_MODE" -eq 1 ]]; then
+  echo "Use only one of --team or --no-team" >&2
+  exit 1
+fi
+
+INSTALL_CODEX=0
+INSTALL_CLAUDE=0
+
+if [[ "$HOST" == "auto" ]]; then
+  if command -v codex >/dev/null 2>&1 || [[ -d "$HOME/.codex" ]]; then
+    INSTALL_CODEX=1
+  fi
+  if command -v claude >/dev/null 2>&1 || [[ -d "$HOME/.claude" ]]; then
+    INSTALL_CLAUDE=1
+  fi
+  if [[ "$INSTALL_CODEX" -eq 0 && "$INSTALL_CLAUDE" -eq 0 ]]; then
+    INSTALL_CODEX=1
+  fi
+elif [[ "$HOST" == "codex" ]]; then
+  INSTALL_CODEX=1
+else
+  INSTALL_CLAUDE=1
+fi
+
+if [[ "$INSTALL_CODEX" -eq 1 ]]; then
+  log "Installing Prime Directive for Codex..."
+  run_step "$ROOT_DIR/scripts/install-codex-plugin.sh"
+fi
+
+if [[ "$INSTALL_CLAUDE" -eq 1 ]]; then
+  log "Installing Prime Directive for Claude..."
+  run_step "$ROOT_DIR/scripts/install-claude-skills.sh"
+fi
+
+STATE_DIR="${PRIME_DIRECTIVE_STATE_DIR:-$HOME/.prime-directive}"
+SESSION_UPDATE="$ROOT_DIR/scripts/prime-directive-session-update.sh"
+SETTINGS_HOOK="$ROOT_DIR/scripts/prime-directive-settings-hook.sh"
+
+if [[ "$TEAM_MODE" -eq 1 ]]; then
+  mkdir -p "$STATE_DIR"
+  touch "$STATE_DIR/team-mode"
+  if [[ "$INSTALL_CLAUDE" -eq 1 && -x "$SETTINGS_HOOK" ]]; then
+    run_step "$SETTINGS_HOOK" add "$SESSION_UPDATE"
+  fi
+  if [[ "$INSTALL_CODEX" -eq 1 ]]; then
+    run_step update_codex_preflight_instruction add
+  fi
+  log "Team mode enabled for this Prime Directive checkout."
+  if [[ "$INSTALL_CLAUDE" -eq 1 ]]; then
+    log "Claude sessions will check for Prime Directive updates at startup, throttled to once per hour."
+  fi
+  if [[ "$INSTALL_CODEX" -eq 1 ]]; then
+    log "Codex will get a managed global AGENTS.md preflight instruction for Prime Directive skill use."
+  fi
+fi
+
+if [[ "$NO_TEAM_MODE" -eq 1 ]]; then
+  rm -f "$STATE_DIR/team-mode"
+  if [[ "$INSTALL_CLAUDE" -eq 1 && -x "$SETTINGS_HOOK" ]]; then
+    run_step "$SETTINGS_HOOK" remove "$SESSION_UPDATE"
+  fi
+  if [[ "$INSTALL_CODEX" -eq 1 ]]; then
+    run_step update_codex_preflight_instruction remove
+  fi
+  log "Team mode disabled for this Prime Directive checkout."
+fi
