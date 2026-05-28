@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Plan"
+  short_description: "Adversarially review a Deliver plan"
+  default_prompt: "Use $review-plan to run a mandatory first-principles adversarial council review over an active tasks/execution-plan-<plan-key>.md before implementation. Apply safe plan-only fixes by default, or use --approval-gate to write proposed fixes without editing the execution plan."

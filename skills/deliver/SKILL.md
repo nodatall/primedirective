@@ -14,6 +14,7 @@ Load references by path, not all up front:
 - Always load `skills/shared/references/plain-language.md`, `skills/shared/references/reasoning-budget.md`, and `skills/shared/references/analysis/verification-pivot.md`.
 - `skills/shared/references/architecture/architecture-guidance.md` when implementation work is boundary-affecting or `docs/ARCHITECTURE.md` exists
 - `skills/plan-to-goal/SKILL.md` when the source is goal-shaped
+- `skills/review-plan/SKILL.md` when the user asks for an adversarial plan review before implementation
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
 - `skills/shared/references/review/review-protocol.md` before the final review
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
@@ -204,6 +205,7 @@ Rules:
    - If the user corrects the plan, update the same Markdown file and rerun refinement only if the correction introduces material backlog risk.
    - If this plan came from a draft Deliver plan, stop here even if the user asked to `deliver this`. In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.
    - Do not begin implementation until the user approves or corrects the plan.
+   - If the user asks to review, pressure-test, or adversarially improve the plan before implementation, route that request through `$review-plan` and return here only after the review leaves the plan ready for approval.
    - Plan discussion does not clear `$deliver` activation. If the user approves after back-and-forth plan review, continue to step 7 for the active execution plan.
 7. Execute one item at a time.
    - `implement the doc` starts here after loading the canonical execution plan and confirming the branch/finalization baseline from earlier steps is available or recapturing it if needed.
@@ -256,6 +258,7 @@ Rules:
    - Archive only after final review findings are dispositioned and any required remediation has been verified.
    - Leave the archived plan readable; do not rewrite it into an audit log during archive.
    - Remove disposable active-step temp files unless they are still needed to explain an unresolved blocker.
+   - Remove `tasks/tmp/review-plan-<plan-key>.md` when it records a completed `$review-plan` pass with no unresolved risk, unless the user requested preserved review artifacts.
    - Commit the archive move and any final review, checklist, cleanup, implementation, or validation edits before the final handoff.
 14. Run the finalization gate before the final handoff.
    - Use the `$deliver` / readable execution-plan path in `skills/shared/references/execution/finalization-gate.md`.

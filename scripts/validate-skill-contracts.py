@@ -26,6 +26,7 @@ REQUIRED_CONTRACTS = {
     "swarm-lanes": "skills/shared/references/review/swarm-lanes.md",
     "plan-refine": "skills/plan-refine/SKILL.md",
     "plan-to-goal": "skills/plan-to-goal/SKILL.md",
+    "review-plan": "skills/review-plan/SKILL.md",
     "reasoning-budget": "skills/shared/references/reasoning-budget.md",
 }
 
@@ -575,6 +576,126 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             )
 
 
+def validate_review_plan_contract(errors: list[str]) -> None:
+    review_plan_path = ROOT / "skills/review-plan/SKILL.md"
+    if not review_plan_path.exists():
+        fail(errors, "PD-REVIEW-PLAN", "skills/review-plan/SKILL.md missing")
+        return
+
+    review_plan = review_plan_path.read_text()
+    readme = (ROOT / "README.md").read_text()
+    deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
+
+    skill_tokens = [
+        "name: review-plan",
+        "Supports `--approval-gate`",
+        "tasks/execution-plan-<plan-key>.md",
+        "tasks/tmp/review-plan-<plan-key>.md",
+        "first-principles adversarial council",
+        "internal adversarial conversation",
+        "Use 3-5 independent lanes",
+        "Run two rebuttal rounds by default.",
+        "Run a third rebuttal round only when",
+        "Preserve serious minority risks",
+        "auto-fix is the default",
+        "`--approval-gate`",
+        "apply the review-plan fixes",
+        "Use an explicit user-provided path such as `tasks/execution-plan-<plan-key>.md` when present.",
+        "Use the visible, attached, referenced, or current-thread `$deliver` execution plan when one is active.",
+        "If the user is approving proposed fixes from a prior `--approval-gate` run",
+        "apply still-valid proposed fixes or rerun against the current plan before editing",
+        "## Retention And Cleanup",
+        "After successful downstream `$deliver` final review and finalization, delete the completed review-plan log",
+        "never edit implementation code",
+        "must not start implementation",
+        "Stop when a fresh reviewer round finds no `blocker` or `material` issues.",
+        "8` is the hard maximum round count",
+        "review_plan_complete",
+        "fresh_council_rounds",
+        "fresh_reviewer_rounds",
+        "reviewer_stop_gate",
+        "all_objections_dispositioned",
+        "ready_for_implementation",
+    ]
+    for token in skill_tokens:
+        if token not in review_plan:
+            fail(errors, "PD-REVIEW-PLAN", f"skills/review-plan/SKILL.md missing token: {token}")
+
+    def section(heading: str) -> str:
+        match = re.search(rf"^## {re.escape(heading)}\n(.*?)(?:\n## |\Z)", review_plan, re.S | re.M)
+        return match.group(1) if match else ""
+
+    plan_resolution = section("Plan Resolution")
+    resolution_order = [
+        "Use an explicit user-provided path such as `tasks/execution-plan-<plan-key>.md` when present.",
+        "Use `plan-key=<plan-key>` when provided.",
+        "Use the visible, attached, referenced, or current-thread `$deliver` execution plan when one is active.",
+        "If exactly one active execution plan exists, infer its `plan-key`.",
+        "If more than one active execution plan exists, stop and ask for `plan-key=<plan-key>`.",
+    ]
+    resolution_positions = [plan_resolution.find(token) for token in resolution_order]
+    if any(position < 0 for position in resolution_positions) or resolution_positions != sorted(resolution_positions):
+        fail(errors, "PD-REVIEW-PLAN-RESOLUTION", "skills/review-plan/SKILL.md must resolve explicit path, then plan-key, then current-thread plan, then inference/ambiguity")
+
+    approval_gate_match = re.search(r"^9\. In `--approval-gate` mode.*?(?:\n10\. |\n## )", review_plan, re.S | re.M)
+    approval_gate = approval_gate_match.group(0) if approval_gate_match else ""
+    approval_gate_tokens = [
+        "Do not edit `tasks/execution-plan-<plan-key>.md`.",
+        "Write proposed fixes to `tasks/tmp/review-plan-<plan-key>.md`.",
+        "Ask the user to approve the proposed fixes or request changes.",
+        "When the user approves, apply still-valid proposed fixes or rerun against the current plan before editing.",
+    ]
+    for token in approval_gate_tokens:
+        if token not in approval_gate:
+            fail(errors, "PD-REVIEW-PLAN-APPROVAL-GATE", f"skills/review-plan/SKILL.md approval gate missing behavior token: {token}")
+
+    workflow_text = section("Workflow")
+    scope_text = section("Scope Boundaries")
+    retention_text = section("Retention And Cleanup")
+    for token in ["implementation source code", "tests", "migrations", "README or shared contract references"]:
+        if token not in scope_text:
+            fail(errors, "PD-REVIEW-PLAN-NO-IMPLEMENTATION", f"skills/review-plan/SKILL.md scope boundary missing forbidden edit target: {token}")
+    if "start implementation" in workflow_text and "must not start implementation" not in workflow_text:
+        fail(errors, "PD-REVIEW-PLAN-NO-IMPLEMENTATION", "skills/review-plan/SKILL.md workflow may allow implementation start")
+    for token in [
+        "the run stopped with unresolved blocker or material findings",
+        "`--approval-gate` wrote proposed fixes that have not been applied or rejected",
+        "After successful downstream `$deliver` final review and finalization, delete the completed review-plan log",
+    ]:
+        if token not in retention_text:
+            fail(errors, "PD-REVIEW-PLAN-RETENTION", f"skills/review-plan/SKILL.md retention section missing behavior token: {token}")
+
+    readme_tokens = [
+        "`review-plan` | `$review-plan [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--approval-gate`; reviews active `$deliver` execution plans",
+        "Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation.",
+        "### `$review-plan`",
+        "Runs an adversarial first-principles council loop over one active `$deliver` execution plan.",
+        "it may edit `tasks/execution-plan-<plan-key>.md`, but it must not edit implementation code or start implementation",
+        "`--approval-gate`: run the same review loop read-only",
+    ]
+    for token in readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-REVIEW-PLAN-README", f"README.md missing review-plan token: {token}")
+
+    deliver_tokens = [
+        "skills/review-plan/SKILL.md",
+        "route that request through `$review-plan`",
+        "Remove `tasks/tmp/review-plan-<plan-key>.md` when it records a completed `$review-plan` pass with no unresolved risk",
+    ]
+    for token in deliver_tokens:
+        if token not in deliver:
+            fail(errors, "PD-REVIEW-PLAN-DELIVER", f"skills/deliver/SKILL.md missing review-plan token: {token}")
+
+    forbidden_skill_patterns = [
+        "continue directly into implementation",
+        "start implementation after review",
+        "invoke `$deliver` implementation",
+    ]
+    for token in forbidden_skill_patterns:
+        if token in review_plan:
+            fail(errors, "PD-REVIEW-PLAN-NO-IMPLEMENTATION", f"skills/review-plan/SKILL.md contains implementation-start wording: {token}")
+
+
 def validate_architecture_guidance(errors: list[str]) -> None:
     reference = (ROOT / "skills/shared/references/architecture/architecture-guidance.md").read_text()
     create_architecture = (ROOT / "skills/create-architecture/SKILL.md").read_text()
@@ -693,6 +814,7 @@ def main() -> int:
     validate_deep_research_completion_stamp(errors)
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
+    validate_review_plan_contract(errors)
     validate_architecture_guidance(errors)
     validate_ship_branch(errors)
     validate_mirrors(errors)

@@ -28,6 +28,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]` | `plan-key=<plan-key>` or source material in the thread |
 | `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; `--swarm` includes nitpick depth; use `/goal $repo-sweep` for repair/resweep |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
+| `review-plan` | `$review-plan [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--approval-gate`; reviews active `$deliver` execution plans |
 | `ship-branch` | `$ship-branch` | None |
 
 ## Which Skill Do I Use?
@@ -39,6 +40,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
 - Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc plus a separate compact paste-ready `/goal` prompt.
 - Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
+- Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation. It patches the plan by default and stops before code changes.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
 - Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Use `/goal $repo-sweep --swarm --preserve-review-artifacts` when you want a longer nitpicky sweep for maintainability, test quality, code slop, and production risk.
@@ -187,6 +189,18 @@ Request options:
 Modifiers:
 
 - `--preserve-review-artifacts`: keep review logs instead of cleaning them after success.
+
+### `$review-plan`
+
+Runs an adversarial first-principles council loop over one active `$deliver` execution plan. It is planning-only: it may edit `tasks/execution-plan-<plan-key>.md`, but it must not edit implementation code or start implementation. Use it after `$deliver` writes the plan and before saying `implement the doc`.
+
+Request options:
+
+- `plan-key=<plan-key>`: select the execution plan when more than one active `$deliver` plan exists.
+
+Modifiers:
+
+- `--approval-gate`: run the same review loop read-only, write proposed plan fixes to `tasks/tmp/review-plan-<plan-key>.md`, and stop before editing the execution plan.
 
 ### `$ship-branch`
 
