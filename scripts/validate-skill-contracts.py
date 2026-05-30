@@ -696,6 +696,78 @@ def validate_review_plan_contract(errors: list[str]) -> None:
             fail(errors, "PD-REVIEW-PLAN-NO-IMPLEMENTATION", f"skills/review-plan/SKILL.md contains implementation-start wording: {token}")
 
 
+def validate_bounded_adversarial_priors(errors: list[str]) -> None:
+    review_protocol = (ROOT / "skills/shared/references/review/review-protocol.md").read_text()
+    review_chain = (ROOT / "skills/review-chain/SKILL.md").read_text()
+    merge_review = (ROOT / "skills/merge-review/SKILL.md").read_text()
+    merge_rubric = (ROOT / "skills/merge-review/references/merge-readiness-rubric.md").read_text()
+    review_plan = (ROOT / "skills/review-plan/SKILL.md").read_text()
+    contract_ownership = (ROOT / "skills/shared/references/contract-ownership.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+
+    review_protocol_tokens = [
+        "## Bounded adversarial priors",
+        "bug_prior",
+        "smaller_delta",
+        "skeptic_falsifier",
+        "must end in one of these outcomes",
+        "a concrete verification pivot naming the smallest useful probe",
+        "`no action` with the falsifying evidence",
+        "Do not run unbounded \"keep looking until you find a bug\" loops.",
+        "Do not invent findings to satisfy an adversarial prompt.",
+        "run the bounded adversarial-prior checks: bug_prior, smaller_delta, and skeptic_falsifier",
+    ]
+    for token in review_protocol_tokens:
+        if token not in review_protocol:
+            fail(errors, "PD-BOUNDED-ADVERSARIAL-PRIORS", f"skills/shared/references/review/review-protocol.md missing token: {token}")
+
+    consumer_tokens = [
+        (
+            "skills/review-chain/SKILL.md",
+            review_chain,
+            "Include the bounded adversarial-prior checks from `review-protocol.md` during Prompt A",
+        ),
+        (
+            "skills/merge-review/SKILL.md",
+            merge_review,
+            "Include the rubric's bounded adversarial-prior checks before declaring a branch merge-ready.",
+        ),
+        (
+            "skills/merge-review/references/merge-readiness-rubric.md",
+            merge_rubric,
+            "## Bounded Adversarial Priors",
+        ),
+        (
+            "skills/merge-review/references/merge-readiness-rubric.md",
+            merge_rubric,
+            "Do not keep searching until a bug is found.",
+        ),
+        (
+            "skills/review-plan/SKILL.md",
+            review_plan,
+            "Include a smaller-delta challenge and a skeptic/falsifier check",
+        ),
+        (
+            "skills/shared/references/contract-ownership.md",
+            contract_ownership,
+            "bounded adversarial-prior checks",
+        ),
+        (
+            "README.md",
+            readme,
+            "It includes bounded adversarial-prior checks, but remains report-first by default.",
+        ),
+        (
+            "README.md",
+            readme,
+            "require evidence, a verification pivot, or `no action` with falsifying evidence instead of inventing a finding",
+        ),
+    ]
+    for path, text, token in consumer_tokens:
+        if token not in text:
+            fail(errors, "PD-BOUNDED-ADVERSARIAL-PRIORS-CONSUMER", f"{path} missing token: {token}")
+
+
 def validate_architecture_guidance(errors: list[str]) -> None:
     reference = (ROOT / "skills/shared/references/architecture/architecture-guidance.md").read_text()
     create_architecture = (ROOT / "skills/create-architecture/SKILL.md").read_text()
@@ -815,6 +887,7 @@ def main() -> int:
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
     validate_review_plan_contract(errors)
+    validate_bounded_adversarial_priors(errors)
     validate_architecture_guidance(errors)
     validate_ship_branch(errors)
     validate_mirrors(errors)

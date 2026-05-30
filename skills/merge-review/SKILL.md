@@ -76,6 +76,7 @@ Do not stop because one round passed after fixes unless that round was a fresh r
    - Trace nearby callers, importers, routes, tests, or config when the branch touches boundaries.
 3. Run a merge-readiness review round.
    - Use `skills/merge-review/references/merge-readiness-rubric.md`.
+   - Include the rubric's bounded adversarial-prior checks before declaring a branch merge-ready.
    - Use `review-protocol.md` Prompt G when frontend behavior changed.
    - Use `review-protocol.md` Prompt H when deploy, runtime, data, security, tools, private data, untrusted input, or outbound actions changed.
    - Record findings in the shared finding shape from `finding-disposition.md`.

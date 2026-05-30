@@ -120,6 +120,7 @@ Inspect `git status --short` before editing:
    - Require the reviewer to run a first-principles adversarial council internally before producing findings.
    - Treat the council as an internal adversarial conversation, not a user-visible transcript.
    - Use 3-5 independent lanes before synthesis, selected from the first-principles-mode pattern: mechanism/root-cause analyst, skeptic/adversary, systems/architecture analyst, operator/pragmatist, and contrarian/reframe analyst.
+   - Include a smaller-delta challenge and a skeptic/falsifier check in the council synthesis when they apply, so the plan is tested for simpler safe scope and unsupported hostile findings are rejected with evidence.
    - Run two rebuttal rounds by default.
    - The second rebuttal round may be abbreviated only when the first rebuttal proves the plan is clean and continuing would only repeat the same evidence.
    - Run a third rebuttal round only when the second rebuttal surfaces a new blocker, a new evidence need, or a genuinely different framing.
@@ -192,6 +193,7 @@ The review must cover:
 - whether user approval, credentials, destructive changes, data-loss risk, billing, security, schema/API decisions, or product scope choices require an explicit human decision before implementation
 - whether a materially simpler or safer plan would satisfy the same user goal
 - whether current evidence is too weak to separate competing approaches, requiring the verification pivot before implementation
+- whether any hostile-prior concern was falsified and should be recorded as `no_action` rather than turned into a forced plan change
 
 ## Review Log
 

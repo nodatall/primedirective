@@ -38,6 +38,7 @@ Load these files before running:
 3. For task-scoped review, use PRD + TDD + tasks-plan as scope context when those artifacts exist.
 4. Select the active prompt profile from `review-protocol.md`, then execute its prompts sequentially, one prompt at a time.
    - Follow `reasoning-budget.md`: explicit review runs should use the strongest appropriate reasoning tier for the selected model family or budget.
+   - Include the bounded adversarial-prior checks from `review-protocol.md` during Prompt A, and do not force findings when the hostile prior is falsified by evidence.
 5. When `docs/ARCHITECTURE.md` exists or the diff is boundary-affecting, compose `architecture-guidance.md` and compare the change against the architecture doc. Flag stale docs, missing modules, forbidden dependency edges, undocumented entrypoints, expired deviations, and shared-code drift.
 6. Treat Prompt G as required only for frontend-facing work or changes that affect rendered content, interaction flows, layout, styling, or responsive behavior. Otherwise record it as not applicable with a reason.
 7. Treat Prompt H as required when the change is deploy-bound, materially affects operations, infrastructure, migrations, security posture, or runtime observability, or touches agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise record it as not applicable with a reason.

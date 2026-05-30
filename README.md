@@ -41,8 +41,8 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc plus a separate compact paste-ready `/goal` prompt.
 - Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
 - Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation. It patches the plan by default and stops before code changes.
-- Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
-- Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
+- Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep. It includes bounded adversarial-prior checks, but remains report-first by default.
+- Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop. It uses the same bounded adversarial-prior checks before declaring the branch ready.
 - Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Use `/goal $repo-sweep --swarm --preserve-review-artifacts` when you want a longer nitpicky sweep for maintainability, test quality, code slop, and production risk.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
@@ -140,7 +140,7 @@ Runs a goal-backed current-branch merge-readiness loop. Invoke it as:
 /goal $merge-review
 ```
 
-It keeps `tasks/merge-review-<branch-slug>.md` current, reviews `origin/main...HEAD`, fixes verified local `Disposition: fix` findings, validates, and starts a fresh rereview until no fixable findings remain or a real blocker is proven. It does not push, create PRs, merge, clean branches, or run a whole-repo production audit.
+It keeps `tasks/merge-review-<branch-slug>.md` current, reviews `origin/main...HEAD`, fixes verified local `Disposition: fix` findings, validates, and starts a fresh rereview until no fixable findings remain or a real blocker is proven. Its merge-readiness pass includes bounded adversarial-prior checks: try to prove the strongest bug candidate, look for a smaller safe delta, then reject unsupported hostile findings with falsifying evidence. It does not push, create PRs, merge, clean branches, or run a whole-repo production audit.
 
 Modifiers:
 
@@ -181,6 +181,8 @@ Modifiers:
 ### `$review-chain`
 
 Runs explicit branch or task-scoped review without starting a repo-wide sweep.
+
+It runs bounded adversarial-prior checks during the review: assume a bug may exist, assume there may be a smaller safe delta, and then require evidence, a verification pivot, or `no action` with falsifying evidence instead of inventing a finding.
 
 Request options:
 
