@@ -94,6 +94,7 @@ Rules:
 - Add `What We Know`, phase `Goal`, or `Decision notes` only when they reduce confusion.
 - Add `Done when` only when the checkbox text is too vague to define completion.
 - Include the exact Deliver implementation instruction near the top of every normal execution plan.
-- Ask for review with `Please review this before I start.` The user reviews the Markdown file directly; do not launch a review app or external viewer.
+- Normal mode: ask for review with `Please review this before I start.` The user reviews the Markdown file directly; do not launch a review app or external viewer.
+- `--fast` mode: omit the initial review request lines and include `Fast mode note: Initial plan-review pause skipped by --fast; continue into implementation after refinement unless a fast-mode stop condition applies.`
 - Do not add `Status`, `Result`, or `Commit` lines by default.
 - Keep validation evidence and commit details in the final handoff or git history unless the evidence changes the plan.

@@ -19,7 +19,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
-| `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias |
+| `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `merge-review` | `$merge-review` inside /goal $merge-review | None |
@@ -37,7 +37,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
 - Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
 - Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
-- Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
+- Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval unless `--fast` is present.
 - Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc plus a separate compact paste-ready `/goal` prompt.
 - Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
 - Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation. It patches the plan by default and stops before code changes.
@@ -87,16 +87,17 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, asks the user to review the Markdown plan file, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and user approval, the plan is checked until no material backlog issues remain, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, asks the user to review the Markdown plan file unless `--fast` is present, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and user approval, or immediately after refinement in `--fast` mode, the plan is checked until no material backlog issues remain, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
-- bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation.
+- bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.
 - `discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.
 
 Modifiers:
 
 - `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask the user to review the Markdown file only after the Pro synthesis gate succeeds.
+- `--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately; validation, final review, archive, commit, and finalization still run.
 
 ### `$plan-to-goal`
 

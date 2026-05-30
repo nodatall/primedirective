@@ -10,6 +10,11 @@ THROTTLE_FILE="$STATE_DIR/.last-session-update"
 LOCK_DIR="$STATE_DIR/.session-update-lock"
 LOG_FILE="$STATE_DIR/session-update.log"
 THROTTLE_SECONDS=3600
+FOREGROUND=0
+
+if [ "${1:-}" = "--foreground" ]; then
+  FOREGROUND=1
+fi
 
 log_entry() {
   mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
@@ -26,6 +31,9 @@ fi
 
 if [ -f "$THROTTLE_FILE" ]; then
   last="$(cat "$THROTTLE_FILE" 2>/dev/null || echo 0)"
+  case "$last" in
+    ""|*[!0-9]*) last=0 ;;
+  esac
   now="$(date +%s)"
   elapsed=$(( now - last ))
   if [ "$elapsed" -lt "$THROTTLE_SECONDS" ]; then
@@ -33,7 +41,7 @@ if [ -f "$THROTTLE_FILE" ]; then
   fi
 fi
 
-(
+run_update() (
   export GIT_TERMINAL_PROMPT=0
   mkdir -p "$STATE_DIR" 2>/dev/null || exit 0
 
@@ -74,6 +82,12 @@ fi
   else
     log_entry "UP_TO_DATE head=$old_head"
   fi
-) &
+)
+
+if [ "$FOREGROUND" -eq 1 ]; then
+  run_update
+else
+  run_update &
+fi
 
 exit 0

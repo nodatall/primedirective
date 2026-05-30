@@ -33,6 +33,13 @@ jobs:
           cp "$HOME/.claude/settings.json" "$RUNNER_TEMP/setup-first-claude-settings.json"
           ./setup --host claude --team
           diff -u "$RUNNER_TEMP/setup-first-claude-settings.json" "$HOME/.claude/settings.json"
+          printf 'not a number\n' > "$HOME/.prime-directive/.last-session-update"
+          ./scripts/prime-directive-session-update.sh 2>"$RUNNER_TEMP/session-update-stderr.txt"
+          sleep 1
+          test ! -s "$RUNNER_TEMP/session-update-stderr.txt"
+          rm -f "$HOME/.prime-directive/.last-session-update"
+          ./scripts/prime-directive-codex-preflight.sh
+          test -f "$HOME/.prime-directive/.last-session-update"
       - name: Validate team init output
         run: |
           tmp_repo="$RUNNER_TEMP/team-repo"

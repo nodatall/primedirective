@@ -109,7 +109,7 @@ Treat the Pro answer as an external reviewer, not as source of truth.
 
 For `$first-principles-mode --pro-analysis`, stop after synthesis unless the user separately asked for edits.
 
-For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review of the Markdown file unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
 
 For `$deliver --pro-analysis`, raw Pro browser output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
 

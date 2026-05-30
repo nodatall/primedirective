@@ -419,6 +419,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     plan_to_goal = (ROOT / "skills/plan-to-goal/SKILL.md").read_text()
     finalization_gate = (ROOT / "skills/shared/references/execution/finalization-gate.md").read_text()
     readme = (ROOT / "README.md").read_text()
+    deliver_agent = (ROOT / "skills/deliver/agents/openai.yaml").read_text()
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
@@ -429,7 +430,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
         "Deliver implementation instruction:",
         "Include the exact Deliver implementation instruction near the top of every normal execution plan.",
-        "Ask the user to say `implement the doc` when it looks right, or tell you what is wrong, missing, or out of order.",
+        "Normal mode: ask the user to say `implement the doc` when it looks right, or tell you what is wrong, missing, or out of order.",
         "Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`.",
         "Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.",
         "do not treat the absence of a canonical execution plan as permission to skip final review, archive movement, or the finalization gate.",
@@ -447,9 +448,13 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Do not mention whether worker agents were or were not used",
         "Supported modifiers:",
         "`--pro-analysis`",
-        "Stop for user review of the Markdown plan file.",
+        "`--fast`",
+        "Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, refinement, validation, final review, archive, commit, or finalization.",
+        "$deliver --fast` creates or resumes the same readable execution plan, runs the same Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.",
+        "Stop for user review of the Markdown plan file unless `--fast` is present.",
         "Do not launch a review app or external viewer.",
-        "Link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.",
+        "Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.",
+        "`--fast` mode must still stop for destructive or data-loss actions",
         "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the readable execution plan exists and before the refinement loop.",
         "tasks/tmp/pro-analysis-<plan-key>.md",
         "Pro Findings Summary",
@@ -462,7 +467,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver_draft_tokens = [
         "$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`",
         "$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.",
-        "Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
+        "Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
         "Draft instruction:",
         "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
         "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
@@ -477,7 +482,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Write open questions as checkboxes, prefixed with `Open question:` when useful, so they are easy to resolve or remove during discussion.",
         "Do not refine, execute, or commit implementation work from the draft plan.",
         "If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.5 when `--pro-analysis` is present or step 5 otherwise.",
-        "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.",
+        "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc` unless the current refinement request includes `--fast`.",
     ]
     for token in deliver_draft_tokens:
         if token not in deliver:
@@ -505,7 +510,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.",
         "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
         "For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
-        "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review",
+        "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation",
     ]
     for token in pro_deliver_reference_tokens:
         if token not in pro_reference:
@@ -546,11 +551,12 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
-        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias",
+        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias",
         "one readable execution plan refined right away",
-        "asks the user to review the Markdown plan file",
+        "asks the user to review the Markdown plan file unless `--fast` is present",
         "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
-        "bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation.",
+        "bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.",
+        "`--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately",
         "`discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
@@ -559,6 +565,15 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     for token in readme_tokens:
         if token not in readme:
             fail(errors, "PD-DELIVER-README-GOAL-PLAN", f"README.md missing deliver goal-plan token: {token}")
+
+    deliver_agent_tokens = [
+        "wait for approval before execution unless I include --fast",
+        "--fast skips only the initial plan-review pause",
+        "validation, final review, archive, commit, and finalization",
+    ]
+    for token in deliver_agent_tokens:
+        if token not in deliver_agent:
+            fail(errors, "PD-DELIVER-AGENT-PROMPT", f"skills/deliver/agents/openai.yaml missing deliver prompt token: {token}")
 
     finalization_tokens = [
         "Portable hard gate for `$deliver` and legacy task-artifact execution.",

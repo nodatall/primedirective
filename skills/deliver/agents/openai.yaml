@@ -1,4 +1,4 @@
 interface:
   display_name: "Deliver"
   short_description: "Plan, refine, then execute"
-  default_prompt: "Use $deliver to create or update one readable execution plan, run --pro-analysis immediately when I include it, refine the plan in the same command, and get approval before execution starts. Use $deliver discuss only when I explicitly want a draft checklist to stay current while we talk through changes."
+  default_prompt: "Use $deliver to create or update one readable execution plan, run --pro-analysis immediately when I include it, refine the plan in the same command, and wait for approval before execution unless I include --fast. --fast skips only the initial plan-review pause; it still requires validation, final review, archive, commit, and finalization. Use $deliver discuss only when I explicitly want a draft checklist to stay current while we talk through changes."
