@@ -221,6 +221,7 @@ Rules:
    - Identify repo-local implementation and validation patterns before editing.
    - For each non-trivial implementation item, create an active-step packet.
    - Assign one worker agent by default when worker agents are available.
+   - Do not run implementation workers in parallel. Parallelism is allowed only for read-only discovery or review lanes, such as `$repo-sweep --swarm`, or for a future workflow that explicitly isolates implementation workers with worktrees or equivalent disjoint checkouts.
    - Do not let the orchestrator absorb implementation by default. The orchestrator owns next-step selection, worker packet creation, integration, validation judgment, plan updates, and commits.
    - Give each worker a compact active-step packet, not the whole planning history.
    - When worker agents are unavailable, the orchestrator implements directly.
@@ -302,5 +303,7 @@ Do not claim the plan is complete until all in-scope checkboxes are done or expl
 ## Worker Packet
 
 Use worker agents by default for non-trivial implementation items when worker agents are available. Use `skills/deliver/references/worker-packet.md` for the full worker-packet template. Pass one bounded item with only the context needed to implement it correctly.
+
+Do not run implementation workers in parallel. Parallelism is allowed only for read-only discovery or review lanes, such as `$repo-sweep --swarm`, or for a future workflow that explicitly isolates implementation workers with worktrees or equivalent disjoint checkouts.
 
 The orchestrator keeps ownership of the full plan, next-step selection, worker packet creation, worker integration, final validation judgment, checkbox updates, commits, and plan changes. It should not hand a worker the whole backlog or ask the worker to choose the next item.
