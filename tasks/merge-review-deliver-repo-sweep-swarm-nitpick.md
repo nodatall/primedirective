@@ -30,6 +30,7 @@ Do not stop because one round passed after fixes unless that round was a fresh r
 | --- | --- | --- | --- |
 | 1 | `origin/main...HEAD` plus working tree | three `Disposition: fix` findings found and patched | validate, commit, and run fresh rereview |
 | 2 | fresh `origin/main...HEAD` after `2e0c019` | one `Disposition: fix` validation finding found and patched | validate and run final rereview |
+| 3 | fresh `origin/main...HEAD` after `a8dd0b6` | no remaining `Disposition: fix` findings | done |
 
 ## Findings
 
@@ -71,6 +72,8 @@ Status values:
 | Foreground Codex preflight probe | passed | `prime-directive-codex-preflight.sh` returned after `.last-session-update` was written | none |
 | Team init required-mode probe | passed | generated `AGENTS.md`, `CLAUDE.md`, executable enforcement hook, and one PreToolUse hook entry | none |
 | `git diff --check origin/main` | passed | combined branch plus working tree has no whitespace errors after MR-004 | none |
+| `git diff --check origin/main...HEAD` | passed | committed branch diff has no whitespace errors after `a8dd0b6` | none |
+| `./scripts/install-codex-plugin.sh` | passed | local Codex plugin and skill symlinks refreshed from this checkout | none |
 
 ## Remaining Human Decisions
 
@@ -82,17 +85,17 @@ Status values:
 
 ## Resume State
 
-- Current status: in_progress
-- Current phase: final validation and rereview
-- Last completed step: Round 2 whitespace finding patched and targeted validation passed
-- Active step: commit the whitespace/state update, then run the final full-branch rereview
-- Next exact action: stage and commit MR-004 plus this state update
+- Current status: done
+- Current phase: complete
+- Last completed step: Round 3 fresh rereview found no remaining `Disposition: fix` findings
+- Active step: none
+- Next exact action: none
 - Blockers: none
-- Last validation: `python3 scripts/validate-skill-contracts.py`; `git diff --check`; `git diff --check origin/main`; shell syntax; setup/preflight/team-init probes
+- Last validation: `python3 scripts/validate-skill-contracts.py`; `git diff --check origin/main...HEAD`; `bash -n` over setup scripts; setup/preflight/team-init probes; `./scripts/install-codex-plugin.sh`
 - Protected paths: none; the previously dirty `$deliver --fast` contract files are in the merge-review implementation scope
 - Evidence paths: this file
 
 ## Final Merge-Readiness Verdict
 
-- Verdict: pending
-- Reason: merge review has not completed yet.
+- Verdict: ready
+- Reason: Fresh full-branch rereview after the committed fixes found no remaining `Disposition: fix` findings, validation passed, and the worktree is clean.
