@@ -9,7 +9,7 @@ Do not use a third-party browser runner or private automation profile for Pro an
 1. Prepare a standalone prompt and a curated context bundle from local files.
 2. Use the user's already-authenticated ChatGPT browser session through Chrome automation when available.
 3. Fall back to Computer Use only when Chrome automation cannot reliably operate the visible UI.
-4. Select the requested Pro model in the visible ChatGPT UI.
+4. Select the Pro Extended model in the visible ChatGPT UI.
 5. Paste or upload the context bundle, submit the prompt, wait for completion, and copy or scrape the answer.
 6. Save and synthesize the answer before any downstream planning, refinement, or execution continues.
 
@@ -17,7 +17,15 @@ Chrome automation is the default because it can use the user's real browser sess
 
 Do not introduce a private browser profile or package-managed browser runner. A Pro browser run must be observable in the user's normal logged-in ChatGPT surface, with visible failure points such as model picker unavailable, composer unavailable, upload failed, no response completed, or answer copy failed.
 
-For any workflow invoked with `--pro-analysis`, a degraded fallback is not a completed Pro pass. If the run did not visibly use a Pro-capable model, if the answer was not read, or if the browser driver evidence cannot be recorded, the Pro synthesis may be saved for diagnostic value, but it must not set `pro_synthesis_complete: yes`.
+For any workflow invoked with `--pro-analysis`, a degraded fallback is not a completed Pro pass. If the run did not visibly use Pro Extended, if the answer was not read, or if the browser driver evidence cannot be recorded, the Pro synthesis may be saved for diagnostic value, but it must not set `pro_synthesis_complete: yes`.
+
+## Model Selection Gate
+
+The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission. Treat `Thinking Extended`, `Extended Thinking`, ordinary thinking modes, or any non-Pro label as a failed Pro model-selection gate, even if the prompt was pasted successfully.
+
+Before submitting, explicitly inspect the model picker or composer header, switch to `Pro Extended` or `Extended Pro` when it is not already selected, and re-check the visible label after the switch. If the driver cannot find or select a Pro Extended option, stop and report the failed model-selection gate instead of submitting with the current model.
+
+Record the exact visible model label and how it was verified in the synthesis memo. Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.
 
 ## Consent Boundary
 
@@ -67,7 +75,7 @@ After the browser run completes, read the Pro answer and synthesize it before st
 For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with:
 
 - context bundle summary: files or scope sent to Pro, rough size if known, and any excluded risky/noisy paths
-- browser run evidence: driver used (`chrome` or `computer-use`), ChatGPT surface used, selected model label, submission method (`paste`, `upload`, or both), response completion evidence, and capture method
+- browser run evidence: driver used (`chrome` or `computer-use`), ChatGPT surface used, exact selected model label, model-selection verification method, submission method (`paste`, `upload`, or both), response completion evidence, and capture method
 - Pro findings ledger: stable finding ID, Pro claim, local verification evidence, disposition (`adopted`, `rejected`, `deferred`), and disposition reason
 - conflict reconciliation: conflicts with repo evidence, the deep-research memo, or the execution plan, and how each conflict was resolved
 - artifact delta: execution-plan sections changed; source-backed claims independently verified when Pro suggested external sources
@@ -75,7 +83,7 @@ For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with
 
 Before setting `pro_synthesis_complete: yes`, print a short `Pro Findings Summary` in the visible thread/log: adopted, rejected/deferred, blockers, and artifact changes.
 
-Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with a Pro-capable model selected, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
+Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with `Pro Extended` or `Extended Pro` visibly selected before submission, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
 
 If `pro_result_read`, `pro_browser_run`, `pro_model_selected`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not refine a `$deliver` plan or execute.
 
@@ -101,7 +109,7 @@ Treat the Pro answer as an external reviewer, not as source of truth.
 
 For `$first-principles-mode --pro-analysis`, stop after synthesis unless the user separately asked for edits.
 
-For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
 
 For `$deliver --pro-analysis`, raw Pro browser output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
 

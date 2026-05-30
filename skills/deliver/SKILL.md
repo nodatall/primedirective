@@ -1,11 +1,11 @@
 ---
 name: deliver
-description: Create or update one plain-language execution plan, run Pro analysis when requested, refine it immediately, open the refined plan in Roughdraft for review, ask the user to approve the reviewed plan, or execute an approved Deliver plan one item at a time with focused validation, useful commits, plan updates, and final review. Supports `--pro-analysis` for ChatGPT Pro browser escalation before refinement. Use when invoked with `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`, plain `deliver` phrases, plain `refine it` after an active Deliver draft, or when the user asks to implement a Deliver execution plan doc.
+description: Manual `$deliver` workflow for readable execution plans, optional Pro analysis, user review, and approved implementation. `--fast` skips only the initial plan-review pause. Supports `--pro-analysis` and `--fast`.
 ---
 
 # Deliver Skill
 
-Run lightweight planned execution from one readable plan document. The normal path is plan -> optional Pro analysis -> refine -> Roughdraft review -> approve -> implement. Use draft mode only for explicit discussion/update requests.
+Run lightweight planned execution from one readable Markdown plan document. The normal path is plan -> optional Pro analysis -> refine -> user reviews the `.md` file -> approve -> implement. Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, refinement, validation, final review, archive, commit, or finalization. Use draft mode only for explicit discussion/update requests.
 
 This skill replaces the retired PRD/TDD/tasks-plan execution stack for new work. Do not generate PRD, TDD, or full tasks-plan artifacts for new `$deliver` plans.
 
@@ -14,6 +14,7 @@ Load references by path, not all up front:
 - Always load `skills/shared/references/plain-language.md`, `skills/shared/references/reasoning-budget.md`, and `skills/shared/references/analysis/verification-pivot.md`.
 - `skills/shared/references/architecture/architecture-guidance.md` when implementation work is boundary-affecting or `docs/ARCHITECTURE.md` exists
 - `skills/plan-to-goal/SKILL.md` when the source is goal-shaped
+- `skills/review-plan/SKILL.md` when the user asks for an adversarial plan review before implementation
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
 - `skills/shared/references/review/review-protocol.md` before the final review
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
@@ -27,11 +28,13 @@ Invoke explicitly with `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$
 Supported modifiers:
 
 - `--pro-analysis`
+- `--fast`
 
 Use one self-identifying document flow:
 
-- `$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction near the top, runs `--pro-analysis` immediately when present, runs refinement immediately, opens the plan in Roughdraft for review, then stops for approval before implementation.
-- `$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file, replaces any draft instruction with the Deliver implementation instruction, runs `--pro-analysis` immediately when present, runs refinement, opens the plan in Roughdraft for review, then stops for approval.
+- `$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction near the top, runs `--pro-analysis` immediately when present, runs refinement immediately, then stops and asks the user to review the Markdown file before approving implementation unless `--fast` is present.
+- `$deliver --fast` creates or resumes the same readable execution plan, runs the same Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.
+- `$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file, replaces any draft instruction with the Deliver implementation instruction, runs `--pro-analysis` immediately when present, runs refinement, then stops and asks the user to review the Markdown file before approving implementation unless `--fast` is present.
 - `$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.
 - When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent while the visible, attached, referenced, or active document is a Deliver execution plan, load this skill, load that exact plan, treat it as the approved scope, and start implementation at step 7. Continue through focused validation, final review, archive movement, commit, and the finalization gate before the final handoff.
 
@@ -40,14 +43,16 @@ Examples:
 - `$deliver` with a thread plan above it.
 - `$deliver discuss` when the user explicitly wants to talk through the work and keep a plain current draft as the conversation changes.
 - `$deliver refine` or `$deliver plan` when the current draft is ready to tighten into a reviewable execution plan.
-- `$deliver --pro-analysis` when a lightweight readable plan should immediately get ChatGPT Pro pressure before refinement and Roughdraft review.
+- `$deliver --pro-analysis` when a lightweight readable plan should immediately get ChatGPT Pro pressure before refinement and user review of the Markdown file.
+- `$deliver --fast` when the user wants the plan written and refined but does not want to pause for manual review before implementation starts.
+- `$deliver --pro-analysis --fast` when the Pro pass should run, adopted findings should be applied, refinement should finish, and implementation should start without the initial user plan-review pause.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
 - `turn this into a deliver plan` after a `$deliver discuss` conversation has produced a draft checklist plan.
 - `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
 - `implement the doc` when the opened or referenced doc contains the Deliver implementation instruction.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
-After `$deliver discuss` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver`, `$deliver refine`, `$deliver plan`, or equivalent, keep the same checklist file, replace the draft instruction with the Deliver implementation instruction, run `--pro-analysis` immediately when present, refine it, open it in Roughdraft for review, and stop for approval before implementation.
+After `$deliver discuss` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver`, `$deliver refine`, `$deliver plan`, or equivalent, keep the same checklist file, replace the draft instruction with the Deliver implementation instruction, run `--pro-analysis` immediately when present, refine it, and stop for the user to review the Markdown file before implementation unless `--fast` is present.
 
 After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
 
@@ -66,7 +71,7 @@ The draft plan is for discussion. Keep it as plain as possible: short full sente
 
 The durable plan is for the user to read and edit. Keep it low-friction. Do not turn it into an audit log.
 
-Use `tasks/goal-plan-<plan-key>.md` only through `$plan-to-goal`. A goal plan is a paste-ready `/goal` prompt plus enough readable context to review the loop before it starts. It is not a normal execution checklist and should not be archived by the `$deliver` finalization gate unless the user explicitly converts it into a normal execution plan.
+Use `tasks/goal-plan-<plan-key>.md` only through `$plan-to-goal`. A goal plan is a reviewable source-of-truth context file for a separately printed paste-ready `/goal` prompt. It is not a normal execution checklist and should not be archived by the `$deliver` finalization gate unless the user explicitly converts it into a normal execution plan.
 
 Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`. Do not implement directly against them. If the user invokes deliver from one of those artifacts, import or convert the in-scope checklist into `tasks/execution-plan-<plan-key>.md` before implementation, then use that execution plan for unchecked-item scans, final review scope, archive movement, and finalization.
 
@@ -102,6 +107,7 @@ Refined execution-plan rules:
 - Add `Done when` only when the checkbox text is too vague to define completion.
 - Every normal execution plan must include `Deliver implementation instruction:`.
 - Include the exact Deliver implementation instruction near the top of every normal execution plan.
+- In `--fast` mode, omit the normal initial review request and include a short `Fast mode note:` that says the initial plan-review pause was skipped by `--fast`.
 - Do not add `Status`, `Result`, or `Commit` lines by default.
 - Keep validation evidence and commit details in the final handoff or git history unless the evidence changes the plan.
 
@@ -116,7 +122,7 @@ Before drafting a normal execution plan, check whether the source is goal-shaped
 
 Even when the source sounds like an evidence loop, do not choose goal mode unless the agent can run multiple useful validation loops inside the goal. If the decisive evidence depends on a slow, paid, approval-gated, nightly, or externally scheduled run, write a normal execution plan that prepares the harness, cheap checks, smoke run, and human-approved decision run instead.
 
-If the source is goal-shaped, use `$plan-to-goal` instead of writing a normal `$deliver` checklist. `$plan-to-goal` owns the `tasks/goal-plan-<plan-key>.md` format, compact `/goal` prompt, target/baseline rules, state-recording guidance, and review wording.
+If the source is goal-shaped, use `$plan-to-goal` instead of writing a normal `$deliver` checklist. `$plan-to-goal` owns the `tasks/goal-plan-<plan-key>.md` format, separate compact `/goal` prompt output, target/baseline rules, state-recording guidance, and review wording.
 
 After `$plan-to-goal` writes the goal plan, stop for user review. Do not start normal `$deliver` implementation unless the user rejects goal mode or asks to convert it into an execution plan.
 
@@ -155,7 +161,7 @@ Rules:
    - If the user approves and explicitly asks to start the goal from this thread, start the goal using the prompt when goal mode is available; otherwise provide the exact `/goal` prompt from the file.
    - If the user says not to use goal mode, convert the source into a normal execution plan and continue with step 4.
 3.5. Create or update the draft checklist plan only when the request is explicitly plan discussion.
-   - Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests; those continue to step 4 and run refinement in the same command.
+   - Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests; those continue to step 4 and run refinement in the same command.
    - Use `tasks/execution-plan-<plan-key>.md`.
    - If an older `tasks/planning-discussion-<plan-key>.md` exists and no matching execution plan exists, import its current in-scope content into `tasks/execution-plan-<plan-key>.md` and continue with the execution-plan file.
    - Keep the doc plain, current, and checklist-shaped, not fully specified.
@@ -184,7 +190,7 @@ Rules:
    - Write and verify `tasks/tmp/pro-analysis-<plan-key>.md`.
    - Apply adopted Pro findings into the execution plan before step 5.
    - Hard-stop before refinement if the Pro synthesis gate is incomplete.
-5. Refine the plan before user review.
+5. Refine the plan before user review or fast-mode implementation.
    - Run at least one refinement round.
    - Continue while material backlog issues remain.
    - If a refinement round finds material issues or changes the plan, run another refinement round after those edits.
@@ -197,22 +203,19 @@ Rules:
    - Edit only the execution plan during refinement.
    - Do not create a refinement notes file or separate refinement markdown artifact.
    - If 8 rounds end with unresolved material issues, stop and show the exact blocker instead of starting implementation.
-6. Open the refined plan in Roughdraft for user review.
-   - Run `roughdraft open "/absolute/path/to/tasks/execution-plan-<plan-key>.md"` and leave the command running until the user clicks Done Reviewing.
-   - If Roughdraft is unavailable, fall back to showing the final readable plan or summarizing it with the file path, and say Roughdraft could not be opened.
-   - After Roughdraft exits, re-read `tasks/execution-plan-<plan-key>.md` from disk.
-   - Resolve CriticMarkup comments and suggested changes in the document itself. Preserve Roughdraft attributes for any comment or suggestion that remains unresolved.
-   - Do not run multiple Roughdraft review rounds by default. If Roughdraft edits materially changed scope, order, or risk, rerun refinement internally and update the same plan without reopening Roughdraft.
-   - If the post-review plan still has an unresolved decision that cannot be safely resolved from the document and thread, ask one concise question in chat instead of opening another Roughdraft round.
-   - Reopen Roughdraft only when the user explicitly asks for another Roughdraft pass.
-   - Ask: `Roughdraft review is resolved. Say implement the doc when it looks right.`
-   - Tell the user they can say `implement the doc` when it looks right.
-   - If this plan came from a draft Deliver plan, stop here even if the user asked to `deliver this`. In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.
-   - Do not begin implementation until the user approves or corrects the plan.
-   - If the user corrects the plan, update it and rerun refinement only if the correction introduces material backlog risk.
+6. Stop for user review of the Markdown plan file unless `--fast` is present.
+   - Do not launch a review app or external viewer.
+   - Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.
+   - Normal mode: ask the user to say `implement the doc` when it looks right, or tell you what is wrong, missing, or out of order.
+   - `--fast` mode: do not ask for initial plan review. Treat the refined execution plan as approved scope and continue directly to step 7 after checking the fast-mode stop conditions below.
+   - `--fast` mode must still stop for destructive or data-loss actions, missing credentials/env/service access, material scope ambiguity, billing/security/schema/API/product decisions, goal-plan delegation, incomplete `--pro-analysis`, unresolved material refinement issues, or any blocker that would make immediate implementation unsafe or dishonest.
+   - If the user corrects the plan, update the same Markdown file and rerun refinement only if the correction introduces material backlog risk.
+   - If this plan came from a draft Deliver plan, stop here even if the user asked to `deliver this`. In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc` unless the current refinement request includes `--fast`.
+   - Normal mode: do not begin implementation until the user approves or corrects the plan.
+   - If the user asks to review, pressure-test, or adversarially improve the plan before implementation, route that request through `$review-plan` and return here only after the review leaves the plan ready for approval.
    - Plan discussion does not clear `$deliver` activation. If the user approves after back-and-forth plan review, continue to step 7 for the active execution plan.
 7. Execute one item at a time.
-   - `implement the doc` starts here after loading the canonical execution plan and confirming the branch/finalization baseline from earlier steps is available or recapturing it if needed.
+   - `implement the doc` or `--fast` mode starts here after loading the canonical execution plan and confirming the branch/finalization baseline from earlier steps is available or recapturing it if needed.
    - Choose the next unchecked item in plan order unless new evidence makes a different next item clearly better; update the plan first when order changes.
    - Create a tiny active-step note only when it helps execution. Keep it private and disposable.
    - Identify repo-local implementation and validation patterns before editing.
@@ -262,6 +265,7 @@ Rules:
    - Archive only after final review findings are dispositioned and any required remediation has been verified.
    - Leave the archived plan readable; do not rewrite it into an audit log during archive.
    - Remove disposable active-step temp files unless they are still needed to explain an unresolved blocker.
+   - Remove `tasks/tmp/review-plan-<plan-key>.md` when it records a completed `$review-plan` pass with no unresolved risk, unless the user requested preserved review artifacts.
    - Commit the archive move and any final review, checklist, cleanup, implementation, or validation edits before the final handoff.
 14. Run the finalization gate before the final handoff.
    - Use the `$deliver` / readable execution-plan path in `skills/shared/references/execution/finalization-gate.md`.
@@ -277,6 +281,12 @@ For the initial review gate:
 - if `$deliver` chose a goal plan, say that it is a goal plan
 - say refinement completed or name unresolved issues
 - ask the user to correct anything wrong, missing, or out of order
+
+For `--fast` mode:
+
+- mention that the initial plan-review pause was skipped
+- name the plan file before implementation starts when useful, but do not stop for review
+- continue into step 7 unless a fast-mode stop condition applies
 
 For the final handoff:
 

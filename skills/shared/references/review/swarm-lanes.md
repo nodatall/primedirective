@@ -4,6 +4,8 @@ Use this reference only when a review or repo sweep explicitly requests parallel
 
 The lanes are read-only discovery lanes. They do not patch, refactor, or approve their own findings. The main agent owns deduplication, evidence checks, severity, disposition, repair decisions, and final reporting.
 
+For `$repo-sweep --swarm`, nitpick-depth maintainability review is part of the swarm by default. Compose `skills/repo-sweep/references/nitpick-depth.md` for the detailed checklist and output expectations.
+
 ## Lanes
 
 ### Intent and Regression
@@ -22,12 +24,19 @@ Look for hot-path blocking work, unbounded fan-out, missing timeouts, retry stor
 
 Look for schema/API contract drift, missing migration coverage, mock-only tests, display-only behavior, unexercised acceptance paths, weak fixtures, and verification gaps around critical flows.
 
+### Maintainability and Slop
+
+Use `skills/repo-sweep/references/nitpick-depth.md`.
+
+Look for dead code, shallow wrappers, over-broad abstractions, duplicated domain rules, scattered state, stale generated artifacts, weak test assertions, stale mockups, unverified interactions, and "green but not convincing" verification. Findings must be evidence-backed and must include impact plus the smallest safe fix path.
+
 ## Output Contract
 
 Each lane returns only evidence-backed candidate findings:
 
 - Short title.
 - Files, commands, logs, probes, or artifacts inspected.
+- Hotspots inspected and obvious hotspots not inspected.
 - Candidate severity and confidence.
 - Evidence and disconfirming evidence checked.
 - Suggested disposition using `fix`, `needs human decision`, `residual risk`, or `no action`.

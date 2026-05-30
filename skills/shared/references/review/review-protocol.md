@@ -123,6 +123,8 @@ Use these prompt sets:
 - `codex-short`: Prompt A, then Prompt G when required, then Prompt H when required, then Prompt I.
 - `full-chain`: Prompts A-I in order, treating Prompts G and H as conditional when not applicable.
 
+Repo-wide skills may override the default prompt profile when their contract requires deeper coverage. `$repo-sweep` forces `full-chain`; `$repo-sweep --swarm` also includes the nitpick-depth maintainability lane owned by `skills/repo-sweep/references/nitpick-depth.md`.
+
 Rationale:
 
 - Codex review runs tend to produce most useful findings in the first broad review plus the closing audit, with Prompt G still valuable for frontend evidence and Prompt H still valuable for deploy-bound changes.
@@ -142,12 +144,35 @@ Every applicable review round must explicitly verify:
 - whether any recorded `trust_boundary_notes` are still true in the implemented change
 - for `full-branch` task-based reviews, whether any material code finding points to a reusable agent-loop failure that should be changed in future planning, worker packets, validation cadence, or review prompts
 
+## Bounded adversarial priors
+
+Reviewers may deliberately test hostile priors such as "there is a real bug here," "this is over-engineered," or "the verification is weaker than it looks." These priors are review tools, not verdicts.
+
+Run the bounded adversarial-prior checks during Prompt A for explicit `$review-chain` runs, merge-readiness review rounds, repo-sweep review rounds, and final full-branch execution reviews unless a parent skill requires a stronger first-principles council.
+
+Use these lanes:
+
+- `bug_prior`: assume at least one real bug exists, then try to prove the strongest candidate with a concrete code path, failing scenario, missing guard, or missing verification signal.
+- `smaller_delta`: assume there is a smaller change that preserves the user goal, then look for unnecessary code, surface area, abstraction, validation burden, or workflow churn.
+- `skeptic_falsifier`: reject unsupported hostile findings, name the evidence that cleared the suspicion, and keep only findings that survive contact with code, tests, runtime evidence, or a specific verification pivot.
+
+Each lane must end in one of these outcomes:
+
+- a verified finding using the shared finding-disposition shape, usually `fix` when it is local, in scope, and safe to repair
+- `needs human decision` when the right repair depends on product, schema, security, billing, public API, or customer-visible intent
+- `residual risk` when the risk matters but cannot be safely verified or repaired in the current run
+- a concrete verification pivot naming the smallest useful probe and the signal that would confirm or weaken the concern
+- `no action` with the falsifying evidence that made the hostile prior fail
+
+Do not run unbounded "keep looking until you find a bug" loops. Try hard, record the falsifier when evidence fails, and stop. Do not invent findings to satisfy an adversarial prompt.
+
 ## Prompts A-I
 
 ### Prompt A
 
 ```text
 Please review all changes in the current review scope, including current uncommitted changes.
+For explicit branch/task review, merge-readiness review, repo-sweep review, and final full-branch execution review, run the bounded adversarial-prior checks: bug_prior, smaller_delta, and skeptic_falsifier.
 ```
 
 ### Prompt B

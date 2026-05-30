@@ -19,15 +19,16 @@ Use this table when you already know the skill name. The detailed sections below
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
-| `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias |
+| `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias |
 | `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `merge-review` | `$merge-review` inside /goal $merge-review | None |
 | `plain-language` | `$plain-language` | None |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]` | `plan-key=<plan-key>` or source material in the thread |
-| `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; use `/goal $repo-sweep` for repair/resweep |
+| `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; `--swarm` includes nitpick depth; use `/goal $repo-sweep` for repair/resweep |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
+| `review-plan` | `$review-plan [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--approval-gate`; reviews active `$deliver` execution plans |
 | `ship-branch` | `$ship-branch` | None |
 
 ## Which Skill Do I Use?
@@ -36,12 +37,13 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
 - Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
 - Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
-- Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval.
-- Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with a compact paste-ready `/goal` prompt.
+- Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval unless `--fast` is present.
+- Use `$plan-to-goal` when a thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc plus a separate compact paste-ready `/goal` prompt.
 - Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
-- Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep.
-- Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop.
-- Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop.
+- Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation. It patches the plan by default and stops before code changes.
+- Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep. It includes bounded adversarial-prior checks, but remains report-first by default.
+- Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop. It uses the same bounded adversarial-prior checks before declaring the branch ready.
+- Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Use `/goal $repo-sweep --swarm --preserve-review-artifacts` when you want a longer nitpicky sweep for maintainability, test quality, code slop, and production risk.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
 - Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches.
@@ -85,20 +87,21 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, opens the refined plan in one Roughdraft review pass, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and Roughdraft review, the plan is checked until no material backlog issues remain, approved by the user, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, asks the user to review the Markdown plan file unless `--fast` is present, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and user approval, or immediately after refinement in `--fast` mode, the plan is checked until no material backlog issues remain, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
-- bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, open it in Roughdraft for review, and ask for approval before implementation.
+- bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.
 - `discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.
 
 Modifiers:
 
-- `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and open Roughdraft review only after the Pro synthesis gate succeeds.
+- `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask the user to review the Markdown file only after the Pro synthesis gate succeeds.
+- `--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately; validation, final review, archive, commit, and finalization still run.
 
 ### `$plan-to-goal`
 
-Converts messy source material, a readable execution plan, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`. The goal plan includes a compact paste-ready `/goal` prompt, target/baseline guidance when metrics exist, state-recording guidance for long runs, and review wording that asks the user to say `start this as a goal`.
+Converts messy source material, a readable execution plan, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, then prints a separate compact paste-ready `/goal` prompt that references that file. The goal plan includes target/baseline guidance when metrics exist, state-recording guidance for long runs, and review wording that asks the user to say `start this as a goal`.
 
 Request options:
 
@@ -138,7 +141,7 @@ Runs a goal-backed current-branch merge-readiness loop. Invoke it as:
 /goal $merge-review
 ```
 
-It keeps `tasks/merge-review-<branch-slug>.md` current, reviews `origin/main...HEAD`, fixes verified local `Disposition: fix` findings, validates, and starts a fresh rereview until no fixable findings remain or a real blocker is proven. It does not push, create PRs, merge, clean branches, or run a whole-repo production audit.
+It keeps `tasks/merge-review-<branch-slug>.md` current, reviews `origin/main...HEAD`, fixes verified local `Disposition: fix` findings, validates, and starts a fresh rereview until no fixable findings remain or a real blocker is proven. Its merge-readiness pass includes bounded adversarial-prior checks: try to prove the strongest bug candidate, look for a smaller safe delta, then reject unsupported hostile findings with falsifying evidence. It does not push, create PRs, merge, clean branches, or run a whole-repo production audit.
 
 Modifiers:
 
@@ -172,13 +175,15 @@ Runs a broad repository audit. It starts with first-principles no-edit analysis,
 Modifiers:
 
 - `--pro-analysis`: use ChatGPT Pro browser escalation as Round 1 audit-thesis input.
-- `--swarm`: add parallel read-only discovery lanes for intent/regression, security/privacy, performance/reliability, and contracts/coverage before the report.
+- `--swarm`: add parallel read-only discovery lanes for intent/regression, security/privacy, performance/reliability, contracts/coverage, and nitpick-depth maintainability/code-quality review before the report.
 - `--dep-scan`: run an explicit dependency and supply-chain audit, reporting unavailable scanners as residual risk.
 - `--preserve-review-artifacts`: keep sweep/review logs instead of cleaning them after success.
 
 ### `$review-chain`
 
 Runs explicit branch or task-scoped review without starting a repo-wide sweep.
+
+It runs bounded adversarial-prior checks during the review: assume a bug may exist, assume there may be a smaller safe delta, and then require evidence, a verification pivot, or `no action` with falsifying evidence instead of inventing a finding.
 
 Request options:
 
@@ -187,6 +192,18 @@ Request options:
 Modifiers:
 
 - `--preserve-review-artifacts`: keep review logs instead of cleaning them after success.
+
+### `$review-plan`
+
+Runs an adversarial first-principles council loop over one active `$deliver` execution plan. It is planning-only: it may edit `tasks/execution-plan-<plan-key>.md`, but it must not edit implementation code or start implementation. Use it after `$deliver` writes the plan and before saying `implement the doc`.
+
+Request options:
+
+- `plan-key=<plan-key>`: select the execution plan when more than one active `$deliver` plan exists.
+
+Modifiers:
+
+- `--approval-gate`: run the same review loop read-only, write proposed plan fixes to `tasks/tmp/review-plan-<plan-key>.md`, and stop before editing the execution plan.
 
 ### `$ship-branch`
 
@@ -200,16 +217,35 @@ Modifiers:
 
 - `.codex-plugin/plugin.json` Codex plugin metadata
 - `skills/` canonical skills and shared references
+- `setup` host-aware installer for Codex, Claude, and optional team auto-update
 - `scripts/install-codex-plugin.sh` idempotent Codex marketplace installer
 - `scripts/install-claude-skills.sh` idempotent Claude skills installer
+- `scripts/prime-directive-team-init.sh` repo-level AGENTS.md/CLAUDE.md bootstrapper
 - `scripts/validate-skill-contracts.py` skill metadata and contract ownership validator
+
+## Paste Install
+
+Open Codex or Claude in any repo and paste:
+
+```text
+Install Prime Directive: clone https://github.com/nodatall/primedirective.git into ~/.prime-directive/repo if it is missing, otherwise pull latest there. Then run ~/.prime-directive/repo/setup --host auto. Do not vendor Prime Directive's skills/ tree into this project. After install, tell me which Prime Directive skills are available and ask whether I want team mode for this repo.
+```
+
+Equivalent shell:
+
+```bash
+if [ ! -d "$HOME/.prime-directive/repo/.git" ]; then
+  git clone --depth 1 https://github.com/nodatall/primedirective.git "$HOME/.prime-directive/repo"
+fi
+cd "$HOME/.prime-directive/repo" && git pull --ff-only && ./setup --host auto
+```
 
 ## Install For Codex
 
 Run from this repository root:
 
 ```bash
-./scripts/install-codex-plugin.sh
+./setup --host codex
 ```
 
 What it does:
@@ -223,7 +259,7 @@ What it does:
 Update flow:
 
 1. Pull the latest changes in this repo.
-2. Re-run `./scripts/install-codex-plugin.sh` if you added, renamed, or removed skills.
+2. Re-run `./setup --host codex` if you added, renamed, or removed skills.
 3. Restart Codex if the updated skills do not appear immediately.
 
 ## Install For Claude
@@ -231,7 +267,7 @@ Update flow:
 Run from this repository root:
 
 ```bash
-./scripts/install-claude-skills.sh
+./setup --host claude
 ```
 
 What it does:
@@ -246,8 +282,28 @@ Set `CLAUDE_SKILLS_DIR=/custom/path` if your Claude setup expects a different gl
 Update flow:
 
 1. Pull the latest changes in this repo.
-2. Re-run `./scripts/install-claude-skills.sh`.
+2. Re-run `./setup --host claude`.
 3. Restart Claude or open a fresh Claude session if the updated skills do not appear immediately.
+
+## Team Mode
+
+Team mode keeps the global Prime Directive checkout as the source of truth and adds small repo-level instructions so teammates install the same skills without vendoring a `skills/` tree.
+
+From inside a target repo:
+
+```bash
+(cd "$HOME/.prime-directive/repo" && ./setup --host auto --team) && "$HOME/.prime-directive/repo/scripts/prime-directive-team-init.sh" required
+```
+
+Use `optional` instead of `required` if you want the repo to suggest Prime Directive without blocking Claude skill usage.
+
+What it does:
+
+- `./setup --team` enables a Claude SessionStart hook that silently runs a throttled `git pull --ff-only` and reinstall for this Prime Directive checkout
+- for Codex, `./setup --team` adds a managed block to `~/.codex/AGENTS.md` that tells Codex to run `scripts/prime-directive-codex-preflight.sh` before first Prime Directive skill use in a session
+- `scripts/prime-directive-team-init.sh required` adds AGENTS.md and CLAUDE.md install checks to the target repo
+- required mode also adds a Claude project PreToolUse hook that blocks skill usage when Prime Directive is missing
+- Codex does not currently expose the same documented session-start hook surface as Claude, so the Codex hook is instruction-driven rather than a runtime callback
 
 ## Skill Authoring
 
@@ -269,9 +325,11 @@ Useful local checks:
 
 ```bash
 python3 scripts/validate-skill-contracts.py
-./scripts/install-codex-plugin.sh
+./setup --host auto
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
 HOME="$(mktemp -d)" ./scripts/install-codex-plugin.sh
+HOME="$(mktemp -d)" ./setup --host auto --team
+HOME="$(mktemp -d)" ./setup --host auto --team
 HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 HOME="$(mktemp -d)" ./scripts/install-claude-skills.sh
 ```
@@ -288,4 +346,4 @@ Prime Directive can use a visible ChatGPT Pro browser pass as an internal escala
 
 The public workflow stays on those skill modifiers. The implementation detail is direct browser control of the user's already-authenticated ChatGPT session: use Chrome automation first, and fall back to Computer Use when the visible UI is easier to operate than DOM selectors.
 
-The Pro pass is not complete until the answer is read and reduced into `tasks/tmp/pro-analysis-<plan-key>.md` with browser evidence, a findings ledger, artifact deltas, and a completion stamp containing `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes`. If the browser cannot select the model, submit the bundle, wait for completion, or capture the answer, treat the Pro gate as failed rather than silently continuing.
+The Pro pass is not complete until the answer is read and reduced into `tasks/tmp/pro-analysis-<plan-key>.md` with browser evidence, a findings ledger, artifact deltas, and a completion stamp containing `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes`. The visible selected model must be `Pro Extended` or `Extended Pro`; `Thinking Extended` is not enough. If the browser cannot select the model, submit the bundle, wait for completion, or capture the answer, treat the Pro gate as failed rather than silently continuing.

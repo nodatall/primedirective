@@ -26,6 +26,7 @@ REQUIRED_CONTRACTS = {
     "swarm-lanes": "skills/shared/references/review/swarm-lanes.md",
     "plan-refine": "skills/plan-refine/SKILL.md",
     "plan-to-goal": "skills/plan-to-goal/SKILL.md",
+    "review-plan": "skills/review-plan/SKILL.md",
     "reasoning-budget": "skills/shared/references/reasoning-budget.md",
 }
 
@@ -418,6 +419,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     plan_to_goal = (ROOT / "skills/plan-to-goal/SKILL.md").read_text()
     finalization_gate = (ROOT / "skills/shared/references/execution/finalization-gate.md").read_text()
     readme = (ROOT / "README.md").read_text()
+    deliver_agent = (ROOT / "skills/deliver/agents/openai.yaml").read_text()
 
     deliver_tokens = [
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
@@ -428,7 +430,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
         "Deliver implementation instruction:",
         "Include the exact Deliver implementation instruction near the top of every normal execution plan.",
-        "Tell the user they can say `implement the doc` when it looks right.",
+        "Normal mode: ask the user to say `implement the doc` when it looks right, or tell you what is wrong, missing, or out of order.",
         "Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`.",
         "Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.",
         "do not treat the absence of a canonical execution plan as permission to skip final review, archive movement, or the finalization gate.",
@@ -446,10 +448,13 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Do not mention whether worker agents were or were not used",
         "Supported modifiers:",
         "`--pro-analysis`",
-        "opens the plan in Roughdraft for review",
-        "roughdraft open",
-        "Resolve CriticMarkup comments and suggested changes in the document itself.",
-        "Do not run multiple Roughdraft review rounds by default.",
+        "`--fast`",
+        "Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, refinement, validation, final review, archive, commit, or finalization.",
+        "$deliver --fast` creates or resumes the same readable execution plan, runs the same Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.",
+        "Stop for user review of the Markdown plan file unless `--fast` is present.",
+        "Do not launch a review app or external viewer.",
+        "Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.",
+        "`--fast` mode must still stop for destructive or data-loss actions",
         "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the readable execution plan exists and before the refinement loop.",
         "tasks/tmp/pro-analysis-<plan-key>.md",
         "Pro Findings Summary",
@@ -462,7 +467,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver_draft_tokens = [
         "$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`",
         "$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.",
-        "Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
+        "Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
         "Draft instruction:",
         "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
         "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
@@ -477,7 +482,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Write open questions as checkboxes, prefixed with `Open question:` when useful, so they are easy to resolve or remove during discussion.",
         "Do not refine, execute, or commit implementation work from the draft plan.",
         "If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.5 when `--pro-analysis` is present or step 5 otherwise.",
-        "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc`.",
+        "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc` unless the current refinement request includes `--fast`.",
     ]
     for token in deliver_draft_tokens:
         if token not in deliver:
@@ -500,9 +505,12 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
     pro_deliver_reference_tokens = [
         "$deliver --pro-analysis",
+        "The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission.",
+        "Treat `Thinking Extended`, `Extended Thinking`, ordinary thinking modes, or any non-Pro label as a failed Pro model-selection gate",
+        "Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.",
         "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
         "For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
-        "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and user review",
+        "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation",
     ]
     for token in pro_deliver_reference_tokens:
         if token not in pro_reference:
@@ -525,6 +533,11 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "If the gate fails, stop with the missing items. Do not write a goal-plan file.",
         "Target and baseline:",
         "Work backward from the target when choosing diagnostics and patches.",
+        "must not embed the full `/goal` prompt.",
+        "print the compact paste-ready `/goal` prompt separately",
+        "reference the absolute path to `tasks/goal-plan-<plan-key>.md`",
+        "Do not copy this Markdown file into `/goal`.",
+        "Separate chat prompt shape:",
         "Keep the `/goal` prompt compact.",
         "under 4,000 characters",
         "Resume State",
@@ -538,11 +551,12 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
-        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`; legacy `$deliver discuss` is a draft-update alias",
+        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias",
         "one readable execution plan refined right away",
-        "opens the refined plan in one Roughdraft review pass",
+        "asks the user to review the Markdown plan file unless `--fast` is present",
         "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
-        "bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, open it in Roughdraft for review",
+        "bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.",
+        "`--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately",
         "`discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
@@ -551,6 +565,15 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     for token in readme_tokens:
         if token not in readme:
             fail(errors, "PD-DELIVER-README-GOAL-PLAN", f"README.md missing deliver goal-plan token: {token}")
+
+    deliver_agent_tokens = [
+        "wait for approval before execution unless I include --fast",
+        "--fast skips only the initial plan-review pause",
+        "validation, final review, archive, commit, and finalization",
+    ]
+    for token in deliver_agent_tokens:
+        if token not in deliver_agent:
+            fail(errors, "PD-DELIVER-AGENT-PROMPT", f"skills/deliver/agents/openai.yaml missing deliver prompt token: {token}")
 
     finalization_tokens = [
         "Portable hard gate for `$deliver` and legacy task-artifact execution.",
@@ -566,6 +589,198 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
                 "PD-DELIVER-FINALIZATION-GATE",
                 f"skills/shared/references/execution/finalization-gate.md missing deliver gate token: {token}",
             )
+
+
+def validate_review_plan_contract(errors: list[str]) -> None:
+    review_plan_path = ROOT / "skills/review-plan/SKILL.md"
+    if not review_plan_path.exists():
+        fail(errors, "PD-REVIEW-PLAN", "skills/review-plan/SKILL.md missing")
+        return
+
+    review_plan = review_plan_path.read_text()
+    readme = (ROOT / "README.md").read_text()
+    deliver = (ROOT / "skills/deliver/SKILL.md").read_text()
+
+    skill_tokens = [
+        "name: review-plan",
+        "Supports `--approval-gate`",
+        "tasks/execution-plan-<plan-key>.md",
+        "tasks/tmp/review-plan-<plan-key>.md",
+        "first-principles adversarial council",
+        "internal adversarial conversation",
+        "Use 3-5 independent lanes",
+        "Run two rebuttal rounds by default.",
+        "Run a third rebuttal round only when",
+        "Preserve serious minority risks",
+        "auto-fix is the default",
+        "`--approval-gate`",
+        "apply the review-plan fixes",
+        "Use an explicit user-provided path such as `tasks/execution-plan-<plan-key>.md` when present.",
+        "Use the visible, attached, referenced, or current-thread `$deliver` execution plan when one is active.",
+        "If the user is approving proposed fixes from a prior `--approval-gate` run",
+        "apply still-valid proposed fixes or rerun against the current plan before editing",
+        "## Retention And Cleanup",
+        "After successful downstream `$deliver` final review and finalization, delete the completed review-plan log",
+        "never edit implementation code",
+        "must not start implementation",
+        "Stop when a fresh reviewer round finds no `blocker` or `material` issues.",
+        "8` is the hard maximum round count",
+        "review_plan_complete",
+        "fresh_council_rounds",
+        "fresh_reviewer_rounds",
+        "reviewer_stop_gate",
+        "all_objections_dispositioned",
+        "ready_for_implementation",
+    ]
+    for token in skill_tokens:
+        if token not in review_plan:
+            fail(errors, "PD-REVIEW-PLAN", f"skills/review-plan/SKILL.md missing token: {token}")
+
+    def section(heading: str) -> str:
+        match = re.search(rf"^## {re.escape(heading)}\n(.*?)(?:\n## |\Z)", review_plan, re.S | re.M)
+        return match.group(1) if match else ""
+
+    plan_resolution = section("Plan Resolution")
+    resolution_order = [
+        "Use an explicit user-provided path such as `tasks/execution-plan-<plan-key>.md` when present.",
+        "Use `plan-key=<plan-key>` when provided.",
+        "Use the visible, attached, referenced, or current-thread `$deliver` execution plan when one is active.",
+        "If exactly one active execution plan exists, infer its `plan-key`.",
+        "If more than one active execution plan exists, stop and ask for `plan-key=<plan-key>`.",
+    ]
+    resolution_positions = [plan_resolution.find(token) for token in resolution_order]
+    if any(position < 0 for position in resolution_positions) or resolution_positions != sorted(resolution_positions):
+        fail(errors, "PD-REVIEW-PLAN-RESOLUTION", "skills/review-plan/SKILL.md must resolve explicit path, then plan-key, then current-thread plan, then inference/ambiguity")
+
+    approval_gate_match = re.search(r"^9\. In `--approval-gate` mode.*?(?:\n10\. |\n## )", review_plan, re.S | re.M)
+    approval_gate = approval_gate_match.group(0) if approval_gate_match else ""
+    approval_gate_tokens = [
+        "Do not edit `tasks/execution-plan-<plan-key>.md`.",
+        "Write proposed fixes to `tasks/tmp/review-plan-<plan-key>.md`.",
+        "Ask the user to approve the proposed fixes or request changes.",
+        "When the user approves, apply still-valid proposed fixes or rerun against the current plan before editing.",
+    ]
+    for token in approval_gate_tokens:
+        if token not in approval_gate:
+            fail(errors, "PD-REVIEW-PLAN-APPROVAL-GATE", f"skills/review-plan/SKILL.md approval gate missing behavior token: {token}")
+
+    workflow_text = section("Workflow")
+    scope_text = section("Scope Boundaries")
+    retention_text = section("Retention And Cleanup")
+    for token in ["implementation source code", "tests", "migrations", "README or shared contract references"]:
+        if token not in scope_text:
+            fail(errors, "PD-REVIEW-PLAN-NO-IMPLEMENTATION", f"skills/review-plan/SKILL.md scope boundary missing forbidden edit target: {token}")
+    if "start implementation" in workflow_text and "must not start implementation" not in workflow_text:
+        fail(errors, "PD-REVIEW-PLAN-NO-IMPLEMENTATION", "skills/review-plan/SKILL.md workflow may allow implementation start")
+    for token in [
+        "the run stopped with unresolved blocker or material findings",
+        "`--approval-gate` wrote proposed fixes that have not been applied or rejected",
+        "After successful downstream `$deliver` final review and finalization, delete the completed review-plan log",
+    ]:
+        if token not in retention_text:
+            fail(errors, "PD-REVIEW-PLAN-RETENTION", f"skills/review-plan/SKILL.md retention section missing behavior token: {token}")
+
+    readme_tokens = [
+        "`review-plan` | `$review-plan [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--approval-gate`; reviews active `$deliver` execution plans",
+        "Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation.",
+        "### `$review-plan`",
+        "Runs an adversarial first-principles council loop over one active `$deliver` execution plan.",
+        "it may edit `tasks/execution-plan-<plan-key>.md`, but it must not edit implementation code or start implementation",
+        "`--approval-gate`: run the same review loop read-only",
+    ]
+    for token in readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-REVIEW-PLAN-README", f"README.md missing review-plan token: {token}")
+
+    deliver_tokens = [
+        "skills/review-plan/SKILL.md",
+        "route that request through `$review-plan`",
+        "Remove `tasks/tmp/review-plan-<plan-key>.md` when it records a completed `$review-plan` pass with no unresolved risk",
+    ]
+    for token in deliver_tokens:
+        if token not in deliver:
+            fail(errors, "PD-REVIEW-PLAN-DELIVER", f"skills/deliver/SKILL.md missing review-plan token: {token}")
+
+    forbidden_skill_patterns = [
+        "continue directly into implementation",
+        "start implementation after review",
+        "invoke `$deliver` implementation",
+    ]
+    for token in forbidden_skill_patterns:
+        if token in review_plan:
+            fail(errors, "PD-REVIEW-PLAN-NO-IMPLEMENTATION", f"skills/review-plan/SKILL.md contains implementation-start wording: {token}")
+
+
+def validate_bounded_adversarial_priors(errors: list[str]) -> None:
+    review_protocol = (ROOT / "skills/shared/references/review/review-protocol.md").read_text()
+    review_chain = (ROOT / "skills/review-chain/SKILL.md").read_text()
+    merge_review = (ROOT / "skills/merge-review/SKILL.md").read_text()
+    merge_rubric = (ROOT / "skills/merge-review/references/merge-readiness-rubric.md").read_text()
+    review_plan = (ROOT / "skills/review-plan/SKILL.md").read_text()
+    contract_ownership = (ROOT / "skills/shared/references/contract-ownership.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+
+    review_protocol_tokens = [
+        "## Bounded adversarial priors",
+        "bug_prior",
+        "smaller_delta",
+        "skeptic_falsifier",
+        "must end in one of these outcomes",
+        "a concrete verification pivot naming the smallest useful probe",
+        "`no action` with the falsifying evidence",
+        "Do not run unbounded \"keep looking until you find a bug\" loops.",
+        "Do not invent findings to satisfy an adversarial prompt.",
+        "run the bounded adversarial-prior checks: bug_prior, smaller_delta, and skeptic_falsifier",
+    ]
+    for token in review_protocol_tokens:
+        if token not in review_protocol:
+            fail(errors, "PD-BOUNDED-ADVERSARIAL-PRIORS", f"skills/shared/references/review/review-protocol.md missing token: {token}")
+
+    consumer_tokens = [
+        (
+            "skills/review-chain/SKILL.md",
+            review_chain,
+            "Include the bounded adversarial-prior checks from `review-protocol.md` during Prompt A",
+        ),
+        (
+            "skills/merge-review/SKILL.md",
+            merge_review,
+            "Include the rubric's bounded adversarial-prior checks before declaring a branch merge-ready.",
+        ),
+        (
+            "skills/merge-review/references/merge-readiness-rubric.md",
+            merge_rubric,
+            "## Bounded Adversarial Priors",
+        ),
+        (
+            "skills/merge-review/references/merge-readiness-rubric.md",
+            merge_rubric,
+            "Do not keep searching until a bug is found.",
+        ),
+        (
+            "skills/review-plan/SKILL.md",
+            review_plan,
+            "Include a smaller-delta challenge and a skeptic/falsifier check",
+        ),
+        (
+            "skills/shared/references/contract-ownership.md",
+            contract_ownership,
+            "bounded adversarial-prior checks",
+        ),
+        (
+            "README.md",
+            readme,
+            "It includes bounded adversarial-prior checks, but remains report-first by default.",
+        ),
+        (
+            "README.md",
+            readme,
+            "require evidence, a verification pivot, or `no action` with falsifying evidence instead of inventing a finding",
+        ),
+    ]
+    for path, text, token in consumer_tokens:
+        if token not in text:
+            fail(errors, "PD-BOUNDED-ADVERSARIAL-PRIORS-CONSUMER", f"{path} missing token: {token}")
 
 
 def validate_architecture_guidance(errors: list[str]) -> None:
@@ -686,6 +901,8 @@ def main() -> int:
     validate_deep_research_completion_stamp(errors)
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
+    validate_review_plan_contract(errors)
+    validate_bounded_adversarial_priors(errors)
     validate_architecture_guidance(errors)
     validate_ship_branch(errors)
     validate_mirrors(errors)

@@ -1,0 +1,101 @@
+# Merge Review: deliver/repo-sweep-swarm-nitpick
+
+Goal: Make `deliver/repo-sweep-swarm-nitpick` merge-ready by reviewing `origin/main...HEAD`, fixing verified local findings, validating, and rereviewing until no `Disposition: fix` findings remain.
+
+## Branch And Base
+
+- Branch: `deliver/repo-sweep-swarm-nitpick`
+- Branch slug: `deliver-repo-sweep-swarm-nitpick`
+- Base: `origin/main`
+- Review scope: `origin/main...HEAD`, plus current working-tree changes
+- Started at: `2026-05-30T19:26:15Z`
+- Starting status: `## deliver/repo-sweep-swarm-nitpick...origin/deliver/repo-sweep-swarm-nitpick [ahead 4]`; dirty files: `README.md`, `scripts/validate-skill-contracts.py`, `skills/deliver/SKILL.md`, `skills/deliver/references/plan-format.md`, `skills/shared/references/analysis/pro-browser-analysis.md`
+
+## End Condition
+
+The merge-review goal is complete only when:
+
+- A fresh full-branch review of `origin/main...HEAD` finds no remaining `Disposition: fix` findings.
+- Every earlier `Disposition: fix` finding is fixed, validated, and marked closed, or reclassified with evidence.
+- Remaining findings, if any, are only `needs human decision`, `residual risk`, or `no action`.
+- Relevant validation commands pass, or failures are recorded as human-blocked or residual with evidence.
+- No uncommitted implementation fixes from the merge-review loop remain. The only allowed dirty file is this state document when the repo treats review artifacts as uncommitted working notes.
+- This document's `Resume State` says `Current status: done`.
+
+Do not stop because one round passed after fixes unless that round was a fresh rereview of the latest branch state.
+
+## Round Log
+
+| Round | Scope | Result | Next action |
+| --- | --- | --- | --- |
+| 1 | `origin/main...HEAD` plus working tree | three `Disposition: fix` findings found and patched | validate, commit, and run fresh rereview |
+| 2 | fresh `origin/main...HEAD` after `2e0c019` | one `Disposition: fix` validation finding found and patched | validate and run final rereview |
+| 3 | fresh `origin/main...HEAD` after `a8dd0b6` | no remaining `Disposition: fix` findings | done |
+
+## Findings
+
+| ID | Round | Severity | Disposition | Scope | Status | Evidence | Fix or reason |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| MR-001 | 1 | material | fix | `$deliver --fast` contract surfaces | validated | `skills/deliver/agents/openai.yaml` still said to get approval before execution starts, contradicting the new `--fast` skip-only-initial-review mode. | Updated the Deliver OpenAI agent prompt to explain `--fast`, and added validator coverage for the prompt. |
+| MR-002 | 1 | material | fix | silent team-mode updater | validated | A corrupt `.last-session-update` file caused `scripts/prime-directive-session-update.sh` to print a Bash arithmetic error, violating the silent best-effort hook behavior. | Sanitized the throttle value before arithmetic and added CI/local coverage for corrupt throttle files. |
+| MR-003 | 1 | material | fix | Codex preflight freshness | validated | The Codex preflight wrapper called an updater that always backgrounded work, so it could return before a pull/reinstall completed despite the managed instruction saying to run preflight before first skill use. | Added `--foreground` mode to `prime-directive-session-update.sh`, made Codex preflight use it, and added CI/local coverage that preflight writes the throttle file before returning. |
+| MR-004 | 2 | minor | fix | branch whitespace hygiene | validated | `git diff --check origin/main...HEAD` reported trailing whitespace in `tasks/archive/2026-05-23-repo-sweep-nitpick-depth/execution-plan-repo-sweep-nitpick-depth.md`. | Removed trailing whitespace mechanically and reran the combined branch/working-tree whitespace check. |
+
+Status values:
+
+- `open`
+- `fixed`
+- `validated`
+- `reclassified`
+- `blocked`
+- `no action`
+
+## Fix Log
+
+| Finding ID | Change | Files | Validation |
+| --- | --- | --- | --- |
+| MR-001 | Synchronized the Deliver agent default prompt with `--fast` and guarded it in contract validation. | `skills/deliver/agents/openai.yaml`, `scripts/validate-skill-contracts.py` | `python3 scripts/validate-skill-contracts.py` |
+| MR-002 | Made corrupt throttle files non-fatal and silent. | `scripts/prime-directive-session-update.sh`, `.github/workflows/validate.yml` | corrupt-throttle local probe; `bash -n`; `git diff --check` |
+| MR-003 | Made Codex preflight run the update in foreground while leaving the Claude session hook backgrounded. | `scripts/prime-directive-session-update.sh`, `scripts/prime-directive-codex-preflight.sh`, `.github/workflows/validate.yml` | foreground preflight local probe; `bash -n`; `git diff --check` |
+| MR-004 | Removed trailing whitespace from the archived repo-sweep execution plan. | `tasks/archive/2026-05-23-repo-sweep-nitpick-depth/execution-plan-repo-sweep-nitpick-depth.md` | `git diff --check origin/main` |
+
+## Validation Log
+
+| Command or flow | Result | Evidence | Remaining gap |
+| --- | --- | --- | --- |
+| `python3 scripts/validate-skill-contracts.py` | passed | `skill contract validation passed` | none |
+| `git diff --check` | passed | no whitespace errors | none |
+| `bash -n setup scripts/install-codex-plugin.sh scripts/install-claude-skills.sh scripts/prime-directive-codex-preflight.sh scripts/prime-directive-session-update.sh scripts/prime-directive-settings-hook.sh scripts/prime-directive-team-init.sh` | passed | shell syntax accepted | none |
+| Codex setup idempotence probe with temp `HOME` | passed | marketplace, config, skill links, and managed `AGENTS.md` stable across two runs | none |
+| Claude setup idempotence probe with temp `HOME` | passed | `settings.json` stable across two runs | none |
+| Corrupt session throttle probe | passed | no stderr from `prime-directive-session-update.sh` after corrupt `.last-session-update` | none |
+| Foreground Codex preflight probe | passed | `prime-directive-codex-preflight.sh` returned after `.last-session-update` was written | none |
+| Team init required-mode probe | passed | generated `AGENTS.md`, `CLAUDE.md`, executable enforcement hook, and one PreToolUse hook entry | none |
+| `git diff --check origin/main` | passed | combined branch plus working tree has no whitespace errors after MR-004 | none |
+| `git diff --check origin/main...HEAD` | passed | committed branch diff has no whitespace errors after `a8dd0b6` | none |
+| `./scripts/install-codex-plugin.sh` | passed | local Codex plugin and skill symlinks refreshed from this checkout | none |
+
+## Remaining Human Decisions
+
+- None currently.
+
+## Residual Risks
+
+- None currently.
+
+## Resume State
+
+- Current status: done
+- Current phase: complete
+- Last completed step: Round 3 fresh rereview found no remaining `Disposition: fix` findings
+- Active step: none
+- Next exact action: none
+- Blockers: none
+- Last validation: `python3 scripts/validate-skill-contracts.py`; `git diff --check origin/main...HEAD`; `bash -n` over setup scripts; setup/preflight/team-init probes; `./scripts/install-codex-plugin.sh`
+- Protected paths: none; the previously dirty `$deliver --fast` contract files are in the merge-review implementation scope
+- Evidence paths: this file
+
+## Final Merge-Readiness Verdict
+
+- Verdict: ready
+- Reason: Fresh full-branch rereview after the committed fixes found no remaining `Disposition: fix` findings, validation passed, and the worktree is clean.

@@ -62,6 +62,16 @@ Look for:
 - missing auth/authz/rate-limit/CORS/CSRF checks where relevant
 - missing timeouts, retries, idempotency, logging, rollback, or observability on risky paths
 
+## Bounded Adversarial Priors
+
+Use the bounded adversarial-prior rules from `skills/shared/references/review/review-protocol.md` during each merge-readiness review round.
+
+- `bug_prior`: assume the branch still has a real merge-blocking bug, then try to prove the strongest candidate with a concrete path, scenario, missing guard, or missing verification signal.
+- `smaller_delta`: assume the branch can preserve the user goal with less code, less surface area, fewer abstractions, or narrower validation. Report only reductions that lower real merge risk or maintenance cost without removing required scope.
+- `skeptic_falsifier`: reject unsupported hostile findings. When suspicion fails, record `no action` with the evidence that cleared it.
+
+Do not keep searching until a bug is found. A clean hostile pass is acceptable only when the falsifying evidence is recorded.
+
 ## Disposition Rules
 
 Use `skills/shared/references/review/finding-disposition.md`.

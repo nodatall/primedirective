@@ -32,6 +32,13 @@ Classify technical debt findings by the actual failure mode:
 - `Performance and Operations`: runtime cost or operational fragility.
 - `Looks Bad But Is Fine`: inspected hotspots that look concerning but have no verified cost.
 
+When `--swarm` is active, include a compact nitpick-depth summary before the category sections or inside `Code Quality and Maintainability`:
+
+- hotspots inspected
+- obvious hotspots not inspected, with why
+- accepted maintainability, test-quality, or product-surface findings
+- rejected false positives under `Looks Bad But Fine`
+
 If a section has no verified findings, say `none verified`. If `Looks Bad But Is Fine` has no entries, say `none found`.
 
 Keep the report concise, but do not bury serious production risks behind lower-priority cleanup.
