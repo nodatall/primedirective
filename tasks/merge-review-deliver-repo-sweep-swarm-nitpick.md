@@ -29,6 +29,7 @@ Do not stop because one round passed after fixes unless that round was a fresh r
 | Round | Scope | Result | Next action |
 | --- | --- | --- | --- |
 | 1 | `origin/main...HEAD` plus working tree | three `Disposition: fix` findings found and patched | validate, commit, and run fresh rereview |
+| 2 | fresh `origin/main...HEAD` after `2e0c019` | one `Disposition: fix` validation finding found and patched | validate and run final rereview |
 
 ## Findings
 
@@ -37,6 +38,7 @@ Do not stop because one round passed after fixes unless that round was a fresh r
 | MR-001 | 1 | material | fix | `$deliver --fast` contract surfaces | validated | `skills/deliver/agents/openai.yaml` still said to get approval before execution starts, contradicting the new `--fast` skip-only-initial-review mode. | Updated the Deliver OpenAI agent prompt to explain `--fast`, and added validator coverage for the prompt. |
 | MR-002 | 1 | material | fix | silent team-mode updater | validated | A corrupt `.last-session-update` file caused `scripts/prime-directive-session-update.sh` to print a Bash arithmetic error, violating the silent best-effort hook behavior. | Sanitized the throttle value before arithmetic and added CI/local coverage for corrupt throttle files. |
 | MR-003 | 1 | material | fix | Codex preflight freshness | validated | The Codex preflight wrapper called an updater that always backgrounded work, so it could return before a pull/reinstall completed despite the managed instruction saying to run preflight before first skill use. | Added `--foreground` mode to `prime-directive-session-update.sh`, made Codex preflight use it, and added CI/local coverage that preflight writes the throttle file before returning. |
+| MR-004 | 2 | minor | fix | branch whitespace hygiene | validated | `git diff --check origin/main...HEAD` reported trailing whitespace in `tasks/archive/2026-05-23-repo-sweep-nitpick-depth/execution-plan-repo-sweep-nitpick-depth.md`. | Removed trailing whitespace mechanically and reran the combined branch/working-tree whitespace check. |
 
 Status values:
 
@@ -54,6 +56,7 @@ Status values:
 | MR-001 | Synchronized the Deliver agent default prompt with `--fast` and guarded it in contract validation. | `skills/deliver/agents/openai.yaml`, `scripts/validate-skill-contracts.py` | `python3 scripts/validate-skill-contracts.py` |
 | MR-002 | Made corrupt throttle files non-fatal and silent. | `scripts/prime-directive-session-update.sh`, `.github/workflows/validate.yml` | corrupt-throttle local probe; `bash -n`; `git diff --check` |
 | MR-003 | Made Codex preflight run the update in foreground while leaving the Claude session hook backgrounded. | `scripts/prime-directive-session-update.sh`, `scripts/prime-directive-codex-preflight.sh`, `.github/workflows/validate.yml` | foreground preflight local probe; `bash -n`; `git diff --check` |
+| MR-004 | Removed trailing whitespace from the archived repo-sweep execution plan. | `tasks/archive/2026-05-23-repo-sweep-nitpick-depth/execution-plan-repo-sweep-nitpick-depth.md` | `git diff --check origin/main` |
 
 ## Validation Log
 
@@ -67,6 +70,7 @@ Status values:
 | Corrupt session throttle probe | passed | no stderr from `prime-directive-session-update.sh` after corrupt `.last-session-update` | none |
 | Foreground Codex preflight probe | passed | `prime-directive-codex-preflight.sh` returned after `.last-session-update` was written | none |
 | Team init required-mode probe | passed | generated `AGENTS.md`, `CLAUDE.md`, executable enforcement hook, and one PreToolUse hook entry | none |
+| `git diff --check origin/main` | passed | combined branch plus working tree has no whitespace errors after MR-004 | none |
 
 ## Remaining Human Decisions
 
@@ -79,12 +83,12 @@ Status values:
 ## Resume State
 
 - Current status: in_progress
-- Current phase: post-fix validation and rereview
-- Last completed step: Round 1 findings patched and targeted validation passed
-- Active step: commit validated fixes, then run a fresh full-branch rereview
-- Next exact action: stage and commit the validated merge-review fixes
+- Current phase: final validation and rereview
+- Last completed step: Round 2 whitespace finding patched and targeted validation passed
+- Active step: commit the whitespace/state update, then run the final full-branch rereview
+- Next exact action: stage and commit MR-004 plus this state update
 - Blockers: none
-- Last validation: `python3 scripts/validate-skill-contracts.py`; `git diff --check`; shell syntax; setup/preflight/team-init probes
+- Last validation: `python3 scripts/validate-skill-contracts.py`; `git diff --check`; `git diff --check origin/main`; shell syntax; setup/preflight/team-init probes
 - Protected paths: none; the previously dirty `$deliver --fast` contract files are in the merge-review implementation scope
 - Evidence paths: this file
 
