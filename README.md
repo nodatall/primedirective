@@ -16,6 +16,7 @@ Use this table when you already know the skill name. The detailed sections below
 | Skill | Invocation | Modifiers and request options |
 | --- | --- | --- |
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
+| `clarifier` | `$clarifier` | None |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
@@ -34,6 +35,7 @@ Use this table when you already know the skill name. The detailed sections below
 ## Which Skill Do I Use?
 
 - Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
+- Use `$clarifier` when you want help turning a rough draft or stuck thought into clearer writing by revising it yourself with questions and short teaching examples.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
 - Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
 - Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
@@ -60,6 +62,14 @@ Sets up a repo's first meaningful validation surface: lint, format, typecheck, t
 Modifiers:
 
 - `--with-hooks`: also wire local hooks when appropriate.
+
+### `$clarifier`
+
+Coaches revision for rough drafts, stuck thoughts, posts, essays, messages, and explanations. It restates the intended meaning, identifies one clarity issue, asks focused questions, may show one short annotated teaching example, and asks the user to write the next version themselves.
+
+Modifiers:
+
+- None.
 
 ### `$cleanup-merged-branches`
 
