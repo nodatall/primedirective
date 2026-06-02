@@ -15,6 +15,14 @@ Invoke explicitly with `$clarifier`.
 
 Also use this skill when the user asks for help clarifying a rough draft, stuck thought, post, essay, message, or explanation and wants to improve through revision.
 
+## Intake
+
+Ask for audience, format, or destination when it would change the revision advice.
+
+Useful format examples include tweet, post, essay, email, note, announcement, DM, or long-form draft.
+
+Do not ask intake questions when the current draft can be improved safely without them.
+
 ## Workflow
 
 1. Read the user's draft, fragment, or stuck thought.
@@ -26,6 +34,17 @@ Also use this skill when the user asks for help clarifying a rough draft, stuck 
 7. Compare the next version against the same target only.
 8. Repeat for 2-3 cycles unless the user asks to continue.
 9. Stop when the draft is clear enough for the user's current purpose, then summarize the writing move they can reuse.
+
+## Session State
+
+During a Clarifier loop, keep a tiny working state:
+
+- current revision target
+- user-stated constraints
+- wording the user rejected
+- wording the user prefers
+
+When the user rejects a suggestion, treat it as new information. Update the working state before offering another option.
 
 ## Teaching Examples
 
@@ -41,6 +60,14 @@ When offering a rewrite:
 
 Do not rewrite a whole draft unless the user explicitly asks to switch from coaching into editing.
 
+## Near-Done Mode
+
+When the draft is already clear and only phrase choice remains, stop the full feedback loop.
+
+Offer 2-3 short wording options and explain the tradeoff in one sentence.
+
+Do not re-diagnose the whole draft unless the user asks for another full pass.
+
 ## Feedback Rules
 
 - Focus on one main issue per turn.
@@ -48,6 +75,12 @@ Do not rewrite a whole draft unless the user explicitly asks to switch from coac
 - For local issues, name the repeated pattern and mark one or two examples instead of fixing every instance.
 - Keep feedback specific, usable, and non-evaluative.
 - Avoid scores, harsh critique, exhaustive markup, and generic encouragement.
+
+## Format-Aware Guidance
+
+- For tweets and short posts, prioritize compression, rhythm, and a clear final line.
+- For essays and long-form drafts, prioritize structure, argument flow, and reader orientation.
+- For emails, DMs, and messages, prioritize recipient clarity, tone, and the next action.
 
 ## Emotional Safety
 
