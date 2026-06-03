@@ -21,7 +21,6 @@ Use this table when you already know the skill name. The detailed sections below
 | `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
 | `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias |
-| `fix-loop` | `$fix-loop <broken behavior>` | None |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `merge-review` | `$merge-review` inside /goal $merge-review | None |
 | `plain-language` | `$plain-language` | None |
@@ -35,7 +34,6 @@ Use this table when you already know the skill name. The detailed sections below
 
 ## Which Skill Do I Use?
 
-- Use `$fix-loop` when one concrete thing is broken and you want Codex to reproduce, patch, retry the actual failing flow, add a focused probe when evidence is missing, and keep going until it is verified fixed or blocked.
 - Use `$clarifier` when you want help turning a rough draft or stuck thought into clearer writing by revising it yourself with questions and short teaching examples.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
 - Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
@@ -121,18 +119,6 @@ Request options:
 
 - `plan-key=<plan-key>`: build the goal plan from an existing PRD/TDD/tasks-plan set.
 - Source material in the thread: build the goal plan from the current conversation or pasted plan.
-
-Modifiers:
-
-- None.
-
-### `$fix-loop`
-
-Targets one concrete broken behavior. It reproduces the failure, patches the root cause, reruns the actual failing flow, reads fresh evidence, and repeats until the behavior is verified fixed or blocked. If repeated patches would be guesses, it adds the smallest useful log, deterministic test, replay, behavior probe, or harness before another fix attempt.
-
-Request options:
-
-- `<broken behavior>`: a short natural-language bug report, such as `checkout is 500ing locally` or `settings page flashes blank on launch`.
 
 Modifiers:
 

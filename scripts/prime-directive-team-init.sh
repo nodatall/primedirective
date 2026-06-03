@@ -61,7 +61,7 @@ Install or update it globally:
 
 $(install_block)
 
-Use installed skills such as \`\$deliver\`, \`\$fix-loop\`, \`\$review-chain\`, and \`\$repo-sweep\` when they match the request. Do not vendor Prime Directive's \`skills/\` tree into this repo.
+Use installed skills such as \`\$deliver\`, \`\$review-chain\`, \`\$repo-sweep\`, and \`\$ship-branch\` when they match the request. Do not vendor Prime Directive's \`skills/\` tree into this repo.
 
 Before the first Prime Directive skill use in a Codex session, run the best-effort preflight if it exists:
 
@@ -79,7 +79,7 @@ Install or update it globally:
 
 $(install_block)
 
-Use installed skills such as \`\$deliver\`, \`\$fix-loop\`, \`\$review-chain\`, and \`\$repo-sweep\` when they match the request. Do not vendor Prime Directive's \`skills/\` tree into this repo.
+Use installed skills such as \`\$deliver\`, \`\$review-chain\`, \`\$repo-sweep\`, and \`\$ship-branch\` when they match the request. Do not vendor Prime Directive's \`skills/\` tree into this repo.
 EOF
 )"
 else

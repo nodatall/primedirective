@@ -1,4 +1,0 @@
-interface:
-  display_name: "Fix Loop"
-  short_description: "Reproduce, patch, and retry until fixed"
-  default_prompt: "Use $fix-loop to reproduce the reported failure, patch the root cause, rerun the actual failing flow, and repeat until verified fixed or blocked."
