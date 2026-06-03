@@ -356,4 +356,6 @@ Prime Directive can use a visible ChatGPT Pro browser pass as an internal escala
 
 The public workflow stays on those skill modifiers. The implementation detail is direct browser control of the user's already-authenticated ChatGPT session: use Chrome automation first, and fall back to Computer Use when the visible UI is easier to operate than DOM selectors.
 
+If the visible browser target starts on `about:blank`, an empty new tab, or another non-ChatGPT page, the Pro workflow should first navigate it to `https://chat.com/`, then fall back to `https://chatgpt.com/` if needed, before declaring the browser path unavailable.
+
 The Pro pass is not complete until the answer is read and reduced into `tasks/tmp/pro-analysis-<plan-key>.md` with browser evidence, a findings ledger, artifact deltas, and a completion stamp containing `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes`. The visible selected model must be `Pro Extended` or `Extended Pro`; `Thinking Extended` is not enough. If the browser cannot select the model, submit the bundle, wait for completion, or capture the answer, treat the Pro gate as failed rather than silently continuing.

@@ -15,6 +15,8 @@ Do not use a third-party browser runner or private automation profile for Pro an
 
 Chrome automation is the default because it can use the user's real browser session and inspect the DOM. Computer Use is the fallback for UI drift, model-picker changes, attachment controls, or copy buttons that are easier to operate visually than through selectors. If neither driver can operate ChatGPT, stop and report the failed Pro browser gate.
 
+If the first visible browser target is blank, `about:blank`, an empty new tab, or a non-ChatGPT page, do not treat that as an unavailable browser path. Navigate the visible target to `https://chat.com/` first, allow redirects to the current ChatGPT host, then re-check whether the ChatGPT composer, login wall, or model picker is visible. Use `https://chatgpt.com/` as the next navigation fallback if `chat.com` does not resolve cleanly. Only report a failed Pro browser gate after this navigation recovery has been attempted or the browser driver cannot navigate the visible target at all.
+
 Do not introduce a private browser profile or package-managed browser runner. A Pro browser run must be observable in the user's normal logged-in ChatGPT surface, with visible failure points such as model picker unavailable, composer unavailable, upload failed, no response completed, or answer copy failed.
 
 For any workflow invoked with `--pro-analysis`, a degraded fallback is not a completed Pro pass. If the run did not visibly use Pro Extended, if the answer was not read, or if the browser driver evidence cannot be recorded, the Pro synthesis may be saved for diagnostic value, but it must not set `pro_synthesis_complete: yes`.
