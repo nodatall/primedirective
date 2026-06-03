@@ -15,6 +15,7 @@ The answer should:
 - run the default adversarial council for hard, ambiguous, high-leverage, or repeated-failure questions
 - separate evidence from inference and synthesis
 - try to falsify the leading view before finalizing it
+- focus falsification on load-bearing claims that would change the conclusion, confidence, or next verification step if wrong
 - report material uncertainty honestly
 - stop before execution
 
@@ -113,6 +114,7 @@ Run the adversarial council before final synthesis.
 - Synthesize from an internal evidence matrix, not from memo polish.
 - Include a compact Council Audit Summary only when the council materially changed the conclusion, confidence, or next verification step.
 - Ask what evidence would weaken the current best view.
+- Identify which claims are load-bearing before the final answer. Spend extra effort trying to disprove those claims; do not spend the same effort on side claims that would not change the answer.
 - Look for hidden constraints, incentives, or boundary conditions that the leading explanation may be skipping.
 - If the prompt is about finding alternatives, look for options that change the shape of the problem rather than merely tuning the current approach.
 

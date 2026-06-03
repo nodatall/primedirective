@@ -129,6 +129,7 @@ Before the first external search:
 16. Do not create a local-only exception for narrowly scoped or repo-heavy tasks. If the user wants a faster repo-only pass, they should use planning without `--deep-research`.
 17. Budget a real deep pass, typically around 20-30 minutes for non-trivial plans. Do not compress it into a fast citation pass. If the plan is too narrow to justify that level of operator discovery, say so and recommend normal planning instead of pretending `--deep-research` was used.
 18. End the research pass by triaging the working memo:
+   - run the Final Load-Bearing Falsification Pass before closing the memo
    - choose the highest-value findings to adopt
    - note meaningful ideas rejected or deferred and why
    - update PRD/TDD before tasks-plan generation
@@ -168,6 +169,7 @@ Before deep research may be considered complete, gather and record:
 - source-date metadata for every substantive external source
 - at least 1 section that distinguishes adopt-now guidance from watchlist or avoid guidance
 - at least 1 plan-specific checklist or implementation guidance section derived from the findings
+- a completed Final Load-Bearing Falsification Pass for the claims that could change the plan
 
 Do not waive these minimums for narrow or local-only tasks when `--deep-research` is present.
 
@@ -203,6 +205,34 @@ For source authority and source conflict handling:
 - do not adopt a conflicted recommendation until the conflict is reconciled or explicitly marked as a residual risk
 
 Follow-up passes count only when they resolve a source conflict, verify a version or provider constraint, validate a limit, failure mode, rollout, rollback, or recovery concern, test a recommendation against an alternative, or prove an expected bucket is not applicable.
+
+## Final Load-Bearing Falsification Pass
+
+Before completing deep research, run one final pass that tries to change the conclusion, not merely decorate it with more citations.
+
+1. Identify the load-bearing claims in the memo. A claim is load-bearing when changing it would change the recommended approach, product or technical constraint, rollout order, verification strategy, risk rating, or task sequencing.
+2. Mark non-load-bearing claims as lower priority. If changing a claim would not change what the plan does, do not spend scarce research time chasing it unless it reveals a broader evidence problem.
+3. For each load-bearing claim, question the evidence:
+   - what source actually supports it
+   - whether that source is current enough, authoritative enough, and version-appropriate
+   - what source or fact would most directly disprove it
+   - whether there is conflicting evidence from a stronger source family
+4. If the existing evidence is thin, stale, conflicted, or indirect, run targeted follow-up web research specifically aimed at falsifying the claim.
+5. If the follow-up research weakens or disproves a load-bearing claim, change the conclusion, recommendation level, PRD/TDD edits, task-plan inputs, or confidence. Do not bury the contradiction as a footnote.
+6. If the claim survives falsification, record the strongest counterevidence found or the reason no material counterevidence was found.
+
+The working memo must include a `Load-Bearing Falsification Pass` section with one row per checked claim:
+
+- `claim_id`
+- `claim`
+- `why_load_bearing`
+- `current_support_source_ids`
+- `strongest_counterevidence_or_gap`
+- `falsification_searches_or_sources`
+- `outcome`
+- `artifact_or_conclusion_change`
+
+Use outcomes such as `survived`, `revised`, `rejected`, `deferred`, or `not_load_bearing`. A final falsification pass is incomplete if any load-bearing claim has no support source, no counterevidence/gap note, or no explicit outcome.
 
 ## Research buckets
 
@@ -272,6 +302,9 @@ The working memo must end with a Deep Research Completion Stamp containing:
 - `research_questions_answered`
 - `buckets_reviewed`
 - `follow_up_passes_completed`
+- `load_bearing_claims_checked`
+- `falsification_follow_up_passes_completed`
+- `conclusions_changed_by_falsification`
 - `adopted_findings_count`
 - `rejected_or_deferred_findings_count`
 - `prd_tdd_sections_changed`
@@ -280,7 +313,7 @@ The working memo must end with a Deep Research Completion Stamp containing:
 
 Record `research_started_at` and `research_completed_at` as ISO-like timestamps with timezone when known. Record `elapsed_minutes` as a numeric wall-clock duration from the start of the web-backed research pass through completion-stamp triage. Set `duration_expectation_met: yes` only when a non-trivial plan received the real deep pass required above, typically at least 20 minutes. If `elapsed_minutes` is below 20, `under_20_minutes_explanation` is required and must state why the pass is incomplete or why the user should rerun normal planning instead of claiming completed deep research.
 
-Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, PRD/TDD revisions, and duration expectation are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
+Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, Load-Bearing Falsification Pass, PRD/TDD revisions, and duration expectation are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
 
 Before setting `evidence_bar_met: yes`, print a short `Deep Research Summary` in the visible thread/log: adopted findings, rejected/deferred ideas, blockers, and artifact changes.
 
@@ -296,6 +329,7 @@ The temporary research memo must contain:
 - Evidence Ledger with the required source fields and count eligibility
 - Draft-Linked Research Agenda with plan-changing draft links for each question
 - Finding-to-Artifact Delta with the required finding, disposition, support, source, artifact-change, and task-input fields
+- Load-Bearing Falsification Pass with claim IDs, counterevidence or evidence gaps, targeted follow-up research when needed, outcomes, and conclusion/artifact changes
 - Deep Research Completion Stamp with timestamps, elapsed duration, counts, duration expectation status, under-20-minute explanation when applicable, and `evidence_bar_met`
 - external primary sources reviewed, with direct links and one-line notes on what each source answered
 - source freshness notes for each substantive external source
@@ -316,6 +350,7 @@ The temporary research memo must contain:
 - which findings came from external web sources versus repo-local sources
 - explicit labels for sourced conclusions versus synthesis versus inference
 - explicit note when a bucket was not applicable
+- explicit note when a claim was not checked further because changing it would not change the plan
 
 Do not start `tasks-plan` drafting until this memo is substantively complete and the adopted findings have been written back into PRD/TDD.
 
@@ -359,4 +394,5 @@ Before continuing to tasks-plan generation:
 5. The working memo meets the minimum evidence bar, including the external-source minimum and required web-status sections.
 6. The Deep Research Completion Stamp records `research_started_at`, `research_completed_at`, `elapsed_minutes`, and `duration_expectation_met: yes`.
 7. The Deep Research Completion Stamp says `evidence_bar_met: yes`.
-8. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.
+8. Load-bearing claims were challenged with counterevidence or targeted follow-up research before conclusions were finalized.
+9. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.

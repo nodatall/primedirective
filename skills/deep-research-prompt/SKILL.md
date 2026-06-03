@@ -66,6 +66,8 @@ The generated prompt must ask ChatGPT Deep Research to:
 - when broad source discovery applies, warn against over-indexing on SEO-dominant, documentation-heavy, incumbent, or already-named providers
 - distinguish adopt-now recommendations from speculative or watchlist ideas
 - cite sources and explain why each source is current enough for the claim it supports
+- before finalizing, run a load-bearing falsification pass: identify which claims would change the recommendation if wrong, question the evidence for those claims, search for counterevidence when needed, and revise the conclusion if the evidence breaks
+- avoid over-researching non-load-bearing claims when changing them would not change the plan, recommendation, or next action
 - produce concrete changes to make before local planning or execution
 
 ## Output

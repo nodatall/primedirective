@@ -42,6 +42,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
 - Generate materially different candidate explanations or approaches when more than one path is plausible. Avoid cosmetic variants of the same idea.
 - Use the adversarial council protocol by default for hard, ambiguous, high-leverage, or repeated-failure questions.
 - Try to disconfirm the leading explanation before settling on it.
+- Give extra falsification effort to load-bearing claims: claims that would change the conclusion, confidence, or next verification step if wrong.
 - Separate observation, inference, and synthesis internally, and surface the distinction when it matters.
 - Explain in plain language first, then add technical detail.
 - Use `skills/shared/references/plain-language.md` for the opening verdict and any user-facing restatement.
@@ -79,6 +80,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
    - Distinguish what the evidence shows from what it merely suggests.
 7. If `--deep-research` is present, run a web-backed research pass after local breadth work has identified the real question.
    - Use the current date, source freshness, primary sources, operator-practice sources, and conflict handling from `deep-research.md`.
+   - Apply the Final Load-Bearing Falsification Pass from `deep-research.md`: identify which claims would change the analysis if wrong, search for counterevidence when support is thin or conflicted, and revise the diagnosis when falsification changes the evidence.
    - Do not create PRD, TDD, tasks-plan, or planning stamps.
    - Print a visible `First-Principles Deep Research Summary` before the final answer or as a clearly labeled part of the final answer.
    - Include enough detail in that summary for the user to audit whether `--deep-research` actually ran, not just that a few searches happened.
@@ -99,6 +101,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
    - Preserve serious minority reports when a losing view found a risk the winning view cannot fully dismiss.
    - If current evidence cannot separate materially different explanations, use the verification pivot: stop theorizing, state the missing evidence plainly, and name the smallest verification step that would separate the explanations.
    - Before final synthesis, build an internal evidence matrix that maps surviving claims to support, counterevidence, falsifier, and verification need. Use this matrix to avoid choosing the most polished lane instead of the best-supported one.
+   - Mark load-bearing claims in the matrix. If changing a claim would change the answer, confidence band, or next verification step, challenge its evidence directly before final synthesis. If `--deep-research` is active and local evidence is not enough, use targeted web research to look for counterevidence.
 10. Recompose the findings into one coherent answer that starts plain and becomes more technical only as needed.
 11. Choose the smallest user-facing output shape that preserves the conclusion, confidence, and decisive evidence.
    - Keep internal subquestions, discarded hypotheses, and intermediate reasoning private unless surfacing them will materially help the user.
@@ -131,6 +134,7 @@ When `--deep-research` is active, the answer must include a compact `First-Princ
 - rejected or deferred ideas
 - source conflicts or blockers
 - what changed in the analysis because of web research
+- load-bearing claims checked and whether falsification changed the conclusion
 - `evidence_bar_met: yes` or `evidence_bar_met: no`
 
 For first-principles mode, `evidence_bar_met: yes` means the web-backed pass met the applicable spirit of `deep-research.md`: live sources were opened, source freshness was considered, external primary and operator-practice evidence was enough for the claim being made, and the final diagnosis changed or was strengthened through that evidence. If that cannot be shown in the visible summary, set `evidence_bar_met: no` and avoid calling the result completed deep research.

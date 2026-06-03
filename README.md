@@ -93,6 +93,8 @@ Modifiers:
 
 Creates a paste-ready prompt for ChatGPT.com Deep Research from the current thread. It assumes you will manually select the relevant GitHub repo, files, or project context in ChatGPT before starting the research.
 
+The generated prompt asks Deep Research to end with a load-bearing falsification pass: test the claims that would change the recommendation if wrong, search for counterevidence when needed, and revise the conclusion when the evidence breaks.
+
 Modifiers:
 
 - None.
@@ -138,7 +140,7 @@ Modifiers:
 
 ### `$first-principles-mode`
 
-Runs a deep, read-only analysis pass. It is for mechanism-level judgment, competing explanations, root-cause reasoning, or plan critique before deciding what to build or change. It uses a default adversarial council with independent lanes and rebuttal rounds before synthesis. When the evidence cannot separate plausible explanations, it should stop and name the smallest verification step needed next.
+Runs a deep, read-only analysis pass. It is for mechanism-level judgment, competing explanations, root-cause reasoning, or plan critique before deciding what to build or change. It uses a default adversarial council with independent lanes and rebuttal rounds before synthesis. It gives extra falsification effort to load-bearing claims that would change the conclusion, confidence, or next verification step if wrong. When the evidence cannot separate plausible explanations, it should stop and name the smallest verification step needed next.
 
 Modifiers:
 

@@ -148,6 +148,7 @@ Evaluate and improve when `--deep-research` was used:
 - Whether the deep-research pass reviewed the initial PRD/TDD drafts rather than researching in the abstract.
 - Whether the Draft-Linked Research Agenda tied each research question to a draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change.
 - Whether the Finding-to-Artifact Delta exists and records finding ID, research question ID, bucket, disposition, recommendation, recommendation level, support type, source IDs, PRD/TDD section changes, task-plan inputs, and disposition reason.
+- Whether the Load-Bearing Falsification Pass exists, identifies claims that could change the plan, records counterevidence or evidence gaps, and shows any conclusion or artifact changes caused by falsification.
 - Whether the selected design reflects the strongest research-backed recommendation.
 - Whether the best ideas from the research memo were pulled back into PRD/TDD before tasks-plan generation.
 - Whether source-backed risks, rollout work, or verification gaps were carried into TDD and tasks-plan.
@@ -196,13 +197,14 @@ The improved plan must explicitly satisfy all of these:
 16. Any `--deep-research` pass is explicitly date-anchored, source-freshness-aware, and scoped to the actual stack and constraints.
 17. Any `--deep-research` pass leaves behind plan-specific checklist or implementation guidance in the memo before cleanup or preservation.
 18. Any `--deep-research` pass includes an auditable Evidence Ledger, Finding-to-Artifact Delta, and Deep Research Completion Stamp.
-19. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
-20. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
-21. Any Pro-backed legacy planning pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
-22. Any Pro-backed legacy planning completion stamp says `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
-23. Any adopted implementation-impact Pro finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
-24. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
-25. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
+19. Any `--deep-research` pass includes a Load-Bearing Falsification Pass before the plan is improved or allowed to proceed.
+20. Any `--deep-research` Completion Stamp says `evidence_bar_met: yes` before the plan is improved or allowed to proceed.
+21. Any adopted implementation-impact research finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
+22. Any Pro-backed legacy planning pass includes a Pro synthesis memo, a short visible Pro findings summary, local verification/disposition for every material Pro finding, conflict reconciliation, an artifact delta, and a Pro synthesis completion stamp.
+23. Any Pro-backed legacy planning completion stamp says `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before the plan is improved, refined, or allowed to proceed.
+24. Any adopted implementation-impact Pro finding is carried into PRD/TDD and tasks-plan, or explicitly rejected, deferred, or marked as a non-goal with a reason.
+25. The user saw a separate three-paragraph plain-language checkpoint as a text-only turn before artifact drafting started, unless `--direct` was active.
+26. Unsupported low-level implementation details were removed, softened, or explicitly deferred to the execution-time sub-task contract.
 
 ## For every issue identified
 

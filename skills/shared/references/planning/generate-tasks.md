@@ -70,7 +70,7 @@ See `skills/shared/references/execution/task-management.md` for execution workfl
 
 1. Confirm `<plan-key>` is known.
 2. Confirm PRD and TDD are both finalized first. If `--deep-research` is active, confirm they were revised after the research pass before continuing.
-3. If `--deep-research` is active, verify the Deep Research Completion Stamp before generating tasks, including `operator_practice_sources_count`. If the stamp is missing, incomplete, or says `evidence_bar_met: no`, hard-stop task generation and report the unmet research checks instead of generating around the gap.
+3. If `--deep-research` is active, verify the Deep Research Completion Stamp before generating tasks, including `operator_practice_sources_count`, `load_bearing_claims_checked`, and `conclusions_changed_by_falsification`. If the stamp is missing, incomplete, or says `evidence_bar_met: no`, hard-stop task generation and report the unmet research checks instead of generating around the gap.
 4. If `$plan-and-execute --pro-analysis` is active, verify `tasks/tmp/pro-analysis-<plan-key>.md` before generating tasks. If the memo is missing, lacks browser evidence for a real Pro browser run, lacks a Pro synthesis completion stamp, says anything other than `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes`, or leaves adopted Pro findings unapplied/unmapped, hard-stop task generation and report the unmet Pro synthesis gate.
 5. Derive task sequencing from finalized PRD and TDD obligations.
 6. Order work risk-first and dependency-aware.
@@ -120,6 +120,8 @@ Contract details are requirements when they affect implementation. Do not let st
 If a parent task or candidate sub-task mixes frontend, backend, database, deployment, CI, and runtime validation work, split it by primary surface before finalizing the task plan unless it is explicitly justified as an integration slice.
 
 When `--deep-research` is active, this coverage rule also applies to adopted findings from the Finding-to-Artifact Delta. Adopted findings that create `task_plan_inputs_created` must appear in the task plan, or the PRD/TDD must explicitly explain why they are deferred or non-goals.
+
+When `--deep-research` is active, task generation must also reflect any implementation-impact changes from the Load-Bearing Falsification Pass. If falsification changed a conclusion, risk, verification strategy, or rollout sequence, that change must be visible in PRD/TDD or in the generated task ordering before coding starts.
 
 ## Hard stop
 

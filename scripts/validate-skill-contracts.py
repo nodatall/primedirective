@@ -364,11 +364,39 @@ def validate_deep_research_completion_stamp(errors: list[str]) -> None:
         "duration_expectation_met",
         "under_20_minutes_explanation",
         "duration_expectation_met: yes",
+        "Load-Bearing Falsification Pass",
+        "load_bearing_claims_checked",
+        "falsification_follow_up_passes_completed",
+        "conclusions_changed_by_falsification",
         "evidence_bar_met: yes",
     ]
     for token in owner_tokens:
         if token not in deep_research:
             fail(errors, "PD-DEEP-RESEARCH-STAMP-OWNER", f"skills/shared/references/planning/deep-research.md missing completion-stamp token: {token}")
+
+
+def validate_deep_research_prompt_contract(errors: list[str]) -> None:
+    skill = (ROOT / "skills/deep-research-prompt/SKILL.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+
+    skill_tokens = [
+        "load-bearing falsification pass",
+        "identify which claims would change the recommendation if wrong",
+        "search for counterevidence when needed",
+        "revise the conclusion if the evidence breaks",
+        "avoid over-researching non-load-bearing claims",
+    ]
+    for token in skill_tokens:
+        if token not in skill:
+            fail(errors, "PD-DEEP-RESEARCH-PROMPT-FALSIFICATION", f"skills/deep-research-prompt/SKILL.md missing token: {token}")
+
+    readme_tokens = [
+        "load-bearing falsification pass",
+        "revise the conclusion when the evidence breaks",
+    ]
+    for token in readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-DEEP-RESEARCH-PROMPT-README", f"README.md missing deep-research-prompt token: {token}")
 
 
 def validate_first_principles_adversarial_council(errors: list[str]) -> None:
@@ -386,6 +414,7 @@ def validate_first_principles_adversarial_council(errors: list[str]) -> None:
         "leading explanation, confidence band, decisive evidence gap, or next verification step",
         "Preserve serious minority reports",
         "internal evidence matrix",
+        "load-bearing claims",
         "compact Council Audit Summary only when",
         "Do not include a debate transcript.",
     ]
@@ -399,6 +428,7 @@ def validate_first_principles_adversarial_council(errors: list[str]) -> None:
         "Require rebuttal rounds.",
         "Use two rebuttal rounds by default",
         "Synthesize from an internal evidence matrix",
+        "load-bearing claims",
         "Council Audit Summary only when",
         "parallel memos without rebuttal",
     ]
@@ -409,6 +439,7 @@ def validate_first_principles_adversarial_council(errors: list[str]) -> None:
     readme_tokens = [
         "default adversarial council",
         "independent lanes and rebuttal rounds",
+        "load-bearing claims",
     ]
     for token in readme_tokens:
         if token not in readme:
@@ -901,6 +932,7 @@ def main() -> int:
     validate_owner_paths(errors)
     validate_plan_refine_completion_gate(errors)
     validate_deep_research_completion_stamp(errors)
+    validate_deep_research_prompt_contract(errors)
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
     validate_review_plan_contract(errors)
