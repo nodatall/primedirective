@@ -30,6 +30,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `repo-sweep` | `$repo-sweep` | `--pro-analysis`, `--swarm`, `--dep-scan`, `--preserve-review-artifacts`; `--swarm` includes nitpick depth; use `/goal $repo-sweep` for repair/resweep |
 | `review-chain` | `$review-chain` | `--preserve-review-artifacts`; optional task ID in the request for task-scoped review |
 | `review-plan` | `$review-plan [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--approval-gate`; reviews active `$deliver` execution plans |
+| `skill-review` | `$skill-review [skill=<skill-name>]` | `skill=<skill-name>`, `scenario=<path-or-name>`, `baseline=<git-ref>`, `candidate=<git-ref-or-worktree>`, `--preserve-review-artifacts` |
 | `ship-branch` | `$ship-branch` | None |
 
 ## Which Skill Do I Use?
@@ -45,6 +46,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation. It patches the plan by default and stops before code changes.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep. It includes bounded adversarial-prior checks, but remains report-first by default.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop. It uses the same bounded adversarial-prior checks before declaring the branch ready.
+- Use `$skill-review` before merging Prime Directive skill changes when you want evidence that the candidate skill contract works better in practice. It runs baseline and candidate skill versions against the same realistic scenario, then judges the artifacts.
 - Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Use `/goal $repo-sweep --swarm --preserve-review-artifacts` when you want a longer nitpicky sweep for maintainability, test quality, code slop, and production risk.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
 - Use `$bootstrap-repo-rules` when a repo needs its first meaningful validation, formatting, build, test, or CI surface.
@@ -214,6 +216,21 @@ Request options:
 Modifiers:
 
 - `--approval-gate`: run the same review loop read-only, write proposed plan fixes to `tasks/tmp/review-plan-<plan-key>.md`, and stop before editing the execution plan.
+
+### `$skill-review`
+
+Reviews Prime Directive skill changes before merge by comparing behavior on a realistic scenario. It extracts the baseline and candidate skill contracts, runs both versions with comparable inputs, preserves the run artifacts in a state doc and scratch directory, and uses a fresh judge to decide whether the candidate is better, neutral, regressive, or inconclusive.
+
+Request options:
+
+- `skill=<skill-name>`: review one changed skill instead of inferring from the diff.
+- `scenario=<path-or-name>`: use a provided scenario prompt, artifact, or named local case.
+- `baseline=<git-ref>`: compare against this baseline instead of the resolved merge base or `origin/main`.
+- `candidate=<git-ref-or-worktree>`: compare against this candidate instead of the current checkout.
+
+Modifiers:
+
+- `--preserve-review-artifacts`: keep scratch artifacts after the review completes.
 
 ### `$ship-branch`
 

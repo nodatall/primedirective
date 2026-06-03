@@ -42,6 +42,7 @@ Prime Directive contracts should have one owner. Consumers may include short ori
 | `merge-review` | `skills/merge-review/SKILL.md; skills/merge-review/references/*.md` | README, skill users | `SKILL.md` owns activation, scope, loop shape, and stop gates; references own the state-document template and merge-readiness rubric. |
 | `repo-sweep` | `skills/repo-sweep/SKILL.md; skills/repo-sweep/references/*.md` | README, skill users | `SKILL.md` owns activation, modifiers, phase order, and stop gates; references own detailed sweep checks, goal/resweep rules, and report formats unique to `$repo-sweep`. |
 | `review-plan` | `skills/review-plan/SKILL.md` | README, skill users | Owns active `$deliver` execution-plan review, adversarial council loop, auto-fix default, approval gate, review log, and completion stamp. |
+| `skill-review` | `skills/skill-review/SKILL.md` | README, skill users | Owns pre-merge skill-behavior comparison, old/new shadow-run artifacts, judge rubric, state document, scratch path, and completion stamp. |
 | `harness-drift` | `skills/shared/references/harness-drift.md` | legacy task-artifact reference only | Retired from the public skill surface; keep only as legacy reference material until old PRD/TDD/tasks-plan execution compatibility is removed. |
 | `reasoning-budget` | `skills/shared/references/reasoning-budget.md` | all Prime Directive workflow skills | Owns reasoning tier mapping by workflow role. |
 

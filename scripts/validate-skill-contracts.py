@@ -27,6 +27,7 @@ REQUIRED_CONTRACTS = {
     "plan-refine": "skills/plan-refine/SKILL.md",
     "plan-to-goal": "skills/plan-to-goal/SKILL.md",
     "review-plan": "skills/review-plan/SKILL.md",
+    "skill-review": "skills/skill-review/SKILL.md",
     "reasoning-budget": "skills/shared/references/reasoning-budget.md",
 }
 

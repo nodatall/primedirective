@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Review"
+  short_description: "Compare old and new skill behavior"
+  default_prompt: "Use $skill-review to review a Prime Directive skill change before merge by running baseline and candidate skill contracts on the same realistic scenario, preserving artifacts, and judging whether the candidate produces a materially better, neutral, regressive, or inconclusive result."
