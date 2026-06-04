@@ -99,7 +99,7 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, asks the user to review the Markdown plan file unless `--fast` is present, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and user approval, or immediately after refinement in `--fast` mode, the plan is checked until no material backlog issues remain, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, asks the user to review the Markdown plan file unless `--fast` is present, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. For frontend-facing plans, it creates a simple linked HTML mockup before approval so the user can see the expected visual direction. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and user approval, or immediately after refinement in `--fast` mode, the plan is checked until no material backlog issues remain, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
@@ -113,7 +113,7 @@ Modifiers:
 
 ### `$plan-to-goal`
 
-Converts messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, then prints a separate compact paste-ready `/goal` prompt that references that file. Before writing the file, it optimizes rough prose into objective, starting evidence, target/baseline, work loop, measurable acceptance criteria, boundaries, and resume state. The goal plan includes target/baseline guidance when metrics exist, state-recording guidance for long runs, and review wording that asks the user to say `start this as a goal`.
+Converts messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, then prints a separate compact paste-ready `/goal` prompt that references that file. Before writing the file, it optimizes rough prose into objective, plain-language summary, starting evidence, target/baseline, work loop, measurable acceptance criteria, explicit stop conditions, boundaries, and resume state. The goal plan includes target/baseline guidance when metrics exist, state-recording guidance for long runs, no-early-stop guidance, and review wording that asks the user to say `start this as a goal`.
 
 Request options:
 

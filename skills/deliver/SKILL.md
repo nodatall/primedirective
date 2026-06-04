@@ -63,6 +63,7 @@ When a plan document contains the Deliver implementation instruction, that docum
 Use these files:
 
 - Draft plan and durable plan: `tasks/execution-plan-<plan-key>.md`
+- Optional frontend mockup: `tasks/ui-mockup-<plan-key>.html`
 - Durable goal plan: `tasks/goal-plan-<plan-key>.md`
 - Optional active-step note: `tasks/tmp/active-step-<plan-key>-<step>.md`
 - Completed plan archive: `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`
@@ -110,6 +111,14 @@ Refined execution-plan rules:
 - In `--fast` mode, omit the normal initial review request and include a short `Fast mode note:` that says the initial plan-review pause was skipped by `--fast`.
 - Do not add `Status`, `Result`, or `Commit` lines by default.
 - Keep validation evidence and commit details in the final handoff or git history unless the evidence changes the plan.
+
+Frontend plan mockup rules:
+
+- When a `$deliver` plan touches a frontend component, rendered content, layout, styling, or an interaction flow, create a simple standalone HTML/CSS mockup at `tasks/ui-mockup-<plan-key>.html` before asking the user to approve the plan.
+- Read `docs/DESIGN.md` first when it exists, and make the mockup reflect the current product style and expected changed state. The mockup is a visual intent artifact, not production source code.
+- Keep the mockup lightweight: static HTML and CSS are enough unless a small inline script is needed to show an expected interaction state.
+- Link the mockup from the execution plan with a short `Visual mockup:` note so the user can open it while reviewing the plan.
+- If the expected visual result cannot be inferred without a product/design decision, add an `Open question:` checkbox instead of inventing the UI and stop before implementation.
 
 ## Goal Plan Delegation
 
@@ -184,6 +193,7 @@ Rules:
    - Phrase steps as user-readable outcomes or actions, not implementation jargon.
    - Keep future items readable rather than fully specified.
    - Keep the main plan high level. Detailed files, tests, commands, and done conditions belong in the active-step packet when execution reaches that slice.
+   - If the plan is frontend-facing, create or update `tasks/ui-mockup-<plan-key>.html` and link it from the execution plan before step 5.
 4.5. If `--pro-analysis` is present, run Pro analysis before refinement.
    - Load `skills/shared/references/analysis/pro-browser-analysis.md`.
    - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the Pro input.
@@ -263,6 +273,7 @@ Rules:
    - Skipping final review is allowed only when a real blocker prevents it; in that case, stop with the blocker and do not claim completion.
 13. Archive the execution plan after final review is complete.
    - Move `tasks/execution-plan-<plan-key>.md` to `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`.
+   - If `tasks/ui-mockup-<plan-key>.html` exists, move it to the same archive directory as `ui-mockup-<plan-key>.html` so the execution-plan link remains reviewable.
    - Archive only after final review findings are dispositioned and any required remediation has been verified.
    - Leave the archived plan readable; do not rewrite it into an audit log during archive.
    - Remove disposable active-step temp files unless they are still needed to explain an unresolved blocker.

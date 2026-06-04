@@ -68,6 +68,8 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 - <Only include when useful.>
 
+Visual mockup: <relative link to `ui-mockup-<plan-key>.html` when this plan is frontend-facing.>
+
 ## Steps
 
 ### 1. <Plain-language phase>
@@ -98,3 +100,11 @@ Rules:
 - `--fast` mode: omit the initial review request lines and include `Fast mode note: Initial plan-review pause skipped by --fast; continue into implementation after refinement unless a fast-mode stop condition applies.`
 - Do not add `Status`, `Result`, or `Commit` lines by default.
 - Keep validation evidence and commit details in the final handoff or git history unless the evidence changes the plan.
+
+Frontend mockup rules:
+
+- If the plan touches a frontend component, rendered content, layout, styling, or interaction flow, create a simple standalone HTML/CSS mockup at `tasks/ui-mockup-<plan-key>.html` before asking for plan approval.
+- Read `docs/DESIGN.md` first when it exists, and match the current product style as closely as a lightweight static mockup allows.
+- Link the mockup from the plan with `Visual mockup: [ui-mockup-<plan-key>.html](ui-mockup-<plan-key>.html)`.
+- Treat the mockup as visual intent only. Do not import it as production code, and do not let it replace browser verification after implementation.
+- If the mockup exposes an unresolved design/product decision, write that as an `Open question:` checkbox and stop before implementation.
