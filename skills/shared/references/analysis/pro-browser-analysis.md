@@ -1,6 +1,6 @@
 # Pro Browser Analysis
 
-Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro-analysis`, `$deliver --pro-analysis`, or `$repo-sweep --pro-analysis`.
+Use this reference only when a Prime Directive skill explicitly activates Pro escalation, such as `$first-principles-mode --pro-analysis`, `$deliver --pro-analysis`, `$deliver --deep-research --pro-analysis`, or `$repo-sweep --pro-analysis`.
 
 ## Browser Driver
 
@@ -60,13 +60,12 @@ Before starting the ChatGPT browser run, confirm the plan key and the current pl
 
 For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`. Use that plan plus selected repo context as the Pro browser input. Do not run Pro against only the raw conversation when a deliver plan has not yet been created, and do not require a separate user review before the Pro pass.
 
-When `--deep-research` is also active, the gate is hard:
+When `$deliver --deep-research --pro-analysis` is active, the gate is hard:
 
-- `tasks/prd-<plan-key>.md` and `tasks/tdd-<plan-key>.md` exist as initial drafts.
 - `tasks/tmp/research-plan-<plan-key>.md` exists.
 - The research memo contains a Deep Research Completion Stamp with `evidence_bar_met: yes`.
-- The PRD/TDD have been revised from adopted research findings, or the research memo records that no PRD/TDD section changes were needed.
-- No current research finding marked adopted is still waiting to be reflected in PRD/TDD or explicitly deferred/rejected with a reason.
+- The execution plan has been revised from adopted research findings, or the research memo records that no execution-plan section changes were needed.
+- No current research finding marked adopted is still waiting to be reflected in `tasks/execution-plan-<plan-key>.md` or explicitly deferred/rejected with a reason.
 
 If any pre-browser check fails, stop. Do not run the Pro browser pass as a substitute for the missing research pass. Report the unmet gate and complete or repair deep research first.
 

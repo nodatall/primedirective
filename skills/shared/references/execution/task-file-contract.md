@@ -21,7 +21,7 @@ See `skills/shared/references/contract-ownership.md` for the broader contract ow
 
 ## Modifier Ownership
 
-- `--deep-research` is valid where the invoking skill explicitly supports it; detailed behavior is owned by `skills/shared/references/planning/deep-research.md`.
+- `--deep-research` is valid with `$first-principles-mode`, `$deliver`, and legacy planning flows that explicitly support it; detailed behavior is owned by `skills/shared/references/planning/deep-research.md`.
 - `--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, and `$repo-sweep`; detailed behavior is owned by `skills/shared/references/analysis/pro-browser-analysis.md`.
 
 ## Plan Key Resolution

@@ -20,7 +20,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
 | `create-architecture` | `$create-architecture` | None |
 | `deep-research-prompt` | `$deep-research-prompt` | None |
-| `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias |
+| `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--deep-research`, `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `merge-review` | `$merge-review` inside /goal $merge-review | None |
 | `plain-language` | `$plain-language` | None |
@@ -99,7 +99,7 @@ Modifiers:
 
 ### `$deliver`
 
-Creates or loads one plain-language execution plan, runs ChatGPT Pro pressure when requested, refines the plan immediately, asks the user to review the Markdown plan file unless `--fast` is present, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. For frontend-facing plans, it creates a simple linked HTML mockup before approval so the user can see the expected visual direction. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and user approval, or immediately after refinement in `--fast` mode, the plan is checked until no material backlog issues remain, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
+Creates or loads one plain-language execution plan, runs web-backed deep research when requested, runs ChatGPT Pro pressure when requested, refines the plan immediately, asks the user to review the Markdown plan file unless `--fast` is present, or delegates to `$plan-to-goal` when the source is really an adaptive evidence loop. For frontend-facing plans, it creates a simple linked HTML mockup before approval so the user can see the expected visual direction. Draft checklist mode remains available through legacy `$deliver discuss` for explicit planning discussion. After refinement and user approval, or immediately after refinement in `--fast` mode, the plan is checked until no material backlog issues remain, then worked through one unchecked item at a time with focused validation, useful commits, plan updates, final review, and a pre-handoff unchecked-box gate.
 
 Request options:
 
@@ -108,7 +108,9 @@ Request options:
 
 Modifiers:
 
+- `--deep-research`: run web-backed operator/current-practice research after the readable execution plan exists, synthesize adopted findings into the plan, then continue to Pro analysis when requested or refinement when not.
 - `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask the user to review the Markdown file only after the Pro synthesis gate succeeds.
+- `--deep-research --pro-analysis`: run deep research first, apply adopted findings to the execution plan, then run ChatGPT Pro against the researched plan before refinement.
 - `--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately; validation, final review, archive, commit, and finalization still run.
 
 ### `$plan-to-goal`
@@ -357,6 +359,7 @@ Prime Directive can use a visible ChatGPT Pro browser pass as an internal escala
 
 - `$first-principles-mode --pro-analysis`
 - `$deliver --pro-analysis`
+- `$deliver --deep-research --pro-analysis`
 - `$repo-sweep --pro-analysis`
 
 The public workflow stays on those skill modifiers. The implementation detail is direct browser control of the user's already-authenticated ChatGPT session: use Chrome automation first, and fall back to Computer Use when the visible UI is easier to operate than DOM selectors.

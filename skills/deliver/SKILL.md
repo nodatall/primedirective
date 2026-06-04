@@ -1,11 +1,11 @@
 ---
 name: deliver
-description: Manual `$deliver` workflow for readable execution plans, optional Pro analysis, user review, and approved implementation. `--fast` skips only the initial plan-review pause. Supports `--pro-analysis` and `--fast`.
+description: Manual `$deliver` workflow for readable execution plans, optional deep research, optional Pro analysis, user review, and approved implementation. `--fast` skips only the initial plan-review pause. Supports `--deep-research`, `--pro-analysis`, and `--fast`.
 ---
 
 # Deliver Skill
 
-Run lightweight planned execution from one readable Markdown plan document. The normal path is plan -> optional Pro analysis -> refine -> user reviews the `.md` file -> approve -> implement. Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, refinement, validation, final review, archive, commit, or finalization. Use draft mode only for explicit discussion/update requests.
+Run lightweight planned execution from one readable Markdown plan document. The normal path is plan -> optional deep research -> optional Pro analysis -> refine -> user reviews the `.md` file -> approve -> implement. Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, research, Pro analysis, refinement, validation, final review, archive, commit, or finalization. Use draft mode only for explicit discussion/update requests.
 
 This skill replaces the retired PRD/TDD/tasks-plan execution stack for new work. Do not generate PRD, TDD, or full tasks-plan artifacts for new `$deliver` plans.
 
@@ -15,6 +15,7 @@ Load references by path, not all up front:
 - `skills/shared/references/architecture/architecture-guidance.md` when implementation work is boundary-affecting or `docs/ARCHITECTURE.md` exists
 - `skills/plan-to-goal/SKILL.md` when the source is goal-shaped
 - `skills/review-plan/SKILL.md` when the user asks for an adversarial plan review before implementation
+- `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
 - `skills/shared/references/review/review-protocol.md` before the final review
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
@@ -27,14 +28,15 @@ Invoke explicitly with `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$
 
 Supported modifiers:
 
+- `--deep-research`
 - `--pro-analysis`
 - `--fast`
 
 Use one self-identifying document flow:
 
-- `$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction near the top, runs `--pro-analysis` immediately when present, runs refinement immediately, then stops and asks the user to review the Markdown file before approving implementation unless `--fast` is present.
-- `$deliver --fast` creates or resumes the same readable execution plan, runs the same Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.
-- `$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file, replaces any draft instruction with the Deliver implementation instruction, runs `--pro-analysis` immediately when present, runs refinement, then stops and asks the user to review the Markdown file before approving implementation unless `--fast` is present.
+- `$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`, embeds the Deliver implementation instruction near the top, runs `--deep-research` immediately when present, runs `--pro-analysis` immediately when present, runs refinement immediately, then stops and asks the user to review the Markdown file before approving implementation unless `--fast` is present.
+- `$deliver --fast` creates or resumes the same readable execution plan, runs the same research/Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.
+- `$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file, replaces any draft instruction with the Deliver implementation instruction, runs `--deep-research` immediately when present, runs `--pro-analysis` immediately when present, runs refinement, then stops and asks the user to review the Markdown file before approving implementation unless `--fast` is present.
 - `$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.
 - When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent while the visible, attached, referenced, or active document is a Deliver execution plan, load this skill, load that exact plan, treat it as the approved scope, and start implementation at step 7. Continue through focused validation, final review, archive movement, commit, and the finalization gate before the final handoff.
 
@@ -44,15 +46,18 @@ Examples:
 - `$deliver discuss` when the user explicitly wants to talk through the work and keep a plain current draft as the conversation changes.
 - `$deliver refine` or `$deliver plan` when the current draft is ready to tighten into a reviewable execution plan.
 - `$deliver --pro-analysis` when a lightweight readable plan should immediately get ChatGPT Pro pressure before refinement and user review of the Markdown file.
+- `$deliver --deep-research` when a readable execution plan needs a web-backed operator/current-practice research pass before refinement and user review of the Markdown file.
+- `$deliver --deep-research --pro-analysis` when the research pass should complete first, adopted findings should be applied to the readable execution plan, and then ChatGPT Pro should pressure-test the researched plan before refinement.
 - `$deliver --fast` when the user wants the plan written and refined but does not want to pause for manual review before implementation starts.
 - `$deliver --pro-analysis --fast` when the Pro pass should run, adopted findings should be applied, refinement should finish, and implementation should start without the initial user plan-review pause.
+- `$deliver --deep-research --pro-analysis --fast` when the deep research pass and Pro pass should both run before refinement and implementation should start without the initial user plan-review pause.
 - `$deliver` followed by a rough checklist, bug list, repo review, research output, or product idea.
 - `turn this into a deliver plan` after a `$deliver discuss` conversation has produced a draft checklist plan.
 - `implement deliver` after a long planning discussion or after the user has reviewed a deliver-style checklist.
 - `implement the doc` when the opened or referenced doc contains the Deliver implementation instruction.
 - `$deliver using tasks/execution-plan-startup-fixes.md` when a readable execution plan already exists.
 
-After `$deliver discuss` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver`, `$deliver refine`, `$deliver plan`, or equivalent, keep the same checklist file, replace the draft instruction with the Deliver implementation instruction, run `--pro-analysis` immediately when present, refine it, and stop for the user to review the Markdown file before implementation unless `--fast` is present.
+After `$deliver discuss` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver`, `$deliver refine`, `$deliver plan`, or equivalent, keep the same checklist file, replace the draft instruction with the Deliver implementation instruction, run `--deep-research` immediately when present, run `--pro-analysis` immediately when present, refine it, and stop for the user to review the Markdown file before implementation unless `--fast` is present.
 
 After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
 
@@ -137,6 +142,17 @@ After `$plan-to-goal` writes the goal plan, stop for user review. Do not start n
 
 ## Pro Analysis
 
+When `--deep-research` is present, compose `skills/shared/references/planning/deep-research.md` after the readable execution plan exists and before any Pro analysis or refinement. Do not make the user approve an unresearched draft before the research pass.
+
+Rules:
+
+- Run local reconnaissance first and use the execution plan plus relevant repo context to frame current-state research.
+- Write the working memo to `tasks/tmp/research-plan-<plan-key>.md`.
+- Use live web research and the evidence bar from `skills/shared/references/planning/deep-research.md`.
+- Reduce adopted findings into execution-plan changes before Pro analysis or refinement.
+- Print a short `Deep Research Summary` before Pro analysis or refinement.
+- Do not start Pro analysis, refinement, user review, or implementation if the research memo is missing, lacks the Deep Research Completion Stamp, leaves material adopted findings unapplied or undispositioned, or does not end with `evidence_bar_met: yes`.
+
 When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the readable execution plan exists and before the refinement loop. Do not make the user approve an unrefined draft before the Pro pass.
 
 Rules:
@@ -170,7 +186,7 @@ Rules:
    - If the user approves and explicitly asks to start the goal from this thread, start the goal using the prompt when goal mode is available; otherwise provide the exact `/goal` prompt from the file.
    - If the user says not to use goal mode, convert the source into a normal execution plan and continue with step 4.
 3.5. Create or update the draft checklist plan only when the request is explicitly plan discussion.
-   - Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests; those continue to step 4 and run refinement in the same command.
+   - Do not use this step for bare `$deliver`, `$deliver --deep-research`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests; those continue to step 4 and run research/Pro/refinement in the same command.
    - Use `tasks/execution-plan-<plan-key>.md`.
    - If an older `tasks/planning-discussion-<plan-key>.md` exists and no matching execution plan exists, import its current in-scope content into `tasks/execution-plan-<plan-key>.md` and continue with the execution-plan file.
    - Keep the doc plain, current, and checklist-shaped, not fully specified.
@@ -180,7 +196,7 @@ Rules:
    - Record rejected ideas only when they are still useful to prevent accidental reintroduction.
    - When the user removes scope, delete or compress the old plan text instead of preserving it as negative instructions.
    - After updating the doc, stop with a short pointer to the file and continue the discussion. Do not run refinement and do not execute.
-   - If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.5 when `--pro-analysis` is present or step 5 otherwise.
+   - If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.25 when `--deep-research` is present, step 4.5 when `--pro-analysis` is present, or step 5 otherwise.
 4. Create or load the plain-language plan.
    - If no plan exists, write `tasks/execution-plan-<plan-key>.md`.
    - Use the refined execution-plan format with the Deliver implementation instruction, not the draft instruction, unless step 3.5 explicitly selected draft discussion mode.
@@ -194,9 +210,15 @@ Rules:
    - Keep future items readable rather than fully specified.
    - Keep the main plan high level. Detailed files, tests, commands, and done conditions belong in the active-step packet when execution reaches that slice.
    - If the plan is frontend-facing, create or update `tasks/ui-mockup-<plan-key>.html` and link it from the execution plan before step 5.
+4.25. If `--deep-research` is present, run deep research before Pro analysis or refinement.
+   - Load `skills/shared/references/planning/deep-research.md`.
+   - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the research input.
+   - Write and verify `tasks/tmp/research-plan-<plan-key>.md`.
+   - Apply adopted research findings into the execution plan before step 4.5 or step 5.
+   - Hard-stop before Pro analysis or refinement if the Deep Research Completion Stamp is incomplete or `evidence_bar_met: yes` is missing.
 4.5. If `--pro-analysis` is present, run Pro analysis before refinement.
    - Load `skills/shared/references/analysis/pro-browser-analysis.md`.
-   - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the Pro input.
+   - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the Pro input. If `--deep-research` is also present, include `tasks/tmp/research-plan-<plan-key>.md` in the Pro context bundle after the research gate is satisfied.
    - Write and verify `tasks/tmp/pro-analysis-<plan-key>.md`.
    - Apply adopted Pro findings into the execution plan before step 5.
    - Hard-stop before refinement if the Pro synthesis gate is incomplete.
@@ -218,7 +240,7 @@ Rules:
    - Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.
    - Normal mode: ask the user to say `implement the doc` when it looks right, or tell you what is wrong, missing, or out of order.
    - `--fast` mode: do not ask for initial plan review. Treat the refined execution plan as approved scope and continue directly to step 7 after checking the fast-mode stop conditions below.
-   - `--fast` mode must still stop for destructive or data-loss actions, missing credentials/env/service access, material scope ambiguity, billing/security/schema/API/product decisions, goal-plan delegation, incomplete `--pro-analysis`, unresolved material refinement issues, or any blocker that would make immediate implementation unsafe or dishonest.
+   - `--fast` mode must still stop for destructive or data-loss actions, missing credentials/env/service access, material scope ambiguity, billing/security/schema/API/product decisions, goal-plan delegation, incomplete `--deep-research`, incomplete `--pro-analysis`, unresolved material refinement issues, or any blocker that would make immediate implementation unsafe or dishonest.
    - If the user corrects the plan, update the same Markdown file and rerun refinement only if the correction introduces material backlog risk.
    - If this plan came from a draft Deliver plan, stop here even if the user asked to `deliver this`. In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc` unless the current refinement request includes `--fast`.
    - Normal mode: do not begin implementation until the user approves or corrects the plan.

@@ -4,9 +4,9 @@
 
 Run a focused draft-improvement research pass when the planning trigger includes `--deep-research`.
 
-This pass exists to strengthen drafted PRD and TDD before tasks-plan is generated. It should reduce avoidable implementation mistakes, missing rollout work, and weak verification strategy.
+This pass exists to strengthen the active planning artifact before execution tasks are generated or before a `$deliver` execution plan is refined. It should reduce avoidable implementation mistakes, missing rollout work, and weak verification strategy.
 
-This mode is not satisfied by a token burst of a few searches. Treat `--deep-research` as a substantial, web-backed research pass with a real evidence bar before tasks-plan may be drafted and before PRD/TDD may be treated as final.
+This mode is not satisfied by a token burst of a few searches. Treat `--deep-research` as a substantial, web-backed research pass with a real evidence bar before tasks-plan may be drafted, before PRD/TDD may be treated as final, or before a researched `$deliver` execution plan may move to Pro analysis, refinement, review, or implementation.
 
 The goal is not just citation coverage. The goal is to scour current best practices, operator lessons, failure reports, implementation playbooks, and new ideas from strong practitioners, then decide what should actually change in this plan.
 
@@ -20,11 +20,12 @@ Treat this as a current-state research task, not a timeless brainstorming task. 
 Planning activation form:
 
 - A workflow that still owns legacy PRD/TDD/tasks-plan generation may activate `--deep-research`.
+- `$deliver --deep-research` may activate this pass after creating or loading `tasks/execution-plan-<plan-key>.md`.
 - New execution planning should use `$deliver`; do not revive the retired PRD/TDD/tasks-plan public entrypoints for new work.
 
 ## When to run
 
-Run this only after Socratic refinement has locked:
+For legacy PRD/TDD/tasks-plan planning, run this only after Socratic refinement has locked:
 
 - `Goal`
 - `Context`
@@ -40,6 +41,17 @@ Run it after generating initial drafts of:
 Run it before generating:
 
 - `tasks/tasks-plan-<plan-key>.md`
+
+For `$deliver --deep-research`, run it after creating or loading:
+
+- `tasks/execution-plan-<plan-key>.md`
+
+Run it before:
+
+- `$deliver --pro-analysis`
+- `$deliver` refinement
+- user review
+- `--fast` implementation
 
 Before the first external search, capture the exact current date in the working materials and use it in the research framing.
 
@@ -84,15 +96,15 @@ Before the first external search:
 
 ## Research process
 
-1. Start from the locked planning decisions plus the current PRD/TDD drafts, not from a blank prompt.
-2. Review the source plan and current PRD/TDD drafts to identify the highest-risk technical and delivery questions that could change implementation quality or sequencing.
+1. Start from the locked planning decisions plus the current PRD/TDD drafts or `$deliver` execution plan, not from a blank prompt.
+2. Review the source plan and current PRD/TDD drafts or execution plan to identify the highest-risk technical and delivery questions that could change implementation quality or sequencing.
 3. Write a Draft-Linked Research Agenda first:
    - the main technical questions to answer
    - the highest-risk unknowns
    - which research buckets apply to this plan
    - the exact current date being used for freshness-sensitive questions
    - the stack-, provider-, or framework-specific areas that need current verification
-   - the draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` each question could change
+   - the draft assumption, PRD section, TDD section, `FR-*`, `TDR-*`, or execution-plan checkbox/decision note each question could change
 4. Create a temporary working memo at `tasks/tmp/research-plan-<plan-key>.md` while the research pass is in progress.
 5. Seed the working memo with an improvement backlog:
    - draft weaknesses or assumptions to test
@@ -132,7 +144,7 @@ Before the first external search:
    - run the Final Load-Bearing Falsification Pass before closing the memo
    - choose the highest-value findings to adopt
    - note meaningful ideas rejected or deferred and why
-   - update PRD/TDD before tasks-plan generation
+   - update PRD/TDD before tasks-plan generation, or update the `$deliver` execution plan before Pro analysis or refinement
    - distill the plan-specific checklist items and decisions worth carrying into this plan's execution
 19. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
 20. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation unless the caller explicitly owns direct orchestration. In a direct orchestration flow, adopt the findings into the artifacts and continue unless the change is a true blocker that is unsafe, contradictory, or impossible to default.
@@ -161,7 +173,7 @@ Before deep research may be considered complete, gather and record:
 - at least 3 substantive operator-practice source reviews when relevant to the plan, such as maintainer guidance, engineering writeups, postmortems, benchmark notes, production lessons, or current best-practice discussions from strong practitioners
 - repo-local source reviews as needed for implementation grounding, but never as a substitute for the external minimum
 - at least 3 distinct research questions answered for this plan
-- each research question linked to a draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change
+- each research question linked to a draft assumption, PRD section, TDD section, `FR-*`, `TDR-*`, or execution-plan checkbox/decision note it could change
 - at least 4 applicable buckets reviewed from the default scope, unless the plan is genuinely too narrow for that many
 - at least 2 rounds of follow-up research after the initial source pass
 - explicit notes on at least 3 design-impacting findings, not just links
@@ -265,7 +277,7 @@ Use `unknown` for unavailable publication or update dates, but still explain why
 
 ## Draft-Linked Research Agenda
 
-The working memo must include a Draft-Linked Research Agenda before research begins. Each question must name the draft assumption, PRD section, TDD section, `FR-*`, or `TDR-*` it could change, plus the research bucket and possible impact on PRD, TDD, rollout, verification, or task sequencing.
+The working memo must include a Draft-Linked Research Agenda before research begins. Each question must name the draft assumption, PRD section, TDD section, `FR-*`, `TDR-*`, or execution-plan checkbox/decision note it could change, plus the research bucket and possible impact on PRD, TDD, the execution plan, rollout, verification, or task sequencing.
 
 Do not include generic research questions that cannot plausibly change the plan.
 
@@ -282,10 +294,11 @@ The working memo must include a Finding-to-Artifact Delta. Each finding row must
 - `support_type`
 - `source_ids`
 - `prd_tdd_sections_changed`
+- `execution_plan_sections_changed`
 - `task_plan_inputs_created`
 - `disposition_reason`
 
-Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding is not adopted unless it changes PRD/TDD or creates an explicit task-plan input; otherwise record the reason in `disposition_reason`.
+Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding is not adopted unless it changes PRD/TDD, changes the `$deliver` execution plan, or creates an explicit task-plan input; otherwise record the reason in `disposition_reason`.
 
 ## Deep Research Completion Stamp
 
@@ -308,12 +321,13 @@ The working memo must end with a Deep Research Completion Stamp containing:
 - `adopted_findings_count`
 - `rejected_or_deferred_findings_count`
 - `prd_tdd_sections_changed`
+- `execution_plan_sections_changed`
 - `task_plan_inputs_created`
 - `evidence_bar_met`
 
 Record `research_started_at` and `research_completed_at` as ISO-like timestamps with timezone when known. Record `elapsed_minutes` as a numeric wall-clock duration from the start of the web-backed research pass through completion-stamp triage. Set `duration_expectation_met: yes` only when a non-trivial plan received the real deep pass required above, typically at least 20 minutes. If `elapsed_minutes` is below 20, `under_20_minutes_explanation` is required and must state why the pass is incomplete or why the user should rerun normal planning instead of claiming completed deep research.
 
-Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, Load-Bearing Falsification Pass, PRD/TDD revisions, and duration expectation are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, and report the unmet evidence checks.
+Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, Load-Bearing Falsification Pass, applicable artifact revisions, and duration expectation are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, do not run `$deliver --pro-analysis`, do not refine or execute the `$deliver` plan, and report the unmet evidence checks.
 
 Before setting `evidence_bar_met: yes`, print a short `Deep Research Summary` in the visible thread/log: adopted findings, rejected/deferred ideas, blockers, and artifact changes.
 
@@ -352,7 +366,7 @@ The temporary research memo must contain:
 - explicit note when a bucket was not applicable
 - explicit note when a claim was not checked further because changing it would not change the plan
 
-Do not start `tasks-plan` drafting until this memo is substantively complete and the adopted findings have been written back into PRD/TDD.
+Do not start `tasks-plan` drafting until this memo is substantively complete and the adopted findings have been written back into PRD/TDD. For `$deliver --deep-research`, do not start Pro analysis, refinement, user review, or implementation until this memo is substantively complete and adopted findings have been written back into `tasks/execution-plan-<plan-key>.md`.
 
 ## Research output
 
@@ -361,7 +375,7 @@ Capture these outcomes:
 - a short research summary
 - concrete recommendations adopted into the plan
 - alternatives considered and rejected when they materially affect the design
-- the best ideas pulled from the working memo and how they changed PRD/TDD
+- the best ideas pulled from the working memo and how they changed PRD/TDD or the `$deliver` execution plan
 - risks, constraints, or follow-up validation uncovered by research
 - source links or citations supporting the adopted recommendations
 - at least 3 answered research questions backed by cited external sources
@@ -382,17 +396,18 @@ Preservation behavior:
 - PRD: update only when research changes product-facing constraints, defaults, guardrails, or acceptance behavior
 - TDD: absorb the detailed technical recommendations and rationale
 - tasks-plan: generate only after PRD/TDD revisions are complete, and add any new rollout, migration, verification, cleanup, or sequencing work discovered by research
+- `$deliver`: continue only after execution-plan revisions are complete, and add any new rollout, migration, verification, cleanup, or sequencing work discovered by research
 
 ## Completion checks
 
-Before continuing to tasks-plan generation:
+Before continuing to tasks-plan generation or `$deliver` Pro/refinement:
 
 1. The research has answered the most important technical and delivery questions for this plan.
 2. The selected approach is supported by cited external sources, with repo-local context used only as supplemental grounding.
-3. Any new risks or sequencing requirements are reflected in revised PRD/TDD where appropriate and are ready to be carried into tasks-plan.
+3. Any new risks or sequencing requirements are reflected in revised PRD/TDD or the `$deliver` execution plan where appropriate and are ready to be carried into tasks-plan or refinement.
 4. The research did not silently widen scope into broad product discovery.
 5. The working memo meets the minimum evidence bar, including the external-source minimum and required web-status sections.
 6. The Deep Research Completion Stamp records `research_started_at`, `research_completed_at`, `elapsed_minutes`, and `duration_expectation_met: yes`.
 7. The Deep Research Completion Stamp says `evidence_bar_met: yes`.
 8. Load-bearing claims were challenged with counterevidence or targeted follow-up research before conclusions were finalized.
-9. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied.
+9. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied; `$deliver` Pro/refinement has not started before the research memo was completed and execution-plan revisions were applied.

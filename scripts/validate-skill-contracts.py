@@ -59,6 +59,7 @@ MIRROR_CHECKS = [
             "skills/shared/references/analysis/pro-browser-analysis.md",
             "skills/shared/references/contract-ownership.md",
             "skills/first-principles-mode/SKILL.md",
+            "skills/deliver/SKILL.md",
             "skills/shared/references/planning/generate-tasks.md",
             "skills/shared/references/planning/improve-plan.md",
             "skills/plan-refine/SKILL.md",
@@ -484,14 +485,19 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Do not mention whether a subagent was or was not used in the user-facing review request",
         "Do not mention whether worker agents were or were not used",
         "Supported modifiers:",
+        "`--deep-research`",
         "`--pro-analysis`",
         "`--fast`",
-        "Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, refinement, validation, final review, archive, commit, or finalization.",
-        "$deliver --fast` creates or resumes the same readable execution plan, runs the same Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.",
+        "Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, research, Pro analysis, refinement, validation, final review, archive, commit, or finalization.",
+        "$deliver --fast` creates or resumes the same readable execution plan, runs the same research/Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.",
         "Stop for user review of the Markdown plan file unless `--fast` is present.",
         "Do not launch a review app or external viewer.",
         "Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.",
         "`--fast` mode must still stop for destructive or data-loss actions",
+        "When `--deep-research` is present, compose `skills/shared/references/planning/deep-research.md` after the readable execution plan exists and before any Pro analysis or refinement.",
+        "tasks/tmp/research-plan-<plan-key>.md",
+        "Deep Research Summary",
+        "Hard-stop before Pro analysis or refinement if the Deep Research Completion Stamp is incomplete or `evidence_bar_met: yes` is missing.",
         "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the readable execution plan exists and before the refinement loop.",
         "tasks/tmp/pro-analysis-<plan-key>.md",
         "Pro Findings Summary",
@@ -504,7 +510,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver_draft_tokens = [
         "$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`",
         "$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.",
-        "Do not use this step for bare `$deliver`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
+        "Do not use this step for bare `$deliver`, `$deliver --deep-research`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
         "Draft instruction:",
         "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
         "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
@@ -518,7 +524,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Do not carry rejected or removed scope into execution-plan work items.",
         "Write open questions as checkboxes, prefixed with `Open question:` when useful, so they are easy to resolve or remove during discussion.",
         "Do not refine, execute, or commit implementation work from the draft plan.",
-        "If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.5 when `--pro-analysis` is present or step 5 otherwise.",
+        "If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.25 when `--deep-research` is present, step 4.5 when `--pro-analysis` is present, or step 5 otherwise.",
         "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc` unless the current refinement request includes `--fast`.",
     ]
     for token in deliver_draft_tokens:
@@ -542,20 +548,26 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     task_file_contract = (ROOT / "skills/shared/references/execution/task-file-contract.md").read_text()
     pro_deliver_reference_tokens = [
         "$deliver --pro-analysis",
+        "$deliver --deep-research --pro-analysis",
         "The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission.",
         "Treat `Thinking Extended`, `Extended Thinking`, ordinary thinking modes, or any non-Pro label as a failed Pro model-selection gate",
         "If the first visible browser target is blank, `about:blank`, an empty new tab, or a non-ChatGPT page, do not treat that as an unavailable browser path.",
         "Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.",
         "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
+        "When `$deliver --deep-research --pro-analysis` is active, the gate is hard:",
         "For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
         "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation",
     ]
     for token in pro_deliver_reference_tokens:
         if token not in pro_reference:
             fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-browser-analysis.md missing deliver pro-analysis token: {token}")
-    pro_deliver_task_contract_token = "`--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, and `$repo-sweep`"
-    if pro_deliver_task_contract_token not in task_file_contract:
-        fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/execution/task-file-contract.md missing deliver pro-analysis token: {pro_deliver_task_contract_token}")
+    deliver_task_contract_tokens = [
+        "`--deep-research` is valid with `$first-principles-mode`, `$deliver`, and legacy planning flows that explicitly support it",
+        "`--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, and `$repo-sweep`",
+    ]
+    for token in deliver_task_contract_tokens:
+        if token not in task_file_contract:
+            fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/execution/task-file-contract.md missing deliver analysis token: {token}")
 
     plan_to_goal_tokens = [
         "name: plan-to-goal",
@@ -604,17 +616,21 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "rough goal prompts",
         "optimizes rough prose into objective, plain-language summary, starting evidence, target/baseline, work loop, measurable acceptance criteria, explicit stop conditions, boundaries, and resume state",
         "no-early-stop guidance",
-        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias",
+        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--deep-research`, `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias",
         "one readable execution plan refined right away",
+        "runs web-backed deep research when requested",
         "asks the user to review the Markdown plan file unless `--fast` is present",
         "For frontend-facing plans, it creates a simple linked HTML mockup before approval",
         "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
         "bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.",
         "`--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately",
+        "`--deep-research`: run web-backed operator/current-practice research after the readable execution plan exists",
+        "`--deep-research --pro-analysis`: run deep research first, apply adopted findings to the execution plan, then run ChatGPT Pro against the researched plan before refinement.",
         "`discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.",
         "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
         "$deliver --pro-analysis",
+        "$deliver --deep-research --pro-analysis",
     ]
     for token in readme_tokens:
         if token not in readme:
