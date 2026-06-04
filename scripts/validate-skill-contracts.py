@@ -554,8 +554,15 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     plan_to_goal_tokens = [
         "name: plan-to-goal",
+        "rough goal prompts",
         "tasks/goal-plan-<plan-key>.md",
         "## Weak Goal Gate",
+        "## Goal Prompt Optimization",
+        "Before writing the goal plan, optimize the source into a goal contract",
+        "Name the real objective in one sentence.",
+        "Extract or infer the baseline.",
+        "Extract or infer the target, comparator, ceiling, or success signal.",
+        "Fill `Resume State` so a new agent has one obvious next exact action",
         "Use a goal plan only when the source is open-ended enough that a stable checklist would be dishonest and the agent can run a real adaptive loop inside the goal.",
         "Goal mode also requires feedback cadence that fits autonomous iteration.",
         "slow, paid, approval-gated, nightly, or externally scheduled run",
@@ -584,6 +591,8 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
+        "rough goal prompts",
+        "optimizes rough prose into objective, starting evidence, target/baseline, work loop, measurable acceptance criteria, boundaries, and resume state",
         "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias",
         "one readable execution plan refined right away",
         "asks the user to review the Markdown plan file unless `--fast` is present",

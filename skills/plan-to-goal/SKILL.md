@@ -1,6 +1,6 @@
 ---
 name: plan-to-goal
-description: Convert messy source material, a readable execution plan, or PRD/TDD/tasks-plan artifacts into a reviewable `tasks/goal-plan-<plan-key>.md` document, then print a separate compact paste-ready `/goal` prompt that references that file. Use when work is an adaptive evidence loop where validation results decide the next implementation step.
+description: Convert messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into a reviewable `tasks/goal-plan-<plan-key>.md` document, then print a separate compact paste-ready `/goal` prompt that references that file. Use when work is an adaptive evidence loop where validation results decide the next implementation step.
 ---
 
 # Plan To Goal Skill
@@ -22,6 +22,7 @@ Also use this skill when another Prime Directive workflow detects goal-shaped wo
 Examples:
 
 - `$plan-to-goal` with a thread plan above it.
+- `$plan-to-goal` with a rough diagnosis or recommended `/goal` draft that needs end conditions, boundaries, and resume state extracted automatically.
 - `$plan-to-goal using tasks/execution-plan-badness-prior-v3-recent-training.md`.
 - `$plan-to-goal plan-key=<plan-key>` from existing PRD/TDD/tasks-plan artifacts.
 
@@ -84,6 +85,27 @@ Needed before goal planning:
 ```
 
 Ask only for missing information that changes what "done" means, changes safety/scope, or cannot be discovered quickly from the repo.
+
+## Goal Prompt Optimization
+
+Before writing the goal plan, optimize the source into a goal contract so the user does not have to manually scan the draft for end conditions.
+
+Treat rough prose, repo-review notes, run analysis, recommendation text, or a long proposed `/goal` prompt as valid source material. Do not require the source to already be organized as objective, baseline, loop, and done-when sections.
+
+Run this pass before the Weak Goal Gate:
+
+1. Name the real objective in one sentence. Prefer the underlying system problem over a metric-gaming phrasing such as "make the number bigger."
+2. Extract the starting evidence: run ids, log examples, file paths, metrics, known bad behavior, current bottleneck, or observed failure mode.
+3. Extract or infer the baseline. If the exact baseline is missing but can be measured locally, add a first-loop instruction to measure it instead of blocking.
+4. Extract or infer the target, comparator, ceiling, or success signal. Do not invent exact numeric targets unless the source gives them; use directional or evidence-based targets when that is the honest stopping rule.
+5. Convert loose recommendations into the work loop: inspect, make the smallest useful change, validate, inspect the result, and repeat until acceptance criteria pass or a blocker is proven.
+6. Extract boundaries and non-goals, especially safety constraints, protected production behavior, live-deployment bans, policy gates, data integrity constraints, and things the source says not to weaken.
+7. Decide whether related symptoms belong in one goal. Keep them together only when they are different stages of the same adaptive loop or share one validation target. Split or stop for review when they need independent loops, repos, owners, or success criteria.
+8. Derive measurable acceptance criteria from the objective, evidence, and boundaries. Include at least one validation command, artifact, dashboard/API observable, benchmark, report, or explicit first-loop instruction to discover the right check.
+9. Fill `Resume State` so a new agent has one obvious next exact action without rereading the whole conversation.
+10. Keep the separate chat `/goal` prompt compact and file-referential. Put rationale, examples, detailed file lists, and optimization reasoning in `tasks/goal-plan-<plan-key>.md`.
+
+If the optimizer can recover all Weak Goal Gate items from the source or a cheap repo inspection, write the goal plan. If it cannot, stop with the missing items using the Weak Goal Gate response.
 
 ## Format
 
@@ -158,15 +180,16 @@ Do not copy this Markdown file into `/goal`.
 3. Inspect `git status --short` before writing files and do not overwrite unrelated changes.
 4. Decide whether the source is goal-shaped using the Goal Candidate Test.
 5. If it is not goal-shaped, stop without writing a goal plan and name the blocking reason briefly.
-6. Run the Weak Goal Gate.
-7. If the gate fails, stop with the missing items. Do not write a goal-plan file.
-8. Write or update `tasks/goal-plan-<plan-key>.md`.
-9. Preserve concrete source constraints: fixed artifacts, commands to reuse, no-new-run requirements, shadow-only boundaries, promotion bans, safety constraints, and stop conditions.
-10. Include measurable baseline, target, ceiling, benchmark, or comparator when available. If missing and central to the goal, add a clear first-loop instruction to measure the baseline before optimizing.
-11. Print the separate `/goal` prompt in chat after the file is written. The prompt should name the absolute goal-plan path, tell the agent to use the file as source of truth, and stay compact.
-12. Fill `Resume State` with the initial status, current phase, next exact action, blockers, last validation, protected paths, and evidence paths. Use `none yet` only when that is true.
-13. Refine the goal plan for missing evidence, absent baseline or target metrics, vague stopping rules, unsafe side effects, unclear validation commands, weak resume state, and missing boundaries.
-14. Stop for user review. Do not start the goal unless the user explicitly says to start it.
+6. Run the Goal Prompt Optimization pass.
+7. Run the Weak Goal Gate against the optimized contract.
+8. If the gate fails, stop with the missing items. Do not write a goal-plan file.
+9. Write or update `tasks/goal-plan-<plan-key>.md`.
+10. Preserve concrete source constraints: fixed artifacts, commands to reuse, no-new-run requirements, shadow-only boundaries, promotion bans, safety constraints, and stop conditions.
+11. Include measurable baseline, target, ceiling, benchmark, or comparator when available. If missing and central to the goal, add a clear first-loop instruction to measure the baseline before optimizing.
+12. Print the separate `/goal` prompt in chat after the file is written. The prompt should name the absolute goal-plan path, tell the agent to use the file as source of truth, and stay compact.
+13. Fill `Resume State` with the initial status, current phase, next exact action, blockers, last validation, protected paths, and evidence paths. Use `none yet` only when that is true.
+14. Refine the goal plan for missing evidence, absent baseline or target metrics, vague stopping rules, unsafe side effects, unclear validation commands, weak resume state, and missing boundaries.
+15. Stop for user review. Do not start the goal unless the user explicitly says to start it.
 
 Separate chat prompt shape:
 
