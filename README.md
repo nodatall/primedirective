@@ -224,7 +224,7 @@ Modifiers:
 
 ### `$ship-branch`
 
-Finishes the current feature branch. It handles dirty work first by showing a compact status/diff summary and asking whether to commit or stash, then pushes the branch, creates or reuses a PR, merges it, deletes the remote branch, switches back to the base branch, pulls the merged base, and deletes the local branch.
+Finishes the current feature branch. It handles dirty work first by showing a compact status/diff summary and asking whether to commit or stash, then pushes the branch, creates or reuses a PR, waits for pending or queued required checks, fixes actionable check failures with focused commits, merges the PR, deletes the remote branch, switches back to the base branch, pulls the merged base, and deletes the local branch.
 
 Modifiers:
 

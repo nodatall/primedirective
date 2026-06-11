@@ -1,4 +1,4 @@
 interface:
   display_name: "Ship Branch"
   short_description: "Push, PR, merge, clean branch"
-  default_prompt: "Use $ship-branch to finish the current feature branch. If there are dirty changes, summarize them first and ask whether to commit or stash before pushing, creating or using a PR, merging it, deleting remote/local branches, and returning to the base branch."
+  default_prompt: "Use $ship-branch to finish the current feature branch. If there are dirty changes, summarize them first and ask whether to commit or stash before pushing, creating or using a PR, waiting for pending or queued required checks, fixing actionable check failures with focused commits, merging it, deleting remote/local branches, and returning to the base branch."

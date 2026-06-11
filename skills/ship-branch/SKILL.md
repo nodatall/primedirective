@@ -53,7 +53,11 @@ Invoke explicitly with `$ship-branch`, or for plain-language requests such as "s
    - Include a concise PR title and body from the branch commits when no explicit title/body was provided.
 6. Merge the PR.
    - Check PR state and mergeability with `gh pr view`.
-   - If checks are failing, required checks are pending, the PR is not mergeable, or review requirements block merge, stop and report the blocker.
+   - If the PR is not mergeable or review requirements block merge, stop and report the blocker.
+   - If required checks are pending or queued, keep checking until all required checks pass or any check fails. Prefer `gh pr checks --watch` when available; otherwise poll `gh pr checks` or `gh pr view` about every 60 seconds and report compact progress.
+   - If required checks fail, inspect the failed check output with `gh pr checks`, `gh run view --log-failed`, or the check URL. If the failure is actionable and within the branch scope, make the smallest fix, run the relevant local validation command when available, commit only the fix with a concise message, push it, and return to the pending/queued check watch.
+   - Stop and report the blocker if the check failure is infrastructure, auth, permission, flaky without a clear branch fix, impossible to reproduce locally, or requires a product/scope decision from the user.
+   - Do not treat pending or queued checks as a final blocker by themselves. After required checks pass, re-check PR state and mergeability, then continue.
    - Merge with the repo's normal merge path. Prefer `gh pr merge --merge --delete-branch` unless the repo or PR clearly requires squash or rebase.
    - Do not use admin merge, force push, or bypass checks.
 7. Return to the base branch and clean local state.
@@ -76,6 +80,7 @@ Invoke explicitly with `$ship-branch`, or for plain-language requests such as "s
 - Never use `git branch -D`.
 - Never run `git reset --hard`.
 - Never commit or stash dirty work without asking.
+- During the failed-check repair loop, commit only agent-made fixes for failed PR checks after verifying the branch was clean before the fix; never include unrelated dirty work.
 - Never delete local or remote branches until the PR merge is confirmed.
-- Never merge a PR with failing or pending required checks unless the user explicitly changes the request and accepts the risk.
+- Never merge a PR with failing or pending required checks unless the user explicitly changes the request and accepts the risk; pending or queued checks are a wait state before merge.
 - If branch state, PR state, or local base state is ambiguous, stop and ask.
