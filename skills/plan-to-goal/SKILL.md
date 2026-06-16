@@ -54,7 +54,7 @@ Write:
 
 - `tasks/goal-plan-<plan-key>.md`
 
-The goal plan is a review artifact and source-of-truth context file. It must not embed the full `/goal` prompt. It should contain the objective, plain-language summary, evidence, loop rules, stop conditions, acceptance gates, resume state, and boundaries the user needs to review before the goal starts.
+The goal plan is a review artifact and source-of-truth context file. It must not embed the full `/goal` prompt. It should contain the objective, plain-language summary, evidence, loop rules, stop conditions, acceptance gates, anti-cheat criteria, resume state, and boundaries the user needs to review before the goal starts.
 
 After writing or updating the goal plan, print the compact paste-ready `/goal` prompt separately in the chat response. The prompt must reference the absolute path to `tasks/goal-plan-<plan-key>.md` and tell the goal agent to read that file as the source of truth. Keep the `/goal` prompt compact. Target roughly 900 characters and keep it under 4,000 characters. Put rationale, examples, and long evidence in the goal-plan doc, not in the chat prompt.
 
@@ -70,6 +70,7 @@ Before writing a goal plan, verify that the source has enough shape for autonomo
 - Target, comparator, ceiling, or success signal.
 - Boundaries, non-goals, or safety constraints.
 - Done-when criteria that are measurable.
+- Anti-cheat criteria that name unacceptable shortcuts or fake wins.
 - Explicit stop conditions that distinguish success, true blockers, and interruption from ordinary failed attempts.
 - Verification command, artifact, or observable behavior.
 
@@ -103,10 +104,11 @@ Run this pass before the Weak Goal Gate:
 6. Extract boundaries and non-goals, especially safety constraints, protected production behavior, live-deployment bans, policy gates, data integrity constraints, and things the source says not to weaken.
 7. Decide whether related symptoms belong in one goal. Keep them together only when they are different stages of the same adaptive loop or share one validation target. Split or stop for review when they need independent loops, repos, owners, or success criteria.
 8. Derive measurable acceptance criteria from the objective, evidence, and boundaries. Include at least one validation command, artifact, dashboard/API observable, benchmark, report, or explicit first-loop instruction to discover the right check.
-9. Fill `Resume State` so a new agent has one obvious next exact action without rereading the whole conversation.
-10. Write a plain-language summary in two to four short sentences. It should say what the goal is trying to accomplish, why it is adaptive, and what evidence will prove progress.
-11. Write stop conditions that make early stopping hard: success only when the target is met, blocked only when a named external/user/credential/destructive-action blocker prevents useful progress, and interrupted only with `Resume State` updated. A failed validation, partial fix, confusing result, or completed sub-step is not a stop condition by itself.
-12. Keep the separate chat `/goal` prompt compact and file-referential, but include a short no-early-stop instruction. Put rationale, examples, detailed file lists, and optimization reasoning in `tasks/goal-plan-<plan-key>.md`.
+9. Derive anti-cheat criteria from the objective and boundaries. Name any shortcut that would make the metric or headline look better without solving the underlying problem, such as deleting coverage, weakening assertions, hiding failures, cropping screenshots, changing protected data, or bypassing the intended workflow.
+10. Fill `Resume State` so a new agent has one obvious next exact action without rereading the whole conversation.
+11. Write a plain-language summary in two to four short sentences. It should say what the goal is trying to accomplish, why it is adaptive, and what evidence will prove progress.
+12. Write stop conditions that make early stopping hard: success only when the target is met, blocked only when a named external/user/credential/destructive-action blocker prevents useful progress, and interrupted only with `Resume State` updated. A failed validation, partial fix, confusing result, or completed sub-step is not a stop condition by itself.
+13. Keep the separate chat `/goal` prompt compact and file-referential, but include a short no-early-stop instruction. Put rationale, examples, detailed file lists, and optimization reasoning in `tasks/goal-plan-<plan-key>.md`.
 
 If the optimizer can recover all Weak Goal Gate items from the source or a cheap repo inspection, write the goal plan. If it cannot, stop with the missing items using the Weak Goal Gate response.
 
@@ -163,6 +165,10 @@ Do not copy this Markdown file into `/goal`.
 - <validation command or artifact exists>
 - <no-go safety boundary>
 
+## Anti-Cheat Criteria
+
+- <Shortcuts that must not count as success, such as weakened assertions, hidden failures, deleted tests, cropped evidence, changed protected data, or bypassed workflow requirements.>
+
 ## Stop Conditions
 
 - Stop as complete only when: <specific target, comparator, coverage, benchmark, validation artifact, or evidence threshold is met>.
@@ -200,7 +206,7 @@ Do not copy this Markdown file into `/goal`.
 9. Write or update `tasks/goal-plan-<plan-key>.md`.
 10. Preserve concrete source constraints: fixed artifacts, commands to reuse, no-new-run requirements, shadow-only boundaries, promotion bans, safety constraints, and stop conditions.
 11. Include measurable baseline, target, ceiling, benchmark, or comparator when available. If missing and central to the goal, add a clear first-loop instruction to measure the baseline before optimizing.
-12. Write the `Plain Language Summary` and `Stop Conditions` sections before printing the `/goal` prompt. If either section is vague, fix the goal plan before review.
+12. Write the `Plain Language Summary`, `Anti-Cheat Criteria`, and `Stop Conditions` sections before printing the `/goal` prompt. If any section is vague, fix the goal plan before review.
 13. Print the separate `/goal` prompt in chat after the file is written. The prompt should name the absolute goal-plan path, tell the agent to use the file as source of truth, include the no-early-stop instruction, and stay compact.
 14. Fill `Resume State` with the initial status, current phase, next exact action, blockers, last validation, protected paths, and evidence paths. Use `none yet` only when that is true.
 15. Refine the goal plan for missing evidence, absent baseline or target metrics, vague stopping rules, unsafe side effects, unclear validation commands, weak resume state, missing boundaries, and any stop condition that would let the goal finish before the target is met or a true blocker is proven.
