@@ -15,6 +15,7 @@ Use this table when you already know the skill name. The detailed sections below
 
 | Skill | Invocation | Modifiers and request options |
 | --- | --- | --- |
+| `backend-optimizer` | `$backend-optimizer` | `--query-sweep`, `--schema-health`, `--runtime`, `--ops-hygiene` |
 | `bootstrap-repo-rules` | `$bootstrap-repo-rules` | `--with-hooks` |
 | `clarifier` | `$clarifier` | None |
 | `cleanup-merged-branches` | `$cleanup-merged-branches` | Optional branch name in the request |
@@ -37,6 +38,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$clarifier` when you want help turning a rough draft or stuck thought into clearer writing by revising it yourself with questions and short teaching examples.
 - Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution.
 - Use `$deliver` when you want one readable execution plan refined right away, or a goal-plan prompt for adaptive evidence loops.
+- Use `$backend-optimizer` when the work is specifically backend or database performance: query sweeps, schema/index health, backend runtime cost, or operational database hygiene. Bare `$backend-optimizer` is report-first; use `/goal $backend-optimizer` for the bounded measured fix loop.
 - Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
 - Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval unless `--fast` is present.
 - Use `$plan-to-goal` when a rough goal prompt, thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc plus a separate compact paste-ready `/goal` prompt.
@@ -54,6 +56,19 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$ship-branch` when the current feature branch should be pushed, PR'd, merged, deleted locally/remotely, and the checkout returned to the base branch.
 
 ## Skill Details
+
+### `$backend-optimizer`
+
+Improves backend and database performance with measured evidence. It is narrower than `$repo-sweep`: use it for query performance, schema/index health, backend runtime cost, and operational database hygiene, not for broad security, architecture redesign, frontend performance, dependency audit, or whole-repo production-readiness review.
+
+Bare `$backend-optimizer` is report-first: it inventories, ranks, measures where practical, and recommends fixes before stopping for approval. Invoke `/goal $backend-optimizer` when safe measured fixes should proceed in a bounded loop until every high-impact candidate is improved, rejected with evidence, or gated behind a clear decision.
+
+Modifiers:
+
+- `--query-sweep`: map application-visible queries, rank by measured impact, and verify safe query or index improvements.
+- `--schema-health`: review tables, indexes, constraints, relationships, duplicate or unused indexes, and growth risks for performance or reliability impact.
+- `--runtime`: inspect backend code paths beyond the database, such as serial awaits, repeated initialization, blocking I/O, large responses, serialization cost, caching, and unnecessary repeated work.
+- `--ops-hygiene`: inspect connection pooling, timeouts, lock risk, migration safety, vacuum/analyze or bloat signals, slow-query visibility, observability, and alerting gaps.
 
 ### `$bootstrap-repo-rules`
 
