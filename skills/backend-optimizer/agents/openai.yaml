@@ -1,4 +1,4 @@
 interface:
   display_name: "Backend Optimizer"
   short_description: "Optimize backend performance"
-  default_prompt: "Use $backend-optimizer to inspect backend and database performance, rank measured candidates, and run the appropriate report-first or /goal optimization loop."
+  default_prompt: "Use $backend-optimizer to inspect backend and database performance, exhaustively inventory query surfaces when using --query-sweep, rank measured candidates, and run the appropriate report-first or /goal optimization loop."

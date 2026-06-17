@@ -18,6 +18,7 @@ Each row should be JSONL with these fields when known:
   "mode": "query-sweep|schema-health|runtime|ops-hygiene",
   "candidate": "what may be slow or risky",
   "surface": "route, job, query, table, migration, or config path",
+  "coverage_status": "inventoried|measured|static-reviewed|fixed|gated|rejected",
   "evidence": "baseline measurement or static evidence",
   "impact": "why this matters",
   "proposed_fix": "smallest useful change",
@@ -30,6 +31,8 @@ Each row should be JSONL with these fields when known:
 ```
 
 Update the ledger or goal state after every candidate is classified, fixed, rejected, or gated. After interruption or context compaction, resume from the first high-impact row whose disposition still requires action.
+
+For `--query-sweep`, the ledger is also the inventory receipt. Every app-visible query surface discovered during the run must have a row, even when it is fast, already indexed, static-reviewed only, or gated by missing safe database access.
 
 ## Dispositions
 
@@ -55,12 +58,23 @@ Stop only when every high-impact candidate is one of:
 
 Do not stop only because one phase is complete, one benchmark improved, or one obvious candidate was fixed.
 
+For `--query-sweep`, do not decide that the high-impact set is exhausted until the app-visible query inventory is exhausted. A safe local fix plus a few gated remote candidates is a partial pass, not a completed query sweep, unless every discovered query surface has a ledger row and disposition.
+
 ## Query Sweep
 
 Inventory:
 
-- SQL files, ORM calls, query builders, RPC functions, views, stored procedures, route handlers, workers, jobs, scripts, and migrations that define read or write paths.
+- SQL files, ORM calls, query builders, transactions, RPC functions, views, stored procedures, route handlers, workers, jobs, scripts, and migrations that define read or write paths.
 - Runtime query evidence when available: slow query logs, APM traces, `pg_stat_statements`, database dashboards, request logs, or benchmark output.
+
+Inventory rules:
+
+- Search static source and migrations before fixing. Do not stop after the first measured bottleneck.
+- Record every discovered app-visible query surface in the ledger with `coverage_status`.
+- Map each query surface to the table, filter columns, join columns, order columns, limit/pagination shape, and caller when knowable.
+- Compare each query shape against schema indexes, unique constraints, foreign keys, and migrations.
+- When no safe database target is available, still do static query/schema/index matching and fixture-based or synthetic measurement where reasonable.
+- Treat missing safe Postgres, MySQL, SQLite, or hosted database access as a gate for measurement, not as a reason to skip inventory.
 
 Rank:
 
@@ -84,6 +98,15 @@ Experiment safely:
 - For indexes, consider duplicate indexes, write cost, storage cost, lock behavior, online/concurrent build support, and migration rollback.
 
 Accept only measured wins.
+
+Completion gate:
+
+- Every app-visible query surface has a ledger row.
+- Every ledger row has one of the allowed dispositions.
+- Every measured optimization has before/after evidence.
+- Every unmeasured query candidate has static schema/index evidence or an explicit blocked/gated reason.
+- Gated candidates do not complete the goal by themselves. Continue through all ungated query surfaces before stopping.
+- The final answer must distinguish `deep query sweep complete` from `safe local pass complete` when any database or query family could not be measured.
 
 ## Schema Health
 

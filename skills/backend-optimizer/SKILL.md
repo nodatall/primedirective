@@ -1,6 +1,6 @@
 ---
 name: backend-optimizer
-description: Optimize backend and database performance through report-first audits or bounded `/goal` fix loops. Use when the user asks to speed up backend routes, database queries, schema/index health, backend runtime work, connection/lock/migration/observability hygiene, or broad backend performance work. Supports `--query-sweep`, `--schema-health`, `--runtime`, and `--ops-hygiene`.
+description: Optimize backend and database performance through report-first audits or bounded `/goal` fix loops. Use when the user asks to speed up backend routes, perform exhaustive database query sweeps, inspect schema/index health, reduce backend runtime work, or improve connection/lock/migration/observability hygiene. Supports `--query-sweep`, `--schema-health`, `--runtime`, and `--ops-hygiene`.
 ---
 
 # Backend Optimizer Skill
@@ -51,6 +51,7 @@ Bare `$backend-optimizer` is report-first:
 - fix only safe candidates with before/after evidence
 - update the candidate ledger or goal state after each candidate
 - resweep until every high-impact candidate is improved, rejected with evidence, or gated behind a clear decision
+- for `--query-sweep`, do not mark the goal complete until the ledger covers every discovered app-visible query surface, not just the first safe bottleneck fixed
 
 ## Scope
 
@@ -90,6 +91,7 @@ Route out-of-scope work:
    - Record missing env, credentials, services, or realistic data before attempting measurements.
 2. Inventory candidates.
    - Map queries, backend hot paths, runtime work, schema/index health, or ops hygiene items according to the selected mode.
+   - For `--query-sweep`, complete the query-surface inventory before declaring the candidate set exhausted. Include every discovered SQL, ORM, query-builder, transaction, RPC/view/function, route, worker, job, script, and migration-backed query surface.
    - Prefer runtime evidence such as logs, traces, query stats, benchmarks, route timings, or `EXPLAIN` output when available.
 3. Rank by impact.
    - Prioritize total time, mean or p95 latency, call frequency, user-facing importance, table size, sequential scans, round trips, lock risk, write cost, and operational blast radius.
@@ -102,6 +104,7 @@ Route out-of-scope work:
 6. Close out.
    - State why the loop stopped.
    - List improved candidates, rejected candidates, gated decisions, validation, and residual risks.
+   - For `--query-sweep`, state the inventory coverage and do not call the sweep complete unless every app-visible query surface has a ledger disposition.
 
 ## Output
 
@@ -117,6 +120,7 @@ For report-first runs, lead with ranked findings:
 For `/goal` runs, include:
 
 - rounds completed and stop reason
+- inventory coverage, especially for `--query-sweep`
 - candidates improved
 - candidates rejected with evidence
 - human-decision gates
