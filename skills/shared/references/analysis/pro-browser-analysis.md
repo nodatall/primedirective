@@ -7,17 +7,20 @@ Use this reference only when a Prime Directive skill explicitly activates Pro es
 Do not use a third-party browser runner or private automation profile for Pro analysis. The Pro path is a visible ChatGPT browser workflow controlled directly by the agent:
 
 1. Prepare a standalone prompt and a curated context bundle from local files.
-2. Use the user's already-authenticated ChatGPT browser session through Chrome automation when available.
-3. Fall back to Computer Use only when Chrome automation cannot reliably operate the visible UI.
-4. Select the Pro Extended model in the visible ChatGPT UI.
-5. Paste or upload the context bundle, submit the prompt, wait for completion, and copy or scrape the answer.
-6. Save and synthesize the answer before any downstream planning, refinement, or execution continues.
+2. Use the Chrome plugin/control surface to inspect and claim an already-open ChatGPT tab in the user's normal Chrome profile when available.
+3. If no ChatGPT tab is already open, use the same Chrome control surface to navigate a regular Chrome tab to ChatGPT.
+4. Fall back to Computer Use only when Chrome automation cannot reliably operate the visible regular Chrome UI.
+5. Select the Pro Extended model in the visible ChatGPT UI.
+6. Paste or upload the context bundle, submit the prompt, wait for completion, and copy or scrape the answer.
+7. Save and synthesize the answer before any downstream planning, refinement, or execution continues.
 
-Chrome automation is the default because it can use the user's real browser session and inspect the DOM. Computer Use is the fallback for UI drift, model-picker changes, attachment controls, or copy buttons that are easier to operate visually than through selectors. If neither driver can operate ChatGPT, stop and report the failed Pro browser gate.
+Chrome automation is the default because it can use the user's real browser session and inspect the DOM. Chrome automation means the Chrome plugin/control-chrome path against the user's installed Chrome profile; it does not mean the Browser plugin, Playwright MCP tabs, a Playwright-launched Chrome or Chromium profile, or a remote-debugging-port probe. Playwright is valid only as an API on a claimed regular Chrome tab from the Chrome plugin/control surface.
+
+Computer Use is the fallback for UI drift, model-picker changes, attachment controls, or copy buttons that are easier to operate visually than through selectors. If neither driver can operate ChatGPT, stop and report the failed Pro browser gate.
 
 If the first visible browser target is blank, `about:blank`, an empty new tab, or a non-ChatGPT page, do not treat that as an unavailable browser path. Navigate the visible target to `https://chat.com/` first, allow redirects to the current ChatGPT host, then re-check whether the ChatGPT composer, login wall, or model picker is visible. Use `https://chatgpt.com/` as the next navigation fallback if `chat.com` does not resolve cleanly. Only report a failed Pro browser gate after this navigation recovery has been attempted or the browser driver cannot navigate the visible target at all.
 
-Do not introduce a private browser profile or package-managed browser runner. A Pro browser run must be observable in the user's normal logged-in ChatGPT surface, with visible failure points such as model picker unavailable, composer unavailable, upload failed, no response completed, or answer copy failed.
+Do not introduce a private browser profile or package-managed browser runner. Do not use the in-app Browser plugin or standalone Playwright MCP surface as the Pro path; those can be logged out even when the user's normal Chrome session is logged in. A logged-out Browser or standalone Playwright ChatGPT page is diagnostic only and is not evidence that the user's regular Chrome ChatGPT tab is unavailable. A Pro browser run must be observable in the user's normal logged-in ChatGPT surface, with visible failure points such as model picker unavailable, composer unavailable, upload failed, no response completed, or answer copy failed.
 
 For any workflow invoked with `--pro-analysis`, a degraded fallback is not a completed Pro pass. If the run did not visibly use Pro Extended, if the answer was not read, or if the browser driver evidence cannot be recorded, the Pro synthesis may be saved for diagnostic value, but it must not set `pro_synthesis_complete: yes`.
 

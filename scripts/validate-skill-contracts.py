@@ -551,6 +551,8 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "$deliver --deep-research --pro-analysis",
         "The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission.",
         "Treat `Thinking Extended`, `Extended Thinking`, ordinary thinking modes, or any non-Pro label as a failed Pro model-selection gate",
+        "Chrome automation means the Chrome plugin/control-chrome path against the user's installed Chrome profile",
+        "Do not use the in-app Browser plugin or standalone Playwright MCP surface as the Pro path",
         "If the first visible browser target is blank, `about:blank`, an empty new tab, or a non-ChatGPT page, do not treat that as an unavailable browser path.",
         "Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.",
         "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",

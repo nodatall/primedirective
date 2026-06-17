@@ -362,7 +362,7 @@ Prime Directive can use a visible ChatGPT Pro browser pass as an internal escala
 - `$deliver --deep-research --pro-analysis`
 - `$repo-sweep --pro-analysis`
 
-The public workflow stays on those skill modifiers. The implementation detail is direct browser control of the user's already-authenticated ChatGPT session: use Chrome automation first, and fall back to Computer Use when the visible UI is easier to operate than DOM selectors.
+The public workflow stays on those skill modifiers. The implementation detail is direct browser control of the user's already-authenticated ChatGPT session: use the Chrome plugin/control surface against the user's normal Chrome profile first, and fall back to Computer Use when the visible UI is easier to operate than DOM selectors. Do not use the in-app Browser plugin, standalone Playwright tabs, or a newly launched browser profile as the Pro path.
 
 If the visible browser target starts on `about:blank`, an empty new tab, or another non-ChatGPT page, the Pro workflow should first navigate it to `https://chat.com/`, then fall back to `https://chatgpt.com/` if needed, before declaring the browser path unavailable.
 

@@ -158,7 +158,7 @@ When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro
 Rules:
 
 - Run local reconnaissance first and use the plan plus relevant repo context to choose a Pro context bundle.
-- Use the visible ChatGPT browser-driver workflow, not a private browser profile.
+- Use the Chrome-backed visible ChatGPT browser-driver workflow from `skills/shared/references/analysis/pro-browser-analysis.md`, not the in-app Browser/standalone Playwright surface or a private browser profile.
 - Write the synthesis memo to `tasks/tmp/pro-analysis-<plan-key>.md`.
 - Reduce the Pro answer into a findings ledger with local verification/disposition for each material finding.
 - Apply adopted findings directly into `tasks/execution-plan-<plan-key>.md` before refinement.
