@@ -26,6 +26,14 @@ Supported modifiers:
 
 If no mode is supplied, choose the smallest mode set that matches the user's request. For broad "make the backend faster" requests, start with `--query-sweep` and `--runtime`; add `--schema-health` or `--ops-hygiene` only when evidence points there.
 
+Mode flags are complete instructions. Do not require the user to paste extra scope, safety, inventory, ledger, or stop-condition text after an invocation such as:
+
+```text
+/goal $backend-optimizer --schema-health
+```
+
+When a mode flag is present, load the optimization-loop reference and apply that mode's full checklist and completion gate automatically.
+
 ## References
 
 Load `skills/backend-optimizer/references/optimization-loop.md` before substantive work. It owns the candidate ledger shape, mode checklists, safety gates, measurement rules, and stop conditions.
@@ -51,7 +59,9 @@ Bare `$backend-optimizer` is report-first:
 - fix only safe candidates with before/after evidence
 - update the candidate ledger or goal state after each candidate
 - resweep until every high-impact candidate is improved, rejected with evidence, or gated behind a clear decision
+- when a mode flag is present, use the reference's mode contract without asking the user for extra boilerplate
 - for `--query-sweep`, do not mark the goal complete until the ledger covers every discovered app-visible query surface, not just the first safe bottleneck fixed
+- for `--schema-health`, do not mark the goal complete until schema-health inventory covers discovered tables, indexes, constraints, relationships, migrations, and growth risks with ledger dispositions
 
 ## Scope
 
@@ -92,6 +102,7 @@ Route out-of-scope work:
 2. Inventory candidates.
    - Map queries, backend hot paths, runtime work, schema/index health, or ops hygiene items according to the selected mode.
    - For `--query-sweep`, complete the query-surface inventory before declaring the candidate set exhausted. Include every discovered SQL, ORM, query-builder, transaction, RPC/view/function, route, worker, job, script, and migration-backed query surface.
+   - For `--schema-health`, complete the schema-health inventory before declaring the candidate set exhausted. Include discovered tables, indexes, constraints, relationships, migrations, retention/growth paths, and schema assumptions made by app code.
    - Prefer runtime evidence such as logs, traces, query stats, benchmarks, route timings, or `EXPLAIN` output when available.
 3. Rank by impact.
    - Prioritize total time, mean or p95 latency, call frequency, user-facing importance, table size, sequential scans, round trips, lock risk, write cost, and operational blast radius.
@@ -105,6 +116,7 @@ Route out-of-scope work:
    - State why the loop stopped.
    - List improved candidates, rejected candidates, gated decisions, validation, and residual risks.
    - For `--query-sweep`, state the inventory coverage and do not call the sweep complete unless every app-visible query surface has a ledger disposition.
+   - For `--schema-health`, state the schema inventory coverage and do not call the sweep complete unless every performance- or reliability-relevant schema surface has a ledger disposition.
 
 ## Output
 
@@ -120,7 +132,7 @@ For report-first runs, lead with ranked findings:
 For `/goal` runs, include:
 
 - rounds completed and stop reason
-- inventory coverage, especially for `--query-sweep`
+- inventory coverage, especially for `--query-sweep` and `--schema-health`
 - candidates improved
 - candidates rejected with evidence
 - human-decision gates

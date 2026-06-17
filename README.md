@@ -63,10 +63,12 @@ Improves backend and database performance with measured evidence. It is narrower
 
 Bare `$backend-optimizer` is report-first: it inventories, ranks, measures where practical, and recommends fixes before stopping for approval. Invoke `/goal $backend-optimizer` when safe measured fixes should proceed in a bounded loop until every high-impact candidate is improved, rejected with evidence, or gated behind a clear decision.
 
+Mode flags are self-contained; `/goal $backend-optimizer --schema-health` is enough. The skill carries the mode checklist, ledger expectations, safety rules, and completion gate.
+
 Modifiers:
 
 - `--query-sweep`: map every discovered application-visible query surface, rank by measured impact, and verify safe query or index improvements. A safe local fix is not a complete sweep unless every query surface has a ledger disposition.
-- `--schema-health`: review tables, indexes, constraints, relationships, duplicate or unused indexes, and growth risks for performance or reliability impact.
+- `--schema-health`: inventory discovered tables, indexes, constraints, relationships, migrations, app-assumed schema invariants, and growth risks for performance or reliability impact. A safe local fix is not a complete sweep unless every relevant schema surface has a ledger disposition.
 - `--runtime`: inspect backend code paths beyond the database, such as serial awaits, repeated initialization, blocking I/O, large responses, serialization cost, caching, and unnecessary repeated work.
 - `--ops-hygiene`: inspect connection pooling, timeouts, lock risk, migration safety, vacuum/analyze or bloat signals, slow-query visibility, observability, and alerting gaps.
 

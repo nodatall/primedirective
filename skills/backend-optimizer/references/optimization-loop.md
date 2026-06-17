@@ -2,6 +2,8 @@
 
 Use this reference for `$backend-optimizer` runs.
 
+Mode flags are the whole contract. A user should be able to invoke `/goal $backend-optimizer --schema-health` without adding a custom prompt. For any explicit mode, apply that mode's inventory rules, ledger coverage, safety gates, and completion gate automatically.
+
 ## Candidate Ledger
 
 Keep one row per candidate in goal state or, when the repo has `tasks/tmp/`, in:
@@ -34,6 +36,8 @@ Update the ledger or goal state after every candidate is classified, fixed, reje
 
 For `--query-sweep`, the ledger is also the inventory receipt. Every app-visible query surface discovered during the run must have a row, even when it is fast, already indexed, static-reviewed only, or gated by missing safe database access.
 
+For `--schema-health`, the ledger is also the schema inventory receipt. Every performance- or reliability-relevant table, index, constraint, relationship, migration, growth path, and app-assumed schema invariant discovered during the run must have a row or be covered by a row with a clear scope.
+
 ## Dispositions
 
 - `improved`: accepted fix has before/after evidence and required regression checks passed.
@@ -59,6 +63,8 @@ Stop only when every high-impact candidate is one of:
 Do not stop only because one phase is complete, one benchmark improved, or one obvious candidate was fixed.
 
 For `--query-sweep`, do not decide that the high-impact set is exhausted until the app-visible query inventory is exhausted. A safe local fix plus a few gated remote candidates is a partial pass, not a completed query sweep, unless every discovered query surface has a ledger row and disposition.
+
+For `--schema-health`, do not decide that the high-impact set is exhausted until the schema inventory is exhausted. One missing-index fix plus a few observations is a partial pass, not a completed schema-health sweep, unless every discovered schema surface has a ledger row or explicitly scoped ledger coverage and disposition.
 
 ## Query Sweep
 
@@ -112,6 +118,21 @@ Completion gate:
 
 Review tables and schema only for performance or reliability impact.
 
+Inventory:
+
+- schema files, migrations, ORM models, generated schema metadata, database clients, table definitions, indexes, constraints, triggers, views, functions, retention jobs, cleanup jobs, and app code that assumes schema invariants
+- runtime schema evidence when available: table sizes, index sizes, index usage, slow plans, lock history, migration history, bloat/vacuum stats, constraint violations, or dashboard output
+
+Inventory rules:
+
+- Search static schema, migrations, models, and database call sites before fixing. Do not stop after the first missing index or unsafe migration.
+- Record every discovered performance- or reliability-relevant schema surface in the ledger with `coverage_status`.
+- Map each table to primary keys, foreign keys, unique constraints, important nullable columns, growth/retention story, high-churn writes, and query shapes that filter, join, order, or aggregate on it.
+- Map each index to the query shapes or constraints it serves, and flag duplicates, overlaps, unused indexes, overly wide indexes, and write-amplification risk.
+- Compare code-assumed invariants against actual database constraints, nullability, uniqueness, defaults, and migration order.
+- When no safe database target is available, still do static schema/query/index matching and mark measurement-only questions as gated.
+- Treat missing safe Postgres, MySQL, SQLite, or hosted database access as a gate for measurement, not as a reason to skip inventory.
+
 Check:
 
 - primary keys and foreign keys
@@ -123,6 +144,16 @@ Check:
 - tables with unbounded growth and no retention, partitioning, or archival story
 - high-churn tables with write-heavy index cost
 - migrations that can lock large tables or fail on existing data
+
+Rank:
+
+- table size and growth rate
+- frequency and importance of queries touching the table
+- sequential scans, sort/hash costs, and rows removed by filters
+- constraint absence that can create bad data or expensive defensive code
+- write amplification from existing or proposed indexes
+- migration lock duration, rollback safety, and existing-data compatibility
+- cleanup, archival, or retention gaps that will make current queries degrade
 
 Safe auto-fix examples:
 
@@ -138,6 +169,15 @@ Gate larger changes:
 - ownership changes
 - retention semantics
 - backfills or destructive data changes
+
+Completion gate:
+
+- Every discovered performance- or reliability-relevant schema surface has a ledger row or an explicitly scoped ledger row that covers it.
+- Every ledger row has one of the allowed dispositions.
+- Every accepted schema or index change has before/after evidence and migration/regression validation.
+- Every unmeasured schema candidate has static schema/query evidence or an explicit blocked/gated reason.
+- Larger redesign candidates are gated and routed out; they do not justify ending the sweep early while safe schema-health candidates remain.
+- The final answer must distinguish `deep schema-health sweep complete` from `safe local pass complete` when any database, table family, or schema evidence source could not be measured.
 
 ## Runtime
 
