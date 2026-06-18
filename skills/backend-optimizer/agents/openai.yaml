@@ -1,4 +1,4 @@
 interface:
   display_name: "Backend Optimizer"
   short_description: "Optimize backend performance"
-  default_prompt: "Use $backend-optimizer to inspect backend and database performance. Treat mode flags like --query-sweep or --schema-health as complete instructions, apply their full inventory and completion gates, rank measured candidates, and run the appropriate report-first or /goal optimization loop."
+  default_prompt: "Use $backend-optimizer to inspect backend and database performance with one default report-first or /goal optimization loop, including queries, schema/index health, runtime work, ops hygiene, goal-state tracking, and measured fixes."

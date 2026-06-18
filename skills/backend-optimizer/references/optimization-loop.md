@@ -2,14 +2,90 @@
 
 Use this reference for `$backend-optimizer` runs.
 
-Mode flags are the whole contract. A user should be able to invoke `/goal $backend-optimizer --schema-health` without adding a custom prompt. For any explicit mode, apply that mode's inventory rules, ledger coverage, safety gates, and completion gate automatically.
+This skill has no public mode flags. A user should be able to invoke `/goal $backend-optimizer` without adding a custom prompt. Apply the backend/database inventory, goal state, candidate ledger, measurement rules, safety gates, and completion gate automatically.
+
+## Goal-Run State
+
+For `/goal $backend-optimizer`, maintain a readable state document at:
+
+```text
+tasks/tmp/backend-optimizer-goal-state.md
+```
+
+Create it at the start of the goal run. Update it after every meaningful checkpoint, after every candidate disposition, before context compaction or interruption handoff when possible, and before final closeout.
+
+The state document should contain:
+
+- `started_at`: local timestamp with timezone when known
+- `last_checkpoint_at`: local timestamp with timezone when known
+- `elapsed_wall_clock`: current elapsed wall-clock time for the run
+- `user_budget`: time, token, or scope budget if the user provided one; otherwise `none provided`
+- `current_phase`: discovering, measuring, patching, validating, resweeping, blocked, or complete
+- `last_completed_step`: concrete completed step or `none yet`
+- `active_step`: current work or `none`
+- `next_exact_action`: the next command, route, query, table, trace, file, or decision to inspect
+- `primary_verifier`: the strongest check or evidence bundle for this backend
+- `supporting_checks`: non-decisive checks that catch regressions or safety issues
+- `inventory_coverage`: queries, schema, runtime paths, migrations/config, and ops hygiene
+- `active_candidate`: current ledger candidate id or `none`
+- `ledger_path`: path to the JSONL ledger
+- `evidence_paths`: reports, query plans, traces, benchmarks, logs, or fixtures
+- `stop_condition_status`: incomplete, success, blocked, interrupted, or unsafe without approval
+- `blockers`: exact blocker and required user/external action, or `none`
+- `protected_boundaries`: behavior, policy, data, schema, config, or files that must not change
+
+Use this shape unless the repo has a stronger local convention:
+
+```md
+# Backend Optimizer Goal State
+
+started_at: <timestamp>
+last_checkpoint_at: <timestamp>
+elapsed_wall_clock: <duration>
+user_budget: <time/token/scope budget or none provided>
+
+## Current State
+
+- current_phase: <discovering|measuring|patching|validating|resweeping|blocked|complete>
+- last_completed_step: <step or none yet>
+- active_step: <step or none>
+- next_exact_action: <command, route, query, table, trace, file, or decision>
+- stop_condition_status: <incomplete|success|blocked|interrupted|unsafe without approval>
+
+## Verification
+
+- primary_verifier: <strongest check or evidence bundle for this backend>
+- supporting_checks: <regression, migration, load, benchmark, trace, or safety checks>
+- last_validation: <command, artifact, or observable result>
+
+## Inventory Coverage
+
+- queries: <covered/pending/gated>
+- schema: <covered/pending/gated>
+- runtime_paths: <covered/pending/gated>
+- migrations_config: <covered/pending/gated>
+- ops_hygiene: <covered/pending/gated>
+
+## Active Candidate
+
+- active_candidate: <ledger id or none>
+- ledger_path: tasks/tmp/backend-optimizer-ledger.jsonl
+- evidence_paths: <reports, query plans, traces, benchmarks, logs, fixtures, or none yet>
+
+## Boundaries And Blockers
+
+- protected_boundaries: <behavior, policy, data, schema, config, or files that must not change>
+- blockers: <none or exact blocker and required user/external action>
+```
+
+Do not mark a `/goal` run complete if this state document is missing, stale, or inconsistent with the ledger.
 
 ## Candidate Ledger
 
-Keep one row per candidate in goal state or, when the repo has `tasks/tmp/`, in:
+Keep one row per candidate in:
 
 ```text
-tasks/tmp/backend-optimizer-<mode>-ledger.jsonl
+tasks/tmp/backend-optimizer-ledger.jsonl
 ```
 
 Each row should be JSONL with these fields when known:
@@ -17,9 +93,11 @@ Each row should be JSONL with these fields when known:
 ```json
 {
   "id": "short-stable-id",
-  "mode": "query-sweep|schema-health|runtime|ops-hygiene",
   "candidate": "what may be slow or risky",
-  "surface": "route, job, query, table, migration, or config path",
+  "surface": "query|schema|runtime|migration|config|ops-hygiene|regression-check",
+  "route_or_job": "route, job, worker, script, CLI, or none",
+  "query_or_table": "query shape, table, view, function, or none",
+  "environment": "prod-like-local|staging|clone|fixture|static-review|unknown",
   "coverage_status": "inventoried|measured|static-reviewed|fixed|gated|rejected",
   "evidence": "baseline measurement or static evidence",
   "impact": "why this matters",
@@ -34,9 +112,9 @@ Each row should be JSONL with these fields when known:
 
 Update the ledger or goal state after every candidate is classified, fixed, rejected, or gated. After interruption or context compaction, resume from the first high-impact row whose disposition still requires action.
 
-For `--query-sweep`, the ledger is also the inventory receipt. Every app-visible query surface discovered during the run must have a row, even when it is fast, already indexed, static-reviewed only, or gated by missing safe database access.
+The ledger is also the inventory receipt. Every high-impact backend/database surface discovered during the run must have a row or be covered by a row with a clear scope, even when it is fast, already indexed, static-reviewed only, or gated by missing safe database access.
 
-For `--schema-health`, the ledger is also the schema inventory receipt. Every performance- or reliability-relevant table, index, constraint, relationship, migration, growth path, and app-assumed schema invariant discovered during the run must have a row or be covered by a row with a clear scope.
+Query rows should cover every app-visible query surface discovered during the run. Schema rows should cover every performance- or reliability-relevant table, index, constraint, relationship, migration, growth path, and app-assumed schema invariant discovered during the run.
 
 ## Dispositions
 
@@ -62,11 +140,22 @@ Stop only when every high-impact candidate is one of:
 
 Do not stop only because one phase is complete, one benchmark improved, or one obvious candidate was fixed.
 
-For `--query-sweep`, do not decide that the high-impact set is exhausted until the app-visible query inventory is exhausted. A safe local fix plus a few gated remote candidates is a partial pass, not a completed query sweep, unless every discovered query surface has a ledger row and disposition.
+Do not decide that the high-impact set is exhausted until the backend/database inventory is exhausted. A safe local fix plus a few gated remote candidates is a partial pass, not a completed backend optimization, unless every discovered high-impact query, schema, runtime, migration/config, and ops-hygiene surface has a ledger disposition.
 
-For `--schema-health`, do not decide that the high-impact set is exhausted until the schema inventory is exhausted. One missing-index fix plus a few observations is a partial pass, not a completed schema-health sweep, unless every discovered schema surface has a ledger row or explicitly scoped ledger coverage and disposition.
+The final answer must distinguish `backend optimization complete` from narrower outcomes such as `safe local pass complete`, `query inventory complete`, `schema inventory complete`, or `blocked before realistic measurement`.
 
-## Query Sweep
+## Backend Inventory
+
+Discover the full backend performance surface before fixing obvious candidates:
+
+- database query surfaces
+- schema/index/constraint and migration surfaces
+- backend request, job, worker, CLI, and service runtime paths
+- connection, timeout, lock, observability, and deployment hygiene surfaces
+
+Rank all discovered high-impact candidates together. It is acceptable to inspect a narrow area first when evidence points there, but do not report the overall goal complete while another high-impact surface remains unclassified.
+
+## Query Surfaces
 
 Inventory:
 
@@ -112,7 +201,7 @@ Completion gate:
 - Every measured optimization has before/after evidence.
 - Every unmeasured query candidate has static schema/index evidence or an explicit blocked/gated reason.
 - Gated candidates do not complete the goal by themselves. Continue through all ungated query surfaces before stopping.
-- The final answer must distinguish `deep query sweep complete` from `safe local pass complete` when any database or query family could not be measured.
+- The final answer must distinguish `query inventory complete` from `safe local pass complete` when any database or query family could not be measured.
 
 ## Schema Health
 
@@ -177,9 +266,9 @@ Completion gate:
 - Every accepted schema or index change has before/after evidence and migration/regression validation.
 - Every unmeasured schema candidate has static schema/query evidence or an explicit blocked/gated reason.
 - Larger redesign candidates are gated and routed out; they do not justify ending the sweep early while safe schema-health candidates remain.
-- The final answer must distinguish `deep schema-health sweep complete` from `safe local pass complete` when any database, table family, or schema evidence source could not be measured.
+- The final answer must distinguish `schema inventory complete` from `safe local pass complete` when any database, table family, or schema evidence source could not be measured.
 
-## Runtime
+## Runtime Work
 
 Inspect backend work outside the database:
 
