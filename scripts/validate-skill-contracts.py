@@ -574,16 +574,25 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     plan_to_goal_tokens = [
         "name: plan-to-goal",
         "rough goal prompts",
-        "plain-language summary, primary verifier, supporting checks, and explicit stop conditions",
+        "starts with the goal, done-when criteria, not-done-yet criteria",
         "tasks/goal-plan-<plan-key>.md",
         "## Weak Goal Gate",
         "## Goal Prompt Optimization",
+        "## Goal",
+        "## Done When",
+        "## Not Done Yet If",
         "## Plain Language Summary",
         "## Stop Conditions",
         "Before writing the goal plan, optimize the source into a goal contract",
         "Name the real objective in one sentence.",
+        "This becomes the first-screen `Goal`.",
         "Extract or infer the baseline.",
         "Extract or infer the target, comparator, ceiling, or success signal.",
+        "first-screen finish-line summary",
+        "Every goal plan must put the `Goal`, `Done When`, and `Not Done Yet If` sections before startup instructions",
+        "First-screen `Goal`, `Done When`, and `Not Done Yet If` entries that make the finish line obvious before process details.",
+        "A reviewer should understand the completion condition without reading the later process sections.",
+        "Derive the first-screen `Not Done Yet If` list from negative stop conditions and common fake wins.",
         "A failed validation, partial fix, confusing result, or completed sub-step is not a stop condition by itself.",
         "Do not stop early. Keep working until one of the Stop Conditions in the goal plan is met",
         "Fill `Resume State` so a new agent has one obvious next exact action",
@@ -610,6 +619,8 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "Separate chat prompt shape:",
         "Keep the `/goal` prompt compact.",
         "under 4,000 characters",
+        "vague first-screen finish line",
+        "source of truth for Goal, Done When, Not Done Yet If",
         "Resume State",
         "If validation results decide the next implementation step",
         "badness-prior training task",
@@ -619,10 +630,36 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in plan_to_goal:
             fail(errors, "PD-PLAN-TO-GOAL", f"skills/plan-to-goal/SKILL.md missing token: {token}")
 
+    plan_to_goal_template_start = plan_to_goal.find("````md\n# <Goal Name>")
+    if plan_to_goal_template_start == -1:
+        fail(errors, "PD-PLAN-TO-GOAL", "skills/plan-to-goal/SKILL.md missing goal-plan template start")
+    else:
+        plan_to_goal_template_order = [
+            "## Goal",
+            "## Done When",
+            "## Not Done Yet If",
+            "This should run as a Codex `/goal`, not a normal implementation checklist.",
+            "## How To Start This Goal",
+            "## Why This Is A Goal",
+            "## Plain Language Summary",
+            "## Starting Evidence",
+            "## Work Loop",
+            "## Primary Verifier",
+            "## Stop Conditions",
+        ]
+        cursor = plan_to_goal_template_start
+        for token in plan_to_goal_template_order:
+            next_index = plan_to_goal.find(token, cursor)
+            if next_index == -1:
+                fail(errors, "PD-PLAN-TO-GOAL", f"skills/plan-to-goal/SKILL.md goal-plan template missing ordered token: {token}")
+                break
+            cursor = next_index + len(token)
+
     readme_tokens = [
         "goal-plan prompt for adaptive evidence loops",
         "rough goal prompts",
-        "optimizes rough prose into objective, plain-language summary, starting evidence, target/baseline, work loop, primary verifier, supporting checks, measurable acceptance criteria, anti-cheat criteria, explicit stop conditions, boundaries, and resume state",
+        "optimizes rough prose into a first-screen `Goal`, `Done When`, and `Not Done Yet If` block",
+        "finish-line-first review guidance",
         "no-early-stop guidance",
         "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--deep-research`, `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias",
         "one readable execution plan refined right away",

@@ -132,7 +132,7 @@ Modifiers:
 
 ### `$plan-to-goal`
 
-Converts messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, then prints a separate compact paste-ready `/goal` prompt that references that file. Before writing the file, it optimizes rough prose into objective, plain-language summary, starting evidence, target/baseline, work loop, primary verifier, supporting checks, measurable acceptance criteria, anti-cheat criteria, explicit stop conditions, boundaries, and resume state. The goal plan includes target/baseline guidance when metrics exist, state-recording guidance for long runs, no-early-stop guidance, and review wording that asks the user to say `start this as a goal`.
+Converts messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, then prints a separate compact paste-ready `/goal` prompt that references that file. Before writing the file, it optimizes rough prose into a first-screen `Goal`, `Done When`, and `Not Done Yet If` block, then fills in the plain-language summary, starting evidence, target/baseline, work loop, primary verifier, supporting checks, measurable acceptance criteria, anti-cheat criteria, explicit stop conditions, boundaries, and resume state. The goal plan includes target/baseline guidance when metrics exist, finish-line-first review guidance, state-recording guidance for long runs, no-early-stop guidance, and review wording that asks the user to say `start this as a goal`.
 
 Request options:
 
