@@ -24,6 +24,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--deep-research`, `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias |
 | `first-principles-mode` | `$first-principles-mode` | `--deep-research`, `--pro-analysis` |
 | `merge-review` | `$merge-review` inside /goal $merge-review | None |
+| `page-speed-optimizer` | `$page-speed-optimizer` | None |
 | `plain-language` | `$plain-language` | None |
 | `plan-refine` | `$plan-refine [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--max-rounds=<n>`, `--preserve-refine-artifacts`; max rounds default to 8 and are capped at 8 |
 | `plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]` | `plan-key=<plan-key>` or source material in the thread |
@@ -46,6 +47,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation. It patches the plan by default and stops before code changes.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep. It includes bounded adversarial-prior checks, but remains report-first by default.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop. It uses the same bounded adversarial-prior checks before declaring the branch ready.
+- Use `$page-speed-optimizer` when the work is specifically frontend journey speed: page load, Core Web Vitals, interaction responsiveness, route transitions, flashes, layout shifts, bfcache/back-forward behavior, frontend assets, third-party cost, or browser-perceived performance. Bare `$page-speed-optimizer` is report-first; use `/goal $page-speed-optimizer` for the bounded measured fix loop.
 - Use `$skill-review` before merging Prime Directive skill changes when you want evidence that the candidate skill contract works better in practice. It runs baseline and candidate skill versions against the same realistic scenario, then judges the artifacts.
 - Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Use `/goal $repo-sweep --swarm --preserve-review-artifacts` when you want a longer nitpicky sweep for maintainability, test quality, code slop, and production risk.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
@@ -165,6 +167,14 @@ It keeps `tasks/merge-review-<branch-slug>.md` current, reviews `origin/main...H
 Modifiers:
 
 - None.
+
+### `$page-speed-optimizer`
+
+Improves real user-perceived frontend journey speed and visual continuity with measured evidence. It is narrower than `$repo-sweep`: use it for page loads, in-session navigation, interaction responsiveness, Core Web Vitals, visual transition quality, frontend assets, third-party scripts, bfcache behavior, and deployed browser-performance surfaces, not for backend query optimization or broad production-readiness review.
+
+Bare `$page-speed-optimizer` is report-first: it inventories journeys, ranks candidates, measures where practical, and recommends fixes before stopping for approval. Invoke `/goal $page-speed-optimizer` when safe measured fixes should proceed in a bounded loop until every high-impact page, transition, interaction, asset, third-party, or deploy/cache candidate is improved, rejected with evidence, or gated behind a clear decision.
+
+There are no public mode flags. `/goal $page-speed-optimizer` is enough; the skill carries the journey inventory, goal-run state document, ledger expectations, safety rules, measurement requirements, and completion gate.
 
 ### `$plain-language`
 

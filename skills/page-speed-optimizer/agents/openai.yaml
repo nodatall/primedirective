@@ -1,0 +1,4 @@
+interface:
+  display_name: "Page Speed Optimizer"
+  short_description: "Optimize frontend journey speed"
+  default_prompt: "Use $page-speed-optimizer to improve real user-perceived page load, interaction, and route-transition speed through a measured report-first or /goal optimization loop."
