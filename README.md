@@ -41,7 +41,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$backend-optimizer` when the work is specifically backend or database performance: exhaustive query sweeps, schema/index health, backend runtime cost, or operational database hygiene. Bare `$backend-optimizer` is report-first; use `/goal $backend-optimizer` for the bounded measured fix loop.
 - Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.
 - Use `$deliver refine` or say `refine it` when an existing draft checklist is ready to become a reviewed execution plan; implementation still waits for approval unless `--fast` is present.
-- Use `$plan-to-goal` when a rough goal prompt, thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc plus a separate compact paste-ready `/goal` prompt.
+- Use `$plan-to-goal` when a rough goal prompt, thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with an embedded copy-pasteable `/goal` start prompt.
 - Use `$plan-refine` only for legacy PRD/TDD/tasks-plan artifacts that need pressure testing before being converted into `$deliver` or a goal.
 - Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation. It patches the plan by default and stops before code changes.
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep. It includes bounded adversarial-prior checks, but remains report-first by default.
@@ -132,7 +132,7 @@ Modifiers:
 
 ### `$plan-to-goal`
 
-Converts messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, then prints a separate compact paste-ready `/goal` prompt that references that file. Before writing the file, it optimizes rough prose into a first-screen `Goal`, `Done When`, and `Not Done Yet If` block, then fills in the plain-language summary, starting evidence, target/baseline, work loop, primary verifier, supporting checks, measurable acceptance criteria, anti-cheat criteria, explicit stop conditions, boundaries, and resume state. The goal plan includes target/baseline guidance when metrics exist, finish-line-first review guidance, state-recording guidance for long runs, no-early-stop guidance, and review wording that asks the user to say `start this as a goal`.
+Converts messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into `tasks/goal-plan-<plan-key>.md`, with an embedded copy-pasteable `/goal` start prompt that references that file. Before writing the file, it optimizes rough prose into a first-screen `Goal`, `Done When`, `Not Done Yet If`, and `Start Prompt` block, then fills in the plain-language summary, starting evidence, target/baseline, work loop, primary verifier, supporting checks, measurable acceptance criteria, anti-cheat criteria, explicit stop conditions, boundaries, and resume state. The goal plan includes target/baseline guidance when metrics exist, finish-line-first review guidance, state-recording guidance for long runs, and no-early-stop guidance.
 
 Request options:
 

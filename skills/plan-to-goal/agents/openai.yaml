@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan To Goal"
   short_description: "Turn adaptive plans into goal-plan docs"
-  default_prompt: "Use $plan-to-goal to convert this source plan into a reviewable goal-plan doc, then print a separate compact paste-ready /goal prompt that references the doc, without starting the goal."
+  default_prompt: "Use $plan-to-goal to convert this source plan into a reviewable goal-plan doc with an embedded copy-pasteable /goal start prompt that references the doc, without starting the goal."

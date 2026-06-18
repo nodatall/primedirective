@@ -1,6 +1,6 @@
 ---
 name: plan-to-goal
-description: Convert messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into a reviewable `tasks/goal-plan-<plan-key>.md` document that starts with the goal, done-when criteria, not-done-yet criteria, primary verifier, supporting checks, and explicit stop conditions, then print a separate compact paste-ready `/goal` prompt that references that file. Use when work is an adaptive evidence loop where validation results decide the next implementation step.
+description: Convert messy source material, rough goal prompts, readable execution plans, or PRD/TDD/tasks-plan artifacts into a reviewable `tasks/goal-plan-<plan-key>.md` document that starts with the goal, done-when criteria, not-done-yet criteria, and a copy-pasteable `/goal` start prompt, then fills in the primary verifier, supporting checks, and explicit stop conditions. Use when work is an adaptive evidence loop where validation results decide the next implementation step.
 ---
 
 # Plan To Goal Skill
@@ -54,11 +54,11 @@ Write:
 
 - `tasks/goal-plan-<plan-key>.md`
 
-The goal plan is a review artifact and source-of-truth context file. It must not embed the full `/goal` prompt. It should start with a first-screen finish-line summary: `Goal`, `Done When`, and `Not Done Yet If`. It should also contain the plain-language summary, evidence, loop rules, primary verifier, supporting checks, stop conditions, acceptance gates, anti-cheat criteria, resume state, and boundaries the user needs to review before the goal starts.
+The goal plan is a review artifact and source-of-truth context file. It should start with a first-screen finish-line summary: `Goal`, `Done When`, and `Not Done Yet If`, followed by a `Start Prompt` section containing the exact copy-pasteable `/goal` prompt for starting the goal. It should also contain the plain-language summary, evidence, loop rules, primary verifier, supporting checks, stop conditions, acceptance gates, anti-cheat criteria, resume state, and boundaries the user needs to review before the goal starts.
 
-After writing or updating the goal plan, print the compact paste-ready `/goal` prompt separately in the chat response. The prompt must reference the absolute path to `tasks/goal-plan-<plan-key>.md` and tell the goal agent to read that file as the source of truth. Keep the `/goal` prompt compact. Target roughly 900 characters and keep it under 4,000 characters. Put rationale, examples, and long evidence in the goal-plan doc, not in the chat prompt.
+The goal plan itself must contain the compact paste-ready `/goal` prompt. After writing or updating the goal plan, print the same prompt in the chat response for convenience. The slash prompt must reference the absolute path to `tasks/goal-plan-<plan-key>.md` and tell the goal agent to read that file as the source of truth. Keep the `/goal` prompt compact. Target roughly 900 characters and keep it under 4,000 characters. Do not duplicate the plan text inside the slash prompt; put rationale, examples, and long evidence in the goal-plan doc.
 
-Every goal plan must put the `Goal`, `Done When`, and `Not Done Yet If` sections before startup instructions, rationale, evidence, and process detail. The `Goal` section names what the goal is trying to accomplish. `Done When` synthesizes the target, primary verifier, required supporting checks, and success stop condition into the shortest useful finish line. `Not Done Yet If` names common early-stop traps from the negative stop conditions. Every goal plan must also include a short `Plain Language Summary`, a `Primary Verifier` section with the single strongest success check, a `Supporting Checks` section for non-decisive quality/regression/safety checks, explicit `Stop Conditions`, and a `Resume State` section that gives the next agent one obvious place to resume from after compaction, interruption, or handoff.
+Every goal plan must put the `Goal`, `Done When`, `Not Done Yet If`, and `Start Prompt` sections before rationale, evidence, and process detail. The `Goal` section names what the goal is trying to accomplish. `Done When` synthesizes the target, primary verifier, required supporting checks, and success stop condition into the shortest useful finish line. `Not Done Yet If` names common early-stop traps from the negative stop conditions. `Start Prompt` is only the copy-pasteable slash goal prompt in a text fence; do not include review prose such as "Please review this before I start" or "If this looks right, say..." Every goal plan must also include a short `Plain Language Summary`, a `Primary Verifier` section with the single strongest success check, a `Supporting Checks` section for non-decisive quality/regression/safety checks, explicit `Stop Conditions`, and a `Resume State` section that gives the next agent one obvious place to resume from after compaction, interruption, or handoff.
 
 ## Weak Goal Gate
 
@@ -71,6 +71,7 @@ Before writing a goal plan, verify that the source has enough shape for autonomo
 - Boundaries, non-goals, or safety constraints.
 - Done-when criteria that are measurable.
 - First-screen `Goal`, `Done When`, and `Not Done Yet If` entries that make the finish line obvious before process details.
+- A copy-pasteable `Start Prompt` that starts with `/goal`, references the goal-plan file by absolute path, and does not duplicate the plan text.
 - Primary verifier that names the one strongest check that decides whether the goal succeeded.
 - Supporting checks that do not prove success by themselves, but catch regressions, quality problems, or unsafe side effects.
 - Anti-cheat criteria that name unacceptable shortcuts or fake wins.
@@ -115,7 +116,7 @@ Run this pass before the Weak Goal Gate:
 14. Fill `Resume State` so a new agent has one obvious next exact action without rereading the whole conversation.
 15. Write a plain-language summary in two to four short sentences. It should say what the goal is trying to accomplish, why it is adaptive, and what evidence will prove progress.
 16. Write stop conditions that make early stopping hard: success only when the target is met, the primary verifier passes, required supporting checks pass, blocked only when a named external/user/credential/destructive-action blocker prevents useful progress, and interrupted only with `Resume State` updated. A failed validation, partial fix, confusing result, or completed sub-step is not a stop condition by itself.
-17. Keep the separate chat `/goal` prompt compact and file-referential, but include a short no-early-stop instruction. Put rationale, examples, detailed file lists, and optimization reasoning in `tasks/goal-plan-<plan-key>.md`.
+17. Write the same compact, file-referential `/goal` prompt in the first-screen `Start Prompt` section and in the chat response. Include a short no-early-stop instruction. Put rationale, examples, detailed file lists, and optimization reasoning in `tasks/goal-plan-<plan-key>.md`, not inside the slash prompt.
 
 If the optimizer can recover all Weak Goal Gate items from the source or a cheap repo inspection, write the goal plan. If it cannot, stop with the missing items using the Weak Goal Gate response.
 
@@ -142,19 +143,19 @@ Use this shape:
 - <A weaker adjacent check is green but the primary verifier has not passed.>
 - <The result looks improved by bypassing the intended workflow, weakening assertions, hiding failures, or changing protected policy/data.>
 
-This should run as a Codex `/goal`, not a normal implementation checklist.
+## Start Prompt
 
-Please review this before I start.
-Tell me what is wrong, missing, or out of order.
+```text
+/goal <one sentence objective>
 
-If this looks right, say: `start this as a goal`.
-Do not approve this as a normal implementation checklist.
+Use <absolute repo path>.
 
-## How To Start This Goal
+Read <absolute repo path>/tasks/goal-plan-<plan-key>.md first and treat it as the source of truth for Goal, Done When, Not Done Yet If, target and baseline, work loop, primary verifier, supporting checks, acceptance criteria, evidence paths, Resume State, and boundaries.
 
-When this looks right, the agent should print a separate paste-ready `/goal` prompt in chat. That prompt must reference this file by absolute path instead of duplicating the plan text.
+Do not stop early. Keep working until one of the Stop Conditions in the goal plan is met; if interrupted before then, update Resume State and leave the goal incomplete.
 
-Do not copy this Markdown file into `/goal`.
+Keep the `Resume State` section in that goal plan current after meaningful checkpoints.
+```
 
 ## Why This Is A Goal
 
@@ -237,14 +238,14 @@ Do not copy this Markdown file into `/goal`.
 9. Write or update `tasks/goal-plan-<plan-key>.md`.
 10. Preserve concrete source constraints: fixed artifacts, commands to reuse, no-new-run requirements, shadow-only boundaries, promotion bans, safety constraints, and stop conditions.
 11. Include measurable baseline, target, ceiling, benchmark, or comparator when available. If missing and central to the goal, add a clear first-loop instruction to measure the baseline before optimizing.
-12. Write the first-screen `Goal`, `Done When`, and `Not Done Yet If` sections before any startup instructions, rationale, evidence, or process detail.
+12. Write the first-screen `Goal`, `Done When`, `Not Done Yet If`, and `Start Prompt` sections before any rationale, evidence, or process detail.
 13. Write the `Plain Language Summary`, `Primary Verifier`, `Supporting Checks`, `Anti-Cheat Criteria`, and `Stop Conditions` sections before printing the `/goal` prompt. If any section is vague, fix the goal plan before review.
-14. Print the separate `/goal` prompt in chat after the file is written. The prompt should name the absolute goal-plan path, tell the agent to use the file as source of truth, include the no-early-stop instruction, and stay compact.
+14. Print the same `/goal` prompt in chat after the file is written. The prompt should name the absolute goal-plan path, tell the agent to use the file as source of truth, include the no-early-stop instruction, and stay compact.
 15. Fill `Resume State` with the initial status, current phase, next exact action, blockers, last validation, protected paths, and evidence paths. Use `none yet` only when that is true.
 16. Refine the goal plan for missing evidence, absent baseline or target metrics, vague first-screen finish line, vague primary verifier, missing supporting checks, vague stopping rules, unsafe side effects, unclear validation commands, weak resume state, missing boundaries, and any stop condition that would let the goal finish before the target is met or a true blocker is proven.
 17. Stop for user review. Do not start the goal unless the user explicitly says to start it.
 
-Separate chat prompt shape:
+Start prompt and chat prompt shape:
 
 ```text
 /goal <one sentence objective>
