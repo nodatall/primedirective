@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Suite Optimizer"
+  short_description: "Optimize test-suite and CI feedback speed"
+  default_prompt: "Use $test-suite-optimizer to improve test-suite runtime and CI feedback speed through a measured report-first or /goal optimization loop while preserving validation confidence."
