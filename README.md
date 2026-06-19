@@ -33,6 +33,7 @@ Use this table when you already know the skill name. The detailed sections below
 | `review-plan` | `$review-plan [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--approval-gate`; reviews active `$deliver` execution plans |
 | `skill-review` | `$skill-review [skill=<skill-name>]` | `skill=<skill-name>`, `scenario=<path-or-name>`, `baseline=<git-ref>`, `candidate=<git-ref-or-worktree>`, `--preserve-review-artifacts` |
 | `ship-branch` | `$ship-branch` | None |
+| `test-suite-optimizer` | `$test-suite-optimizer` | None |
 
 ## Which Skill Do I Use?
 
@@ -48,6 +49,7 @@ Use this table when you already know the skill name. The detailed sections below
 - Use `$review-chain` when you want a branch or task reviewed without a repo-wide sweep. It includes bounded adversarial-prior checks, but remains report-first by default.
 - Use `$merge-review` inside `/goal $merge-review` when the current branch should be made merge-ready through a review/fix/validate/rereview loop. It uses the same bounded adversarial-prior checks before declaring the branch ready.
 - Use `$page-speed-optimizer` when the work is specifically frontend journey speed: page load, Core Web Vitals, interaction responsiveness, route transitions, flashes, layout shifts, bfcache/back-forward behavior, frontend assets, third-party cost, or browser-perceived performance. Bare `$page-speed-optimizer` is report-first; use `/goal $page-speed-optimizer` for the bounded measured fix loop.
+- Use `$test-suite-optimizer` when the work is specifically test-suite or CI feedback speed: slow tests, setup/teardown cost, runner configuration, flaky tests that cause reruns, coverage/report cost, CI caches, artifacts, sharding, or parallelism while preserving validation confidence. Bare `$test-suite-optimizer` is report-first; use `/goal $test-suite-optimizer` for the bounded measured fix loop.
 - Use `$skill-review` before merging Prime Directive skill changes when you want evidence that the candidate skill contract works better in practice. It runs baseline and candidate skill versions against the same realistic scenario, then judges the artifacts.
 - Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Use `/goal $repo-sweep --swarm --preserve-review-artifacts` when you want a longer nitpicky sweep for maintainability, test quality, code slop, and production risk.
 - Use `$first-principles-mode` when the main need is deep read-only analysis, not edits; if current evidence cannot separate the leading explanations, it should name the smallest verification step instead of giving a polished guess.
@@ -175,6 +177,14 @@ Improves real user-perceived frontend journey speed and visual continuity with m
 Bare `$page-speed-optimizer` is report-first: it inventories journeys, ranks candidates, measures where practical, and recommends fixes before stopping for approval. Invoke `/goal $page-speed-optimizer` when safe measured fixes should proceed in a bounded loop until every high-impact page, transition, interaction, asset, third-party, or deploy/cache candidate is improved, rejected with evidence, or gated behind a clear decision.
 
 There are no public mode flags. `/goal $page-speed-optimizer` is enough; the skill carries the journey inventory, goal-run state document, ledger expectations, safety rules, measurement requirements, and completion gate.
+
+### `$test-suite-optimizer`
+
+Improves test-suite runtime and CI feedback speed with measured evidence while preserving validation confidence. It is narrower than `$repo-sweep`: use it for slow tests, setup/teardown cost, runner configuration, flaky tests that cause reruns, coverage/report cost, CI caches, artifacts, sharding, and parallelism, not for broad repository audit or generic failing-test repair.
+
+Bare `$test-suite-optimizer` is report-first: it inventories commands, runners, CI jobs, timing sources, coverage/reporting, services, fixtures, and flakes; ranks candidates; measures where practical; and recommends fixes before stopping for approval. Invoke `/goal $test-suite-optimizer` when safe measured fixes should proceed in a bounded loop until every high-impact test, harness, coverage, flake, or CI feedback candidate is improved, rejected with evidence, or gated behind a clear decision.
+
+There are no public mode flags. `/goal $test-suite-optimizer` is enough; the skill carries the test-surface inventory, goal-run state document, ledger expectations, timing rules, anti-cheat checks, safety rules, and completion gate.
 
 ### `$plain-language`
 
