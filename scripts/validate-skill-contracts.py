@@ -851,6 +851,12 @@ def validate_bounded_adversarial_priors(errors: list[str]) -> None:
         "Do not run unbounded \"keep looking until you find a bug\" loops.",
         "Do not invent findings to satisfy an adversarial prompt.",
         "run the bounded adversarial-prior checks: bug_prior, smaller_delta, and skeptic_falsifier",
+        "## Final Review-Quality Check",
+        "incorrect_or_overstated_findings",
+        "missed_material_issues",
+        "severity_or_disposition_adjustments",
+        "the closing audit must attack the review itself",
+        "Final review-quality check recorded when required",
     ]
     for token in review_protocol_tokens:
         if token not in review_protocol:

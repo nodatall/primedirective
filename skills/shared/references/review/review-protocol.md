@@ -166,6 +166,16 @@ Each lane must end in one of these outcomes:
 
 Do not run unbounded "keep looking until you find a bug" loops. Try hard, record the falsifier when evidence fails, and stop. Do not invent findings to satisfy an adversarial prompt.
 
+## Final Review-Quality Check
+
+For explicit `$review-chain` runs, merge-readiness clean verdicts, repo-sweep review rounds, and final full-branch execution reviews, the closing audit must attack the review itself before declaring the scope clean:
+
+- `incorrect_or_overstated_findings`: try to refute material findings, severities, and dispositions against the actual code, tests, runtime evidence, or task contract. Drop, soften, or reclassify anything the evidence does not support.
+- `missed_material_issues`: re-check the riskiest changed paths for false negatives, especially error handling, boundary behavior, security, data integrity, user-facing flows, and verification gaps.
+- `severity_or_disposition_adjustments`: recalibrate severity and disposition when the evidence shows a finding is stronger, weaker, human-decision-bound, residual, or no action.
+
+If the check changes findings, update the review log and continue the parent workflow's fix, validation, or rereview path as needed. If it finds no changes, record `none` plus the concrete areas or evidence checked.
+
 ## Prompts A-I
 
 ### Prompt A
@@ -306,7 +316,8 @@ Was anything skipped, deferred, or left implicit?
 What assumptions remain and should be documented?
 What is most likely to break in production?
 Which part of the agent loop, if any, made the most important remaining issue more likely?
-Action: Give an honest assessment, list any remaining issues or accepted risks explicitly, and do not mark the review complete while unresolved in-scope issues remain. For task-based `full-branch` reviews, also include the Agent-Loop Backprop output described below.
+Before declaring the scope clean, did the final review-quality check find any incorrect_or_overstated_findings, missed_material_issues, or severity_or_disposition_adjustments?
+Action: Give an honest assessment, list any remaining issues or accepted risks explicitly, include the final review-quality check when applicable, and do not mark the review complete while unresolved in-scope issues remain. For task-based `full-branch` reviews, also include the Agent-Loop Backprop output described below.
 ```
 
 ## Agent-Loop Backprop
@@ -430,6 +441,7 @@ Completion gates:
 - No unresolved LARP remediation TODO items.
 - No unresolved final-audit issues without explicit accepted-risk or blocked status.
 - No unresolved blocker/material code findings hidden as agent-loop findings.
+- Final review-quality check recorded when required, including `none` plus areas/evidence checked when it made no changes.
 - Tests passing or explicitly justified.
 
 Deletion gate:
