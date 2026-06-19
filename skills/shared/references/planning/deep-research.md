@@ -139,15 +139,16 @@ Before the first external search:
    - inference or judgment calls made for this specific plan
 15. If live web research is unavailable at runtime, stop immediately and tell the user that `--deep-research` cannot proceed without web access.
 16. Do not create a local-only exception for narrowly scoped or repo-heavy tasks. If the user wants a faster repo-only pass, they should use planning without `--deep-research`.
-17. Budget a real deep pass, typically around 20-30 minutes for non-trivial plans. Do not compress it into a fast citation pass. If the plan is too narrow to justify that level of operator discovery, say so and recommend normal planning instead of pretending `--deep-research` was used.
-18. End the research pass by triaging the working memo:
+17. Budget a real deep pass, typically around 20-30 minutes for non-trivial plans. Do not compress it into a fast citation pass. If the plan is too narrow to justify that level of operator discovery, say so before starting the web-backed memo and recommend normal planning instead of pretending `--deep-research` was used.
+18. Once a `--deep-research` memo has been started, an unmet duration or evidence bar is an in-progress state, not a valid final handoff. Continue researching, reconciling, and updating artifacts until the completion gate passes. Stop only for a real blocker such as unavailable web access, unsafe context exposure, a required user decision, or an explicit user instruction to drop `--deep-research`.
+19. End the research pass by triaging the working memo:
    - run the Final Load-Bearing Falsification Pass before closing the memo
    - choose the highest-value findings to adopt
    - note meaningful ideas rejected or deferred and why
    - update PRD/TDD before tasks-plan generation, or update the `$deliver` execution plan before Pro analysis or refinement
    - distill the plan-specific checklist items and decisions worth carrying into this plan's execution
-19. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
-20. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation unless the caller explicitly owns direct orchestration. In a direct orchestration flow, adopt the findings into the artifacts and continue unless the change is a true blocker that is unsafe, contradictory, or impossible to default.
+20. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
+21. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation unless the caller explicitly owns direct orchestration. In a direct orchestration flow, adopt the findings into the artifacts and continue unless the change is a true blocker that is unsafe, contradictory, or impossible to default.
 
 ## Context Discipline
 
@@ -325,9 +326,9 @@ The working memo must end with a Deep Research Completion Stamp containing:
 - `task_plan_inputs_created`
 - `evidence_bar_met`
 
-Record `research_started_at` and `research_completed_at` as ISO-like timestamps with timezone when known. Record `elapsed_minutes` as a numeric wall-clock duration from the start of the web-backed research pass through completion-stamp triage. Set `duration_expectation_met: yes` only when a non-trivial plan received the real deep pass required above, typically at least 20 minutes. If `elapsed_minutes` is below 20, `under_20_minutes_explanation` is required and must state why the pass is incomplete or why the user should rerun normal planning instead of claiming completed deep research.
+Record `research_started_at` and `research_completed_at` as ISO-like timestamps with timezone when known. Record `elapsed_minutes` as a numeric wall-clock duration from the start of the web-backed research pass through completion-stamp triage. Set `duration_expectation_met: yes` only when a non-trivial plan received the real deep pass required above, typically at least 20 minutes. If `elapsed_minutes` is below 20, treat the memo as in progress and continue the research pass until the expectation is met, unless the user explicitly drops `--deep-research` or a real blocker prevents continuation. Use `under_20_minutes_explanation` only for a blocked or explicitly downgraded run; do not use it as a normal terminal handoff after a shallow pass.
 
-Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, Load-Bearing Falsification Pass, applicable artifact revisions, and duration expectation are complete. `evidence_bar_met: no` is a planning stop: do not generate `tasks-plan`, do not treat PRD/TDD as final, do not run `$deliver --pro-analysis`, do not refine or execute the `$deliver` plan, and report the unmet evidence checks.
+Set `evidence_bar_met: yes` only when the minimum evidence bar, Evidence Ledger, Draft-Linked Research Agenda, Finding-to-Artifact Delta, Load-Bearing Falsification Pass, applicable artifact revisions, and duration expectation are complete. `evidence_bar_met: no` is a planning stop for downstream work only: do not generate `tasks-plan`, do not treat PRD/TDD as final, do not run `$deliver --pro-analysis`, and do not refine or execute the `$deliver` plan. It is not, by itself, a reason to hand control back to the user. Keep completing or repairing the research pass unless a real blocker prevents progress or the user explicitly drops `--deep-research`.
 
 Before setting `evidence_bar_met: yes`, print a short `Deep Research Summary` in the visible thread/log: adopted findings, rejected/deferred ideas, blockers, and artifact changes.
 
