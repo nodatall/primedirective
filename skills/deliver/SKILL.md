@@ -152,6 +152,7 @@ Rules:
 - Reduce adopted findings into execution-plan changes before Pro analysis or refinement.
 - Print a short `Deep Research Summary` before Pro analysis or refinement.
 - Do not start Pro analysis, refinement, user review, or implementation if the research memo is missing, lacks the Deep Research Completion Stamp, leaves material adopted findings unapplied or undispositioned, or does not end with `evidence_bar_met: yes`.
+- A short partial research pass is not a completed research gate and should not become a terminal user handoff. If the evidence bar is unmet only because the pass is incomplete, keep researching and repairing the memo until the gate passes. Stop only for a real blocker such as unavailable web access, unsafe context exposure, a required user decision, or the user explicitly dropping `--deep-research`.
 
 When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the readable execution plan exists and before the refinement loop. Do not make the user approve an unrefined draft before the Pro pass.
 
@@ -216,6 +217,7 @@ Rules:
    - Write and verify `tasks/tmp/research-plan-<plan-key>.md`.
    - Apply adopted research findings into the execution plan before step 4.5 or step 5.
    - Hard-stop before Pro analysis or refinement if the Deep Research Completion Stamp is incomplete or `evidence_bar_met: yes` is missing.
+   - Do not hand that incomplete state back as completed planning. Continue the research pass unless there is a real blocker or the user explicitly drops `--deep-research`.
 4.5. If `--pro-analysis` is present, run Pro analysis before refinement.
    - Load `skills/shared/references/analysis/pro-browser-analysis.md`.
    - Use `tasks/execution-plan-<plan-key>.md` plus selected repo context as the Pro input. If `--deep-research` is also present, include `tasks/tmp/research-plan-<plan-key>.md` in the Pro context bundle after the research gate is satisfied.
