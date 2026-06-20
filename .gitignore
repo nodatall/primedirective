@@ -1,6 +1,7 @@
 .DS_Store
 .codex/environments/
 /agent-scratch/
+/tasks/tmp/
 apps/board/data/
 apps/board/artifacts/
 apps/board/worktrees/
