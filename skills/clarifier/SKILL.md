@@ -70,7 +70,7 @@ Treat voice dumps as thinking material, not failed prose.
 10. When a concrete next move would help, offer exactly two short candidate directions:
    - `Plain version`: the clearest, lowest-filler version.
    - `Alternative version`: a different structure, emphasis, or cadence without forcing a punchier tone.
-11. Before showing any candidate, run the post-candidate check.
+11. Before showing any candidate, run the private refinement loop, then the post-candidate check.
 12. Ask which candidate is closer and what they dislike, want cut, or want kept.
 13. Compare the next version against the same target only.
 14. Repeat for 2-3 cycles unless the user asks to continue.
@@ -105,6 +105,24 @@ When offering a rewrite:
 - Ask the user to react, cut, combine, or rewrite from the candidates rather than copy-pasting them unchanged.
 
 Do not rewrite a whole draft unless the user explicitly asks to switch from coaching into editing.
+
+## Private Refinement Loop
+
+Before showing a candidate rewrite, improve it privately.
+
+Loop:
+
+1. Draft the candidate.
+2. Critique it against the current target, mode, user constraints, and post-candidate check.
+3. If the critique finds a material issue, revise the candidate.
+4. Repeat until the next critique finds no material issue.
+5. Stop after 20 passes even if minor issues remain.
+
+Material issues include unclear meaning, missed user constraints, lost voice, added claims, weak structure, phrase echoes, repeated sentence shapes, tone drift, format mismatch, or avoidable reader drag.
+
+Do not keep looping for tiny synonym preferences, marginal polish, or a more impressive-sounding version. Stop when the candidate is clear enough for the user's current purpose and another pass would not change the user's likely decision.
+
+Do not show the internal critique loop unless the user asks how many passes happened or wants to inspect the process.
 
 ## Plain Compression
 
