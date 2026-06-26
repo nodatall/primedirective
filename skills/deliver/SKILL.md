@@ -109,7 +109,10 @@ Refined execution-plan rules:
 - Use phases plus checkboxes.
 - Allow one level of checkboxes under a phase.
 - Avoid checkboxes inside checkboxes.
-- Add `What We Know`, phase `Goal`, or `Decision notes` only when they reduce confusion.
+- Add `Context`, phase `Goal`, or `Decision notes` only when they reduce confusion.
+- Keep `Context` short. Use it for current-state facts, constraints, and settled decisions, not plan justification.
+- Convert any supporting rationale into concrete decisions, constraints, or checks.
+- Omit plan-justifying prose. The plan should say what to do, what is true now, and what must be checked, not argue that the approach is good.
 - Add `Done when` only when the checkbox text is too vague to define completion.
 - Every normal execution plan must include `Deliver implementation instruction:`.
 - Include the exact Deliver implementation instruction near the top of every normal execution plan.

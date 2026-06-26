@@ -64,9 +64,9 @@ Tell me what is wrong, missing, or out of order.
 Deliver implementation instruction:
 When asked to implement this doc, load the `$deliver` skill, use this file as the approved execution plan, scan every checkbox, and continue through final review, archive movement, commit, and finalization before the final handoff.
 
-## What We Know
+## Context
 
-- <Only include when useful.>
+- <Only include current-state facts, constraints, or settled decisions that help implementation.>
 
 Visual mockup: <relative link to `ui-mockup-<plan-key>.html` when this plan is frontend-facing.>
 
@@ -93,7 +93,10 @@ Rules:
 - Use phases plus checkboxes.
 - Allow one level of checkboxes under a phase.
 - Avoid checkboxes inside checkboxes.
-- Add `What We Know`, phase `Goal`, or `Decision notes` only when they reduce confusion.
+- Add `Context`, phase `Goal`, or `Decision notes` only when they reduce confusion.
+- Keep `Context` short. Use it for current-state facts, constraints, and settled decisions, not plan justification.
+- Convert any supporting rationale into concrete decisions, constraints, or checks.
+- Omit plan-justifying prose. The plan should say what to do, what is true now, and what must be checked, not argue that the approach is good.
 - Add `Done when` only when the checkbox text is too vague to define completion.
 - Include the exact Deliver implementation instruction near the top of every normal execution plan.
 - Normal mode: ask for review with `Please review this before I start.` The user reviews the Markdown file directly; do not launch a review app or external viewer.
