@@ -18,6 +18,7 @@ Invoke explicitly with `$ship-branch`, or for plain-language requests such as "s
 - Use local `git` for branch, status, commit, push, switch, pull, and local deletion.
 - Use GitHub CLI `gh` for auth checks, PR discovery, PR creation, merge, and remote branch deletion.
 - Stop if `gh` is unavailable or unauthenticated.
+- Prefer the repo's explicit local merge gate over ad hoc validation when present.
 
 ## Workflow
 
@@ -42,7 +43,13 @@ Invoke explicitly with `$ship-branch`, or for plain-language requests such as "s
 3. Check branch content.
    - Compare the branch to the resolved base with `git log --oneline <base>..HEAD`.
    - If there are no unique commits after dirty-work handling, stop and report that there is nothing to ship.
-   - Run the relevant repo validation command when it is obvious from the repo or recent workflow. If no obvious command exists, say that no validation command was found.
+   - Discover the repo's explicit local merge gate before choosing validation:
+     - First honor repo instructions that name a local pre-merge, merge-readiness, or local CI gate, such as `AGENTS.md`, `README.md`, `docs/`, runbooks, package scripts, task-runner config, or recent workflow notes.
+     - Prefer an explicitly named gate command over decomposing it into its underlying checks. Examples include `ci:local`, `local:ci`, `merge:check`, `premerge`, `verify:local`, `scripts/local-ci.sh`, or a documented equivalent.
+     - For package scripts, use the repo's package manager from `packageManager` or lockfiles. For example, if a Bun repo exposes `ci:local`, run `bun run ci:local`; for npm, pnpm, or yarn repos, use that repo's equivalent runner.
+     - If more than one plausible local merge gate exists and the owner is ambiguous, stop and ask which gate is authoritative.
+   - Run the explicit local merge gate when present. Treat failure as a merge blocker; classify whether it is a branch-scoped failure, environment/auth/provider issue, flaky local-only check, or an unrelated baseline problem before making another patch.
+   - If no explicit local merge gate exists, run the relevant repo validation command when it is obvious from the repo or recent workflow. If no obvious command exists, say that no local merge gate or validation command was found.
 4. Push the branch.
    - Use `git push -u origin <current-branch>`.
    - Stop and report the exact blocker on push failure.
@@ -55,7 +62,7 @@ Invoke explicitly with `$ship-branch`, or for plain-language requests such as "s
    - Check PR state and mergeability with `gh pr view`.
    - If the PR is not mergeable or review requirements block merge, stop and report the blocker.
    - If required checks are pending or queued, keep checking until all required checks pass or any check fails. Prefer `gh pr checks --watch` when available; otherwise poll `gh pr checks` or `gh pr view` about every 60 seconds and report compact progress.
-   - If required checks fail, inspect the failed check output with `gh pr checks`, `gh run view --log-failed`, or the check URL. If the failure is actionable and within the branch scope, make the smallest fix, run the relevant local validation command when available, commit only the fix with a concise message, push it, and return to the pending/queued check watch.
+   - If required checks fail, inspect the failed check output with `gh pr checks`, `gh run view --log-failed`, or the check URL. If the failure is actionable and within the branch scope, make the smallest fix, run the explicit local merge gate when available, otherwise run the relevant local validation command when available, commit only the fix with a concise message, push it, and return to the pending/queued check watch.
    - Stop and report the blocker if the check failure is infrastructure, auth, permission, flaky without a clear branch fix, impossible to reproduce locally, or requires a product/scope decision from the user.
    - Do not treat pending or queued checks as a final blocker by themselves. After required checks pass, re-check PR state and mergeability, then continue.
    - Merge with the repo's normal merge path. Prefer `gh pr merge --merge --delete-branch` unless the repo or PR clearly requires squash or rebase.
@@ -70,7 +77,7 @@ Invoke explicitly with `$ship-branch`, or for plain-language requests such as "s
    - PR URL and merge result.
    - Branch deleted locally and remotely.
    - Current branch.
-   - Validation run or skipped reason.
+   - Local merge gate or validation run, or skipped reason.
    - Any stash left behind.
    - Final `git status --short --branch`.
 
