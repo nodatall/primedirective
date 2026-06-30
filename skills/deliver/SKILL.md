@@ -113,6 +113,10 @@ Refined execution-plan rules:
 - Keep `Context` short. Use it for current-state facts, constraints, and settled decisions, not plan justification.
 - Convert any supporting rationale into concrete decisions, constraints, or checks.
 - Omit plan-justifying prose. The plan should say what to do, what is true now, and what must be checked, not argue that the approach is good.
+- Do not put planning work inside a refined execution plan. The plan itself must already carry the chosen contract, shape, policy, acceptance criteria, or remaining explicit `Open question:` before implementation starts.
+- Avoid placeholder work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the requested deliverable is itself a planning artifact.
+- If a decision is unresolved and would change implementation, write it as an `Open question:` checkbox and stop for user review; otherwise record the settled decision in `Context` or `Decision notes` and make the checkbox implement that decision.
+- Open questions that would change implementation are implementation blockers, not normal backlog. The review handoff must list them under open questions and say they need to be resolved or explicitly deferred before implementation starts.
 - Add `Done when` only when the checkbox text is too vague to define completion.
 - Every normal execution plan must include `Deliver implementation instruction:`.
 - Include the exact Deliver implementation instruction near the top of every normal execution plan.
@@ -236,6 +240,7 @@ Rules:
    - Use a fresh reviewer subagent by default when subagents are available.
    - Do not mention whether a subagent was or was not used in the user-facing review request unless it creates a real blocker or residual risk.
    - The reviewer checks for missing source items, vague checkboxes, bad order, duplicate work, oversized steps, hidden dependencies, contradictions, and unclear next step.
+   - The reviewer must reject refined plans that still contain meta-planning placeholders such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` instead of settled decisions, concrete implementation work, or explicit `Open question:` checkboxes.
    - The reviewer also checks that the plan is sliced in dependency order without turning the main plan into a per-file implementation script.
    - Edit only the execution plan during refinement.
    - Do not create a refinement notes file or separate refinement markdown artifact.
@@ -245,7 +250,7 @@ Rules:
    - Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.
    - Normal mode: ask the user to say `implement the doc` when it looks right, or tell you what is wrong, missing, or out of order.
    - `--fast` mode: do not ask for initial plan review. Treat the refined execution plan as approved scope and continue directly to step 7 after checking the fast-mode stop conditions below.
-   - `--fast` mode must still stop for destructive or data-loss actions, missing credentials/env/service access, material scope ambiguity, billing/security/schema/API/product decisions, goal-plan delegation, incomplete `--deep-research`, incomplete `--pro-analysis`, unresolved material refinement issues, or any blocker that would make immediate implementation unsafe or dishonest.
+   - `--fast` mode must still stop for destructive or data-loss actions, missing credentials/env/service access, material scope ambiguity, billing/security/schema/API/product decisions, unresolved implementation-changing `Open question:` checkboxes, goal-plan delegation, incomplete `--deep-research`, incomplete `--pro-analysis`, unresolved material refinement issues, or any blocker that would make immediate implementation unsafe or dishonest.
    - If the user corrects the plan, update the same Markdown file and rerun refinement only if the correction introduces material backlog risk.
    - If this plan came from a draft Deliver plan, stop here even if the user asked to `deliver this`. In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc` unless the current refinement request includes `--fast`.
    - Normal mode: do not begin implementation until the user approves or corrects the plan.
@@ -319,11 +324,13 @@ For the initial review gate:
 - link the plan file
 - if `$deliver` chose a goal plan, say that it is a goal plan
 - say refinement completed or name unresolved issues
+- if any implementation-changing `Open question:` checkboxes remain, list them as open questions and say they must be resolved or explicitly deferred before implementation starts
 - ask the user to correct anything wrong, missing, or out of order
 
 For `--fast` mode:
 
 - mention that the initial plan-review pause was skipped
+- if any implementation-changing `Open question:` checkboxes remain, stop and list them instead of starting implementation
 - name the plan file before implementation starts when useful, but do not stop for review
 - continue into step 7 unless a fast-mode stop condition applies
 

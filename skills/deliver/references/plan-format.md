@@ -97,6 +97,10 @@ Rules:
 - Keep `Context` short. Use it for current-state facts, constraints, and settled decisions, not plan justification.
 - Convert any supporting rationale into concrete decisions, constraints, or checks.
 - Omit plan-justifying prose. The plan should say what to do, what is true now, and what must be checked, not argue that the approach is good.
+- Do not put planning work inside a refined execution plan. The plan itself must already carry the chosen contract, shape, policy, acceptance criteria, or remaining explicit `Open question:` before implementation starts.
+- Avoid placeholder work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the requested deliverable is itself a planning artifact.
+- If a decision is unresolved and would change implementation, write it as an `Open question:` checkbox and stop for user review; otherwise record the settled decision in `Context` or `Decision notes` and make the checkbox implement that decision.
+- Open questions that would change implementation are implementation blockers, not normal backlog. The review handoff must list them under open questions and say they need to be resolved or explicitly deferred before implementation starts.
 - Add `Done when` only when the checkbox text is too vague to define completion.
 - Include the exact Deliver implementation instruction near the top of every normal execution plan.
 - Normal mode: ask for review with `Please review this before I start.` The user reviews the Markdown file directly; do not launch a review app or external viewer.

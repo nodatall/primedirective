@@ -163,9 +163,9 @@ def declared_skill_tokens(text: str) -> set[str]:
     return tokens
 
 
-def readme_rows() -> dict[str, tuple[str, str]]:
+def readme_rows() -> dict[str, str]:
     readme = (ROOT / "README.md").read_text()
-    rows: dict[str, tuple[str, str]] = {}
+    rows: dict[str, str] = {}
     in_table = False
     for line in readme.splitlines():
         if line.startswith("| Skill |"):
@@ -178,11 +178,11 @@ def readme_rows() -> dict[str, tuple[str, str]]:
         if not line.startswith("|"):
             break
         cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if len(cells) != 3:
+        if len(cells) < 2:
             continue
         match = re.fullmatch(r"`([^`]+)`", cells[0])
         if match:
-            rows[match.group(1)] = (cells[1], cells[2])
+            rows[match.group(1)] = " ".join(cells[1:])
     return rows
 
 
@@ -209,17 +209,8 @@ def validate_skill_metadata(errors: list[str]) -> None:
             fail(errors, "PD-README-SKILL-EXTRA", f"README has unknown skill rows: {', '.join(extra)}")
 
     for name, expected in sorted(skills.items()):
-        invocation_cell, options_cell = rows.get(name, ("", ""))
-        expected_invocation = INVOCATION_OVERRIDES.get(name, f"${name}")
-        invocation_codes = re.findall(r"`([^`]+)`", invocation_cell)
-        valid_invocations = bool(invocation_codes)
-        for code in invocation_codes:
-            first_token = code.split()[0] if code.split() else ""
-            if first_token != expected_invocation:
-                valid_invocations = False
-        if not valid_invocations:
-            fail(errors, "PD-README-INVOCATION", f"{name}: README invocation cell does not include `{expected_invocation}`")
-        actual = public_tokens(" ".join([invocation_cell, options_cell]))
+        readme_cell = rows.get(name, "")
+        actual = public_tokens(readme_cell)
         if actual != expected:
             fail(
                 errors,
@@ -531,6 +522,35 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in deliver:
             fail(errors, "PD-DELIVER-DRAFT-MODE", f"skills/deliver/SKILL.md missing draft-mode token: {token}")
 
+    deliver_refined_tokens = [
+        "Do not put planning work inside a refined execution plan.",
+        "The plan itself must already carry the chosen contract, shape, policy, acceptance criteria, or remaining explicit `Open question:` before implementation starts.",
+        "Avoid placeholder work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the requested deliverable is itself a planning artifact.",
+        "If a decision is unresolved and would change implementation, write it as an `Open question:` checkbox and stop for user review; otherwise record the settled decision in `Context` or `Decision notes` and make the checkbox implement that decision.",
+        "Open questions that would change implementation are implementation blockers, not normal backlog.",
+        "The review handoff must list them under open questions and say they need to be resolved or explicitly deferred before implementation starts.",
+        "if any implementation-changing `Open question:` checkboxes remain, list them as open questions and say they must be resolved or explicitly deferred before implementation starts",
+        "if any implementation-changing `Open question:` checkboxes remain, stop and list them instead of starting implementation",
+        "`--fast` mode must still stop for destructive or data-loss actions, missing credentials/env/service access, material scope ambiguity, billing/security/schema/API/product decisions, unresolved implementation-changing `Open question:` checkboxes",
+        "The reviewer must reject refined plans that still contain meta-planning placeholders",
+    ]
+    for token in deliver_refined_tokens:
+        if token not in deliver:
+            fail(errors, "PD-DELIVER-REFINED-PLAN", f"skills/deliver/SKILL.md missing refined-plan token: {token}")
+
+    plan_format = (ROOT / "skills/deliver/references/plan-format.md").read_text()
+    plan_format_tokens = [
+        "Do not put planning work inside a refined execution plan.",
+        "The plan itself must already carry the chosen contract, shape, policy, acceptance criteria, or remaining explicit `Open question:` before implementation starts.",
+        "Avoid placeholder work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the requested deliverable is itself a planning artifact.",
+        "If a decision is unresolved and would change implementation, write it as an `Open question:` checkbox and stop for user review; otherwise record the settled decision in `Context` or `Decision notes` and make the checkbox implement that decision.",
+        "Open questions that would change implementation are implementation blockers, not normal backlog.",
+        "The review handoff must list them under open questions and say they need to be resolved or explicitly deferred before implementation starts.",
+    ]
+    for token in plan_format_tokens:
+        if token not in plan_format:
+            fail(errors, "PD-DELIVER-PLAN-FORMAT", f"skills/deliver/references/plan-format.md missing refined-plan token: {token}")
+
     deliver_goal_tokens = [
         "skills/plan-to-goal/SKILL.md",
         "Durable goal plan: `tasks/goal-plan-<plan-key>.md`",
@@ -666,18 +686,18 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "optimizes rough prose into a first-screen `Goal`, `Done When`, `Not Done Yet If`, and `Start Prompt` block",
         "finish-line-first review guidance",
         "no-early-stop guidance",
-        "`deliver` | `$deliver`, `$deliver refine`, or `$deliver plan` | `--deep-research`, `--pro-analysis`, `--fast`; legacy `$deliver discuss` is a draft-update alias",
+        "`deliver` | Use `$deliver` for the main planning, implementation, and review workflow.",
         "one readable execution plan refined right away",
         "runs web-backed deep research when requested",
         "asks the user to review the Markdown plan file unless `--fast` is present",
         "For frontend-facing plans, it creates a simple linked HTML mockup before approval",
         "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
-        "bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.",
+        "Use bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.",
         "`--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately",
         "`--deep-research`: run web-backed operator/current-practice research after the readable execution plan exists",
         "`--deep-research --pro-analysis`: run deep research first, apply adopted findings to the execution plan, then run ChatGPT Pro against the researched plan before refinement.",
-        "`discuss`: legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.",
-        "`plan-to-goal` | `$plan-to-goal [plan-key=<plan-key>]`",
+        "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
+        "`plan-to-goal` | Use `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
         "$deliver --pro-analysis",
         "$deliver --deep-research --pro-analysis",
@@ -801,7 +821,7 @@ def validate_review_plan_contract(errors: list[str]) -> None:
             fail(errors, "PD-REVIEW-PLAN-RETENTION", f"skills/review-plan/SKILL.md retention section missing behavior token: {token}")
 
     readme_tokens = [
-        "`review-plan` | `$review-plan [plan-key=<plan-key>]` | `plan-key=<plan-key>`, `--approval-gate`; reviews active `$deliver` execution plans",
+        "`review-plan` | Use `$review-plan [plan-key=<plan-key>]`",
         "Use `$review-plan` when an active `$deliver` execution plan should get an adversarial first-principles council pass before implementation.",
         "### `$review-plan`",
         "Runs an adversarial first-principles council loop over one active `$deliver` execution plan.",
@@ -959,7 +979,7 @@ def validate_architecture_guidance(errors: list[str]) -> None:
                 fail(errors, "PD-ARCHITECTURE-CONSUMER", f"{path} missing architecture token: {token}")
 
     metadata_tokens = [
-        "`create-architecture` | `$create-architecture` | None",
+        "`create-architecture` | Use `$create-architecture` when a non-trivial repo needs a concrete `docs/ARCHITECTURE.md`",
         "Use `$create-architecture` when a non-trivial repo needs a concrete `docs/ARCHITECTURE.md`",
         "Creates or updates a repo-specific `docs/ARCHITECTURE.md`.",
     ]
@@ -1005,7 +1025,7 @@ def validate_ship_branch(errors: list[str]) -> None:
             fail(errors, "PD-SHIP-BRANCH", f"skills/ship-branch/SKILL.md missing token: {token}")
 
     readme_tokens = [
-        "`ship-branch` | `$ship-branch` | None",
+        "`ship-branch` | Use `$ship-branch` when the current feature branch should be pushed",
         "Use `$ship-branch` when the current feature branch should be pushed, PR'd, merged, deleted locally/remotely, and the checkout returned to the base branch.",
         "Finishes the current feature branch.",
     ]
