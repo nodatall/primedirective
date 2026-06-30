@@ -70,7 +70,7 @@ Treat voice dumps as thinking material, not failed prose.
 10. When a concrete next move would help, offer exactly two short candidate directions:
    - `Plain version`: the clearest, lowest-filler version.
    - `Alternative version`: a different structure, emphasis, or cadence without forcing a punchier tone.
-11. Before showing any candidate, run the private refinement loop, then the post-candidate check.
+11. Before showing any candidate, run the private refinement loop as an explicit gate, then the post-candidate check. Do not present candidates if this was only a quick polish pass.
 12. Ask which candidate is closer and what they dislike, want cut, or want kept.
 13. Compare the next version against the same target only.
 14. Repeat for 2-3 cycles unless the user asks to continue.
@@ -110,6 +110,14 @@ Do not rewrite a whole draft unless the user explicitly asks to switch from coac
 
 Before showing a candidate rewrite, improve it privately.
 
+First set the loop target in plain terms:
+
+- current purpose and reader
+- writing mode
+- user-stated voice, tone, and format constraints
+- must-keep facts, names, claims, and phrases
+- main reader effect to improve
+
 Loop:
 
 1. Draft the candidate.
@@ -120,9 +128,13 @@ Loop:
 
 Material issues include unclear meaning, missed user constraints, lost voice, added claims, weak structure, phrase echoes, repeated sentence shapes, tone drift, format mismatch, or avoidable reader drag.
 
+For professional, application, profile, or outreach copy, also treat generic AI-polished surface as a material issue. Watch for overly balanced template structure, inflated transition phrases, recruiter-like abstractions, claim smoothing, and language the user would not naturally say. Revise toward the user's own concrete words before showing candidates.
+
 Do not keep looping for tiny synonym preferences, marginal polish, or a more impressive-sounding version. Stop when the candidate is clear enough for the user's current purpose and another pass would not change the user's likely decision.
 
-Do not show the internal critique loop unless the user asks how many passes happened or wants to inspect the process.
+Keep a tiny private loop note: pass count, target, last material issue fixed, and whether the final critique found no material issue.
+
+Do not show the internal critique loop unless the user asks how many passes happened or wants to inspect the process. If the user asks whether the loop ran, answer plainly with the pass count and the main material issues checked or fixed. If the loop did not run, say so and restart from the current target instead of defending the earlier candidates.
 
 ## Plain Compression
 
@@ -169,6 +181,7 @@ Before presenting a revised candidate, quickly scan it for:
 - repeated sentence starts or repeated sentence shapes
 - added claims the user did not supply
 - tone drift away from the user's stated preference
+- AI-polished or template-like phrasing that conflicts with the user's voice, especially in professional, application, profile, or outreach copy
 
 Fix clear misses silently before responding. Mention the tradeoff only when the fix would change meaning, emphasis, or voice.
 
