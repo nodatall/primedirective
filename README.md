@@ -32,7 +32,7 @@ The skills are composable. `$deliver` is the main orchestration workflow, and se
 | Skill | What it does |
 | --- | --- |
 | `deliver` | Use `$deliver` for the main planning, implementation, and review workflow. After you talk through what you want to build, it turns the conversation into a plain Markdown plan with checkboxes, optionally runs `--deep-research` or `--pro-analysis`, improves the plan, shows it for review, then implements it task by task with focused subagents, commits, validation, and final review. Use `--fast` only when you want to skip the initial plan-review pause. |
-| `clarifier` | Use `$clarifier` when you want help turning a rough draft or stuck thought into clearer writing by revising it yourself with questions and short teaching examples. |
+| `clarifier` | Use `$clarifier` when you want two rewritten versions of a rough draft followed by a sentence-level editorial review with concrete recommendations for every material weakness. |
 | `plain-language` | Use `$plain-language` when you want a shorter, clearer, plainer answer or rewrite. |
 | `plan-to-goal` | Use `$plan-to-goal [plan-key=<plan-key>]` when a rough goal prompt, thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with an embedded copy-pasteable `/goal` start prompt. |
 | `first-principles-mode` | Use `$first-principles-mode` when the main need is deep read-only analysis, not edits. It uses a default adversarial council with independent lanes and rebuttal rounds, checks load-bearing claims, and supports `--deep-research` and `--pro-analysis`. |
@@ -84,7 +84,7 @@ Use `$deliver discuss` only when you want a draft checklist to stay current whil
 
 ### `$clarifier`
 
-Coaches revision for rough drafts, stuck thoughts, posts, essays, messages, and explanations. It restates the intended meaning, identifies one clarity issue, asks focused questions, may show one short annotated teaching example, and asks the user to write the next version themselves.
+Coaches revision for rough drafts, stuck thoughts, posts, essays, messages, and explanations. For substantial drafts, it provides a plain rewrite and an alternative rewrite, then reviews the original sentence by sentence. Each material weakness gets a reader-effect explanation, an action such as cut, tighten, rewrite, combine, split, move, or source-check, and concrete examples when wording or structure should change.
 
 ### `$plain-language`
 

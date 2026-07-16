@@ -391,6 +391,34 @@ def validate_deep_research_prompt_contract(errors: list[str]) -> None:
             fail(errors, "PD-DEEP-RESEARCH-PROMPT-README", f"README.md missing deep-research-prompt token: {token}")
 
 
+def validate_clarifier_editorial_review(errors: list[str]) -> None:
+    skill = (ROOT / "skills/clarifier/SKILL.md").read_text()
+    readme = (ROOT / "README.md").read_text()
+
+    skill_tokens = [
+        "two complete rewritten candidates",
+        "## Default Response Shape",
+        "`Weakest sentences`, with the original, reader effect, recommendation, and examples for every material issue",
+        "review the user's original draft, not only the candidates",
+        "list every sentence or passage with a material issue; use no arbitrary minimum or maximum",
+        "`Cut`, `Tighten`, `Rewrite`, `Combine`, `Split`, `Move`, or `Source-check`",
+        "say so instead of inventing weaknesses",
+        "Only enter Near-Done Mode after a quick original-draft scan",
+    ]
+    for token in skill_tokens:
+        if token not in skill:
+            fail(errors, "PD-CLARIFIER-EDITORIAL-REVIEW", f"skills/clarifier/SKILL.md missing token: {token}")
+
+    readme_tokens = [
+        "two rewritten versions of a rough draft followed by a sentence-level editorial review",
+        "reviews the original sentence by sentence",
+        "cut, tighten, rewrite, combine, split, move, or source-check",
+    ]
+    for token in readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-CLARIFIER-README", f"README.md missing Clarifier editorial-review token: {token}")
+
+
 def validate_first_principles_adversarial_council(errors: list[str]) -> None:
     first_principles = (ROOT / "skills/first-principles-mode/SKILL.md").read_text()
     rubric = (ROOT / "skills/first-principles-mode/references/analysis-rubric.md").read_text()
@@ -1049,6 +1077,7 @@ def main() -> int:
     validate_plan_refine_completion_gate(errors)
     validate_deep_research_completion_stamp(errors)
     validate_deep_research_prompt_contract(errors)
+    validate_clarifier_editorial_review(errors)
     validate_first_principles_adversarial_council(errors)
     validate_deliver_terminal_gate(errors)
     validate_review_plan_contract(errors)
