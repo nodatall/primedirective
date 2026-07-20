@@ -398,10 +398,18 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
     skill_tokens = [
         "two complete rewritten candidates",
         "## Default Response Shape",
+        "`Structural issues`, only when the whole-draft point, paragraph purpose, development, or progression has a material problem",
         "`Weakest sentences`, with the original, reader effect, recommendation, and examples for every material issue",
+        "## Structural and Argument Checks",
+        "purpose, main claim, decision, or ask early enough for the format",
+        "one controlling purpose",
+        "explains, supports, exemplifies, qualifies, or advances",
+        "allow it to be delayed or implicit",
+        "private reverse outline",
+        "Do not require every paragraph to begin with a topic sentence",
         "review the user's original draft, not only the candidates",
-        "list every sentence or passage with a material issue; use no arbitrary minimum or maximum",
-        "`Cut`, `Tighten`, `Rewrite`, `Combine`, `Split`, `Move`, or `Source-check`",
+        "list every sentence, passage, or paragraph with a material issue; use no arbitrary minimum or maximum",
+        "`Cut`, `Tighten`, `Rewrite`, `Combine`, `Split`, `Move`, `Support`, `Explain`, `Connect`, or `Source-check`",
         "say so instead of inventing weaknesses",
         "Only enter Near-Done Mode after a quick original-draft scan",
     ]
@@ -410,9 +418,10 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
             fail(errors, "PD-CLARIFIER-EDITORIAL-REVIEW", f"skills/clarifier/SKILL.md missing token: {token}")
 
     readme_tokens = [
-        "two rewritten versions of a rough draft followed by a sentence-level editorial review",
-        "reviews the original sentence by sentence",
-        "cut, tighten, rewrite, combine, split, move, or source-check",
+        "two rewritten versions of a rough draft followed by a structural and sentence-level editorial review",
+        "reviews the original at whole-draft, paragraph, and sentence levels",
+        "cut, tighten, rewrite, combine, split, move, support, explain, connect, or source-check",
+        "mode-aware diagnostics, not fixed rules",
     ]
     for token in readme_tokens:
         if token not in readme:

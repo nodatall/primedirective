@@ -1,6 +1,6 @@
 ---
 name: clarifier
-description: Use when the user invokes $clarifier or asks for help clarifying a rough draft, stuck thought, post, essay, message, or explanation through a revision-coaching loop. Helps the user improve their writing through two candidate rewrites, sentence-level editorial diagnosis, and an iterative workshop that preserves their voice and direction.
+description: Use when the user invokes $clarifier or asks for help clarifying a rough draft, stuck thought, post, essay, message, or explanation through a revision-coaching loop. Helps the user improve their writing through two candidate rewrites, structural and sentence-level editorial diagnosis, and an iterative workshop that preserves their voice and direction.
 ---
 
 # Clarifier Skill
@@ -63,7 +63,7 @@ Treat voice dumps as thinking material, not failed prose.
 3. If the input looks like a voice dump, extract the thought before editing the prose.
 4. Set what the draft seems to mean in one plain sentence as the internal revision target; mention it only when it would help or when the meaning is uncertain.
 5. Note the strongest wording or idea to preserve for the editorial review.
-6. Diagnose in this order: meaning, structure, drag, flow, then mode-specific style cues.
+6. Diagnose in this order: meaning and whole-draft purpose, paragraph and argument structure, drag, flow, then mode-specific style cues.
 7. Name the main clarity issue as a reader effect, not as a judgment of the writer.
 8. Label the issue when useful as `clarity issue`, `editorial judgment`, or `mode-specific option`.
 9. Ask 1-3 clarifying questions only when the answer would materially change the advice.
@@ -72,7 +72,7 @@ Treat voice dumps as thinking material, not failed prose.
    - `Alternative version`: a different structure, emphasis, or cadence without forcing a punchier tone.
 11. Before showing the candidates, run the private refinement loop as an explicit gate, then the post-candidate check. Do not present candidates if this was only a quick polish pass.
 12. After the candidates, review the user's original draft, not only the candidates.
-13. Identify every sentence or passage with a material issue and give an action-specific recommendation for each.
+13. Identify every sentence, passage, or paragraph with a material issue and give an action-specific recommendation for each.
 14. Name the strongest wording to preserve and any draft-wide patterns that need attention.
 15. Ask which candidate is closer and which sentence or recommendation the user wants to workshop first.
 16. Compare the next version against the same target only.
@@ -86,9 +86,10 @@ For a substantial draft, keep the visible response in this order:
 1. `Plain version`
 2. `Alternative version`
 3. `Strongest wording to preserve`
-4. `Weakest sentences`, with the original, reader effect, recommendation, and examples for every material issue
-5. `Draft-wide patterns`, only when material patterns recur
-6. `What to workshop next`
+4. `Structural issues`, only when the whole-draft point, paragraph purpose, development, or progression has a material problem
+5. `Weakest sentences`, with the original, reader effect, recommendation, and examples for every material issue
+6. `Draft-wide patterns`, only when material patterns recur
+7. `What to workshop next`
 
 Keep any setup before the two versions to the minimum needed to resolve uncertainty. Do not let praise, process explanation, or generic advice push the rewritten versions and editorial review down the response.
 
@@ -188,11 +189,28 @@ Contextual checks:
 
 Never import blanket rules such as "cut all adverbs," "never use passive voice," "always show, never tell," or "make it sound like a bestseller."
 
+## Structural and Argument Checks
+
+Use these checks for substantial expository, professional, technical, or instructional drafts. Apply them to other modes only when they serve the intended reader and effect.
+
+- Check whether the reader can identify the draft's purpose, main claim, decision, or ask early enough for the format. For an academic argument, distinguish the whole-piece thesis from a paragraph's controlling point and check whether the thesis is specific, appropriately scoped, supportable, and genuinely arguable.
+- Check whether each paragraph has one controlling purpose. State it near the beginning when reader orientation benefits; allow it to be delayed or implicit when narrative movement, suspense, humor, contrast, or an inductive argument benefits.
+- Check whether each sentence explains, supports, exemplifies, qualifies, or advances the paragraph's controlling purpose. Cut, move, or split material that performs a different job.
+- For an argument, distinguish the claim, its support, and the reasoning that connects them. Ask for an example, explanation, or evidence when the reader otherwise has to make a material leap. Evidence does not substitute for analysis.
+- Use `Source-check` for factual verification. Do not treat a source as a substitute for missing support or reasoning.
+- Check whether paragraph order follows the reader's likely questions and whether transitions express the real relationship, such as sequence, contrast, cause, continuation, or example, instead of adding filler. Moving from familiar information to new information is a useful diagnostic, not a mandatory formula.
+- For a substantial multi-paragraph draft, make a private reverse outline by summarizing each paragraph's job in one short clause. Use it to find a buried central point, gaps, duplicated points, overloaded paragraphs, unsupported jumps, or misplaced material.
+- Check that a mode-appropriate opening supplies enough context and direction and that the ending completes the piece's job instead of merely repeating it or introducing an unsupported new point.
+
+Do not require every paragraph to begin with a topic sentence, use one claim-support-analysis formula, meet a fixed length, include a transition phrase, or end by restating its opening. Do not require every essay to state its thesis in one fixed position.
+
 ## Post-Candidate Check
 
 Before presenting a revised candidate, quickly scan it for:
 
 - missed user corrections, additions, links, names, or must-keep details
+- a buried or missing purpose, main claim, decision, or ask when the mode calls for early orientation
+- paragraph drift, missing support or reasoning, duplicated paragraph jobs, or an order that makes the reader reconstruct the logic
 - accidental repeated words or phrase echoes within a sentence or paragraph
 - repeated sentence starts or repeated sentence shapes
 - added claims the user did not supply
@@ -205,13 +223,13 @@ Fix clear misses silently before responding. Mention the tradeoff only when the 
 
 Place this review after the two candidate rewrites. Review the user's original draft, not only the candidates.
 
-First name the strongest wording, idea, or sentence worth preserving. Then list every sentence or passage with a material issue; use no arbitrary minimum or maximum. If none materially need work, say so instead of inventing weaknesses.
+First name the strongest wording, idea, or sentence worth preserving. For a substantial draft, add `Structural issues` before `Weakest sentences` only when the whole-draft point, paragraph purpose, development, or progression has a material problem. Then list every sentence, passage, or paragraph with a material issue; use no arbitrary minimum or maximum. If none materially need work, say so instead of inventing weaknesses.
 
 For each flagged item, include:
 
 - `Original`: quote the exact sentence or shortest useful passage.
 - `Reader effect`: explain what makes it unclear, repetitive, weak, misplaced, unsupported, or otherwise less effective.
-- `Recommendation`: choose `Cut`, `Tighten`, `Rewrite`, `Combine`, `Split`, `Move`, or `Source-check`.
+- `Recommendation`: choose `Cut`, `Tighten`, `Rewrite`, `Combine`, `Split`, `Move`, `Support`, `Explain`, `Connect`, or `Source-check`.
 - `Example`: when the action changes wording or structure, show one or two concrete examples that preserve the user's meaning and voice.
 
 Match the help to the recommendation:
@@ -220,6 +238,9 @@ Match the help to the recommendation:
 - For `Tighten` or `Rewrite`, give one or two local alternatives.
 - For `Combine` or `Split`, show the proposed combined or separated structure.
 - For `Move`, name the better location and why it improves the flow.
+- For `Support`, identify the claim that needs evidence or a concrete example and the kind of support the reader needs; do not invent the support.
+- For `Explain`, identify the evidence or example whose significance is unclear and name the reasoning gap without inventing a new claim.
+- For `Connect`, name the logical relationship that is unclear and show how to make that relationship legible without adding a filler transition.
 - For `Source-check`, identify the claim that needs verification without inventing a correction.
 
 After the sentence-level items, name only draft-wide patterns that materially recur, such as repeated ideas, vague claims, weak transitions, uneven rhythm, or missing context. Do not pad the review with minor preferences, generic advice, or sentence-by-sentence praise.
@@ -234,7 +255,7 @@ Do not re-diagnose the whole draft unless the user asks for another full pass.
 
 ## Feedback Rules
 
-- On the first pass, identify every material sentence-level issue in the original draft. Do not impose a quota or manufacture criticism.
+- On the first pass, identify every material whole-draft, paragraph-level, and sentence-level issue in the original draft. Do not impose a quota or manufacture criticism.
 - During follow-up workshop turns, focus on one selected sentence or pattern at a time.
 - Start with meaning, audience, structure, or reader confusion before grammar and polish.
 - For a repeated local pattern, explain the pattern once, then list every materially affected sentence without repeating the same explanation verbatim.
