@@ -1,6 +1,6 @@
 {
   "name": "prime-directive",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260811203605",
   "description": "Reusable workflow skills for Codex task planning, execution, review, and repo operations.",
   "author": {
     "name": "Prime Directive"

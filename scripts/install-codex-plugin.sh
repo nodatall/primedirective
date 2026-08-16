@@ -8,10 +8,20 @@ MARKETPLACE_PATH="${MARKETPLACE_DIR}/marketplace.json"
 CODEX_CONFIG_DIR="${HOME}/.codex"
 CODEX_CONFIG_PATH="${CODEX_CONFIG_DIR}/config.toml"
 CODEX_SKILLS_DIR="${CODEX_CONFIG_DIR}/skills"
+CODEX_PLUGIN_DIR="${CODEX_CONFIG_DIR}/plugins"
+CODEX_PLUGIN_PATH="${CODEX_PLUGIN_DIR}/prime-directive"
 
 mkdir -p "$MARKETPLACE_DIR"
 mkdir -p "$CODEX_CONFIG_DIR"
 mkdir -p "$CODEX_SKILLS_DIR"
+mkdir -p "$CODEX_PLUGIN_DIR"
+
+if [[ -e "$CODEX_PLUGIN_PATH" && ! -L "$CODEX_PLUGIN_PATH" ]]; then
+  echo "Cannot link Prime Directive plugin: $CODEX_PLUGIN_PATH is not a symlink" >&2
+  exit 1
+fi
+ln -sfn "$ROOT_DIR" "$CODEX_PLUGIN_PATH"
+echo "Linked Prime Directive plugin -> $CODEX_PLUGIN_PATH"
 
 python3 - "$MARKETPLACE_PATH" "$CODEX_CONFIG_PATH" "$ROOT_DIR" <<'PY'
 import json
@@ -29,11 +39,11 @@ plugin_entry = {
     "name": plugin_name,
     "source": {
         "source": "local",
-        "path": str(repo_root),
+        "path": "./.codex/plugins/prime-directive",
     },
     "policy": {
         "installation": "AVAILABLE",
-        "authentication": "NEVER",
+        "authentication": "ON_INSTALL",
     },
     "category": "Coding",
 }

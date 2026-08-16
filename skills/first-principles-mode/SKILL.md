@@ -1,6 +1,6 @@
 ---
 name: first-principles-mode
-description: Run a deep, adaptive, read-only analysis pass that widens the search space, uses a default adversarial council with rebuttal rounds to test competing explanations, and synthesizes the best mechanism-level answer before implementation judgment. Supports `--deep-research` for web-backed operator/current-practice research and `--pro-analysis` for ChatGPT Pro browser escalation through the repo wrapper.
+description: Run a deep, adaptive, read-only analysis pass that widens the search space, compares materially different explanations or approaches, uses a default adversarial council with rebuttal rounds, and synthesizes the best mechanism-level answer before implementation judgment. Use for "evaluate the right approach" and tradeoff-table requests. Supports `--deep-research` for web-backed operator/current-practice research and `--pro-analysis` for ChatGPT Pro browser escalation through the repo wrapper.
 ---
 
 # First-Principles Mode Skill
@@ -22,6 +22,8 @@ If `--pro-analysis` is present, also load `skills/shared/references/analysis/pro
 Invoke explicitly with `$first-principles-mode`.
 
 Treat the current user request as the analysis target. Do not require the user to restate it in a second command.
+
+Also treat prompts like "evaluate the right approach", "compare approaches", "what approach should we take", or "create a tradeoff table" as first-principles analysis requests when the user is asking for judgment before implementation.
 
 Supported modifiers:
 
@@ -107,6 +109,7 @@ Produce the most useful answer for hard, ambiguous, or repeated-failure problems
    - Keep internal subquestions, discarded hypotheses, and intermediate reasoning private unless surfacing them will materially help the user.
    - Do not include a debate transcript. Synthesize what survived the council.
    - Include a compact Council Audit Summary only when the council materially changed the conclusion, confidence, or next verification step.
+   - When the user asks to evaluate the right approach, compare approaches, or create a tradeoff table, make the visible answer decision-shaped: a short recommendation, a comparison table of materially different approaches, and the key uncertainty or verification pivot that could change the recommendation.
    - Prefer a tight causal memo over a report template when the thesis is clear.
    - Expand only when ambiguity, confidence, or decision risk justifies it.
 12. Stop after the analysis pass. Do not move into implementation, patching, or task execution.
@@ -122,6 +125,14 @@ Use this shape unless the user asks for a deep dive or the ambiguity is genuinel
 3. Attach evidence inline where each claim needs support.
 4. When material, include a brief note on confidence, key uncertainty, or the evidence gap most likely to change the answer.
 5. End with implications, fix order, or next steps only if the user asked for them or they are necessary to make the diagnosis useful.
+
+For approach-comparison prompts, use this visible shape:
+
+1. Start with the recommended approach in one short paragraph.
+2. Include a Markdown table with columns for `Approach`, `When It Fits`, `Tradeoff`, and `Verdict`.
+3. Include only materially different approaches that would change the decision, cost, risk, sequencing, or validation strategy.
+4. After the table, state the deciding factor and the smallest verification step if the current evidence is not enough to choose cleanly.
+5. Do not include filler alternatives just to make the table longer.
 
 When `--deep-research` is active, the answer must include a compact `First-Principles Deep Research Summary` with:
 
@@ -179,5 +190,6 @@ Formatting rules:
 - `$first-principles-mode Diagnose the root cause of this architecture drift; do not propose fixes yet`
 - `$first-principles-mode Pressure-test this plan and tell me where its reasoning breaks`
 - `$first-principles-mode Find a materially different way to solve this problem, not just an optimization of the current path`
+- `$first-principles-mode Evaluate the right approach for this problem and create a comparison table with the tradeoff for each approach`
 - `$first-principles-mode --deep-research Find the strongest current architecture for this workflow`
 - `$first-principles-mode --pro-analysis Explain the real architecture risk in this repo`

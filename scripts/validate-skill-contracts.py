@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -396,72 +397,130 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
     readme = (ROOT / "README.md").read_text()
 
     skill_tokens = [
-        "two complete rewritten candidates",
-        "## Default Response Shape",
-        "## Private Direction Search",
-        "For every substantial draft, as well as an exploratory draft or voice dump with an unsettled direction, run this search",
-        "Do not add a fast or shallow Clarifier mode.",
-        "Question whether the apparent main point is the strongest useful point the source can support",
-        "use up to three fresh generator subagents in parallel",
-        "Ask each lane to search broadly in private and return only its two strongest concise direction sketches.",
-        "use the user's selected model at `low` reasoning for these lanes",
-        "spend no more than 25 seconds waiting for generator results",
-        "Continue with the completed results, interrupt unfinished lanes, and cover any missing lane locally.",
-        "Require every returned direction to anchor itself in a short source quote or source-specific fact.",
-        "The normal delegated search returns up to six strong direction sketches across the lanes.",
-        "add only enough local sketches to reach a ceiling of nine",
-        "Do not start a sequential delegated expansion wave.",
+        "Return one best revision by default.",
+        "Do not automatically follow a completed rewrite with `Strongest wording`, `Structural issues`, `Weakest sentences`",
+        "Show editorial diagnosis only when the user explicitly asks for feedback, critique",
+        "Never produce two versions merely to satisfy a quota.",
+        "## Source Material",
+        "Relevant repository or filesystem material retrieved for this task.",
+        "## Choose the Task Mode",
+        "Use only when the user explicitly limits the request to a phrase, sentence, typo, repeated word, grammar point, or punctuation choice.",
+        "Do not infer this mode merely because the source is short or appears easy.",
+        "## Context Reconstruction",
+        "Search only the most likely relevant files and passages.",
+        "Do not claim to have searched the conversation or filesystem unless that context was actually available and inspected.",
+        "## Full-Pass Dispatch Gate",
+        "Launch one fresh `clarifier-orchestrator` subagent",
+        "The orchestrator launches two independent fresh direction workers",
+        "For every Clarifier request outside Explicit local edit, including a one-line resume bullet or professional statement, dispatch the work",
+        "selects the strongest supported direction, assembles one best revision",
+        "The runtime gate for every explicit `$clarifier` request outside Explicit local edit requires the dispatcher, the two named worker launches, and one complete visible response.",
+        "It has no minimum draft length.",
+        "## Bounded private direction search",
+        "Require every direction to anchor itself in a source quote or source-specific fact.",
+        "Wait no more than 25 seconds for the parallel wave",
+        "Use only one delegated wave.",
+        "Select two to four private finalists when useful, but expose only the winner unless another direction creates a material user decision.",
         "If subagents are unavailable, run the three role-separated passes privately and sequentially; do not claim that they ran in parallel.",
-        "`Alternative version — idea shift`",
-        "Do not ask permission before producing a labeled idea shift.",
-        "Never silently replace the user's intent",
-        "Treat about one minute as the normal work budget for a substantial draft.",
-        "The one parallel generator wave is the only normal delegated wave.",
-        "Do not launch a second delegated wave for sentence refinement or critique.",
-        "## Targeted Sentence Search",
-        "Generate the variants locally in the orchestrator; do not launch another delegated wave.",
-        "Use up to two materially distinct variants per flagged sentence and no more than six variants for the current working section.",
-        "Do not generate 50 versions of every sentence.",
-        "Keep a tiny private search note",
+        "## Job-Search Context",
+        "Distinguish what the project or team did from what the user personally did.",
+        "## Editing Order",
+        "**Fidelity:** Preserve supported facts, intended certainty, voice, and ownership.",
+        "**Compression:** Remove words and clauses that add no information.",
+        "## Private Refinement Gate",
         "Do not launch critic subagents.",
-        "Do not run a second broad critique round",
-        "do not enumerate discarded options or report process counts unless the user explicitly requests those exact details",
-        "Do not write or preserve private direction pools, discarded sentence variants, critic notes, or raw review artifacts unless the user explicitly asks.",
-        "`Structural issues`, only when the whole-draft point, paragraph purpose, development, or progression has a material problem",
-        "`Weakest sentences`, with the original, reader effect, recommendation, and examples for every material issue",
-        "## Structural and Argument Checks",
-        "purpose, main claim, decision, or ask early enough for the format",
-        "one controlling purpose",
-        "explains, supports, exemplifies, qualifies, or advances",
-        "allow it to be delayed or implicit",
+        "create a compressed challenger to the leading candidate",
+        "Replace framing phrases such as `took ownership of`, `was responsible for`, `worked to`, and `made improvements to` with the main action verb",
+        "reject the longer version unless it adds a distinct fact, necessary attribution, or important qualification.",
+        "`Took ownership of turning` -> `Turned`",
+        "Treat clauses as semantic duplicates when they describe the same work under different labels.",
+        "Treat research, observations, discovery, evaluation, and product testing as one overlapping activity family",
+        "Labels alone never establish that the work was distinct; the source's use of both labels is not evidence.",
+        "do not preserve `user research and end-to-end product testing` as two contributions unless inspected context distinguishes them concretely.",
+        "replace the pair with one umbrella activity such as product validation or keep the more informative concrete method.",
+        "Require every remaining clause to add a distinct supported fact, action, method, scope detail, constraint, or result.",
+        "`Faster` describes an improvement; `fast` describes the resulting quality.",
+        "prefer parallel end-state adjectives such as `turned an early proof of concept into a fast, polished experience` over mixed comparative phrasing such as `faster, more polished`",
+        "Preserve the comparative when the baseline or measured improvement matters.",
+        "## Core Writing Rules",
         "private reverse outline",
-        "Do not require every paragraph to begin with a topic sentence",
-        "review the user's original draft, not only the candidates",
-        "list every sentence, passage, or paragraph with a material issue; use no arbitrary minimum or maximum",
-        "`Cut`, `Tighten`, `Rewrite`, `Combine`, `Split`, `Move`, `Support`, `Explain`, `Connect`, or `Source-check`",
-        "say so instead of inventing weaknesses",
-        "Only enter Near-Done Mode after a quick original-draft scan",
+        "Treat topic sentences, passive voice, adverbs, transitions, paragraph formulas, and thesis placement as contextual choices rather than universal rules.",
+        "### Clarity and evidence checks",
+        "Treat a sentence over 30 words as a prompt to check whether it should be tightened or split, not as an automatic error.",
+        "`due to the fact that` -> `because`",
+        "Prefer relevant, supported data to subjective adjectives, adverbs, buzzwords, or ungrounded comparisons",
+        "Never invent a number to make a claim sound objective.",
+        "Flag weasel words such as `nearly all`, `significantly`, `arguably`, `best`, `would help`, `might bring clarity`, or `should result in benefits`",
+        "Do not remove modal language that accurately represents real uncertainty, risk, or a conditional prediction.",
+        "Apply the `so what?` test",
+        "Avoid unexplained jargon, acronyms, and abbreviations when they would exclude the intended reader.",
+        "lead with the shortest truthful answer that fits: `yes`, `no`, a number, or `I don't know` plus what would resolve the uncertainty.",
+        "## Final Quality Gate",
+        "A direct compressed challenger cannot improve it without losing meaning.",
+        "## Response Format",
+        "**Revision:** The one best supported version.",
+        "Do not append a diagnosis of weaknesses the revision already fixed.",
+        "### Explicit feedback or critique request",
+        "**Feedback:** The requested material critique of the original writing.",
+        "If the user asks for both revision and feedback, lead with the revision and discuss only unresolved choices, factual uncertainty, or reusable patterns.",
     ]
     for token in skill_tokens:
         if token not in skill:
             fail(errors, "PD-CLARIFIER-EDITORIAL-REVIEW", f"skills/clarifier/SKILL.md missing token: {token}")
 
     readme_tokens = [
-        "return two rewritten versions, and then give a structural and sentence-level editorial review",
-        "question the apparent main point, search many possible directions in parallel",
-        "there is no fast or shallow Clarifier mode",
-        "uses one bounded parallel wave of up to three low-latency subagent lanes",
-        "produces the candidate without a permission pause, labels it as an idea shift",
-        "Sentence alternatives and one three-lens self-review run locally, with no second delegated wave",
-        "targets about one minute of work",
-        "does not preserve raw private search or review artifacts by default",
-        "reviews the original at whole-draft, paragraph, and sentence levels",
-        "cut, tighten, rewrite, combine, split, move, support, explain, connect, or source-check",
-        "mode-aware diagnostics, not fixed rules",
+        "return one selected natural revision",
+        "shows editorial diagnosis only when you explicitly ask for feedback or critique",
+        "a dispatch gate sends every request through a fresh orchestrator plus two independent direction workers",
+        "reconstructs only the conversation and repository context likely to change the writing",
+        "selects one best revision",
+        "does not expose two versions by quota or append a diagnosis of weaknesses the rewrite already fixed",
+        "An alternative appears only for a genuinely useful different direction or material tradeoff",
+        "compares the leading sentence with a compressed challenger",
+        "prefers direct action verbs over framing such as `took ownership of turning`",
+        "treats long sentences as a diagnostic",
+        "prefers supported data to subjective qualifiers",
+        "flags evidence-masking weasel words",
+        "applies a `so what?` test",
+        "defines necessary jargon",
+        "does not invent metrics, erase honest uncertainty, or impose business-writing rules on creative prose",
     ]
     for token in readme_tokens:
         if token not in readme:
             fail(errors, "PD-CLARIFIER-README", f"README.md missing Clarifier editorial-review token: {token}")
+
+    hook_path = ROOT / "hooks/clarifier_dispatch_gate.py"
+    spec = importlib.util.spec_from_file_location("clarifier_dispatch_gate", hook_path)
+    if spec is None or spec.loader is None:
+        fail(errors, "PD-CLARIFIER-DISPATCH", "unable to load hooks/clarifier_dispatch_gate.py")
+        return
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    short_resume_prompt = (
+        "[$prime-directive:clarifier](/Volumes/Code/primedirective/skills/clarifier/SKILL.md) "
+        "Drove user research and end-to-end product testing at an early-stage AI shopping startup."
+    )
+    if not module.explicit_request_needs_full_pass(short_resume_prompt):
+        fail(errors, "PD-CLARIFIER-SHORT-DRAFT", "explicit one-line resume bullet did not enter the full pass")
+    if module.explicit_request_needs_full_pass("$clarifier how does Clarifier choose directions?"):
+        fail(errors, "PD-CLARIFIER-META", "meta question incorrectly entered the full pass")
+    if module.LOCAL_ONLY.search("$clarifier rewrite just this phrase") is None:
+        fail(errors, "PD-CLARIFIER-LOCAL", "explicit phrase-only request did not match Near-Done Mode")
+    if module.requested_response_kind("$clarifier feedback on this paragraph") != "feedback":
+        fail(errors, "PD-CLARIFIER-FEEDBACK", "explicit critique did not select feedback output")
+    if module.requested_response_kind("$clarifier rewrite this paragraph") != "rewrite":
+        fail(errors, "PD-CLARIFIER-REWRITE", "rewrite request did not select revision output")
+    if module.requested_response_kind("$clarifier feedback and rewrite this paragraph") != "rewrite":
+        fail(errors, "PD-CLARIFIER-BOTH", "combined feedback and rewrite did not keep revision-first output")
+    if not module.full_response_is_present("**Revision:** Turned the prototype into a fast, polished product."):
+        fail(errors, "PD-CLARIFIER-ONE-REVISION", "one selected revision did not satisfy the dispatch gate")
+    if module.full_response_is_present("**Plain version** A.\n\n**Alternative version** B."):
+        fail(errors, "PD-CLARIFIER-OLD-SHAPE", "old two-version output incorrectly satisfied the new dispatch gate")
+    if not module.full_response_is_present(
+        "**Feedback:**\n\n**Reader effect:** Abstract.\n\n**Recommendation:** Use the direct verb.",
+        "feedback",
+    ):
+        fail(errors, "PD-CLARIFIER-FEEDBACK-SHAPE", "explicit feedback output did not satisfy the dispatch gate")
 
 
 def validate_first_principles_adversarial_council(errors: list[str]) -> None:

@@ -120,6 +120,8 @@ Run the adversarial council before final synthesis.
 
 Use reasoning effort for search and comparison first, not for elaborating one early theory.
 
+For "evaluate the right approach" or tradeoff-table prompts, turn the internal comparison into a visible decision table only after the evidence pass. Include alternatives that would change cost, risk, sequencing, validation, reversibility, or long-term ownership. Do not pad the table with cosmetic variants.
+
 ## Plain-Language First
 
 Use `skills/shared/references/plain-language.md` as the detailed output standard.
