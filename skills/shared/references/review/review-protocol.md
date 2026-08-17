@@ -380,6 +380,27 @@ Rules:
 - Otherwise mark Prompt G `not applicable` with a reason.
 - Prompt H is required for deploy-bound work, for changes that materially affect operations, infrastructure, migrations, security posture, or runtime observability, and for any change touching agents, private data, secrets, untrusted input, or outbound actions/tools. Otherwise mark it `not applicable` with a reason.
 
+## Deliver final-review remediation rereviews
+
+This section applies only to repairs authorized during `$deliver` final review. It does not change `$review-chain`, `$merge-review`, `$repo-sweep`, legacy task review, or any other consumer of this protocol.
+
+The initial `$deliver` final review is always one fresh `full-branch` round over the entire branch diff. After an authorized repair, record `rereview_scope: targeted | full` and its evidence-backed rationale. Default to one fresh `targeted` rereview when the repair is demonstrably isolated.
+
+A targeted rereview is complete only when its record names:
+
+- the repaired finding IDs
+- the exact pre-repair base state
+- the repair boundary and exact repair diff
+- the adjacent callers and relevant tests inspected
+- the originating review prompt and the testing prompt used for the rereview
+- Prompt H when the repaired boundary affects operations, infrastructure, migrations, security, runtime observability, agents, private data, secrets, untrusted input, or outbound actions/tools
+- the relevant validation reruns
+- evidence from one fresh reviewer that the finding is closed and the repair did not create an adjacent material defect
+
+Escalate to a fresh `full` rereview when a repair crosses an architecture or trust boundary, changes a public contract, broadly affects security or data integrity, cannot be shown to be isolated, or a targeted rereview discovers a new material defect. When several repairs are grouped, use the widest scope required by any repair. A `full` rereview uses the normal fresh full-branch round and active prompt profile.
+
+For Deliver final-review remediation, this targeted-or-full fresh rereview satisfies the repair-loop resweep requirement. Completion still requires no unresolved verified `fix` findings and verification for every repair. All non-Deliver consumers retain their existing full resweep or rereview behavior unchanged.
+
 ## Review log protocol (required)
 
 Create and maintain log files:

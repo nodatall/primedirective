@@ -36,19 +36,19 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 2. Add The Shared Test-Value Decision
 
-- [ ] Extend `skills/shared/references/review/finding-disposition.md` with a Deliver-scoped test-value vocabulary: `test_disposition: permanent | table_case | probe_only | no_test` plus a concise evidence-backed rationale for material `fix` findings and investigated `no action` concerns during Deliver final-review remediation; require `rereview_scope: targeted | full` only when Deliver authorizes a repair.
-- [ ] For Deliver remediation only, require permanent or table-driven coverage to be reachable through a supported path, materially tied to the explicit contract or credible harm, uniquely uncovered, deterministic, and economical to maintain.
-- [ ] For Deliver remediation only, require related cases to share the smallest coherent table-driven test, use `probe_only` for useful one-run evidence under `agent-scratch/`, and use `no_test` when stronger coverage already exists or permanent reproduction would add no durable protection; every repaired finding still needs recorded verification evidence.
-- [ ] State explicitly that `test_disposition` does not weaken the existing `Disposition: fix` rule: every verified, in-scope, safely repairable defect is still fixed.
+- [x] Extend `skills/shared/references/review/finding-disposition.md` with a Deliver-scoped test-value vocabulary: `test_disposition: permanent | table_case | probe_only | no_test` plus a concise evidence-backed rationale for material `fix` findings and investigated `no action` concerns during Deliver final-review remediation; require `rereview_scope: targeted | full` only when Deliver authorizes a repair.
+- [x] For Deliver remediation only, require permanent or table-driven coverage to be reachable through a supported path, materially tied to the explicit contract or credible harm, uniquely uncovered, deterministic, and economical to maintain.
+- [x] For Deliver remediation only, require related cases to share the smallest coherent table-driven test, use `probe_only` for useful one-run evidence under `agent-scratch/`, and use `no_test` when stronger coverage already exists or permanent reproduction would add no durable protection; every repaired finding still needs recorded verification evidence.
+- [x] State explicitly that `test_disposition` does not weaken the existing `Disposition: fix` rule: every verified, in-scope, safely repairable defect is still fixed.
 
 ### 3. Make Rereviews Proportional
 
-- [ ] Update `skills/shared/references/review/review-protocol.md` so Deliver's initial final review remains full-branch, while an isolated authorized Deliver repair defaults to one fresh targeted rereview of the finding, repair diff, repaired boundary, adjacent callers, and relevant tests.
-- [ ] Require a targeted rereview record to name the finding IDs, exact pre-repair base state, repair boundary and diff, adjacent callers and tests inspected, originating review prompt plus testing prompt, conditional trust-boundary prompt when applicable, validation reruns, and fresh reviewer evidence.
-- [ ] Escalate a repair to a full rereview only when it crosses architecture or trust boundaries, changes a public contract, affects security or data integrity broadly, cannot be shown to be isolated, or the targeted rereview discovers a new material defect; use the widest required scope when several repairs are grouped.
-- [ ] Qualify unconditional resweep wording only for Deliver final-review remediation, while preserving the rule that completion requires no unresolved verified `fix` findings and leaving review-chain, merge-review, and repo-sweep behavior unchanged.
-- [ ] Add one short consumer hook in `skills/deliver/SKILL.md` that enforces the shared test-value and rereview decisions without copying their rubric.
-- [ ] Update `skills/shared/references/contract-ownership.md` so finding disposition owns the Deliver-scoped test-persistence vocabulary and review protocol owns Deliver rereview topology, without imposing either behavior on other consumers.
+- [x] Update `skills/shared/references/review/review-protocol.md` so Deliver's initial final review remains full-branch, while an isolated authorized Deliver repair defaults to one fresh targeted rereview of the finding, repair diff, repaired boundary, adjacent callers, and relevant tests.
+- [x] Require a targeted rereview record to name the finding IDs, exact pre-repair base state, repair boundary and diff, adjacent callers and tests inspected, originating review prompt plus testing prompt, conditional trust-boundary prompt when applicable, validation reruns, and fresh reviewer evidence.
+- [x] Escalate a repair to a full rereview only when it crosses architecture or trust boundaries, changes a public contract, affects security or data integrity broadly, cannot be shown to be isolated, or the targeted rereview discovers a new material defect; use the widest required scope when several repairs are grouped.
+- [x] Qualify unconditional resweep wording only for Deliver final-review remediation, while preserving the rule that completion requires no unresolved verified `fix` findings and leaving review-chain, merge-review, and repo-sweep behavior unchanged.
+- [x] Add one short consumer hook in `skills/deliver/SKILL.md` that enforces the shared test-value and rereview decisions without copying their rubric.
+- [x] Update `skills/shared/references/contract-ownership.md` so finding disposition owns the Deliver-scoped test-persistence vocabulary and review protocol owns Deliver rereview topology, without imposing either behavior on other consumers.
 
 ### 4. Enforce And Validate The Contracts
 

@@ -17,7 +17,7 @@ Load references by path, not all up front:
 - `skills/review-plan/SKILL.md` when the user asks for an adversarial plan review before implementation
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
-- `skills/shared/references/review/review-protocol.md` before the final review
+- `skills/shared/references/review/finding-disposition.md` and `skills/shared/references/review/review-protocol.md` before the final review; during Deliver final-review remediation, enforce their owned `test_disposition` and `rereview_scope` decisions without copying their rubrics or applying them to other review workflows
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
 - `skills/deliver/references/plan-format.md` when drafting or refining the plan
 - `skills/deliver/references/worker-packet.md` before assigning a worker packet
