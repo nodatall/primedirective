@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "behavior": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation_additions": {"minimum": 0, "type": "integer"},
+        "implementation_deletions": {"minimum": 0, "type": "integer"},
+        "implementation_diff": {"type": "string"},
+        "probe_results": {"type": "array"},
+        "review_actions": {"type": "array"},
+        "test_additions": {"minimum": 0, "type": "integer"},
+        "test_diff": {"type": "string"}
+      },
+      "required": ["implementation_diff", "test_diff", "implementation_additions", "implementation_deletions", "test_additions", "probe_results", "review_actions"],
+      "type": "object"
+    },
+    "measurements": {
+      "additionalProperties": false,
+      "properties": {
+        "full_review_rounds": {"minimum": 0, "type": "integer"},
+        "targeted_rereviews": {"minimum": 0, "type": "integer"},
+        "test_count": {"minimum": 0, "type": "integer"},
+        "test_size_lines": {"minimum": 0, "type": "integer"},
+        "wall_time_seconds": {"minimum": 0, "type": "integer"}
+      },
+      "required": ["test_count", "test_size_lines", "full_review_rounds", "targeted_rereviews", "wall_time_seconds"],
+      "type": "object"
+    },
+    "scenario_id": {"enum": ["retry-failed", "preflight-remediation-holdout"]},
+    "schema_version": {"const": 1},
+    "snapshots": {
+      "additionalProperties": false,
+      "properties": {
+        "post_remediation": {"type": "string"},
+        "pre_packet": {"type": "string"}
+      },
+      "required": ["pre_packet", "post_remediation"],
+      "type": "object"
+    },
+    "source_hashes": {"additionalProperties": {"pattern": "^[0-9a-f]{64}$", "type": "string"}, "type": "object"}
+  },
+  "required": ["schema_version", "scenario_id", "snapshots", "behavior", "measurements", "source_hashes"],
+  "type": "object"
+}

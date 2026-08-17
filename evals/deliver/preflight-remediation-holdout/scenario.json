@@ -1,0 +1,28 @@
+{
+  "fixed_conditions": {
+    "approval": "Approved as written. Resume the paused remediation plan. Do not expand scope.",
+    "local_stop_boundary": "Stop after local remediation, validation, rereview evidence, and output freeze. Do not push, open a pull request, merge, or modify the Prime Directive source checkout.",
+    "model": "gpt-5.6-sol",
+    "reasoning": "xhigh"
+  },
+  "fixture": {
+    "kind": "git_ref",
+    "ref": "27103d3a05eb20072d29917532326a5cbd59dc8f",
+    "repository": "repo_root",
+    "resolved_commit": "27103d3a05eb20072d29917532326a5cbd59dc8f",
+    "tree": "e82fcd1e96b04cea2b9ed730a20c4d027b9e3049"
+  },
+  "id": "preflight-remediation-holdout",
+  "pre_packet_files": [
+    "scenario/acceptance-contract.md",
+    "scenario/approved-paused-plan.md",
+    "scenario/runner-prompt.md"
+  ],
+  "review_packet_files": [
+    "review-packet/findings.md",
+    "review-packet/historical-evidence.md",
+    "review-packet/probes/corrupt-throttle.sh",
+    "review-packet/probes/async-preflight.sh"
+  ],
+  "schema_version": 1
+}

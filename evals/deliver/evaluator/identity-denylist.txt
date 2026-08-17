@@ -1,0 +1,11 @@
+# Case-insensitive identity clues forbidden in blinded packets.
+baseline
+candidate
+old contract
+new contract
+arm-a
+arm-b
+arm_a
+arm_b
+pre-change
+post-change

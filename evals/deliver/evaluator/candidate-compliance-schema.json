@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "records": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "finding_id": {"minLength": 1, "type": "string"},
+          "repair_authorized": {"type": "boolean"},
+          "rereview_rationale": {"type": "string"},
+          "rereview_scope": {"enum": ["targeted", "full", null]},
+          "test_disposition": {"enum": ["permanent", "table_case", "probe_only", "no_test"]},
+          "test_rationale": {"minLength": 1, "type": "string"}
+        },
+        "required": ["finding_id", "test_disposition", "test_rationale", "repair_authorized", "rereview_scope", "rereview_rationale"],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "revealed_identity": {"const": "candidate"}
+  },
+  "required": ["revealed_identity", "records"],
+  "type": "object"
+}
