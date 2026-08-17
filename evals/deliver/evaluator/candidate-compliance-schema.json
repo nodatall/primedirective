@@ -6,7 +6,7 @@
       "items": {
         "additionalProperties": false,
         "properties": {
-          "finding_id": {"minLength": 1, "type": "string"},
+          "finding_id": {"enum": ["RF-001", "RF-002", "RF-003", "RF-004", "PF-001", "PF-002"]},
           "repair_authorized": {"type": "boolean"},
           "rereview_rationale": {"type": "string"},
           "rereview_scope": {"enum": ["targeted", "full", null]},
@@ -16,8 +16,10 @@
         "required": ["finding_id", "test_disposition", "test_rationale", "repair_authorized", "rereview_scope", "rereview_rationale"],
         "type": "object"
       },
-      "minItems": 1,
-      "type": "array"
+      "maxItems": 6,
+      "minItems": 6,
+      "type": "array",
+      "uniqueItems": true
     },
     "revealed_identity": {"const": "candidate"}
   },

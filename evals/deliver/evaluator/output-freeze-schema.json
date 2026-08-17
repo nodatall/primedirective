@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {"pattern": "^frozen/", "type": "string"},
+        "sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "size": {"minimum": 0, "type": "integer"}
+      },
+      "required": ["path", "sha256", "size"],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation_diff": {"$ref": "#/$defs/artifact"},
+        "pre_packet_manifest": {"$ref": "#/$defs/artifact"},
+        "pre_packet_metadata": {"$ref": "#/$defs/artifact"},
+        "pre_packet_profile": {"$ref": "#/$defs/artifact"},
+        "pre_packet_prompt": {"$ref": "#/$defs/artifact"},
+        "pre_packet_snapshot": {"$ref": "#/$defs/artifact"},
+        "pre_packet_stderr": {"$ref": "#/$defs/artifact"},
+        "pre_packet_trace": {"$ref": "#/$defs/artifact"},
+        "pre_packet_validation": {"$ref": "#/$defs/artifact"},
+        "probe_results": {"$ref": "#/$defs/artifact"},
+        "remediation_manifest": {"$ref": "#/$defs/artifact"},
+        "remediation_metadata": {"$ref": "#/$defs/artifact"},
+        "remediation_profile": {"$ref": "#/$defs/artifact"},
+        "remediation_prompt": {"$ref": "#/$defs/artifact"},
+        "remediation_stderr": {"$ref": "#/$defs/artifact"},
+        "remediation_trace": {"$ref": "#/$defs/artifact"},
+        "review_log": {"$ref": "#/$defs/artifact"},
+        "review_rounds": {"$ref": "#/$defs/artifact"},
+        "run_record": {"$ref": "#/$defs/artifact"},
+        "runner_preflight": {"$ref": "#/$defs/artifact"},
+        "test_diff": {"$ref": "#/$defs/artifact"}
+      },
+      "required": ["implementation_diff", "test_diff", "probe_results", "review_log", "review_rounds", "run_record", "runner_preflight", "pre_packet_snapshot", "pre_packet_validation", "pre_packet_trace", "pre_packet_stderr", "pre_packet_metadata", "pre_packet_prompt", "pre_packet_manifest", "pre_packet_profile", "remediation_trace", "remediation_stderr", "remediation_metadata", "remediation_prompt", "remediation_manifest", "remediation_profile"],
+      "type": "object"
+    },
+    "initial_snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "commit": {"pattern": "^[0-9a-f]{40}$", "type": "string"},
+        "tree": {"pattern": "^[0-9a-f]{40}$", "type": "string"}
+      },
+      "required": ["commit", "tree"],
+      "type": "object"
+    },
+    "input_manifest_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "repository_state": {
+      "additionalProperties": false,
+      "properties": {
+        "head": {"pattern": "^[0-9a-f]{40}$", "type": "string"},
+        "status": {"type": "string"}
+      },
+      "required": ["head", "status"],
+      "type": "object"
+    },
+    "scenario_id": {"enum": ["retry-failed", "preflight-remediation-holdout"]},
+    "schema_version": {"const": 1},
+    "snapshots": {
+      "additionalProperties": false,
+      "properties": {
+        "post_remediation": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+      },
+      "required": ["pre_packet", "post_remediation"],
+      "type": "object"
+    }
+  },
+  "required": ["schema_version", "scenario_id", "input_manifest_sha256", "initial_snapshot", "snapshots", "repository_state", "artifacts"],
+  "type": "object"
+}

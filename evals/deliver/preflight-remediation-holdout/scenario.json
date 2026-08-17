@@ -7,6 +7,20 @@
   },
   "fixture": {
     "kind": "git_ref",
+    "blobs": {
+      "scripts/prime-directive-codex-preflight.sh": {
+        "blob": "c9e3571c2c0815843631c04cb47719653b2b7612",
+        "mode": "100755"
+      },
+      "scripts/prime-directive-session-update.sh": {
+        "blob": "2b0adb694eaade7d367ff234b74d1ba2f43b1f6a",
+        "mode": "100755"
+      }
+    },
+    "paths": [
+      "scripts/prime-directive-codex-preflight.sh",
+      "scripts/prime-directive-session-update.sh"
+    ],
     "ref": "27103d3a05eb20072d29917532326a5cbd59dc8f",
     "repository": "repo_root",
     "resolved_commit": "27103d3a05eb20072d29917532326a5cbd59dc8f",

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "phase": {
+      "additionalProperties": false,
+      "properties": {
+        "manifest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "metadata": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "profile": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "prompt": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "stderr": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "trace": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+      },
+      "required": ["trace", "stderr", "metadata", "prompt", "manifest", "profile"],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "event": {"const": "deliver_eval_arm_finalized"},
+    "output_freeze_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "phase_bindings": {
+      "additionalProperties": false,
+      "properties": {
+        "pre-packet": {"$ref": "#/$defs/phase"},
+        "remediation": {"$ref": "#/$defs/phase"}
+      },
+      "required": ["pre-packet", "remediation"],
+      "type": "object"
+    },
+    "schema_version": {"const": 1}
+  },
+  "required": ["schema_version", "event", "output_freeze_sha256", "phase_bindings"],
+  "type": "object"
+}

@@ -8,12 +8,13 @@
         "implementation_additions": {"minimum": 0, "type": "integer"},
         "implementation_deletions": {"minimum": 0, "type": "integer"},
         "implementation_diff": {"type": "string"},
-        "probe_results": {"type": "array"},
-        "review_actions": {"type": "array"},
+        "probe_results": {"items": {"$ref": "evidence-records-schema.json#/$defs/probe"}, "type": "array"},
+        "review_actions": {"items": {"$ref": "evidence-records-schema.json#/$defs/review"}, "type": "array"},
+        "review_rounds": {"items": {"$ref": "evidence-records-schema.json#/$defs/round"}, "minItems": 1, "type": "array"},
         "test_additions": {"minimum": 0, "type": "integer"},
         "test_diff": {"type": "string"}
       },
-      "required": ["implementation_diff", "test_diff", "implementation_additions", "implementation_deletions", "test_additions", "probe_results", "review_actions"],
+      "required": ["implementation_diff", "test_diff", "implementation_additions", "implementation_deletions", "test_additions", "probe_results", "review_actions", "review_rounds"],
       "type": "object"
     },
     "measurements": {
@@ -23,7 +24,7 @@
         "targeted_rereviews": {"minimum": 0, "type": "integer"},
         "test_count": {"minimum": 0, "type": "integer"},
         "test_size_lines": {"minimum": 0, "type": "integer"},
-        "wall_time_seconds": {"minimum": 0, "type": "integer"}
+        "wall_time_seconds": {"minimum": 2, "type": "integer"}
       },
       "required": ["test_count", "test_size_lines", "full_review_rounds", "targeted_rereviews", "wall_time_seconds"],
       "type": "object"
@@ -33,13 +34,40 @@
     "snapshots": {
       "additionalProperties": false,
       "properties": {
-        "post_remediation": {"type": "string"},
-        "pre_packet": {"type": "string"}
+        "post_remediation": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
       },
       "required": ["pre_packet", "post_remediation"],
       "type": "object"
     },
-    "source_hashes": {"additionalProperties": {"pattern": "^[0-9a-f]{64}$", "type": "string"}, "type": "object"}
+    "source_hashes": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation_diff": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_manifest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_metadata": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_profile": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_prompt": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_snapshot": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_stderr": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_trace": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "pre_packet_validation": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "probe_results": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "remediation_manifest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "remediation_metadata": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "remediation_profile": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "remediation_prompt": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "remediation_stderr": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "remediation_trace": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "review_log": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "review_rounds": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "run_record": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "runner_preflight": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "test_diff": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+      },
+      "required": ["implementation_diff", "test_diff", "probe_results", "review_log", "review_rounds", "run_record", "runner_preflight", "pre_packet_snapshot", "pre_packet_validation", "pre_packet_trace", "pre_packet_stderr", "pre_packet_metadata", "pre_packet_prompt", "pre_packet_manifest", "pre_packet_profile", "remediation_trace", "remediation_stderr", "remediation_metadata", "remediation_prompt", "remediation_manifest", "remediation_profile"],
+      "type": "object"
+    }
   },
   "required": ["schema_version", "scenario_id", "snapshots", "behavior", "measurements", "source_hashes"],
   "type": "object"

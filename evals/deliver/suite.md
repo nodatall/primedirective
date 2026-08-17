@@ -15,7 +15,7 @@ $skill-review skill=deliver scenario=evals/deliver/suite.md baseline=<ref> candi
 ## Frozen scenarios
 
 1. [`retry-failed`](retry-failed/scenario.json) is the original Queuectl known case. The clean fixture preserves the pilot's semantic contents with only trailing blank EOF lines normalized, then freezes that normalized tree and every fixture-file hash. Its three public tests, source bullets, acceptance contract, fixed approval, and original seven hidden checks remain the pilot cases. Its eleven later reviewer-derived checks are unchanged diagnostic post-hoc challenges, not unbiased acceptance checks.
-2. [`preflight-remediation-holdout`](preflight-remediation-holdout/scenario.json) replays the already-approved May 30 remediation at exact commit `27103d3a05eb20072d29917532326a5cbd59dc8f`. Its packet contains the corrupt-throttle and asynchronous-preflight findings, deterministic versions of the original probes, the paused plan, and the behavior later fixed in `2e0c01916bebceca619f1b209a101e591ebfd07d`.
+2. [`preflight-remediation-holdout`](preflight-remediation-holdout/scenario.json) replays the already-approved May 30 remediation from the two required scripts at exact commit `27103d3a05eb20072d29917532326a5cbd59dc8f`. The fixture records the source commit, source tree, and exact blob/mode for each script but deliberately does not materialize the rest of that historical repository, so the runner sees only one Deliver contract: the separately extracted arm package. Its packet contains the corrupt-throttle and asynchronous-preflight findings, deterministic versions of the original probes, the paused plan, and the behavior later fixed in `2e0c01916bebceca619f1b209a101e591ebfd07d`.
 
 The evaluator-owned [`outcome-ledger.json`](evaluator/outcome-ledger.json) is frozen before contract edits. It is not supplied to either runner. It spans all four test dispositions and both rereview scopes.
 
@@ -23,73 +23,91 @@ The evaluator-owned [`outcome-ledger.json`](evaluator/outcome-ledger.json) is fr
 
 For each scenario and each arm:
 
-1. Extract only that arm's Deliver contract and required references through `$skill-review` into one package directory. Preserve their package-relative paths.
-2. Prepare an empty stage. This builds a fresh deterministic git snapshot and a hash-allowlisted input manifest:
+1. Preflight the only compatible runner binary. This command never falls back to `PATH` or Homebrew: it resolves `/Applications/ChatGPT.app/Contents/Resources/codex`, records its absolute path, version, and executable SHA-256, and performs a tiny real Sol/xhigh JSONL smoke under the same outer sandbox used for scenarios. Preserve the resulting evaluator artifact in the `$skill-review` scratch root:
 
    ```bash
-   python3 evals/deliver/harness.py prepare --scenario retry-failed --contract <extracted-contract-package> --destination <arm-stage>
+   python3 evals/deliver/harness.py preflight-runner --output <runner-preflight.json>
+   ```
+
+2. Extract only that arm's Deliver contract and required references through `$skill-review` into one package directory. Preserve their package-relative paths.
+3. Prepare an empty stage outside the Prime Directive source checkout. This builds a fresh deterministic git snapshot and a hash-allowlisted input manifest, validates the runner identity again, and copies the preflight artifact into evaluator evidence:
+
+   ```bash
+   python3 evals/deliver/harness.py prepare --scenario retry-failed --contract <extracted-contract-package> --destination <arm-stage> --runner-preflight <runner-preflight.json>
    python3 evals/deliver/harness.py verify-manifest <arm-stage>
    ```
 
-3. Give the runner only `<arm-stage>/repo`, `<arm-stage>/scenario`, `<arm-stage>/contract`, the fixed approval, and the local stop boundary. Save its recorded JSONL tool trace. Never expose any path under `evals/deliver/**/evaluator`, `evals/deliver/evaluator`, or a ledger path.
-4. Before providing the review packet, freeze the actual starting or pre-packet implementation state, diff, and validation evidence:
+4. Start the pre-packet runner through the harness. This invokes the preflight-pinned bundled Codex with actual `exec --json --ephemeral --ignore-user-config --strict-config` in the staged repository with fixed `gpt-5.6-sol`, `xhigh`, `workspace-write`, and `approval_policy=never`. The command is wrapped by `/usr/bin/sandbox-exec` using the generated `runner.sb`, which allows normal staged-repository operation but denies `file-read*` for the resolved Prime Directive source root; tool subprocesses inherit that outer sandbox. The exact wrapper command, profile digest, and binary path/version/digest/preflight binding are metadata. Its prompt is assembled deterministically from only the hashed contract and scenario-stage files. The authoritative JSONL, stderr, invocation metadata, exact prompt, profile, and input manifest are written under `<arm-stage>/runner/pre-packet/`; `$skill-review` remains the outer arm/judge orchestrator.
+
+   ```bash
+   python3 evals/deliver/harness.py run-scenario <arm-stage> --phase pre-packet
+   ```
+
+   Never expose any path under `evals/deliver/**/evaluator`, `evals/deliver/evaluator`, or a ledger path.
+5. Before providing the review packet, freeze the actual pre-packet state and validation evidence. The command requires a completed, verified pre-packet runner bundle, verifies the existing manifest, recomputes `HEAD`, status, and code/test diffs against the initial snapshot, and binds the exact snapshot, runner preflight, and copied validation bytes to that manifest digest:
 
    ```bash
    python3 evals/deliver/harness.py freeze-pre-packet <arm-stage> --validation <public-validation-log>
    python3 evals/deliver/harness.py stage-review-packet <arm-stage>
    ```
 
-5. Run remediation under the extracted contract. Record post-remediation code, tests, one-run probes, review logs, public validation, review-round counts, and start/end timing, then freeze before evaluator access:
+6. Start remediation through the same fixed runner after packet staging. The packet command first verifies the old manifest and refuses to rehash runner-modified contract or scenario inputs; the new review-packet manifest records the frozen pre-packet manifest as its parent.
 
    ```bash
-   python3 evals/deliver/harness.py freeze-output <arm-stage> --record <run-record.json> --trace <runner-trace.jsonl>
+   python3 evals/deliver/harness.py run-scenario <arm-stage> --phase remediation
    ```
 
-   This hashes the actual implementation and test diffs, record, and pre-freeze trace, writes `evidence/output-freeze.json`, and appends the trace freeze marker.
-6. Audit the trace before copying hidden tests, challenge probes, the ledger, or judge inputs into evaluator-owned scratch:
+   Record post-remediation code, tests, structured probes, and review actions, then finalize the arm before evaluator access:
 
    ```bash
-   python3 evals/deliver/harness.py audit-trace <runner-trace.jsonl>
+   python3 evals/deliver/harness.py finalize-arm <arm-stage> --record <run-record.json>
    ```
 
+   This is the only arm-finalization path; it accepts no caller-selected trace. It requires both harness-produced runner phases and verifies their exact outer-sandbox commands, phase identities, successful exits, prompt/trace/stderr/profile digests, initial snapshot, and manifest lineage. Each trace must begin with exactly one `thread.started`, end with exactly one successful `turn.completed`, and contain no failure terminal or trailing event. The pre-packet input digest must equal the review manifest parent and the remediation input digest must equal the current manifest. Diffs are recomputed from the initially prepared fixture commit, not current `HEAD`, and include committed deltas, staged/unstaged worktree deltas, and untracked code or tests. The command freezes both complete runner evidence bundles, the pre-packet snapshot and validation bytes, code, tests, probes, reviews, and the run record under `evaluator/frozen/`; writes [`output-freeze.json`](evaluator/output-freeze-schema.json); and writes a digest-bound [`terminal-seal.json`](evaluator/terminal-seal-schema.json). Normalization independently revalidates that seal and both runner bundles.
 7. Run the original hidden checks and historical probes unchanged. Run post-hoc Queuectl challenges separately and label their results `diagnostic_posthoc`; they cannot alter acceptance-check totals.
-8. Create the evaluator-owned `run-record.json` described below, normalize it, and build the blind pair. Judge behavior first. Reveal workflow identity and run candidate-only contract compliance only after the blinded verdict is frozen.
+8. Normalize each finalized arm and build the blind pair. Judge behavior first. Reveal workflow identity and run candidate-only contract compliance only after the blinded verdict is frozen.
 
-The packet-staging command refuses to run without `evidence/pre-packet-snapshot.json`. Preparation rejects nonempty destinations, symlinks, escaping paths, evaluator/ledger names, a drifted historical ref/tree, and any unlisted input. Each manifest and every listed file has a SHA-256 digest.
+The packet-staging command refuses to run without `evidence/pre-packet-snapshot.json`. Preparation rejects nonempty destinations, symlinks, escaping paths, evaluator/ledger names, multiple or non-Deliver `SKILL.md` files, a drifted historical commit/tree/blob, and any unlisted input. Each manifest and every listed file has a SHA-256 digest.
+
+The threat model separates the trusted evaluator/operator from the untrusted runner. The inherited outer sandbox is the read-isolation boundary that keeps source-checkout evaluator material away from the runner. Trace checks, frozen digests, and the terminal seal are lifecycle and audit controls, not that security boundary. They detect partial or accidental mutation; a trusted operator able to rewrite every local artifact can forge a new digest chain, so the seal is not claimed as protection from that operator.
 
 ## Run record and normalization
 
-Place `run-record.json` beside its evidence files. Paths are relative, regular, non-symlink files inside that record root:
+Place [`run-record.json`](evaluator/run-record-schema.json) beside its evidence files. Paths are relative, regular, non-symlink files inside that record root:
 
 ```json
 {
   "scenario_id": "retry-failed",
-  "snapshots": {"pre_packet": "<sha256>", "post_remediation": "<sha256>"},
   "evidence": {
     "implementation_diff": "evidence/implementation.diff",
     "test_diff": "evidence/tests.diff",
     "probe_results": "evidence/probes.json",
-    "review_log": "evidence/reviews.json"
+    "review_log": "evidence/reviews.json",
+    "review_rounds": "evidence/review-rounds.json"
   },
   "measurements": {
-    "test_count": 0,
-    "test_size_lines": 0,
+    "test_count": 1,
+    "test_size_lines": 12,
     "full_review_rounds": 0,
-    "targeted_rereviews": 0,
-    "wall_time_seconds": 0
+    "targeted_rereviews": 3,
+    "wall_time_seconds": 42
   },
   "identity_clues": ["arm-specific scratch name", "evaluated commit ref"]
 }
 ```
 
-`probe_results` and `review_log` are JSON arrays with stable finding/test IDs, dispositions, scopes, commands, exit statuses, and evidence. The normalizer uses the actual implementation diff, test diff, probes, and review actions; normalizes line endings; redacts paths, commit IDs, declared clues, and the identity denylist; rejects candidate-compliance fields before reveal; and emits [`behavior-schema.json`](evaluator/behavior-schema.json).
+The numbers above only illustrate the record shape. Use the values derived from that arm's frozen diff, review actions, and runner metadata; `finalize-arm` rejects any mismatch.
+
+`probe_results`, `review_log`, and `review_rounds` follow [`evidence-records-schema.json`](evaluator/evidence-records-schema.json). Each item has a command, exit status, nonblank summary, and `evidence_ref`/`evidence_sha256` naming a frozen artifact. Probe and review-action arrays contain every scenario finding ID exactly once; actions own the final disposition/scope used by the outcome gate. Rounds are independent execution evidence with a unique nonblank `round_id`, `targeted|full` scope, and a nonempty set of known reviewed finding IDs. The same finding may appear in multiple rounds, including a clean final round with no new findings. `test_count` is the number of added Python `test_*` function definitions, while language-neutral `test_size_lines` is the number of added lines in the frozen test diff. Full/targeted costs count every round record of that scope, not findings; wall time is derived from both runner durations. Self-reported values must match those deterministic results.
+
+Snapshot identities are not runner inputs: finalization generates their 64-hex digests from evaluator-owned evidence. The normalizer accepts only `output-freeze.json`, validates the terminal seal, both phase bundles and lineage, the exact output shape, and every frozen artifact size/digest before reading behavior; revalidates the structured records and derived costs; recursively redacts paths, commit IDs, declared clues, and the identity denylist from all blinded strings and object keys; then checks [`behavior-schema.json`](evaluator/behavior-schema.json).
 
 ```bash
-python3 evals/deliver/harness.py normalize <run-record.json> --output <normalized.json>
+python3 evals/deliver/harness.py normalize <arm-stage>/evaluator/output-freeze.json --output <normalized.json>
 python3 evals/deliver/harness.py blind-packet <normalized-1.json> <normalized-2.json> --output <blind-packet.json>
 ```
 
-Blind labeling is assigned by normalized-content digest, so swapping input arm order produces byte-identical Run A/Run B packets. Candidate field compliance is a separate post-reveal artifact and must never appear in `run-record.json`. After reveal, provide only the candidate's structured field report and check it separately:
+Blind labeling is assigned by normalized-content digest, so swapping input arm order produces byte-identical Run A/Run B packets. Candidate field compliance is a separate post-reveal artifact and must never appear in `run-record.json`. After reveal, provide only the candidate's structured field report. It must use exact schema types, six unique nonblank frozen-ledger IDs, and no missing or extra finding before the separate check passes:
 
 ```bash
 python3 evals/deliver/harness.py check-candidate-compliance <candidate-fields.json> --output <candidate-compliance.json>
@@ -97,30 +115,22 @@ python3 evals/deliver/harness.py check-candidate-compliance <candidate-fields.js
 
 ## Frozen outcome gate
 
-After both identities are revealed, create evaluator-normalized baseline and candidate records using [`outcome-record-schema.json`](evaluator/outcome-record-schema.json). Each record is keyed by every finding in the frozen ledger and contains only `test_disposition` and `rereview_scope`:
-
-```json
-{
-  "schema_version": 1,
-  "outcomes": {
-    "RF-001": {"test_disposition": "permanent", "rereview_scope": "targeted"}
-  }
-}
-```
-
-Run the deterministic category and cost gate:
+After both identities are revealed, run the deterministic category and cost gate directly on the four already-validated normalized outputs—one output per scenario for each arm:
 
 ```bash
-python3 evals/deliver/harness.py gate-outcomes --baseline <baseline-outcomes.json> --candidate <candidate-outcomes.json> --output <outcome-gate.json>
+python3 evals/deliver/harness.py gate-outcomes \
+  --baseline <baseline-retry-normalized.json> <baseline-holdout-normalized.json> \
+  --candidate <candidate-retry-normalized.json> <candidate-holdout-normalized.json> \
+  --output <outcome-gate.json>
 ```
 
-The command fails on missing or extra findings, invalid fields, any candidate category that differs from the frozen ledger, or failure to improve strictly on both cost axes. The axes are unjustified `permanent` decisions where the ledger expects `table_case`, `probe_only`, or `no_test`, and unnecessary `full` rereviews where the ledger expects `targeted` or no rereview. Its machine-readable output includes counts, category regressions, record errors, the ledger hash, and the pass decision.
+The command validates every normalized document, requires both scenarios exactly once per arm, extracts their exact `review_actions`, and fails on missing or extra findings, any candidate category that differs from the frozen ledger, or failure to improve strictly on both cost axes. The axes are unjustified `permanent` decisions where the ledger expects `table_case`, `probe_only`, or `no_test`, and unnecessary `full` rereviews where the ledger expects `targeted` or no rereview. Its machine-readable output includes each input SHA-256, counts, category regressions, the ledger hash, and the pass decision.
 
 This gate evaluates only frozen category retention and the two cost axes. Material correctness and the blinded judge verdict remain separate required gates; `gate-outcomes` reports both as unevaluated and cannot claim the overall candidate verdict.
 
 ## Evaluator order and evidence
 
-The evaluator freezes, in order: runner outputs; trace audit; acceptance and diagnostic probe results; normalized packets; blinded verdict; identity reveal; candidate compliance; cost measurements; ledger gate; final verdict. Preserve all of them in the `$skill-review` scratch root and summarize them in its durable state document.
+The evaluator freezes, in order: both runner phases; the single arm finalization and terminal seal; acceptance and diagnostic probe results; normalized packets; blinded verdict; identity reveal; candidate compliance; ledger gate; final verdict. Preserve all of them in the `$skill-review` scratch root and summarize them in its durable state document. The outcome gate consumes the normalized outputs themselves, so there is no later transcription artifact or second source of workflow decisions.
 
 The hard ledger gate requires every registered outcome before the qualitative judge can prefer the candidate. The blinded judge uses [`judge-rubric.md`](evaluator/judge-rubric.md): correctness first, then durable test value, consolidation, rereview breadth, test count/size, full rounds, wall time, and ceremony. No hard line-count cap applies.
 
