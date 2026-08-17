@@ -95,6 +95,29 @@ Blind labeling is assigned by normalized-content digest, so swapping input arm o
 python3 evals/deliver/harness.py check-candidate-compliance <candidate-fields.json> --output <candidate-compliance.json>
 ```
 
+## Frozen outcome gate
+
+After both identities are revealed, create evaluator-normalized baseline and candidate records using [`outcome-record-schema.json`](evaluator/outcome-record-schema.json). Each record is keyed by every finding in the frozen ledger and contains only `test_disposition` and `rereview_scope`:
+
+```json
+{
+  "schema_version": 1,
+  "outcomes": {
+    "RF-001": {"test_disposition": "permanent", "rereview_scope": "targeted"}
+  }
+}
+```
+
+Run the deterministic category and cost gate:
+
+```bash
+python3 evals/deliver/harness.py gate-outcomes --baseline <baseline-outcomes.json> --candidate <candidate-outcomes.json> --output <outcome-gate.json>
+```
+
+The command fails on missing or extra findings, invalid fields, any candidate category that differs from the frozen ledger, or failure to improve strictly on both cost axes. The axes are unjustified `permanent` decisions where the ledger expects `table_case`, `probe_only`, or `no_test`, and unnecessary `full` rereviews where the ledger expects `targeted` or no rereview. Its machine-readable output includes counts, category regressions, record errors, the ledger hash, and the pass decision.
+
+This gate evaluates only frozen category retention and the two cost axes. Material correctness and the blinded judge verdict remain separate required gates; `gate-outcomes` reports both as unevaluated and cannot claim the overall candidate verdict.
+
 ## Evaluator order and evidence
 
 The evaluator freezes, in order: runner outputs; trace audit; acceptance and diagnostic probe results; normalized packets; blinded verdict; identity reveal; candidate compliance; cost measurements; ledger gate; final verdict. Preserve all of them in the `$skill-review` scratch root and summarize them in its durable state document.

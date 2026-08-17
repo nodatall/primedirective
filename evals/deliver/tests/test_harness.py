@@ -211,6 +211,92 @@ class DeliverEvalHarnessTests(unittest.TestCase):
     def test_ledger_spans_every_frozen_disposition_and_scope(self) -> None:
         harness.validate_ledger()
 
+    def frozen_outcomes(self) -> dict[str, dict[str, object]]:
+        ledger = json.loads(harness.OUTCOME_LEDGER.read_text(encoding="utf-8"))
+        return {
+            entry["finding_id"]: {
+                "test_disposition": entry["test_disposition"],
+                "rereview_scope": entry["rereview_scope"],
+            }
+            for entry in ledger["entries"]
+        }
+
+    def write_outcomes(self, name: str, outcomes: dict[str, dict[str, object]]) -> Path:
+        path = self.root / name
+        harness.write_json(path, {"schema_version": 1, "outcomes": outcomes})
+        return path
+
+    def inefficient_baseline(self) -> dict[str, dict[str, object]]:
+        outcomes = json.loads(json.dumps(self.frozen_outcomes()))
+        for outcome in outcomes.values():
+            if outcome["test_disposition"] in {"table_case", "probe_only", "no_test"}:
+                outcome["test_disposition"] = "permanent"
+            if outcome["rereview_scope"] in {"targeted", None}:
+                outcome["rereview_scope"] = "full"
+        return outcomes
+
+    def test_outcome_gate_passes_exact_candidate_with_two_axis_improvement(self) -> None:
+        baseline = self.write_outcomes("baseline-pass.json", self.inefficient_baseline())
+        candidate = self.write_outcomes("candidate-pass.json", self.frozen_outcomes())
+        output = self.root / "outcome-gate.json"
+
+        result = harness.gate_outcomes(baseline, candidate)
+
+        self.assertTrue(result["passed"])
+        self.assertTrue(result["axes"]["unjustified_permanent_decisions"]["strict_improvement"])
+        self.assertTrue(result["axes"]["unnecessary_full_rereviews"]["strict_improvement"])
+        self.assertFalse(result["correctness_gate_evaluated"])
+        self.assertFalse(result["judge_verdict_evaluated"])
+        self.assertEqual(
+            harness.main(
+                [
+                    "gate-outcomes",
+                    "--baseline",
+                    str(baseline),
+                    "--candidate",
+                    str(candidate),
+                    "--output",
+                    str(output),
+                ]
+            ),
+            0,
+        )
+        self.assertTrue(json.loads(output.read_text(encoding="utf-8"))["passed"])
+
+    def test_outcome_gate_rejects_candidate_category_regression_and_bad_finding_set(self) -> None:
+        baseline = self.write_outcomes("baseline-regression.json", self.inefficient_baseline())
+        candidate_outcomes = self.frozen_outcomes()
+        candidate_outcomes["RF-002"]["test_disposition"] = "permanent"
+        candidate = self.write_outcomes("candidate-regression.json", candidate_outcomes)
+
+        result = harness.gate_outcomes(baseline, candidate)
+
+        self.assertFalse(result["passed"])
+        self.assertEqual(result["candidate_category_regressions"][0]["finding_id"], "RF-002")
+
+        bad_set = self.frozen_outcomes()
+        bad_set.pop("RF-004")
+        bad_set["EXTRA"] = {"test_disposition": "no_test", "rereview_scope": None}
+        bad_candidate = self.write_outcomes("candidate-bad-set.json", bad_set)
+        bad_result = harness.gate_outcomes(baseline, bad_candidate)
+        self.assertFalse(bad_result["passed"])
+        self.assertTrue(any("missing findings: RF-004" in error for error in bad_result["record_errors"]))
+        self.assertTrue(any("extra findings: EXTRA" in error for error in bad_result["record_errors"]))
+
+    def test_outcome_gate_rejects_when_only_one_cost_axis_improves(self) -> None:
+        baseline_outcomes = self.frozen_outcomes()
+        for outcome in baseline_outcomes.values():
+            if outcome["test_disposition"] in {"table_case", "probe_only", "no_test"}:
+                outcome["test_disposition"] = "permanent"
+        baseline = self.write_outcomes("baseline-one-axis.json", baseline_outcomes)
+        candidate = self.write_outcomes("candidate-one-axis.json", self.frozen_outcomes())
+
+        result = harness.gate_outcomes(baseline, candidate)
+
+        self.assertFalse(result["passed"])
+        self.assertTrue(result["axes"]["unjustified_permanent_decisions"]["strict_improvement"])
+        self.assertFalse(result["axes"]["unnecessary_full_rereviews"]["strict_improvement"])
+
 
 if __name__ == "__main__":
     unittest.main()

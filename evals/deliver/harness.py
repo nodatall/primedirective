@@ -499,6 +499,111 @@ def validate_ledger() -> None:
         raise HarnessError("outcome ledger topics drifted")
 
 
+def load_outcome_record(path: Path, label: str, ledger_ids: set[str]) -> tuple[dict[str, dict[str, object]], list[str]]:
+    if path.is_symlink() or not path.is_file():
+        raise HarnessError(f"{label} outcome record must be a regular file")
+    document = json.loads(path.read_text(encoding="utf-8"))
+    errors: list[str] = []
+    if set(document) != {"schema_version", "outcomes"} or document.get("schema_version") != SCHEMA_VERSION:
+        errors.append(f"{label}: invalid document fields or schema_version")
+    raw_outcomes = document.get("outcomes", {})
+    if not isinstance(raw_outcomes, dict):
+        return {}, [*errors, f"{label}: outcomes must be an object"]
+    actual_ids = set(raw_outcomes)
+    missing = sorted(ledger_ids - actual_ids)
+    extra = sorted(actual_ids - ledger_ids)
+    if missing:
+        errors.append(f"{label}: missing findings: {', '.join(missing)}")
+    if extra:
+        errors.append(f"{label}: extra findings: {', '.join(extra)}")
+    outcomes: dict[str, dict[str, object]] = {}
+    for finding_id in sorted(actual_ids & ledger_ids):
+        outcome = raw_outcomes[finding_id]
+        if not isinstance(outcome, dict) or set(outcome) != {"test_disposition", "rereview_scope"}:
+            errors.append(f"{label}: {finding_id} must contain only test_disposition and rereview_scope")
+            continue
+        if outcome["test_disposition"] not in {"permanent", "table_case", "probe_only", "no_test"}:
+            errors.append(f"{label}: {finding_id} has invalid test_disposition")
+            continue
+        if outcome["rereview_scope"] not in {"targeted", "full", None}:
+            errors.append(f"{label}: {finding_id} has invalid rereview_scope")
+            continue
+        outcomes[finding_id] = outcome
+    return outcomes, errors
+
+
+def gate_outcomes(baseline_path: Path, candidate_path: Path) -> dict[str, object]:
+    validate_ledger()
+    ledger_document = json.loads(OUTCOME_LEDGER.read_text(encoding="utf-8"))
+    ledger = {entry["finding_id"]: entry for entry in ledger_document["entries"]}
+    ledger_ids = set(ledger)
+    baseline, baseline_errors = load_outcome_record(baseline_path, "baseline", ledger_ids)
+    candidate, candidate_errors = load_outcome_record(candidate_path, "candidate", ledger_ids)
+
+    regressions: list[dict[str, object]] = []
+    for finding_id in sorted(ledger_ids & set(candidate)):
+        expected = ledger[finding_id]
+        actual = candidate[finding_id]
+        for field in ("test_disposition", "rereview_scope"):
+            if actual[field] != expected[field]:
+                regressions.append(
+                    {
+                        "finding_id": finding_id,
+                        "field": field,
+                        "expected": expected[field],
+                        "actual": actual[field],
+                    }
+                )
+
+    def unjustified_permanent(outcomes: dict[str, dict[str, object]]) -> int:
+        return sum(
+            1
+            for finding_id, outcome in outcomes.items()
+            if outcome["test_disposition"] == "permanent"
+            and ledger[finding_id]["test_disposition"] in {"table_case", "probe_only", "no_test"}
+        )
+
+    def unnecessary_full(outcomes: dict[str, dict[str, object]]) -> int:
+        return sum(
+            1
+            for finding_id, outcome in outcomes.items()
+            if outcome["rereview_scope"] == "full"
+            and ledger[finding_id]["rereview_scope"] in {"targeted", None}
+        )
+
+    baseline_permanent = unjustified_permanent(baseline)
+    candidate_permanent = unjustified_permanent(candidate)
+    baseline_full = unnecessary_full(baseline)
+    candidate_full = unnecessary_full(candidate)
+    permanent_improved = candidate_permanent < baseline_permanent
+    full_improved = candidate_full < baseline_full
+    errors = [*baseline_errors, *candidate_errors]
+    passed = not errors and not regressions and permanent_improved and full_improved
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "gate": "deliver_outcomes",
+        "passed": passed,
+        "ledger_sha256": sha256_file(OUTCOME_LEDGER),
+        "ledger_finding_count": len(ledger),
+        "axes": {
+            "unjustified_permanent_decisions": {
+                "baseline": baseline_permanent,
+                "candidate": candidate_permanent,
+                "strict_improvement": permanent_improved,
+            },
+            "unnecessary_full_rereviews": {
+                "baseline": baseline_full,
+                "candidate": candidate_full,
+                "strict_improvement": full_improved,
+            },
+        },
+        "candidate_category_regressions": regressions,
+        "record_errors": errors,
+        "correctness_gate_evaluated": False,
+        "judge_verdict_evaluated": False,
+    }
+
+
 def check_candidate_compliance(report_path: Path) -> dict[str, object]:
     if report_path.is_symlink() or not report_path.is_file():
         raise HarnessError("candidate compliance report must be a regular post-reveal file")
@@ -571,6 +676,11 @@ def parser() -> argparse.ArgumentParser:
     compliance.add_argument("report", type=Path)
     compliance.add_argument("--output", type=Path, required=True)
 
+    outcomes = commands.add_parser("gate-outcomes")
+    outcomes.add_argument("--baseline", type=Path, required=True)
+    outcomes.add_argument("--candidate", type=Path, required=True)
+    outcomes.add_argument("--output", type=Path, required=True)
+
     commands.add_parser("validate-ledger")
     return root
 
@@ -597,6 +707,11 @@ def main(argv: list[str] | None = None) -> int:
         result = check_candidate_compliance(arguments.report)
         write_json(arguments.output, result)
         if not result["compliant"]:
+            return 1
+    elif arguments.command == "gate-outcomes":
+        result = gate_outcomes(arguments.baseline, arguments.candidate)
+        write_json(arguments.output, result)
+        if not result["passed"]:
             return 1
     elif arguments.command == "validate-ledger":
         validate_ledger()

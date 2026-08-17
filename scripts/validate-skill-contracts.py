@@ -1061,6 +1061,87 @@ def validate_bounded_adversarial_priors(errors: list[str]) -> None:
             fail(errors, "PD-BOUNDED-ADVERSARIAL-PRIORS-CONSUMER", f"{path} missing token: {token}")
 
 
+def validate_deliver_review_proportionality(errors: list[str]) -> None:
+    disposition_path = "skills/shared/references/review/finding-disposition.md"
+    protocol_path = "skills/shared/references/review/review-protocol.md"
+    ownership_path = "skills/shared/references/contract-ownership.md"
+    deliver_path = "skills/deliver/SKILL.md"
+    disposition = (ROOT / disposition_path).read_text()
+    protocol = (ROOT / protocol_path).read_text()
+    ownership = (ROOT / ownership_path).read_text()
+    deliver = (ROOT / deliver_path).read_text()
+
+    disposition_tokens = [
+        "## Deliver Final-Review Test Value",
+        "test_disposition: permanent | table_case | probe_only | no_test",
+        "concise evidence-backed rationale",
+        "supported path that is reachable",
+        "explicit contract or credible harm",
+        "uniquely uncovered",
+        "deterministic enough",
+        "economical to understand and maintain",
+        "smallest coherent table-driven test",
+        "agent-scratch/",
+        "stronger coverage already proves the boundary",
+        "Every repaired finding still requires recorded verification evidence",
+        "test_disposition` is independent of `Disposition",
+        "never weakens `Disposition: fix`",
+        "`$review-chain`, `$merge-review`, `$repo-sweep`",
+        "or any other consumer",
+    ]
+    for token in disposition_tokens:
+        if token not in disposition:
+            fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{disposition_path} missing token: {token}")
+
+    protocol_tokens = [
+        "## Deliver final-review remediation rereviews",
+        "The initial `$deliver` final review is always one fresh `full-branch` round",
+        "rereview_scope: targeted | full",
+        "Default to one fresh `targeted` rereview",
+        "the repaired finding IDs",
+        "the exact pre-repair base state",
+        "the repair boundary and exact repair diff",
+        "the adjacent callers and relevant tests inspected",
+        "the originating review prompt and the testing prompt",
+        "Prompt H when the repaired boundary affects",
+        "the relevant validation reruns",
+        "evidence from one fresh reviewer",
+        "crosses an architecture or trust boundary",
+        "changes a public contract",
+        "broadly affects security or data integrity",
+        "cannot be shown to be isolated",
+        "targeted rereview discovers a new material defect",
+        "use the widest scope required by any repair",
+        "no unresolved verified `fix` findings",
+        "does not change `$review-chain`, `$merge-review`, `$repo-sweep`",
+        "All non-Deliver consumers retain their existing full resweep or rereview behavior unchanged.",
+    ]
+    for token in protocol_tokens:
+        if token not in protocol:
+            fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{protocol_path} missing token: {token}")
+
+    deliver_tokens = [
+        disposition_path,
+        protocol_path,
+        "during Deliver final-review remediation",
+        "`test_disposition` and `rereview_scope`",
+        "without copying their rubrics or applying them to other review workflows",
+    ]
+    for token in deliver_tokens:
+        if token not in deliver:
+            fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{deliver_path} missing token: {token}")
+
+    ownership_tokens = [
+        "Deliver-final-review-only targeted/full rereview topology",
+        "The Deliver-only topology does not apply to other consumers.",
+        "Deliver-final-review-only test-persistence vocabulary",
+        "The Deliver-only vocabulary does not apply to other consumers.",
+    ]
+    for token in ownership_tokens:
+        if token not in ownership:
+            fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{ownership_path} missing token: {token}")
+
+
 def validate_architecture_guidance(errors: list[str]) -> None:
     reference = (ROOT / "skills/shared/references/architecture/architecture-guidance.md").read_text()
     create_architecture = (ROOT / "skills/create-architecture/SKILL.md").read_text()
@@ -1186,6 +1267,7 @@ def main() -> int:
     validate_deliver_terminal_gate(errors)
     validate_review_plan_contract(errors)
     validate_bounded_adversarial_priors(errors)
+    validate_deliver_review_proportionality(errors)
     validate_architecture_guidance(errors)
     validate_ship_branch(errors)
     validate_mirrors(errors)

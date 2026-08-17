@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "outcome": {
+      "additionalProperties": false,
+      "properties": {
+        "rereview_scope": {"enum": ["targeted", "full", null]},
+        "test_disposition": {"enum": ["permanent", "table_case", "probe_only", "no_test"]}
+      },
+      "required": ["test_disposition", "rereview_scope"],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "outcomes": {
+      "additionalProperties": false,
+      "properties": {
+        "PF-001": {"$ref": "#/$defs/outcome"},
+        "PF-002": {"$ref": "#/$defs/outcome"},
+        "RF-001": {"$ref": "#/$defs/outcome"},
+        "RF-002": {"$ref": "#/$defs/outcome"},
+        "RF-003": {"$ref": "#/$defs/outcome"},
+        "RF-004": {"$ref": "#/$defs/outcome"}
+      },
+      "required": ["RF-001", "RF-002", "RF-003", "RF-004", "PF-001", "PF-002"],
+      "type": "object"
+    },
+    "schema_version": {"const": 1}
+  },
+  "required": ["schema_version", "outcomes"],
+  "type": "object"
+}
