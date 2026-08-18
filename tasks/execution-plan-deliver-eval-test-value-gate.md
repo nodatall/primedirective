@@ -55,7 +55,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Add a focused validator check for the Deliver-scoped shared enums, permanent-test criteria, repair/test independence, targeted/full escalation rules, and Deliver consumer hook, including tokens that keep other shared-reference consumers outside the requirement; inspect and preserve any validator edits that appear after planning.
 - [x] Validate the Queuectl fixture's existing public tests, reproduce the two historical preflight/session-updater failures at the pinned holdout state, prove the Retry Failed Jobs hidden suite fails closed against the unimplemented base where expected, and test the evaluator normalizer, manifest/path isolation, trace contamination audit, identity-clue denylist, swapped-label invariance, and challenge-probe entry points.
 - [x] Run `python3 scripts/validate-skill-contracts.py`, `git diff --check`, and `./scripts/install-codex-plugin.sh`.
-- [ ] Run one fresh full-branch implementation review of the contract and eval-harness changes before the expensive comparison, apply any authorized fixes, rerun all contract and deterministic harness checks, reinstall the plugin, and record the exact evaluated candidate state.
+- [x] Run one fresh full-branch implementation review of the contract and eval-harness changes before the expensive comparison, apply any authorized fixes, rerun all contract and deterministic harness checks, reinstall the plugin, and record the exact evaluated candidate state.
 
 ### 5. Run The Reusable Eval And Judge The Change
 
