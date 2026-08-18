@@ -240,6 +240,169 @@ class DeliverEvalHarnessTests(unittest.TestCase):
         self.assertEqual(runner_visible_skills[0], stage / "contract/SKILL.md")
         self.assertFalse((stage / "scenario/review-packet").exists())
 
+    def test_historical_holdout_discloses_defects_only_after_packet_staging(self) -> None:
+        stage = self.arm_path("holdout-blind", "preflight-remediation-holdout")
+        harness.prepare_scenario(
+            "preflight-remediation-holdout", self.contract, stage, self.preflight
+        )
+        pre_packet = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((stage / "scenario").rglob("*"))
+            if path.is_file()
+        )
+        for withheld in (
+            ".last-session-update",
+            "Bash arithmetic",
+            "always backgrounds",
+            "sanitize the throttle value",
+            "explicit foreground path",
+        ):
+            self.assertNotIn(withheld, pre_packet)
+        self.assertTrue((stage / "scenario/starting-state-contract.md").is_file())
+        self.assertFalse((stage / "scenario/acceptance-contract.md").exists())
+        self.assertFalse((stage / "scenario/approved-paused-plan.md").exists())
+
+        validation = self.root / "holdout-blind-validation.txt"
+        validation.write_text("starting state inspected\n", encoding="utf-8")
+        self.run_mocked_phase(stage, "pre-packet")
+        harness.freeze_pre_packet(stage, validation)
+        harness.stage_review_packet(stage)
+        packet = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted((stage / "scenario/review-packet").rglob("*"))
+            if path.is_file()
+        )
+        self.assertIn(".last-session-update", packet)
+        self.assertIn("Bash arithmetic", packet)
+        self.assertIn("explicit foreground path", packet)
+
+    def test_historical_holdout_freeze_requires_exact_pinned_source_states(self) -> None:
+        script = Path("scripts/prime-directive-codex-preflight.sh")
+
+        def commit(repo: Path, message: str) -> str:
+            subprocess.run(
+                [
+                    "git", "-c", "user.name=Deliver Eval", "-c",
+                    "user.email=eval@example.invalid", "commit", "-q",
+                    "--no-gpg-sign", "-m", message,
+                ],
+                cwd=repo,
+                check=True,
+            )
+            return subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=repo, text=True
+            ).strip()
+
+        def prepare(name: str) -> tuple[Path, Path]:
+            stage = self.arm_path(name, "preflight-remediation-holdout")
+            harness.prepare_scenario(
+                "preflight-remediation-holdout", self.contract, stage, self.preflight
+            )
+            self.run_mocked_phase(stage, "pre-packet")
+            return stage, stage / "repo"
+
+        def expect_rejection(stage: Path, name: str, pattern: str) -> None:
+            validation = self.root / f"holdout-{name}-validation.txt"
+            validation.write_text("passed\n", encoding="utf-8")
+            with self.assertRaisesRegex(harness.HarnessError, pattern):
+                harness.freeze_pre_packet(stage, validation)
+
+        allowed, _ = prepare("holdout-bookkeeping")
+        note = allowed / "repo/tasks/pre-packet-note.md"
+        note.parent.mkdir()
+        note.write_text("inspection only\n", encoding="utf-8")
+        allowed_validation = self.root / "holdout-bookkeeping-validation.txt"
+        allowed_validation.write_text("passed\n", encoding="utf-8")
+        harness.freeze_pre_packet(allowed, allowed_validation)
+
+        for mutation in ("staged", "unstaged", "deleted", "mode"):
+            with self.subTest(mutation=mutation):
+                stage, repo = prepare(f"holdout-{mutation}")
+                target = repo / script
+                if mutation == "deleted":
+                    target.unlink()
+                elif mutation == "mode":
+                    target.chmod(0o644)
+                else:
+                    target.write_text(
+                        target.read_text(encoding="utf-8") + "\n# pre-packet drift\n",
+                        encoding="utf-8",
+                    )
+                    if mutation == "staged":
+                        subprocess.run(["git", "add", script.as_posix()], cwd=repo, check=True)
+                expect_rejection(stage, mutation, "pinned pre-packet source drift")
+
+        for history_case in (
+            "commit",
+            "reset",
+            "side-ref",
+            "replace-ref",
+            "reflog",
+            "grafts",
+            "shallow",
+        ):
+            with self.subTest(history_case=history_case):
+                stage, repo = prepare(f"holdout-{history_case}")
+                initial = subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], cwd=repo, text=True
+                ).strip()
+                if history_case in {"commit", "reset"}:
+                    target = repo / script
+                    target.write_text(
+                        target.read_text(encoding="utf-8") + "\n# hidden repair\n",
+                        encoding="utf-8",
+                    )
+                    subprocess.run(["git", "add", script.as_posix()], cwd=repo, check=True)
+                    commit(repo, "Hidden pre-packet repair")
+                    if history_case == "reset":
+                        subprocess.run(
+                            ["git", "reset", "--hard", "-q", initial], cwd=repo, check=True
+                        )
+                elif history_case == "side-ref":
+                    subprocess.run(
+                        ["git", "branch", "hidden-prepacket", initial],
+                        cwd=repo,
+                        check=True,
+                    )
+                elif history_case == "replace-ref":
+                    tree = subprocess.check_output(
+                        ["git", "rev-parse", f"{initial}^{{tree}}"],
+                        cwd=repo,
+                        text=True,
+                    ).strip()
+                    replacement = subprocess.check_output(
+                        [
+                            "git", "-c", "user.name=Deliver Eval", "-c",
+                            "user.email=eval@example.invalid", "commit-tree", tree,
+                            "-m", "Synthetic replacement",
+                        ],
+                        cwd=repo,
+                        text=True,
+                    ).strip()
+                    subprocess.run(
+                        ["git", "replace", initial, replacement], cwd=repo, check=True
+                    )
+                elif history_case == "reflog":
+                    blob = subprocess.check_output(
+                        ["git", "rev-parse", f"{initial}:{script.as_posix()}"],
+                        cwd=repo,
+                        text=True,
+                    ).strip()
+                    with (repo / ".git/logs/HEAD").open("a", encoding="ascii") as handle:
+                        handle.write(
+                            f"{initial} {blob} Eval <eval@example.invalid> 0 +0000\tbad\n"
+                        )
+                else:
+                    relative = (
+                        Path(".git/info/grafts")
+                        if history_case == "grafts"
+                        else Path(".git/shallow")
+                    )
+                    metadata = repo / relative
+                    metadata.parent.mkdir(parents=True, exist_ok=True)
+                    metadata.write_text(f"{initial}\n", encoding="ascii")
+                expect_rejection(stage, history_case, "unsupported Git history state")
+
     def test_manifest_rejects_symlink_path_escape_and_evaluator_input(self) -> None:
         root = self.root / "paths"
         root.mkdir()

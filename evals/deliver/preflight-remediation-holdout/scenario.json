@@ -28,11 +28,12 @@
   },
   "id": "preflight-remediation-holdout",
   "pre_packet_files": [
-    "scenario/acceptance-contract.md",
-    "scenario/approved-paused-plan.md",
+    "scenario/starting-state-contract.md",
     "scenario/runner-prompt.md"
   ],
   "review_packet_files": [
+    "review-packet/acceptance-contract.md",
+    "review-packet/approved-paused-plan.md",
     "review-packet/findings.md",
     "review-packet/historical-evidence.md",
     "review-packet/probes/corrupt-throttle.sh",

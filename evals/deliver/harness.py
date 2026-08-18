@@ -646,6 +646,152 @@ def repository_diffs(repo: Path, initial_commit: str) -> tuple[str, str]:
     return "".join(implementation), "".join(tests)
 
 
+def git_index_entry(repo: Path, relative: Path) -> tuple[str, str]:
+    output = run(["git", "ls-files", "--stage", "--", relative.as_posix()], cwd=repo)
+    lines = output.splitlines()
+    if len(lines) != 1:
+        raise HarnessError(f"pinned pre-packet source drift: {relative}")
+    try:
+        metadata, listed_path = lines[0].split("\t", 1)
+        mode, blob, stage = metadata.split()
+    except ValueError as exc:
+        raise HarnessError(f"pinned pre-packet source drift: {relative}") from exc
+    if listed_path != relative.as_posix() or stage != "0":
+        raise HarnessError(f"pinned pre-packet source drift: {relative}")
+    return mode, blob
+
+
+def verify_pre_packet_source_invariants(
+    stage_root: Path, manifest: dict[str, Any]
+) -> None:
+    if manifest["scenario_id"] != "preflight-remediation-holdout":
+        return
+    _, descriptor = scenario_descriptor(manifest["scenario_id"])
+    fixture = descriptor.get("fixture")
+    if not isinstance(fixture, dict) or fixture.get("kind") != "git_ref":
+        raise HarnessError("historical holdout pinned source contract is invalid")
+    blobs = fixture.get("blobs")
+    paths = fixture.get("paths")
+    if (
+        not isinstance(blobs, dict)
+        or not isinstance(paths, list)
+        or any(not isinstance(path, str) for path in paths)
+        or set(blobs) != set(paths)
+    ):
+        raise HarnessError("historical holdout pinned source contract is invalid")
+    repo = safe_path(stage_root, "repo")
+    initial_commit = manifest["initial_snapshot"]["commit"]
+    git_environment = os.environ.copy()
+    git_environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    git_dir = repo / ".git"
+    if git_dir.is_symlink() or not git_dir.is_dir():
+        raise HarnessError("unsupported Git history state: repository metadata")
+    for metadata in (git_dir / "info/grafts", git_dir / "shallow"):
+        reject_symlink_chain(git_dir, metadata.relative_to(git_dir))
+        if metadata.exists() or metadata.is_symlink():
+            raise HarnessError("unsupported Git history state: graft or shallow metadata")
+    refs = run(
+        ["git", "for-each-ref", "--format=%(refname) %(objectname)"],
+        cwd=repo,
+        env=git_environment,
+    ).splitlines()
+    if refs != [f"refs/heads/eval {initial_commit}"]:
+        raise HarnessError("unsupported Git history state: unexpected refs")
+    head_ref = subprocess.run(
+        ["git", "symbolic-ref", "-q", "HEAD"],
+        cwd=repo,
+        env=git_environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    head = run(
+        ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+        cwd=repo,
+        env=git_environment,
+    ).strip()
+    if head_ref.returncode != 0 or head_ref.stdout.strip() != "refs/heads/eval" or head != initial_commit:
+        raise HarnessError("unsupported Git history state: HEAD changed")
+    for raw_path in paths:
+        if not isinstance(blobs.get(raw_path), dict):
+            raise HarnessError("historical holdout pinned source contract is invalid")
+        expected = blobs[raw_path]
+        if set(expected) != {"blob", "mode"}:
+            raise HarnessError("historical holdout pinned source contract is invalid")
+        relative = Path(raw_path)
+        try:
+            path = safe_path(repo, relative)
+        except HarnessError as exc:
+            raise HarnessError(f"pinned pre-packet source drift: {relative}") from exc
+        if not path.is_file():
+            raise HarnessError(f"pinned pre-packet source drift: {relative}")
+        head_listing = run(
+            ["git", "ls-tree", "HEAD", "--", relative.as_posix()],
+            cwd=repo,
+            env=git_environment,
+        ).strip()
+        try:
+            head_metadata, head_path = head_listing.split("\t", 1)
+            head_mode, head_type, head_blob = head_metadata.split()
+        except ValueError as exc:
+            raise HarnessError(f"pinned pre-packet source drift: {relative}") from exc
+        index_mode, index_blob = git_index_entry(repo, relative)
+        content = path.read_bytes()
+        worktree_blob = hashlib.sha1(
+            f"blob {len(content)}\0".encode("ascii") + content
+        ).hexdigest()
+        worktree_mode = "100755" if stat.S_IMODE(path.stat().st_mode) & 0o111 else "100644"
+        if (
+            head_path != relative.as_posix()
+            or head_type != "blob"
+            or head_blob != expected["blob"]
+            or head_mode != expected["mode"]
+            or index_blob != expected["blob"]
+            or index_mode != expected["mode"]
+            or worktree_blob != expected["blob"]
+            or worktree_mode != expected["mode"]
+        ):
+            raise HarnessError(f"pinned pre-packet source drift: {relative}")
+    expected_objects = {
+        line.split(" ", 1)[0]
+        for line in run(
+            ["git", "rev-list", "--objects", initial_commit],
+            cwd=repo,
+            env=git_environment,
+        ).splitlines()
+        if line
+    }
+    actual_objects = set(
+        run(
+            ["git", "cat-file", "--batch-check=%(objectname)", "--batch-all-objects"],
+            cwd=repo,
+            env=git_environment,
+        ).splitlines()
+    )
+    if actual_objects != expected_objects:
+        raise HarnessError("unsupported Git history state: unexpected objects")
+    reflog_root = git_dir / "logs"
+    required_reflogs = (reflog_root / "HEAD", reflog_root / "refs/heads/eval")
+    if (
+        reflog_root.is_symlink()
+        or not reflog_root.is_dir()
+        or any(path.is_symlink() or not path.is_file() for path in required_reflogs)
+    ):
+        raise HarnessError("unsupported Git history state: missing reflog")
+    allowed_reflog_objects = {b"0" * 40, initial_commit.encode("ascii")}
+    for reflog in sorted(reflog_root.rglob("*")):
+        relative = reflog.relative_to(reflog_root)
+        reject_symlink_chain(reflog_root, relative)
+        if reflog.is_dir():
+            continue
+        if not reflog.is_file():
+            raise HarnessError("unsupported Git history state: reflog entry")
+        for line in reflog.read_bytes().splitlines():
+            fields = line.split(b" ", 2)
+            if len(fields) < 2 or not set(fields[:2]).issubset(allowed_reflog_objects):
+                raise HarnessError("unsupported Git history state: reflog objects")
+
+
 def freeze_pre_packet(stage_root: Path, validation: Path) -> Path:
     manifest = verify_manifest(stage_root, allow_repo_changes=True)
     if manifest["scenario_stage"] != "pre_packet":
@@ -657,6 +803,7 @@ def freeze_pre_packet(stage_root: Path, validation: Path) -> Path:
     validate_runner_bundles(
         phase_paths, phases=("pre-packet",), repo=repo, stage_root=stage_root
     )
+    verify_pre_packet_source_invariants(stage_root, manifest)
     implementation_diff, test_diff = repository_diffs(repo, manifest["initial_snapshot"]["commit"])
     validation_copy = stage_root / "evidence/pre-packet-validation.log"
     validation_copy.parent.mkdir(parents=True, exist_ok=True)
