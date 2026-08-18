@@ -9,6 +9,8 @@ import json
 import math
 import os
 import re
+import select
+import signal
 import shutil
 import stat
 import subprocess
@@ -63,6 +65,30 @@ FIRST_TOOL_GATE_PROMPT = (
     f"Continue only if its exact output is: {FIRST_TOOL_GATE_OUTPUT}\n\n"
 )
 PREFLIGHT_PROMPT = FIRST_TOOL_GATE_PROMPT + "Then reply only with: runner preflight ok\n"
+ARM_TIMEOUT_POLICY = {
+    "policy_version": 2,
+    "arm_total_seconds": 90 * 60,
+    "inactivity_seconds": 15 * 60,
+    "activity_event": "structurally_valid_codex_jsonl_event",
+}
+PREFLIGHT_TIMEOUT_POLICY = {
+    "policy_version": 2,
+    "total_seconds": 2 * 60,
+    "inactivity_seconds": 60,
+    "activity_event": "structurally_valid_codex_jsonl_event",
+}
+CODEX_EVENT_TYPES = frozenset(
+    {
+        "thread.started",
+        "turn.started",
+        "turn.completed",
+        "turn.failed",
+        "item.started",
+        "item.updated",
+        "item.completed",
+        "error",
+    }
+)
 RUNNER_FILES = {
     "trace": "trace.jsonl",
     "stderr": "stderr.txt",
@@ -87,6 +113,22 @@ SNAPSHOT_FIELDS = {
 
 class HarnessError(RuntimeError):
     """Raised when an eval isolation or evidence invariant is violated."""
+
+
+class StreamCapture:
+    """Parent-owned byte count and digest captured while streaming runner output."""
+
+    def __init__(self) -> None:
+        self.byte_count = 0
+        self._hasher = hashlib.sha256()
+
+    def update(self, chunk: bytes) -> None:
+        self.byte_count += len(chunk)
+        self._hasher.update(chunk)
+
+    @property
+    def sha256(self) -> str:
+        return self._hasher.hexdigest()
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -860,10 +902,10 @@ def validate_runner_trace(trace_bytes: bytes) -> None:
     for number, line in enumerate(trace_bytes.splitlines(), 1):
         try:
             event = json.loads(line)
-        except json.JSONDecodeError as exc:
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise HarnessError(f"trace line {number} is not JSON") from exc
-        if not isinstance(event, dict):
-            raise HarnessError(f"trace line {number} must be a JSON object")
+        if not is_structurally_valid_codex_event(event):
+            raise HarnessError(f"trace line {number} is not a known Codex JSONL event")
         if event.get("event") == TERMINAL_SEAL_EVENT:
             raise HarnessError("runner trace contains a forged harness seal")
         events.append(event)
@@ -950,7 +992,7 @@ def validate_runner_bundles(
         "initial_snapshot",
         "exit_code", "trace_sha256", "stderr_sha256", "profile_sha256", "duration_milliseconds",
         "runner_preflight_sha256", "runner_binary_path", "runner_binary_version",
-        "runner_binary_sha256",
+        "runner_binary_sha256", "timeout_policy", "arm_elapsed_before_milliseconds",
     }
     digest_fields = {"prompt": "prompt_sha256", "trace": "trace_sha256", "stderr": "stderr_sha256", "manifest": "input_manifest_sha256", "profile": "profile_sha256"}
     if preflight is None:
@@ -961,6 +1003,7 @@ def validate_runner_bundles(
     else:
         preflight_path = None
     identity = (preflight["binary_path"], preflight["binary_version"], preflight["binary_sha256"])
+    elapsed_milliseconds = 0
     for phase in phases:
         prefix = phase.replace("-", "_")
         metadata = json.loads(paths[f"{prefix}_metadata"].read_text(encoding="utf-8"))
@@ -995,10 +1038,18 @@ def validate_runner_bundles(
             or actual != fixed
             or actual_identity != identity
             or metadata["runner_preflight_sha256"] != expected_preflight
+            or metadata["timeout_policy"] != ARM_TIMEOUT_POLICY
+            or metadata["arm_elapsed_before_milliseconds"] != elapsed_milliseconds
         ):
             raise HarnessError(f"{phase} runner metadata violates fixed conditions")
         duration = metadata["duration_milliseconds"]
-        if isinstance(duration, bool) or not isinstance(duration, int) or duration < 1:
+        if (
+            isinstance(duration, bool)
+            or not isinstance(duration, int)
+            or duration < 1
+            or elapsed_milliseconds + duration
+            > ARM_TIMEOUT_POLICY["arm_total_seconds"] * 1000
+        ):
             raise HarnessError(f"{phase} runner duration is invalid")
         for kind, field in digest_fields.items():
             if metadata[field] != sha256_file(paths[f"{prefix}_{kind}"]):
@@ -1014,6 +1065,7 @@ def validate_runner_bundles(
         ):
             raise HarnessError(f"{phase} runner prompt is not the allowlisted manifest prompt")
         bundles[phase] = {"metadata": metadata, "manifest": manifest}
+        elapsed_milliseconds += duration
     if phases != RUNNER_PHASES:
         return bundles
     pre = bundles["pre-packet"]
@@ -1787,7 +1839,179 @@ def assemble_runner_prompt(stage_root: Path, phase: str) -> tuple[str, dict[str,
     return FIRST_TOOL_GATE_PROMPT + prompt_from_manifest(stage_root, manifest), manifest
 
 
-def execute_codex(command: list[str], prompt: str, repo: Path) -> subprocess.CompletedProcess[str]:
+def is_structurally_valid_codex_event(event: object) -> bool:
+    if not isinstance(event, dict) or event.get("type") not in CODEX_EVENT_TYPES:
+        return False
+    event_type = event["type"]
+    if event_type == "thread.started":
+        return isinstance(event.get("thread_id"), str) and bool(event["thread_id"].strip())
+    if event_type.startswith("item."):
+        item = event.get("item")
+        return (
+            isinstance(item, dict)
+            and isinstance(item.get("id"), str)
+            and bool(item["id"].strip())
+            and isinstance(item.get("type"), str)
+            and bool(item["type"].strip())
+        )
+    if event_type == "error":
+        return isinstance(event.get("message"), str) and bool(event["message"].strip())
+    if event_type == "turn.failed":
+        return isinstance(event.get("error"), dict)
+    return True
+
+
+def stop_process_group(process: Any, process_group_id: int) -> None:
+    own_group = os.getpgrp()
+    if process_group_id <= 0 or process_group_id == own_group:
+        if process.poll() is None:
+            process.kill()
+            process.wait()
+        raise HarnessError("refusing to signal the evaluator process group")
+    signal_error: OSError | None = None
+    try:
+        os.killpg(process_group_id, signal.SIGKILL)
+    except ProcessLookupError:
+        if process.poll() is None:
+            process.kill()
+    except OSError as exc:
+        signal_error = exc
+        if process.poll() is None:
+            process.kill()
+    finally:
+        process.wait()
+    if signal_error is not None:
+        raise HarnessError("unable to stop the runner process group") from signal_error
+
+
+def parent_stream_paths(stage_root: Path, phase: str) -> tuple[Path, Path]:
+    probe_root = ensure_sibling_probe(stage_root).parent
+    streams_root = probe_root / "runner-streams"
+    if streams_root.is_symlink():
+        raise HarnessError("parent stream root must not be a symlink")
+    streams_root.mkdir(mode=0o700, exist_ok=True)
+    stream_root = streams_root / stage_root.name / phase
+    if stream_root.exists() or stream_root.is_symlink():
+        raise HarnessError(f"parent stream artifacts already exist: {phase}")
+    stream_root.mkdir(parents=True, mode=0o700)
+    return stream_root / "trace.jsonl", stream_root / "stderr.txt"
+
+
+def publish_captured_stream(
+    stream_path: Path, artifact_path: Path, capture: StreamCapture
+) -> Path:
+    if stream_path.is_symlink() or not stream_path.is_file():
+        raise HarnessError("captured output is not a regular parent stream")
+    if stream_path.stat().st_size != capture.byte_count:
+        raise HarnessError("parent stream capture integrity size mismatch")
+    data = stream_path.read_bytes()
+    if len(data) != capture.byte_count or sha256_bytes(data) != capture.sha256:
+        raise HarnessError("parent stream capture integrity digest mismatch")
+    if artifact_path.parent.is_symlink() or not artifact_path.parent.is_dir():
+        raise HarnessError("runner artifact parent is not a regular directory")
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            prefix=f".{artifact_path.name}.",
+            dir=artifact_path.parent,
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            temporary.write(data)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, artifact_path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+    return artifact_path
+
+
+def monitor_codex_process(
+    process: Any,
+    trace_path: Path,
+    auth_copy: Path,
+    *,
+    total_timeout_seconds: float,
+    inactivity_timeout_seconds: float,
+    monotonic: Any = time.monotonic,
+    wait_for_readable: Any = select.select,
+    process_group_id: int,
+    stop_group: Any = stop_process_group,
+    capture: StreamCapture | None = None,
+) -> int:
+    if total_timeout_seconds <= 0 or inactivity_timeout_seconds <= 0:
+        raise HarnessError("Codex timeout thresholds must be positive")
+    if process.stdout is None:
+        raise HarnessError("Codex runner stdout pipe is unavailable")
+    started = monotonic()
+    last_activity = started
+    pending = b""
+    capture = capture or StreamCapture()
+    with trace_path.open("wb") as trace_file:
+        while True:
+            now = monotonic()
+            total_remaining = total_timeout_seconds - (now - started)
+            inactivity_remaining = inactivity_timeout_seconds - (now - last_activity)
+            if total_remaining <= 0:
+                stop_group(process, process_group_id)
+                raise HarnessError(
+                    f"codex runner total timeout after {total_timeout_seconds:g} seconds; "
+                    f"partial trace preserved at {trace_path}"
+                )
+            if inactivity_remaining <= 0:
+                stop_group(process, process_group_id)
+                raise HarnessError(
+                    "codex runner inactivity timeout after "
+                    f"{inactivity_timeout_seconds:g} seconds; partial trace preserved at "
+                    f"{trace_path}"
+                )
+            readable, _, _ = wait_for_readable(
+                [process.stdout], [], [], min(total_remaining, inactivity_remaining)
+            )
+            if not readable:
+                continue
+            chunk = process.stdout.read1(64 * 1024)
+            if not chunk:
+                return process.wait()
+            trace_file.write(chunk)
+            trace_file.flush()
+            capture.update(chunk)
+            pending += chunk
+            while b"\n" in pending:
+                raw_line, pending = pending.split(b"\n", 1)
+                try:
+                    event = json.loads(raw_line)
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    continue
+                if is_structurally_valid_codex_event(event):
+                    last_activity = monotonic()
+                    if event["type"] == "thread.started":
+                        auth_copy.unlink(missing_ok=True)
+
+
+def bind_executor_output(path: Path, output: str) -> None:
+    expected = output.encode()
+    if path.exists():
+        if path.read_bytes() != expected:
+            raise HarnessError(f"streamed executor output drifted: {path}")
+    else:
+        path.write_bytes(expected)
+
+
+def execute_codex(
+    command: list[str],
+    prompt: str,
+    repo: Path,
+    *,
+    trace_path: Path,
+    stderr_path: Path,
+    trace_stream_path: Path,
+    stderr_stream_path: Path,
+    total_timeout_seconds: float,
+    inactivity_timeout_seconds: float,
+) -> subprocess.CompletedProcess[str]:
     try:
         profile = Path(command[command.index("-f") + 1])
         env_start = command.index("-i") + 1
@@ -1799,34 +2023,69 @@ def execute_codex(command: list[str], prompt: str, repo: Path) -> subprocess.Com
     child_env = dict(item.split("=", 1) for item in environment)
     state_home = Path(child_env["CODEX_HOME"])
     auth_copy = state_home / "auth.json"
-    stdout: list[str] = []
-    process: subprocess.Popen[str] | None = None
+    process: subprocess.Popen[bytes] | None = None
+    process_group_id: int | None = None
+    capture = StreamCapture()
+    execution_error: BaseException | None = None
+    cleanup_error: BaseException | None = None
+    returncode: int | None = None
     try:
-        with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr_file:
+        with tempfile.TemporaryFile(mode="w+b") as prompt_file, stderr_stream_path.open(
+            "w+b"
+        ) as stderr_file:
+            prompt_file.write(prompt.encode())
+            prompt_file.seek(0)
             process = subprocess.Popen(
-                command, cwd=repo, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=stderr_file, text=True, env=child_env,
+                command, cwd=repo, stdin=prompt_file, stdout=subprocess.PIPE,
+                stderr=stderr_file, text=False, env=child_env, start_new_session=True,
             )
-            assert process.stdin is not None and process.stdout is not None
-            process.stdin.write(prompt)
-            process.stdin.close()
-            for line in process.stdout:
-                stdout.append(line)
+            process_group_id = process.pid
+            try:
+                actual_process_group_id = os.getpgid(process.pid)
+            except ProcessLookupError as exc:
+                process.wait()
+                process_group_id = None
+                raise HarnessError("Codex runner exited before process-group setup") from exc
+            if actual_process_group_id != process_group_id:
+                process.kill()
+                process.wait()
+                process_group_id = None
+                raise HarnessError("Codex runner did not start in an isolated process group")
+            try:
+                returncode = monitor_codex_process(
+                    process,
+                    trace_stream_path,
+                    auth_copy,
+                    total_timeout_seconds=total_timeout_seconds,
+                    inactivity_timeout_seconds=inactivity_timeout_seconds,
+                    process_group_id=process_group_id,
+                    capture=capture,
+                )
+            except BaseException as exc:
+                execution_error = exc
+            finally:
                 try:
-                    event = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if isinstance(event, dict) and event.get("type") == "thread.started":
-                    auth_copy.unlink(missing_ok=True)
-            returncode = process.wait()
-            stderr_file.seek(0)
-            stderr = stderr_file.read()
-        return subprocess.CompletedProcess(command, returncode, "".join(stdout), stderr)
+                    stop_process_group(process, process_group_id)
+                except BaseException as exc:
+                    cleanup_error = exc
+            stderr_file.flush()
+        publish_captured_stream(trace_stream_path, trace_path, capture)
+        stderr_capture = StreamCapture()
+        stderr_capture.update(stderr_stream_path.read_bytes())
+        publish_captured_stream(stderr_stream_path, stderr_path, stderr_capture)
+        if cleanup_error is not None:
+            raise cleanup_error from execution_error
+        if execution_error is not None:
+            raise execution_error.with_traceback(execution_error.__traceback__)
+        if returncode is None:
+            raise HarnessError("Codex runner ended without a return code")
+        stderr = stderr_path.read_text(encoding="utf-8", errors="replace")
+        stdout = trace_path.read_text(encoding="utf-8")
+        return subprocess.CompletedProcess(command, returncode, stdout, stderr)
     finally:
         auth_copy.unlink(missing_ok=True)
-        if process is not None and process.poll() is None:
-            process.kill()
-            process.wait()
+        if process is not None and process_group_id is not None:
+            stop_process_group(process, process_group_id)
 
 
 def runner_identity() -> dict[str, str]:
@@ -1920,10 +2179,13 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
     if path.is_symlink() or not path.is_file():
         raise HarnessError("runner preflight must be a regular evaluator artifact")
     data = json.loads(path.read_text(encoding="utf-8"))
-    fields = {"schema_version", "binary_path", "binary_version", "binary_sha256", "smoke"}
+    fields = {
+        "schema_version", "binary_path", "binary_version", "binary_sha256",
+        "arm_timeout_policy", "smoke",
+    }
     smoke_fields = {
         "command", "environment", "prompt_sha256", "profile", "profile_sha256", "trace",
-        "trace_sha256", "stderr", "stderr_sha256", "exit_code",
+        "trace_sha256", "stderr", "stderr_sha256", "exit_code", "timeout_policy",
     }
     if not isinstance(data, dict) or set(data) != fields or data["schema_version"] != SCHEMA_VERSION:
         raise HarnessError("runner preflight fields are not exact")
@@ -1937,6 +2199,7 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
         or not isinstance(identity["version"], str)
         or not identity["version"].strip()
         or not is_digest(identity["sha256"])
+        or data["arm_timeout_policy"] != ARM_TIMEOUT_POLICY
         or not isinstance(data["smoke"], dict)
         or set(data["smoke"]) != smoke_fields
     ):
@@ -1960,6 +2223,7 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
         or smoke["prompt_sha256"] != sha256_bytes(PREFLIGHT_PROMPT.encode())
         or smoke["trace_sha256"] != sha256_bytes(trace.encode())
         or smoke["stderr_sha256"] != sha256_bytes(stderr.encode())
+        or smoke["timeout_policy"] != PREFLIGHT_TIMEOUT_POLICY
         or isinstance(smoke["exit_code"], bool)
         or smoke["exit_code"] != 0
     ):
@@ -1984,12 +2248,28 @@ def preflight_runner(output: Path) -> Path:
         run(["git", "init", "-q", "-b", "eval"], cwd=repo)
         profile = sandbox_profile(stage_root)
         profile_path.write_text(profile, encoding="utf-8")
+        trace_path, stderr_path = stage_root / "trace.jsonl", stage_root / "stderr.txt"
+        trace_stream_path, stderr_stream_path = parent_stream_paths(
+            stage_root, "preflight"
+        )
         auth_copy = prepare_codex_state(profile_path)
         try:
             command = codex_command(repo, profile_path)
-            result = execute_codex(command, PREFLIGHT_PROMPT, repo)
+            result = execute_codex(
+                command,
+                PREFLIGHT_PROMPT,
+                repo,
+                trace_path=trace_path,
+                stderr_path=stderr_path,
+                trace_stream_path=trace_stream_path,
+                stderr_stream_path=stderr_stream_path,
+                total_timeout_seconds=PREFLIGHT_TIMEOUT_POLICY["total_seconds"],
+                inactivity_timeout_seconds=PREFLIGHT_TIMEOUT_POLICY["inactivity_seconds"],
+            )
         finally:
             auth_copy.unlink(missing_ok=True)
+        bind_executor_output(trace_path, result.stdout)
+        bind_executor_output(stderr_path, result.stderr)
         if result.returncode:
             raise HarnessError(
                 f"bundled Codex preflight failed with exit {result.returncode}: {result.stderr}"
@@ -2000,6 +2280,7 @@ def preflight_runner(output: Path) -> Path:
             "binary_path": identity["path"],
             "binary_version": identity["version"],
             "binary_sha256": identity["sha256"],
+            "arm_timeout_policy": ARM_TIMEOUT_POLICY,
             "smoke": {
                 "command": command, "prompt_sha256": sha256_bytes(PREFLIGHT_PROMPT.encode()),
                 "environment": runner_environment(profile_path),
@@ -2007,6 +2288,7 @@ def preflight_runner(output: Path) -> Path:
                 "trace": result.stdout, "trace_sha256": sha256_bytes(result.stdout.encode()),
                 "stderr": result.stderr, "stderr_sha256": sha256_bytes(result.stderr.encode()),
                 "exit_code": result.returncode,
+                "timeout_policy": PREFLIGHT_TIMEOUT_POLICY,
             },
         }
     write_json(output, artifact)
@@ -2025,10 +2307,28 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
         "sha256": preflight["binary_sha256"],
     }
     repo = safe_path(stage_root, "repo")
+    elapsed_before_milliseconds = 0
+    if phase == "remediation":
+        prior = validate_runner_bundles(
+            runner_paths(stage_root, phases=("pre-packet",)),
+            phases=("pre-packet",),
+            repo=repo,
+            stage_root=stage_root,
+        )
+        elapsed_before_milliseconds = prior["pre-packet"]["metadata"][
+            "duration_milliseconds"
+        ]
+    remaining_milliseconds = (
+        ARM_TIMEOUT_POLICY["arm_total_seconds"] * 1000
+        - elapsed_before_milliseconds
+    )
+    if remaining_milliseconds <= 0:
+        raise HarnessError("codex runner arm total timeout before phase start")
     runner_root = stage_root / "runner" / phase
     if runner_root.exists():
         raise HarnessError(f"runner phase artifacts already exist: {phase}")
     runner_root.mkdir(parents=True)
+    trace_stream_path, stderr_stream_path = parent_stream_paths(stage_root, phase)
     profile = runner_root / RUNNER_FILES["profile"]
     profile.write_text(sandbox_profile(stage_root), encoding="utf-8")
     auth_copy = prepare_codex_state(profile)
@@ -2038,15 +2338,30 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
         (runner_root / "input-manifest.json").write_bytes(
             (stage_root / "runner-manifest.json").read_bytes()
         )
+        trace = runner_root / RUNNER_FILES["trace"]
+        stderr = runner_root / RUNNER_FILES["stderr"]
         started = time.monotonic_ns()
-        result = execute_codex(command, prompt, repo)
+        result = execute_codex(
+            command,
+            prompt,
+            repo,
+            trace_path=trace,
+            stderr_path=stderr,
+            trace_stream_path=trace_stream_path,
+            stderr_stream_path=stderr_stream_path,
+            total_timeout_seconds=remaining_milliseconds / 1000,
+            inactivity_timeout_seconds=ARM_TIMEOUT_POLICY["inactivity_seconds"],
+        )
     finally:
         auth_copy.unlink(missing_ok=True)
     ensure_sibling_probe(stage_root)
     duration_milliseconds = max(1, math.ceil((time.monotonic_ns() - started) / 1_000_000))
-    trace = runner_root / "trace.jsonl"
-    trace.write_text(result.stdout, encoding="utf-8")
-    (runner_root / "stderr.txt").write_text(result.stderr, encoding="utf-8")
+    bind_executor_output(trace, result.stdout)
+    bind_executor_output(stderr, result.stderr)
+    if elapsed_before_milliseconds + duration_milliseconds > (
+        ARM_TIMEOUT_POLICY["arm_total_seconds"] * 1000
+    ):
+        raise HarnessError("codex runner arm total timeout after phase completion")
     validate_runner_trace(trace.read_bytes())
     metadata = {
         "schema_version": SCHEMA_VERSION,
@@ -2061,13 +2376,15 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
         "initial_snapshot": manifest["initial_snapshot"],
         "exit_code": result.returncode,
         "trace_sha256": sha256_file(trace),
-        "stderr_sha256": sha256_file(runner_root / "stderr.txt"),
+        "stderr_sha256": sha256_file(stderr),
         "profile_sha256": sha256_file(profile),
         "runner_preflight_sha256": sha256_file(preflight_path),
         "runner_binary_path": identity["path"],
         "runner_binary_version": identity["version"],
         "runner_binary_sha256": identity["sha256"],
         "duration_milliseconds": duration_milliseconds,
+        "timeout_policy": ARM_TIMEOUT_POLICY,
+        "arm_elapsed_before_milliseconds": elapsed_before_milliseconds,
     }
     write_json(runner_root / "metadata.json", metadata)
     if result.returncode:

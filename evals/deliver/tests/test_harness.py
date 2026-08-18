@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -28,6 +31,51 @@ def successful_trace(command: str = harness.FIRST_TOOL_GATE_TRACE_COMMAND) -> st
         {"type": "turn.completed"},
     ]
     return "".join(json.dumps(event) + "\n" for event in events)
+
+
+class FakeClock:
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+class FakeStdout:
+    def __init__(self, chunks: list[bytes]) -> None:
+        self.chunks = chunks
+
+    def fileno(self) -> int:
+        return 42
+
+    def read1(self, _size: int) -> bytes:
+        return self.chunks.pop(0) if self.chunks else b""
+
+
+class FakeProcess:
+    def __init__(self, chunks: list[bytes]) -> None:
+        self.stdout = FakeStdout(chunks)
+        self.returncode: int | None = None
+        self.killed = False
+        self.wait_count = 0
+
+    def poll(self) -> int | None:
+        return self.returncode
+
+    def kill(self) -> None:
+        self.killed = True
+        self.returncode = -9
+
+    def wait(self) -> int:
+        self.wait_count += 1
+        if self.returncode is None:
+            self.returncode = 0
+        return self.returncode
+
+
+def stop_fake_process_group(process: FakeProcess, _process_group_id: int) -> None:
+    process.kill()
+    process.wait()
 
 
 class DeliverEvalHarnessTests(unittest.TestCase):
@@ -285,6 +333,10 @@ for label, path, read in (("source-read", ledger, True), ("home-read", auth, Tru
         self.assertEqual(preflight["binary_path"], str(harness.BUNDLED_CODEX))
         self.assertEqual(preflight["binary_version"], self.runner_identity["version"])
         self.assertEqual(preflight["binary_sha256"], self.runner_identity["sha256"])
+        self.assertEqual(preflight["arm_timeout_policy"], harness.ARM_TIMEOUT_POLICY)
+        self.assertEqual(
+            preflight["smoke"]["timeout_policy"], harness.PREFLIGHT_TIMEOUT_POLICY
+        )
         self.assertIn(str(harness.BUNDLED_CODEX), preflight["smoke"]["command"])
         tampered = self.root / "tampered-preflight.json"
         tampered_data = json.loads(self.preflight.read_text(encoding="utf-8"))
@@ -292,6 +344,11 @@ for label, path, read in (("source-read", ledger, True), ("home-read", auth, Tru
         harness.write_json(tampered, tampered_data)
         with self.assertRaisesRegex(harness.HarnessError, "identity drifted"):
             harness.validate_runner_preflight(tampered)
+        tampered_data = json.loads(self.preflight.read_text(encoding="utf-8"))
+        tampered_data["arm_timeout_policy"]["arm_total_seconds"] -= 1
+        harness.write_json(tampered, tampered_data)
+        with self.assertRaisesRegex(harness.HarnessError, "identity or smoke"):
+            harness.validate_runner_preflight(tampered, check_binary=False)
         stage = self.prepare_retry("runner-stage")
         completed = subprocess.CompletedProcess(
             args=["codex"],
@@ -300,7 +357,9 @@ for label, path, read in (("source-read", ledger, True), ("home-read", auth, Tru
             stderr="",
         )
         auth_copy = stage / "runner/pre-packet/codex-state/home/auth.json"
-        def execute_with_atomic_auth(*_args: object) -> subprocess.CompletedProcess[str]:
+        def execute_with_atomic_auth(
+            *_args: object, **_kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
             self.assertEqual(auth_copy.stat().st_mode & 0o777, 0o600)
             return completed
         with mock.patch.object(harness, "execute_codex", side_effect=execute_with_atomic_auth) as execute:
@@ -322,6 +381,12 @@ for label, path, read in (("source-read", ledger, True), ("home-read", auth, Tru
         )
         self.assertNotIn(harness.INHERITED_SENTINEL, " ".join(command))
         self.assertEqual(repo, stage / "repo")
+        trace_stream_path = execute.call_args.kwargs["trace_stream_path"]
+        self.assertIn(harness.SIBLING_PROBE, trace_stream_path.parts)
+        self.assertIn(
+            f'(subpath "{stage.parent / harness.SIBLING_PROBE}")',
+            (stage / "runner/pre-packet/runner.sb").read_text(encoding="utf-8"),
+        )
         self.assertTrue(prompt.startswith(harness.FIRST_TOOL_GATE_PROMPT))
         self.assertIn("contract/SKILL.md", prompt)
         self.assertIn("Approved as written. Implement the complete plan.", prompt)
@@ -341,6 +406,8 @@ for label, path, read in (("source-read", ledger, True), ("home-read", auth, Tru
         )
         self.assertEqual(metadata["runner_binary_sha256"], self.runner_identity["sha256"])
         self.assertEqual(metadata["execution_boundary"], "outer_sandbox_only")
+        self.assertEqual(metadata["timeout_policy"], harness.ARM_TIMEOUT_POLICY)
+        self.assertEqual(metadata["arm_elapsed_before_milliseconds"], 0)
         self.assertEqual(metadata["environment"], harness.runner_environment(
             stage / "runner/pre-packet/runner.sb"
         ))
@@ -385,6 +452,253 @@ for label, path, read in (("source-read", ledger, True), ("home-read", auth, Tru
         for trace_bytes in invalid_traces:
             with self.assertRaises(harness.HarnessError):
                 harness.validate_runner_trace(trace_bytes)
+
+    def test_monitor_streams_jsonl_and_times_out_without_real_waiting(self) -> None:
+        clock = FakeClock()
+        event = b'{"type":"thread.started","thread_id":"opaque"}\n'
+        process = FakeProcess([event])
+        trace = self.root / "partial-trace.jsonl"
+        auth = self.root / "partial-auth.json"
+        auth.write_text("secret", encoding="utf-8")
+        readable_once = True
+
+        def wait_for_readable(
+            readers: list[FakeStdout], _writers: list[object],
+            _errors: list[object], timeout: float,
+        ) -> tuple[list[FakeStdout], list[object], list[object]]:
+            nonlocal readable_once
+            if readable_once:
+                readable_once = False
+                clock.now += 1.5
+                return readers, [], []
+            clock.now += timeout
+            return [], [], []
+
+        with self.assertRaisesRegex(harness.HarnessError, "inactivity timeout"):
+            harness.monitor_codex_process(
+                process,
+                trace,
+                auth,
+                total_timeout_seconds=5,
+                inactivity_timeout_seconds=2,
+                monotonic=clock,
+                wait_for_readable=wait_for_readable,
+                process_group_id=9001,
+                stop_group=stop_fake_process_group,
+            )
+        self.assertEqual(trace.read_bytes(), event)
+        self.assertFalse(auth.exists())
+        self.assertTrue(process.killed)
+        self.assertEqual(process.wait_count, 1)
+        self.assertEqual(clock.now, 3.5)
+
+    def test_monitor_enforces_total_budget_without_real_waiting(self) -> None:
+        clock = FakeClock()
+        process = FakeProcess([])
+        trace = self.root / "total-timeout-trace.jsonl"
+        auth = self.root / "total-timeout-auth.json"
+        auth.write_text("secret", encoding="utf-8")
+
+        def wait_for_readable(
+            _readers: list[FakeStdout], _writers: list[object],
+            _errors: list[object], timeout: float,
+        ) -> tuple[list[object], list[object], list[object]]:
+            clock.now += timeout
+            return [], [], []
+
+        with self.assertRaisesRegex(harness.HarnessError, "total timeout"):
+            harness.monitor_codex_process(
+                process,
+                trace,
+                auth,
+                total_timeout_seconds=1,
+                inactivity_timeout_seconds=3,
+                monotonic=clock,
+                wait_for_readable=wait_for_readable,
+                process_group_id=9002,
+                stop_group=stop_fake_process_group,
+            )
+        self.assertEqual(trace.read_bytes(), b"")
+        self.assertTrue(process.killed)
+        self.assertEqual(process.wait_count, 1)
+
+    def test_fabricated_or_malformed_lines_do_not_refresh_inactivity(self) -> None:
+        for label, chunk in (
+            ("unknown", b'{"type":"fabricated"}\n'),
+            ("malformed", b'{"type":"thread.started"\n'),
+            ("partial", b'{"type":"thread.started"}'),
+        ):
+            with self.subTest(label=label):
+                clock = FakeClock()
+                process = FakeProcess([chunk])
+                trace = self.root / f"{label}-trace.jsonl"
+                auth = self.root / f"{label}-auth.json"
+                auth.write_text("secret", encoding="utf-8")
+                readable_once = True
+
+                def wait_for_readable(
+                    readers: list[FakeStdout], _writers: list[object],
+                    _errors: list[object], timeout: float,
+                ) -> tuple[list[FakeStdout], list[object], list[object]]:
+                    nonlocal readable_once
+                    if readable_once:
+                        readable_once = False
+                        clock.now += 1.5
+                        return readers, [], []
+                    clock.now += timeout
+                    return [], [], []
+
+                with self.assertRaisesRegex(harness.HarnessError, "inactivity timeout"):
+                    harness.monitor_codex_process(
+                        process,
+                        trace,
+                        auth,
+                        total_timeout_seconds=5,
+                        inactivity_timeout_seconds=2,
+                        monotonic=clock,
+                        wait_for_readable=wait_for_readable,
+                        process_group_id=9010,
+                        stop_group=stop_fake_process_group,
+                    )
+                self.assertEqual(clock.now, 2)
+                self.assertTrue(auth.exists())
+
+    def test_stream_capture_rejects_overwrite_and_replacement(self) -> None:
+        original = b'{"type":"thread.started","thread_id":"opaque"}\n'
+        capture = harness.StreamCapture()
+        capture.update(original)
+        stream = self.root / "parent-stream.jsonl"
+        artifact = self.root / "trace.jsonl"
+
+        stream.write_bytes(b"overwritten")
+        with self.assertRaisesRegex(harness.HarnessError, "capture integrity"):
+            harness.publish_captured_stream(stream, artifact, capture)
+        self.assertFalse(artifact.exists())
+
+        replacement = self.root / "replacement.jsonl"
+        replacement.write_bytes(original)
+        stream.unlink()
+        stream.symlink_to(replacement)
+        with self.assertRaisesRegex(harness.HarnessError, "regular parent stream"):
+            harness.publish_captured_stream(stream, artifact, capture)
+        self.assertFalse(artifact.exists())
+
+        stream.unlink()
+        stream.write_bytes(original)
+        artifact.write_bytes(b"runner-controlled")
+        harness.publish_captured_stream(stream, artifact, capture)
+        self.assertEqual(artifact.read_bytes(), original)
+
+    def test_group_cleanup_kills_descendant_after_leader_exits(self) -> None:
+        script = (
+            "import subprocess, sys; "
+            "child = subprocess.Popen([sys.executable, '-c', "
+            "'import time; time.sleep(60)']); "
+            "print(child.pid, flush=True)"
+        )
+        leader = subprocess.Popen(
+            [sys.executable, "-c", script],
+            stdout=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
+        assert leader.stdout is not None
+        descendant = int(leader.stdout.readline())
+        process_group_id = leader.pid
+        try:
+            leader.wait(timeout=5)
+            self.assertNotEqual(process_group_id, os.getpgrp())
+            harness.stop_process_group(leader, process_group_id)
+            deadline = time.monotonic() + 2
+            while time.monotonic() < deadline:
+                try:
+                    os.kill(descendant, 0)
+                except ProcessLookupError:
+                    break
+                time.sleep(0.01)
+            else:
+                self.fail("background descendant survived process-group cleanup")
+            self.assertIsNotNone(leader.returncode)
+        finally:
+            try:
+                os.killpg(process_group_id, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            leader.stdout.close()
+            leader.wait()
+
+    def test_timeout_is_fail_closed_and_policy_drift_is_rejected(self) -> None:
+        stage = self.prepare_retry("runner-timeout")
+
+        def timeout_with_diagnostics(
+            *_args: object, **kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
+            trace_path = kwargs["trace_path"]
+            stderr_path = kwargs["stderr_path"]
+            assert isinstance(trace_path, Path) and isinstance(stderr_path, Path)
+            trace_path.write_text('{"type":"thread.started"}\n', encoding="utf-8")
+            stderr_path.write_text("timed out\n", encoding="utf-8")
+            raise harness.HarnessError("codex runner inactivity timeout")
+
+        with mock.patch.object(harness, "execute_codex", side_effect=timeout_with_diagnostics):
+            with self.assertRaisesRegex(harness.HarnessError, "inactivity timeout"):
+                harness.run_scenario(stage, "pre-packet")
+        runner = stage / "runner/pre-packet"
+        self.assertEqual(
+            (runner / "trace.jsonl").read_text(encoding="utf-8"),
+            '{"type":"thread.started"}\n',
+        )
+        self.assertFalse((runner / "metadata.json").exists())
+        self.assertFalse((stage / "evaluator/terminal-seal.json").exists())
+        self.assertFalse((runner / "codex-state/home/auth.json").exists())
+
+        valid_stage = self.prepare_retry("runner-policy-drift")
+        self.run_mocked_phase(valid_stage, "pre-packet")
+        metadata_path = valid_stage / "runner/pre-packet/metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["timeout_policy"]["arm_total_seconds"] -= 1
+        harness.write_json(metadata_path, metadata)
+        paths = harness.runner_paths(valid_stage, phases=("pre-packet",))
+        with self.assertRaisesRegex(harness.HarnessError, "fixed conditions"):
+            harness.validate_runner_bundles(
+                paths,
+                phases=("pre-packet",),
+                repo=valid_stage / "repo",
+                stage_root=valid_stage,
+            )
+
+    def test_remediation_receives_only_the_remaining_arm_budget(self) -> None:
+        stage = self.prepare_retry("remaining-budget")
+        self.run_mocked_phase(stage, "pre-packet")
+        pre_metadata = json.loads(
+            (stage / "runner/pre-packet/metadata.json").read_text(encoding="utf-8")
+        )
+        validation = self.root / "remaining-budget-validation.txt"
+        validation.write_text("passed\n", encoding="utf-8")
+        harness.freeze_pre_packet(stage, validation)
+        harness.stage_review_packet(stage)
+        completed = subprocess.CompletedProcess(
+            args=["codex"], returncode=0, stdout=successful_trace(), stderr=""
+        )
+        with mock.patch.object(harness, "execute_codex", return_value=completed) as execute:
+            harness.run_scenario(stage, "remediation")
+        expected_remaining = (
+            harness.ARM_TIMEOUT_POLICY["arm_total_seconds"]
+            - pre_metadata["duration_milliseconds"] / 1000
+        )
+        self.assertAlmostEqual(
+            execute.call_args.kwargs["total_timeout_seconds"], expected_remaining
+        )
+        remediation_metadata = json.loads(
+            (stage / "runner/remediation/metadata.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            remediation_metadata["arm_elapsed_before_milliseconds"],
+            pre_metadata["duration_milliseconds"],
+        )
+        self.assertEqual(
+            remediation_metadata["timeout_policy"], harness.ARM_TIMEOUT_POLICY
+        )
 
     def run_mocked_phase(self, stage: Path, phase: str) -> None:
         completed = subprocess.CompletedProcess(
