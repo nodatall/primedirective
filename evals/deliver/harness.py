@@ -21,8 +21,10 @@ from typing import Any, Iterable
 
 SUITE_ROOT = Path(__file__).resolve().parent
 SOURCE_ROOT = SUITE_ROOT.parents[1].resolve()
+STAGE_ROOT = Path("/private/tmp").resolve()
 SANDBOX_EXEC = Path("/usr/bin/sandbox-exec")
 BUNDLED_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
+CODEX_AUTH = Path("/Users/fromdarkness/.codex/auth.json")
 SCHEMA_VERSION = 1
 DENIED_INPUT_PARTS = {"evaluator", "evaluators", "ledger", "hidden"}
 DENIED_INPUT_NAMES = {"outcome-ledger.json", "identity-denylist.txt"}
@@ -32,9 +34,35 @@ FIXED_AUTHOR_DATE = "2000-01-01T00:00:00+00:00"
 HEX_DIGEST = re.compile(r"^[0-9a-f]{64}$")
 GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40}$")
 TERMINAL_SEAL_EVENT = "deliver_eval_arm_finalized"
-PREFLIGHT_PROMPT = "Reply only with: runner preflight ok\n"
 RUNNER_PHASES = ("pre-packet", "remediation")
 OUTCOME_SCENARIOS = ("retry-failed", "preflight-remediation-holdout")
+ARM_NAMES = tuple(
+    f"{scenario}-{variant}"
+    for scenario in OUTCOME_SCENARIOS
+    for variant in ("baseline", "candidate")
+)
+PREFLIGHT_ARM = "runner-preflight"
+SIBLING_PROBE = "runner-sibling-probe"
+SIBLING_SENTINEL = "sentinel.txt"
+INHERITED_SENTINEL = "DELIVER_EVAL_INHERITED_SENTINEL"
+FIRST_TOOL_GATE_OUTPUT = "deliver-eval-first-tool-gate-ok"
+FIRST_TOOL_GATE_COMMAND = (
+    '/bin/test ! -e "$CODEX_HOME/auth.json" && '
+    f'/bin/test -z "${{{INHERITED_SENTINEL}+x}}" && '
+    f'! /bin/cat ../../{SIBLING_PROBE}/{SIBLING_SENTINEL} >/dev/null 2>&1 && '
+    f"/usr/bin/printf {FIRST_TOOL_GATE_OUTPUT}"
+)
+FIRST_TOOL_GATE_TRACE_COMMANDS = tuple(
+    f"/bin/zsh {flag} '{FIRST_TOOL_GATE_COMMAND}'" for flag in ("-c", "-lc")
+)
+FIRST_TOOL_GATE_TRACE_COMMAND = FIRST_TOOL_GATE_TRACE_COMMANDS[-1]
+FIRST_TOOL_GATE_PROMPT = (
+    "Your first tool call of any kind must be a shell call running exactly this command:\n"
+    f"{FIRST_TOOL_GATE_COMMAND}\n"
+    "Do not make any other tool call before it.\n"
+    f"Continue only if its exact output is: {FIRST_TOOL_GATE_OUTPUT}\n\n"
+)
+PREFLIGHT_PROMPT = FIRST_TOOL_GATE_PROMPT + "Then reply only with: runner preflight ok\n"
 RUNNER_FILES = {
     "trace": "trace.jsonl",
     "stderr": "stderr.txt",
@@ -129,6 +157,48 @@ def safe_path(root: Path, relative: str | Path, *, must_exist: bool = True) -> P
     except (FileNotFoundError, ValueError) as exc:
         raise HarnessError(f"path outside staging root rejected: {relative}") from exc
     return path
+
+
+def require_stage_root(path: Path, scenario_id: str | None = None) -> Path:
+    arm = path.resolve()
+    runtime = arm.parent
+    valid_names = ARM_NAMES if scenario_id is None else (
+        f"{scenario_id}-baseline", f"{scenario_id}-candidate"
+    )
+    if (
+        runtime.parent != STAGE_ROOT
+        or not re.fullmatch(r"deliver-eval-[A-Za-z0-9._-]+", runtime.name)
+        or arm.name not in valid_names
+        or (
+            runtime.is_dir()
+            and any(
+                child.name not in set((*ARM_NAMES, SIBLING_PROBE))
+                for child in runtime.iterdir()
+            )
+        )
+    ):
+        raise HarnessError(
+            "arm stage must be a named baseline/candidate child of /private/tmp/deliver-eval-<run>"
+        )
+    return arm
+
+
+def ensure_sibling_probe(stage_root: Path) -> Path:
+    probe = stage_root.parent / SIBLING_PROBE
+    sentinel = probe / SIBLING_SENTINEL
+    if not probe.exists():
+        probe.mkdir(mode=0o700)
+        fd = os.open(sentinel, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(b"runner sibling isolation probe\n")
+    if (
+        probe.is_symlink()
+        or sentinel.is_symlink()
+        or not sentinel.is_file()
+        or sentinel.read_bytes() != b"runner sibling isolation probe\n"
+    ):
+        raise HarnessError("runtime sibling isolation probe is invalid")
+    return sentinel
 
 
 def reject_evaluator_path(relative: Path) -> None:
@@ -286,12 +356,13 @@ def write_manifest(
 def prepare_scenario(
     scenario_id: str, contract: Path, destination: Path, runner_preflight: Path
 ) -> dict[str, object]:
+    destination = require_stage_root(destination, scenario_id)
     try:
-        destination.resolve().relative_to(SOURCE_ROOT)
-    except ValueError:
-        pass
-    else:
-        raise HarnessError("arm stage destination must be outside the Prime Directive source checkout")
+        destination.parent.mkdir(mode=0o700, exist_ok=True)
+    except OSError as exc:
+        raise HarnessError("unable to create the validated eval runtime root") from exc
+    destination = require_stage_root(destination, scenario_id)
+    ensure_sibling_probe(destination)
     if destination.exists() and any(destination.iterdir()):
         raise HarnessError(f"destination must be absent or empty: {destination}")
     if contract.is_symlink() or not (contract.is_file() or contract.is_dir()):
@@ -806,6 +877,41 @@ def validate_runner_trace(trace_bytes: bytes) -> None:
         raise HarnessError("runner trace must end with exactly one successful turn.completed event")
     if any(event_type in {"turn.failed", "error"} for event_type in types):
         raise HarnessError("runner trace contains a failure terminal")
+    command_events = [
+        event for event in events
+        if event.get("type") in {"item.started", "item.completed"}
+        and isinstance(event.get("item"), dict)
+        and event["item"].get("type") == "command_execution"
+    ]
+    completed = [event for event in command_events if event["type"] == "item.completed"]
+    if not command_events or not completed:
+        raise HarnessError("runner trace is missing the mandatory first-tool gate")
+    gate_event = completed[0]
+    gate = gate_event["item"]
+    started_command = command_events[0]["item"].get("command")
+    before_gate = events[:events.index(gate_event) + 1]
+    pre_gate_actions = [
+        event for event in before_gate
+        if event.get("type") in {"item.started", "item.completed"}
+        and isinstance(event.get("item"), dict)
+        and event["item"].get("type") not in {"agent_message", "reasoning"}
+        and not (
+            event["item"].get("type") == "command_execution"
+            and event["item"].get("id") == gate.get("id")
+            and event["item"].get("command") == started_command
+        )
+    ]
+    if (
+        command_events[0]["type"] != "item.started"
+        or started_command not in FIRST_TOOL_GATE_TRACE_COMMANDS
+        or pre_gate_actions
+        or any(event["item"].get("id") != gate.get("id") for event in command_events[:command_events.index(completed[0]) + 1])
+        or gate.get("command") != started_command
+        or gate.get("exit_code") != 0
+        or gate.get("status") != "completed"
+        or gate.get("aggregated_output") != FIRST_TOOL_GATE_OUTPUT
+    ):
+        raise HarnessError("runner trace failed the mandatory first-tool gate")
 
 
 def runner_artifact_names() -> set[str]:
@@ -839,8 +945,9 @@ def validate_runner_bundles(
 ) -> dict[str, dict[str, Any]]:
     bundles: dict[str, dict[str, Any]] = {}
     metadata_fields = {
-        "schema_version", "phase", "command", "model", "reasoning", "sandbox",
-        "approval_policy", "prompt_sha256", "input_manifest_sha256", "initial_snapshot",
+        "schema_version", "phase", "command", "model", "reasoning",
+        "execution_boundary", "environment", "prompt_sha256", "input_manifest_sha256",
+        "initial_snapshot",
         "exit_code", "trace_sha256", "stderr_sha256", "profile_sha256", "duration_milliseconds",
         "runner_preflight_sha256", "runner_binary_path", "runner_binary_version",
         "runner_binary_sha256",
@@ -869,8 +976,11 @@ def validate_runner_bundles(
             raise HarnessError(f"{phase} runner command metadata is invalid") from exc
         expected_repo = repo or command_repo
         expected_profile = paths[f"{prefix}_profile"] if repo is not None else command_profile
-        fixed = (SCHEMA_VERSION, phase, "gpt-5.6-sol", "xhigh", "workspace-write", "never", 0)
-        actual = tuple(metadata[key] for key in ("schema_version", "phase", "model", "reasoning", "sandbox", "approval_policy", "exit_code"))
+        fixed = (SCHEMA_VERSION, phase, "gpt-5.6-sol", "xhigh", "outer_sandbox_only", 0)
+        actual = tuple(metadata[key] for key in (
+            "schema_version", "phase", "model", "reasoning", "execution_boundary",
+            "exit_code",
+        ))
         actual_identity = tuple(
             metadata[key] for key in
             ("runner_binary_path", "runner_binary_version", "runner_binary_sha256")
@@ -881,6 +991,7 @@ def validate_runner_bundles(
         )
         if (
             command != codex_command(expected_repo, expected_profile)
+            or metadata["environment"] != runner_environment(expected_profile)
             or actual != fixed
             or actual_identity != identity
             or metadata["runner_preflight_sha256"] != expected_preflight
@@ -892,9 +1003,15 @@ def validate_runner_bundles(
         for kind, field in digest_fields.items():
             if metadata[field] != sha256_file(paths[f"{prefix}_{kind}"]):
                 raise HarnessError(f"{phase} runner {kind} digest mismatch")
+        if paths[f"{prefix}_profile"].read_text(encoding="utf-8") != sandbox_profile(expected_repo.parent):
+            raise HarnessError(f"{phase} runner sandbox profile is not stage-bound")
         validate_runner_trace(paths[f"{prefix}_trace"].read_bytes())
         manifest = json.loads(paths[f"{prefix}_manifest"].read_text(encoding="utf-8"))
-        if stage_root is not None and paths[f"{prefix}_prompt"].read_text(encoding="utf-8") != prompt_from_manifest(stage_root, manifest):
+        if (
+            stage_root is not None
+            and paths[f"{prefix}_prompt"].read_text(encoding="utf-8")
+            != FIRST_TOOL_GATE_PROMPT + prompt_from_manifest(stage_root, manifest)
+        ):
             raise HarnessError(f"{phase} runner prompt is not the allowlisted manifest prompt")
         bundles[phase] = {"metadata": metadata, "manifest": manifest}
     if phases != RUNNER_PHASES:
@@ -1667,13 +1784,49 @@ def assemble_runner_prompt(stage_root: Path, phase: str) -> tuple[str, dict[str,
     expected_stage = {"pre-packet": "pre_packet", "remediation": "review_packet"}[phase]
     if manifest["scenario_stage"] != expected_stage:
         raise HarnessError(f"runner phase {phase} requires manifest stage {expected_stage}")
-    return prompt_from_manifest(stage_root, manifest), manifest
+    return FIRST_TOOL_GATE_PROMPT + prompt_from_manifest(stage_root, manifest), manifest
 
 
 def execute_codex(command: list[str], prompt: str, repo: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        command, cwd=repo, input=prompt, text=True, capture_output=True, check=False,
-    )
+    try:
+        profile = Path(command[command.index("-f") + 1])
+        env_start = command.index("-i") + 1
+    except (ValueError, IndexError) as exc:
+        raise HarnessError("Codex command is missing its isolated environment") from exc
+    environment = runner_environment(profile)
+    if command[env_start:env_start + len(environment)] != environment:
+        raise HarnessError("Codex command environment is not the fixed allowlist")
+    child_env = dict(item.split("=", 1) for item in environment)
+    state_home = Path(child_env["CODEX_HOME"])
+    auth_copy = state_home / "auth.json"
+    stdout: list[str] = []
+    process: subprocess.Popen[str] | None = None
+    try:
+        with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as stderr_file:
+            process = subprocess.Popen(
+                command, cwd=repo, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=stderr_file, text=True, env=child_env,
+            )
+            assert process.stdin is not None and process.stdout is not None
+            process.stdin.write(prompt)
+            process.stdin.close()
+            for line in process.stdout:
+                stdout.append(line)
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(event, dict) and event.get("type") == "thread.started":
+                    auth_copy.unlink(missing_ok=True)
+            returncode = process.wait()
+            stderr_file.seek(0)
+            stderr = stderr_file.read()
+        return subprocess.CompletedProcess(command, returncode, "".join(stdout), stderr)
+    finally:
+        auth_copy.unlink(missing_ok=True)
+        if process is not None and process.poll() is None:
+            process.kill()
+            process.wait()
 
 
 def runner_identity() -> dict[str, str]:
@@ -1692,19 +1845,75 @@ def runner_identity() -> dict[str, str]:
     return {"path": str(path), "version": version, "sha256": sha256_file(path)}
 
 
-def sandbox_profile() -> str:
-    escaped = str(SOURCE_ROOT).replace("\\", "\\\\").replace('"', '\\"')
-    return f'(version 1)\n(allow default)\n(deny file-read* (subpath "{escaped}"))\n'
+def seatbelt_path(path: Path) -> str:
+    return str(path).replace("\\", "\\\\").replace('"', '\\"')
+
+
+def sandbox_profile(stage_root: Path) -> str:
+    stage_root = stage_root.resolve()
+    existing = {
+        path.name for path in stage_root.parent.iterdir() if path.is_dir()
+    } if stage_root.parent.is_dir() else set()
+    sibling_names = sorted(
+        (set((*ARM_NAMES, PREFLIGHT_ARM, SIBLING_PROBE)) | existing) - {stage_root.name}
+    )
+    sibling_rules = "".join(
+        f'(deny file-read* file-write* (subpath "{seatbelt_path(stage_root.parent / name)}"))\n'
+        for name in sibling_names
+    )
+    return (
+        '(version 1)\n(allow default)\n'
+        '(deny file-read* file-write* (subpath "/Users/fromdarkness"))\n'
+        '(deny file-read* file-write* (subpath "/Volumes"))\n'
+        f"{sibling_rules}"
+    )
+
+
+def runner_environment(profile: Path) -> list[str]:
+    state_root = profile.parent / "codex-state"
+    state_home = state_root / "home"
+    return [
+        f"CODEX_HOME={state_home}",
+        f"HOME={state_home}",
+        f"TMPDIR={profile.parent / 'tmp'}",
+        "PATH=/usr/bin:/bin",
+        "LANG=en_US.UTF-8",
+        "LC_ALL=en_US.UTF-8",
+        "TERM=dumb",
+    ]
 
 
 def codex_command(repo: Path, profile: Path) -> list[str]:
+    state_root = profile.parent / "codex-state"
     return [
-        str(SANDBOX_EXEC), "-f", str(profile), str(BUNDLED_CODEX), "exec", "--json",
+        str(SANDBOX_EXEC), "-f", str(profile), "/usr/bin/env", "-i",
+        *runner_environment(profile), str(BUNDLED_CODEX), "exec", "--json",
         "--ephemeral", "--ignore-user-config", "--strict-config", "--model",
         "gpt-5.6-sol", "--config", 'model_reasoning_effort="xhigh"',
-        "--sandbox", "workspace-write", "--config", 'approval_policy="never"',
+        "--config", f'sqlite_home="{state_root}"',
+        "--config", f'log_dir="{state_root / "logs"}"',
+        "--dangerously-bypass-approvals-and-sandbox",
         "--cd", str(repo), "-",
     ]
+
+
+def prepare_codex_state(profile: Path) -> Path:
+    state_home = profile.parent / "codex-state/home"
+    state_home.mkdir(parents=True, exist_ok=True)
+    (profile.parent / "tmp").mkdir(mode=0o700)
+    if CODEX_AUTH.is_symlink() or not CODEX_AUTH.is_file():
+        raise HarnessError("bundled Codex authentication file is unavailable")
+    auth_copy = state_home / "auth.json"
+    if auth_copy.exists() or auth_copy.is_symlink():
+        raise HarnessError("isolated Codex authentication copy already exists")
+    fd = os.open(auth_copy, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "wb") as target, CODEX_AUTH.open("rb") as source:
+            shutil.copyfileobj(source, target)
+    except Exception:
+        auth_copy.unlink(missing_ok=True)
+        raise
+    return auth_copy
 
 
 def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[str, Any]:
@@ -1713,7 +1922,7 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
     data = json.loads(path.read_text(encoding="utf-8"))
     fields = {"schema_version", "binary_path", "binary_version", "binary_sha256", "smoke"}
     smoke_fields = {
-        "command", "prompt_sha256", "profile", "profile_sha256", "trace",
+        "command", "environment", "prompt_sha256", "profile", "profile_sha256", "trace",
         "trace_sha256", "stderr", "stderr_sha256", "exit_code",
     }
     if not isinstance(data, dict) or set(data) != fields or data["schema_version"] != SCHEMA_VERSION:
@@ -1744,8 +1953,9 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
     profile, trace, stderr = smoke["profile"], smoke["trace"], smoke["stderr"]
     if (
         command != codex_command(repo, profile_path)
+        or smoke["environment"] != runner_environment(profile_path)
         or not all(isinstance(value, str) for value in (profile, trace, stderr))
-        or profile != sandbox_profile()
+        or profile != sandbox_profile(repo.parent)
         or smoke["profile_sha256"] != sha256_bytes(profile.encode())
         or smoke["prompt_sha256"] != sha256_bytes(PREFLIGHT_PROMPT.encode())
         or smoke["trace_sha256"] != sha256_bytes(trace.encode())
@@ -1762,15 +1972,24 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
 
 def preflight_runner(output: Path) -> Path:
     identity = runner_identity()
-    with tempfile.TemporaryDirectory(prefix="deliver-runner-preflight-") as temporary:
+    with tempfile.TemporaryDirectory(
+        prefix="deliver-eval-preflight-", dir=STAGE_ROOT
+    ) as temporary:
         root = Path(temporary)
-        repo, profile_path = root / "repo", root / "runner.sb"
+        stage_root = root / PREFLIGHT_ARM
+        stage_root.mkdir()
+        ensure_sibling_probe(stage_root)
+        repo, profile_path = stage_root / "repo", stage_root / "runner.sb"
         repo.mkdir()
         run(["git", "init", "-q", "-b", "eval"], cwd=repo)
-        profile = sandbox_profile()
+        profile = sandbox_profile(stage_root)
         profile_path.write_text(profile, encoding="utf-8")
-        command = codex_command(repo, profile_path)
-        result = execute_codex(command, PREFLIGHT_PROMPT, repo)
+        auth_copy = prepare_codex_state(profile_path)
+        try:
+            command = codex_command(repo, profile_path)
+            result = execute_codex(command, PREFLIGHT_PROMPT, repo)
+        finally:
+            auth_copy.unlink(missing_ok=True)
         if result.returncode:
             raise HarnessError(
                 f"bundled Codex preflight failed with exit {result.returncode}: {result.stderr}"
@@ -1783,6 +2002,7 @@ def preflight_runner(output: Path) -> Path:
             "binary_sha256": identity["sha256"],
             "smoke": {
                 "command": command, "prompt_sha256": sha256_bytes(PREFLIGHT_PROMPT.encode()),
+                "environment": runner_environment(profile_path),
                 "profile": profile, "profile_sha256": sha256_bytes(profile.encode()),
                 "trace": result.stdout, "trace_sha256": sha256_bytes(result.stdout.encode()),
                 "stderr": result.stderr, "stderr_sha256": sha256_bytes(result.stderr.encode()),
@@ -1795,6 +2015,8 @@ def preflight_runner(output: Path) -> Path:
 
 
 def run_scenario(stage_root: Path, phase: str) -> Path:
+    stage_root = require_stage_root(stage_root)
+    ensure_sibling_probe(stage_root)
     prompt, manifest = assemble_runner_prompt(stage_root, phase)
     preflight_path = safe_path(stage_root, "evidence/runner-preflight.json")
     preflight = validate_runner_preflight(preflight_path)
@@ -1808,14 +2030,19 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
         raise HarnessError(f"runner phase artifacts already exist: {phase}")
     runner_root.mkdir(parents=True)
     profile = runner_root / RUNNER_FILES["profile"]
-    profile.write_text(sandbox_profile(), encoding="utf-8")
-    command = codex_command(repo, profile)
-    (runner_root / "prompt.txt").write_text(prompt, encoding="utf-8")
-    (runner_root / "input-manifest.json").write_bytes(
-        (stage_root / "runner-manifest.json").read_bytes()
-    )
-    started = time.monotonic_ns()
-    result = execute_codex(command, prompt, repo)
+    profile.write_text(sandbox_profile(stage_root), encoding="utf-8")
+    auth_copy = prepare_codex_state(profile)
+    try:
+        command = codex_command(repo, profile)
+        (runner_root / "prompt.txt").write_text(prompt, encoding="utf-8")
+        (runner_root / "input-manifest.json").write_bytes(
+            (stage_root / "runner-manifest.json").read_bytes()
+        )
+        started = time.monotonic_ns()
+        result = execute_codex(command, prompt, repo)
+    finally:
+        auth_copy.unlink(missing_ok=True)
+    ensure_sibling_probe(stage_root)
     duration_milliseconds = max(1, math.ceil((time.monotonic_ns() - started) / 1_000_000))
     trace = runner_root / "trace.jsonl"
     trace.write_text(result.stdout, encoding="utf-8")
@@ -1825,10 +2052,10 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
         "schema_version": SCHEMA_VERSION,
         "phase": phase,
         "command": command,
+        "environment": runner_environment(profile),
         "model": "gpt-5.6-sol",
         "reasoning": "xhigh",
-        "sandbox": "workspace-write",
-        "approval_policy": "never",
+        "execution_boundary": "outer_sandbox_only",
         "prompt_sha256": sha256_bytes(prompt.encode()),
         "input_manifest_sha256": sha256_file(stage_root / "runner-manifest.json"),
         "initial_snapshot": manifest["initial_snapshot"],

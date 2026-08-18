@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -11,9 +12,27 @@ from unittest import mock
 from evals.deliver import harness
 
 
+def successful_trace(command: str = harness.FIRST_TOOL_GATE_TRACE_COMMAND) -> str:
+    gate = {
+        "id": "gate", "type": "command_execution",
+        "command": command,
+    }
+    events = [
+        {"type": "thread.started", "thread_id": "opaque"},
+        {"type": "turn.started"},
+        {"type": "item.started", "item": {**gate, "status": "in_progress"}},
+        {"type": "item.completed", "item": {
+            **gate, "status": "completed", "exit_code": 0,
+            "aggregated_output": harness.FIRST_TOOL_GATE_OUTPUT,
+        }},
+        {"type": "turn.completed"},
+    ]
+    return "".join(json.dumps(event) + "\n" for event in events)
+
+
 class DeliverEvalHarnessTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.temporary_directory = tempfile.TemporaryDirectory(dir=harness.STAGE_ROOT)
         self.addCleanup(self.temporary_directory.cleanup)
         self.root = Path(self.temporary_directory.name)
         self.contract = self.root / "SKILL.md"
@@ -34,15 +53,26 @@ class DeliverEvalHarnessTests(unittest.TestCase):
         self.preflight = self.root / "runner-preflight.json"
         completed = subprocess.CompletedProcess(
             args=[str(harness.BUNDLED_CODEX)], returncode=0,
-            stdout='{"type":"thread.started"}\n{"type":"turn.completed"}\n', stderr="",
+            stdout=successful_trace(), stderr="",
         )
         with mock.patch.object(harness, "execute_codex", return_value=completed):
             harness.preflight_runner(self.preflight)
 
     def prepare_retry(self, name: str = "stage") -> Path:
-        stage = self.root / name
+        runtime = tempfile.TemporaryDirectory(
+            prefix=f"deliver-eval-{name}-", dir=harness.STAGE_ROOT
+        )
+        self.addCleanup(runtime.cleanup)
+        stage = Path(runtime.name) / "retry-failed-baseline"
         harness.prepare_scenario("retry-failed", self.contract, stage, self.preflight)
         return stage
+
+    def arm_path(self, name: str, scenario: str = "retry-failed") -> Path:
+        runtime = tempfile.TemporaryDirectory(
+            prefix=f"deliver-eval-{name}-", dir=harness.STAGE_ROOT
+        )
+        self.addCleanup(runtime.cleanup)
+        return Path(runtime.name) / f"{scenario}-baseline"
 
     def test_eof_normalized_fixture_and_evaluator_files_are_frozen(self) -> None:
         expected = {
@@ -66,6 +96,12 @@ class DeliverEvalHarnessTests(unittest.TestCase):
     def test_preparation_is_identical_allowlisted_and_packet_is_staged_late(self) -> None:
         first = self.prepare_retry("first")
         second = self.prepare_retry("second")
+        absent_runtime = harness.STAGE_ROOT / f"deliver-eval-absent-{self.root.name}"
+        self.assertFalse(absent_runtime.exists())
+        self.addCleanup(shutil.rmtree, absent_runtime, ignore_errors=True)
+        absent = absent_runtime / "retry-failed-baseline"
+        harness.prepare_scenario("retry-failed", self.contract, absent, self.preflight)
+        self.assertTrue((absent_runtime / harness.SIBLING_PROBE).is_dir())
         first_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=first / "repo", text=True).strip()
         second_head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=second / "repo", text=True).strip()
         self.assertEqual(first_head, second_head)
@@ -94,7 +130,7 @@ class DeliverEvalHarnessTests(unittest.TestCase):
         )
         reference.write_text("# Review protocol\n", encoding="utf-8")
 
-        stage = self.root / "package-stage"
+        stage = self.arm_path("package-stage")
         harness.prepare_scenario("retry-failed", package, stage, self.preflight)
         staged_reference = stage / "contract/references/review/review-protocol.md"
         self.assertEqual(staged_reference.read_text(encoding="utf-8"), "# Review protocol\n")
@@ -111,11 +147,11 @@ class DeliverEvalHarnessTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(harness.HarnessError, "exactly one SKILL.md"):
             harness.prepare_scenario(
-                "retry-failed", package, self.root / "two-contracts", self.preflight
+                "retry-failed", package, self.arm_path("two-contracts"), self.preflight
             )
 
     def test_historical_fixture_is_exactly_pinned(self) -> None:
-        stage = self.root / "holdout"
+        stage = self.arm_path("holdout", "preflight-remediation-holdout")
         result = harness.prepare_scenario(
             "preflight-remediation-holdout", self.contract, stage, self.preflight
         )
@@ -168,34 +204,52 @@ class DeliverEvalHarnessTests(unittest.TestCase):
             harness.safe_path(root, "../outside.txt")
         with self.assertRaises(harness.HarnessError):
             harness.reject_evaluator_path(Path("scenario/evaluator/ledger.json"))
-        with self.assertRaisesRegex(harness.HarnessError, "outside"):
+        with self.assertRaisesRegex(harness.HarnessError, "named baseline/candidate"):
             harness.prepare_scenario(
                 "retry-failed", self.contract,
                 harness.SOURCE_ROOT / "agent-scratch/eval-stage", self.preflight,
             )
 
-    def test_outer_sandbox_denies_source_read_but_allows_staged_repo(self) -> None:
+    def test_outer_sandbox_allows_arm_and_denies_user_volume_and_sibling_access(self) -> None:
         stage = self.prepare_retry("sandbox-stage")
         profile = self.root / "runner.sb"
-        profile.write_text(harness.sandbox_profile(), encoding="utf-8")
-        script = (
-            "from pathlib import Path; import sys; Path(sys.argv[1]).read_bytes(); "
-            "\ntry: Path(sys.argv[2]).read_bytes()\n"
-            "except OSError: print('blocked')\nelse: raise SystemExit(2)"
-        )
-        result = subprocess.run(
-            [
-                str(harness.SANDBOX_EXEC), "-f", str(profile), sys.executable, "-c", script,
-                str(stage / "repo/README.md"), str(harness.OUTCOME_LEDGER),
-            ],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if result.returncode == 71 and "sandbox_apply: Operation not permitted" in result.stderr:
-            self.skipTest("the enclosing test sandbox forbids nested sandbox-exec")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), "blocked")
+        profile.write_text(harness.sandbox_profile(stage), encoding="utf-8")
+        denied = [
+            Path(f"/Users/fromdarkness/.deliver-eval-probe-{self.root.name}"),
+            Path(f"/Volumes/Code/.deliver-eval-probe-{self.root.name}"),
+        ]
+        self.assertTrue(all(not path.exists() and not path.is_symlink() for path in denied))
+        script = """from pathlib import Path
+import sys
+stage, ledger, auth, sibling = map(Path, sys.argv[1:5])
+(stage / "outer-sandbox-write.txt").write_text("ok")
+(stage / "README.md").read_bytes()
+for label, path, read in (("source-read", ledger, True), ("home-read", auth, True), ("sibling-read", sibling, True), ("user-write", Path(sys.argv[5]), False), ("volume-write", Path(sys.argv[6]), False)):
+    try: path.read_bytes() if read else path.write_text("blocked")
+    except OSError: print(label)
+    else: raise SystemExit(2)
+"""
+        try:
+            result = subprocess.run(
+                [str(harness.SANDBOX_EXEC), "-f", str(profile), sys.executable, "-c", script,
+                 str(stage / "repo"), str(harness.OUTCOME_LEDGER), str(harness.CODEX_AUTH),
+                 str(stage.parent / harness.SIBLING_PROBE / harness.SIBLING_SENTINEL),
+                 *(str(path) for path in denied)],
+                capture_output=True, text=True, check=False,
+            )
+            if result.returncode == 71 and "sandbox_apply: Operation not permitted" in result.stderr:
+                self.skipTest("the enclosing test sandbox forbids nested sandbox-exec")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                result.stdout.splitlines(),
+                ["source-read", "home-read", "sibling-read", "user-write", "volume-write"],
+            )
+            self.assertEqual((stage / "repo/outer-sandbox-write.txt").read_text(), "ok")
+            self.assertTrue(all(not path.exists() for path in denied))
+        finally:
+            for path in denied:
+                if path.exists() or path.is_symlink():
+                    path.unlink()
 
     def test_manifest_mutation_blocks_both_pre_packet_freeze_and_packet_staging(self) -> None:
         validation = self.root / "validation.txt"
@@ -231,7 +285,7 @@ class DeliverEvalHarnessTests(unittest.TestCase):
         self.assertEqual(preflight["binary_path"], str(harness.BUNDLED_CODEX))
         self.assertEqual(preflight["binary_version"], self.runner_identity["version"])
         self.assertEqual(preflight["binary_sha256"], self.runner_identity["sha256"])
-        self.assertEqual(preflight["smoke"]["command"][3], str(harness.BUNDLED_CODEX))
+        self.assertIn(str(harness.BUNDLED_CODEX), preflight["smoke"]["command"])
         tampered = self.root / "tampered-preflight.json"
         tampered_data = json.loads(self.preflight.read_text(encoding="utf-8"))
         tampered_data["binary_version"] = "different"
@@ -242,18 +296,33 @@ class DeliverEvalHarnessTests(unittest.TestCase):
         completed = subprocess.CompletedProcess(
             args=["codex"],
             returncode=0,
-            stdout='{"type":"thread.started","thread_id":"opaque"}\n{"type":"turn.completed"}\n',
+            stdout=successful_trace(),
             stderr="",
         )
-        with mock.patch.object(harness, "execute_codex", return_value=completed) as execute:
+        auth_copy = stage / "runner/pre-packet/codex-state/home/auth.json"
+        def execute_with_atomic_auth(*_args: object) -> subprocess.CompletedProcess[str]:
+            self.assertEqual(auth_copy.stat().st_mode & 0o777, 0o600)
+            return completed
+        with mock.patch.object(harness, "execute_codex", side_effect=execute_with_atomic_auth) as execute:
             trace = harness.run_scenario(stage, "pre-packet")
         command, prompt, repo = execute.call_args.args
         self.assertEqual(command, harness.codex_command(
             stage / "repo", stage / "runner/pre-packet/runner.sb"
         ))
-        for fixed in ("--json", "--ephemeral", "--ignore-user-config", "gpt-5.6-sol", "workspace-write", 'approval_policy="never"'):
+        for fixed in (
+            "--json", "--ephemeral", "--ignore-user-config", "gpt-5.6-sol",
+            "--dangerously-bypass-approvals-and-sandbox",
+        ):
             self.assertIn(fixed, command)
+        self.assertNotIn("--sandbox", command)
+        self.assertEqual(command[3:5], ["/usr/bin/env", "-i"])
+        self.assertEqual(
+            command[5:5 + len(harness.runner_environment(stage / "runner/pre-packet/runner.sb"))],
+            harness.runner_environment(stage / "runner/pre-packet/runner.sb"),
+        )
+        self.assertNotIn(harness.INHERITED_SENTINEL, " ".join(command))
         self.assertEqual(repo, stage / "repo")
+        self.assertTrue(prompt.startswith(harness.FIRST_TOOL_GATE_PROMPT))
         self.assertIn("contract/SKILL.md", prompt)
         self.assertIn("Approved as written. Implement the complete plan.", prompt)
         self.assertNotIn("Queuectl is a dependency-free command-line tool", prompt)
@@ -271,6 +340,11 @@ class DeliverEvalHarnessTests(unittest.TestCase):
             harness.sha256_file(stage / "runner/pre-packet/prompt.txt"),
         )
         self.assertEqual(metadata["runner_binary_sha256"], self.runner_identity["sha256"])
+        self.assertEqual(metadata["execution_boundary"], "outer_sandbox_only")
+        self.assertEqual(metadata["environment"], harness.runner_environment(
+            stage / "runner/pre-packet/runner.sb"
+        ))
+        self.assertFalse(auth_copy.exists())
         self.assertEqual(
             metadata["runner_preflight_sha256"],
             harness.sha256_file(stage / "evidence/runner-preflight.json"),
@@ -279,11 +353,35 @@ class DeliverEvalHarnessTests(unittest.TestCase):
             with self.assertRaisesRegex(harness.HarnessError, "already exist"):
                 harness.run_scenario(stage, "pre-packet")
             second_execute.assert_not_called()
+        failure_stage = self.prepare_retry("runner-failure")
+        with mock.patch.object(harness, "execute_codex", side_effect=RuntimeError("probe")):
+            with self.assertRaisesRegex(RuntimeError, "probe"):
+                harness.run_scenario(failure_stage, "pre-packet")
+        self.assertFalse(
+            (failure_stage / "runner/pre-packet/codex-state/home/auth.json").exists()
+        )
         invalid_traces = (
             b'{"type":"turn.completed"}\n',
             b'{"type":"thread.started"}\n{"type":"turn.completed"}\n{"type":"item.completed"}\n',
             b'{"type":"thread.started"}\n{"type":"turn.failed"}\n',
+            successful_trace(harness.FIRST_TOOL_GATE_TRACE_COMMAND.replace(
+                harness.FIRST_TOOL_GATE_OUTPUT, "altered-inner-gate"
+            )).encode(),
         )
+        for wrapper in harness.FIRST_TOOL_GATE_TRACE_COMMANDS:
+            harness.validate_runner_trace(successful_trace(wrapper).encode())
+        base = [json.loads(line) for line in successful_trace().splitlines()]
+        file_change = [
+            {"type": kind, "item": {"id": "file", "type": "file_change"}}
+            for kind in ("item.started", "item.completed")
+        ]
+        with self.assertRaises(harness.HarnessError):
+            harness.validate_runner_trace("".join(
+                json.dumps(event) + "\n" for event in base[:2] + file_change + base[2:]
+            ).encode())
+        harness.validate_runner_trace("".join(
+            json.dumps(event) + "\n" for event in base[:-1] + file_change + base[-1:]
+        ).encode())
         for trace_bytes in invalid_traces:
             with self.assertRaises(harness.HarnessError):
                 harness.validate_runner_trace(trace_bytes)
@@ -292,7 +390,7 @@ class DeliverEvalHarnessTests(unittest.TestCase):
         completed = subprocess.CompletedProcess(
             args=["codex"],
             returncode=0,
-            stdout='{"type":"thread.started","thread_id":"opaque"}\n{"type":"turn.completed"}\n',
+            stdout=successful_trace(),
             stderr="",
         )
         with mock.patch.object(harness, "execute_codex", return_value=completed):

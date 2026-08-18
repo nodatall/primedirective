@@ -10,7 +10,7 @@ Run from the Prime Directive repository with fresh `gpt-5.6-sol` runners at `xhi
 $skill-review skill=deliver scenario=evals/deliver/suite.md baseline=<ref> candidate=<ref-or-worktree> --preserve-review-artifacts
 ```
 
-`$skill-review` owns baseline/candidate reconstruction, fresh runner and judge allocation, the durable state document, and preserved scratch root. This suite supplies the realistic scenarios and deterministic gates. Use the same runner model, reasoning, tools, approval, and local-only stop boundary for both arms. Do not use native Plan mode or Pro analysis in this required regression lane.
+`$skill-review` owns baseline/candidate reconstruction, fresh runner and judge allocation, the durable state document, and preserved scratch root. This suite supplies the realistic scenarios and deterministic gates. Use the same runner model, reasoning, tools, outer execution boundary, and local-only stop boundary for both arms. Do not use native Plan mode or Pro analysis in this required regression lane.
 
 ## Frozen scenarios
 
@@ -30,14 +30,14 @@ For each scenario and each arm:
    ```
 
 2. Extract only that arm's Deliver contract and required references through `$skill-review` into one package directory. Preserve their package-relative paths.
-3. Prepare an empty stage outside the Prime Directive source checkout. This builds a fresh deterministic git snapshot and a hash-allowlisted input manifest, validates the runner identity again, and copies the preflight artifact into evaluator evidence:
+3. Prepare an empty stage at `/private/tmp/deliver-eval-<run>/<scenario>-<baseline|candidate>`. A runtime root may contain only the four stable arm names plus the harness sibling probe; run the arms sequentially through the harness. This builds a fresh deterministic git snapshot and a hash-allowlisted input manifest, validates the runner identity again, and copies the preflight artifact into evaluator evidence:
 
    ```bash
    python3 evals/deliver/harness.py prepare --scenario retry-failed --contract <extracted-contract-package> --destination <arm-stage> --runner-preflight <runner-preflight.json>
    python3 evals/deliver/harness.py verify-manifest <arm-stage>
    ```
 
-4. Start the pre-packet runner through the harness. This invokes the preflight-pinned bundled Codex with actual `exec --json --ephemeral --ignore-user-config --strict-config` in the staged repository with fixed `gpt-5.6-sol`, `xhigh`, `workspace-write`, and `approval_policy=never`. The command is wrapped by `/usr/bin/sandbox-exec` using the generated `runner.sb`, which allows normal staged-repository operation but denies `file-read*` for the resolved Prime Directive source root; tool subprocesses inherit that outer sandbox. The exact wrapper command, profile digest, and binary path/version/digest/preflight binding are metadata. Its prompt is assembled deterministically from only the hashed contract and scenario-stage files. The authoritative JSONL, stderr, invocation metadata, exact prompt, profile, and input manifest are written under `<arm-stage>/runner/pre-packet/`; `$skill-review` remains the outer arm/judge orchestrator.
+4. Start the pre-packet runner through the harness. This invokes the preflight-pinned bundled Codex with actual `exec --json --ephemeral --ignore-user-config --strict-config`, fixed `gpt-5.6-sol`/`xhigh`, and `--dangerously-bypass-approvals-and-sandbox`. That bypass flag is used only because `/usr/bin/sandbox-exec` is the sole execution boundary; nesting Codex's workspace sandbox under Seatbelt is unsupported. `/usr/bin/env -i` and `Popen(env=...)` supply exactly arm-local `CODEX_HOME`, `HOME`, and `TMPDIR`, a fixed minimal `PATH`, and fixed nonsecret locale/terminal values. The generated profile allows normal process, network, and current-arm behavior, denies reads and writes under `/Users/fromdarkness` and `/Volumes`, and denies every other stable or existing sibling directory in that run root. Tool subprocesses inherit it. Authentication is copied atomically at mode 0600 and removed when the harness observes `thread.started`, with unconditional cleanup on success or failure. Every prompt begins with the same exact first-tool gate; an execution is accepted only when no actionable tool precedes it and the gate shell tool proves that the copy is absent, an inherited sentinel is absent, and the sibling probe is unreadable, then exits 0 with the exact gate output. This is a fail-closed trace condition, not a claim about scheduler ordering before the observed event. Metadata records `execution_boundary=outer_sandbox_only`, the exact environment/wrapper command/profile digest, and the binary path/version/digest/preflight binding. The remaining prompt comes only from hashed contract and scenario-stage files. Authoritative JSONL, stderr, metadata, prompt, profile, and input manifest are written under `<arm-stage>/runner/pre-packet/`; `$skill-review` remains the outer arm/judge orchestrator.
 
    ```bash
    python3 evals/deliver/harness.py run-scenario <arm-stage> --phase pre-packet
@@ -69,7 +69,7 @@ For each scenario and each arm:
 
 The packet-staging command refuses to run without `evidence/pre-packet-snapshot.json`. Preparation rejects nonempty destinations, symlinks, escaping paths, evaluator/ledger names, multiple or non-Deliver `SKILL.md` files, a drifted historical commit/tree/blob, and any unlisted input. Each manifest and every listed file has a SHA-256 digest.
 
-The threat model separates the trusted evaluator/operator from the untrusted runner. The inherited outer sandbox is the read-isolation boundary that keeps source-checkout evaluator material away from the runner. Trace checks, frozen digests, and the terminal seal are lifecycle and audit controls, not that security boundary. They detect partial or accidental mutation; a trusted operator able to rewrite every local artifact can forge a new digest chain, so the seal is not claimed as protection from that operator.
+The threat model separates the trusted evaluator/operator from the untrusted runner. The inherited outer sandbox is the only isolation boundary: it keeps user and volume data plus sibling arms unreadable and unwritable while leaving the current `/private/tmp` arm usable. The empty environment prevents parent token variables from entering the boundary. The first-tool gate, trace checks, frozen digests, and terminal seal are fail-closed lifecycle and audit controls, not a second sandbox. They detect partial or accidental mutation; a trusted operator able to rewrite every local artifact can forge a new digest chain, so the seal is not claimed as protection from that operator.
 
 ## Run record and normalization
 
