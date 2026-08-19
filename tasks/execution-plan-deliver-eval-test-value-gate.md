@@ -17,6 +17,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - The branch starts from local commit `a4116bb`, which is ahead of `origin/main`. At planning time the historical eval report and this plan are the only untracked files; preserve any later user or updater changes and inspect validator overlap before editing.
 - Proportional rereview will apply only to Deliver final-review repairs. `$review-chain`, `$merge-review`, and `$repo-sweep` behavior remain unchanged; changing those public workflows would require their own skill reviews.
 - This stays within the existing Deliver, skill-review, finding-disposition, and review-protocol boundaries. It does not add a public modifier or require a new architecture document.
+- The user-approved v3 rerun stopped with a frozen `candidate_regression`: Queuectl baseline completed and normalized in 4,101 seconds, while the candidate exhausted the identical 5,400-second arm budget before remediation finalization. Per the no-tuning rule, another contract or evaluator revision requires a new user-approved versioned iteration.
 
 ## Steps
 
