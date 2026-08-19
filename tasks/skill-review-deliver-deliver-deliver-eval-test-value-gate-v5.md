@@ -4,7 +4,7 @@
 
 - Skill: `deliver`
 - Baseline: `a4116bb`
-- Candidate: pending exact v5 commit
+- Candidate: `3c71231`
 - Scenarios: Queuectl Retry Failed Jobs and historical preflight remediation holdout
 - Runner, reviewer, and judge: `gpt-5.6-sol`, `xhigh`
 - Budget: 5,400 cumulative active seconds per arm
@@ -22,8 +22,8 @@ Keep the early Deliver test-value decision. Require a full rereview when a repai
 
 ## Status
 
-- [ ] Implement and validate the smallest v5 contract and evaluator change.
-- [ ] Freeze the exact candidate/evaluator ref.
+- [x] Implement and validate the smallest v5 contract and evaluator change.
+- [x] Freeze the exact candidate/evaluator ref.
 - [ ] Run both unchanged scenarios with fresh baseline and candidate arms.
 - [ ] Freeze and normalize all four arms.
 - [ ] Obtain a fresh blinded verdict and reveal identities only afterward.
@@ -36,7 +36,7 @@ skill_review_complete: no
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v5.md
 baseline_ref: a4116bb
-candidate_ref: pending
+candidate_ref: 3c71231
 scenario: evals/deliver/suite.md
 baseline_run_complete: no
 candidate_run_complete: no
@@ -46,4 +46,4 @@ judge_blinded: no
 verdict: inconclusive
 artifact_evidence_preserved: yes
 ready_for_merge_review: no
-stop_reason: missing_candidate
+stop_reason: missing_judge
