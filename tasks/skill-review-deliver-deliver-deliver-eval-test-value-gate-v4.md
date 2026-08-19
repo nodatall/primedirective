@@ -4,7 +4,7 @@
 
 - Skill: `deliver`
 - Baseline: `a4116bb`
-- Candidate: pending exact committed ref
+- Candidate: `e62ca5d`
 - Evaluator: unchanged suite and harness from `2e0f650`
 - Scenarios: Queuectl Retry Failed Jobs and historical preflight remediation holdout
 - Runner and judge: `gpt-5.6-sol`, `xhigh`
@@ -23,8 +23,8 @@ Apply the shared test-value decision before any new Deliver test is persisted, s
 ## Status
 
 - [x] Preserve v3 evidence and diagnose the candidate cost mechanism.
-- [ ] Implement and validate the smallest candidate contract change.
-- [ ] Freeze the exact candidate ref.
+- [x] Implement and validate the smallest candidate contract change.
+- [x] Freeze the exact candidate ref.
 - [ ] Run both unchanged scenarios through the unchanged evaluator.
 - [ ] Freeze and normalize both arms.
 - [ ] Obtain a fresh blinded verdict and reveal identities only afterward.

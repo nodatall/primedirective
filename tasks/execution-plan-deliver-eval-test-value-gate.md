@@ -62,7 +62,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 ### 5. Run The Reusable Eval And Judge The Change
 
 - [x] Apply the user-approved v4 candidate change: gate permanent-test work before implementation workers receive it, treat approved fixed remediation packets as implementation resumes without another refinement loop, and count their recorded completed full review as the initial full round.
-- [ ] Validate the v4 contract, run a fresh adversarial review, install the updated plugin, and freeze the exact candidate commit before starting the unchanged expensive comparison.
+- [x] Validate the v4 contract, run a fresh adversarial review, install the updated plugin, and freeze the exact candidate commit before starting the unchanged expensive comparison.
 
 - [ ] Run the tracked two-scenario suite with `a4116bb` as the pre-change Deliver baseline and the recorded candidate state, using fresh `gpt-5.6-sol` `xhigh` runners, identical fixture snapshots, approvals, tools, staged review packets, and stop boundaries, with artifacts preserved.
 - [ ] Run the frozen hidden checks and diagnostic challenge probes unchanged against both outputs, normalize and redact both artifact sets, and give a fresh blinded judge the behavior evidence before revealing contract identity, candidate-only compliance checks, and process-cost measurements.
