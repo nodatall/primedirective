@@ -38,11 +38,11 @@ Do not use this schema as ceremony for trivial notes. Apply it to material findi
 
 `no action` means the sweep investigated the concern and intentionally decided it is not a problem, not reachable, already guarded, duplicated by a stronger control, or out of scope.
 
-## Deliver Final-Review Test Value
+## Deliver Test Value
 
-This section applies only when `$deliver` authorizes remediation during its final review. It does not add fields or test-persistence requirements to `$review-chain`, `$merge-review`, `$repo-sweep`, planning refinement, or any other consumer.
+This section applies only to new or changed tests proposed during `$deliver` implementation or authorized final-review remediation. It does not add fields or test-persistence requirements to `$review-chain`, `$merge-review`, `$repo-sweep`, planning refinement, or any other consumer.
 
-For each material `fix` finding, and for an investigated `no action` concern when the test choice matters, record `test_disposition: permanent | table_case | probe_only | no_test` plus a concise evidence-backed rationale.
+Before any new or changed Deliver test is kept as permanent coverage, classify it as `test_disposition: permanent | table_case | probe_only | no_test` using the criteria below. During implementation, record the decision and concise evidence-backed rationale with the existing active-step verification evidence; do not create a separate artifact. During final-review remediation, record it on each material `fix` finding, and on an investigated `no action` concern when the test choice matters.
 
 Choose `permanent` or `table_case` only when the proposed coverage:
 
@@ -50,16 +50,17 @@ Choose `permanent` or `table_case` only when the proposed coverage:
 - protects a material behavior tied to the explicit contract or credible harm
 - is uniquely uncovered rather than already protected by stronger existing coverage
 - is deterministic enough to be a reliable regression signal
+- is stable across supported environments
 - is economical to understand and maintain relative to the protection it adds
 
 Use the dispositions as follows:
 
 - `permanent`: keep one durable standalone regression when the criteria above hold and the behavior does not belong in an existing coherent case group.
-- `table_case`: add the case to the smallest coherent table-driven test when related inputs share the same supported boundary, expected result, and failure mechanism. Consolidate related cases instead of preserving one test per reviewer discovery.
-- `probe_only`: preserve useful one-run reproduction or verification under `agent-scratch/` when it proves the repair but would not add economical durable protection.
+- `table_case`: add the case to the smallest coherent table-driven test when related inputs share the same supported boundary, expected result, and failure mechanism. Consolidate related cases instead of preserving one test per discovery, and do not keep duplicate permanent coverage.
+- `probe_only`: preserve useful one-run reproduction or verification under `agent-scratch/` when it proves the repair but would not add economical durable protection. Environment-, interpreter-, or resource-limit-dependent behavior defaults to `probe_only` unless that exact environment behavior is itself an explicit supported contract.
 - `no_test`: add no new test when stronger coverage already proves the boundary or permanent reproduction would add no durable protection. Record the existing evidence or the reason reproduction has no lasting value.
 
-Every repaired finding still requires recorded verification evidence, regardless of test disposition. `test_disposition` is independent of `Disposition`: it never weakens `Disposition: fix`. Every verified, in-scope defect that is safe to repair remains a required fix even when its proof is `probe_only` or `no_test`.
+Every implementation change and repaired finding still requires recorded verification evidence, regardless of test disposition. A fix may proceed without a permanent test. `test_disposition` is independent of `Disposition`: it never weakens `Disposition: fix`. Every verified, in-scope defect that is safe to repair remains a required fix even when its proof is `probe_only` or `no_test`.
 
 ## Looks Bad But Is Fine
 

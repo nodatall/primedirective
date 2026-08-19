@@ -1066,24 +1066,31 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
     protocol_path = "skills/shared/references/review/review-protocol.md"
     ownership_path = "skills/shared/references/contract-ownership.md"
     deliver_path = "skills/deliver/SKILL.md"
+    worker_packet_path = "skills/deliver/references/worker-packet.md"
     disposition = (ROOT / disposition_path).read_text()
     protocol = (ROOT / protocol_path).read_text()
     ownership = (ROOT / ownership_path).read_text()
     deliver = (ROOT / deliver_path).read_text()
+    worker_packet = (ROOT / worker_packet_path).read_text()
 
     disposition_tokens = [
-        "## Deliver Final-Review Test Value",
+        "## Deliver Test Value",
         "test_disposition: permanent | table_case | probe_only | no_test",
+        "Before any new or changed Deliver test is kept as permanent coverage",
         "concise evidence-backed rationale",
         "supported path that is reachable",
         "explicit contract or credible harm",
         "uniquely uncovered",
-        "deterministic enough",
+        "stable across supported environments",
         "economical to understand and maintain",
         "smallest coherent table-driven test",
+        "do not keep duplicate permanent coverage",
+        "resource-limit-dependent behavior defaults to `probe_only`",
+        "explicit supported contract",
         "agent-scratch/",
         "stronger coverage already proves the boundary",
-        "Every repaired finding still requires recorded verification evidence",
+        "Every implementation change and repaired finding still requires recorded verification evidence",
+        "A fix may proceed without a permanent test.",
         "test_disposition` is independent of `Disposition",
         "never weakens `Disposition: fix`",
         "`$review-chain`, `$merge-review`, `$repo-sweep`",
@@ -1123,18 +1130,41 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
     deliver_tokens = [
         disposition_path,
         protocol_path,
-        "during Deliver final-review remediation",
-        "`test_disposition` and `rereview_scope`",
+        "before step 7 when implementation may add or change tests",
+        "Deliver-only `test_disposition` and final-review `rereview_scope`",
         "without copying their rubrics or applying them to other review workflows",
+        "already-approved Deliver execution plan",
+        "approved fixed remediation packet",
+        "import the packet as execution tracking without changing its approved scope",
+        "do not rerun plan refinement",
+        "begin or resume implementation at step 7",
+        "does not weaken the initial refinement",
+        "Before keeping any new or changed test as permanent coverage",
+        "one initial fresh full-branch review",
+        "do not add another full review only as closeout ceremony",
+        "trusted fixed remediation packet from the active workflow",
+        "count that review as the initial full round",
+        "Do not repeat it before repair",
     ]
     for token in deliver_tokens:
         if token not in deliver:
             fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{deliver_path} missing token: {token}")
 
+    worker_packet_tokens = [
+        "Test value when this step adds or changes tests:",
+        "test_disposition: permanent | table_case | probe_only | no_test",
+        "the orchestrator must decide and include `test_disposition` plus its rationale before assigning permanent-test work",
+        "assign only reproduction or repair",
+        "keep permanent-test work out of the packet",
+    ]
+    for token in worker_packet_tokens:
+        if token not in worker_packet:
+            fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{worker_packet_path} missing token: {token}")
+
     ownership_tokens = [
         "Deliver-final-review-only targeted/full rereview topology",
         "The Deliver-only topology does not apply to other consumers.",
-        "Deliver-final-review-only test-persistence vocabulary",
+        "Deliver-only implementation-and-final-review test-persistence vocabulary",
         "The Deliver-only vocabulary does not apply to other consumers.",
     ]
     for token in ownership_tokens:

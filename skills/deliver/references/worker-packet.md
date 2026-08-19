@@ -33,6 +33,10 @@ Validation:
 - Focused command or flow to run:
 - UI/app inspection needed: yes/no
 
+Test value when this step adds or changes tests:
+- test_disposition: permanent | table_case | probe_only | no_test
+- Rationale: <why this is supported-path, material, unique, stable, and economical, or why durable coverage is not justified>
+
 Rules:
 - Do not edit outside this step unless required and reported.
 - Do not mark other plan items done.
@@ -41,3 +45,5 @@ Rules:
 ```
 
 The orchestrator keeps ownership of the full plan, next-step selection, worker packet creation, worker integration, final validation judgment, checkbox updates, commits, and plan changes. It should not hand a worker the whole backlog or ask the worker to choose the next item.
+
+For a test-changing step, the orchestrator must decide and include `test_disposition` plus its rationale before assigning permanent-test work. When evidence is insufficient to decide, assign only reproduction or repair, keep permanent-test work out of the packet, and decide test persistence after inspecting the evidence.

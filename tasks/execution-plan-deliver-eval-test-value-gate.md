@@ -18,6 +18,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - Proportional rereview will apply only to Deliver final-review repairs. `$review-chain`, `$merge-review`, and `$repo-sweep` behavior remain unchanged; changing those public workflows would require their own skill reviews.
 - This stays within the existing Deliver, skill-review, finding-disposition, and review-protocol boundaries. It does not add a public modifier or require a new architecture document.
 - The user-approved v3 rerun stopped with a frozen `candidate_regression`: Queuectl baseline completed and normalized in 4,101 seconds, while the candidate exhausted the identical 5,400-second arm budget before remediation finalization. Per the no-tuning rule, another contract or evaluator revision requires a new user-approved versioned iteration.
+- The user approved a v4 iteration after reviewing the v3 result. V4 keeps the evaluator, scenarios, baseline, expected outcomes, and 5,400-second arm budget unchanged. Its candidate-only contract change must move the test-value decision before any Deliver test is made permanent, reject environment-dependent permanent regressions, and prevent repair closeout from restarting broad planning or full-review work when a targeted rereview is sufficient.
 
 ## Steps
 
@@ -59,6 +60,9 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Run one fresh full-branch implementation review of the contract and eval-harness changes before the expensive comparison, apply any authorized fixes, rerun all contract and deterministic harness checks, reinstall the plugin, and record the exact evaluated candidate state.
 
 ### 5. Run The Reusable Eval And Judge The Change
+
+- [x] Apply the user-approved v4 candidate change: gate permanent-test work before implementation workers receive it, treat approved fixed remediation packets as implementation resumes without another refinement loop, and count their recorded completed full review as the initial full round.
+- [ ] Validate the v4 contract, run a fresh adversarial review, install the updated plugin, and freeze the exact candidate commit before starting the unchanged expensive comparison.
 
 - [ ] Run the tracked two-scenario suite with `a4116bb` as the pre-change Deliver baseline and the recorded candidate state, using fresh `gpt-5.6-sol` `xhigh` runners, identical fixture snapshots, approvals, tools, staged review packets, and stop boundaries, with artifacts preserved.
 - [ ] Run the frozen hidden checks and diagnostic challenge probes unchanged against both outputs, normalize and redact both artifact sets, and give a fresh blinded judge the behavior evidence before revealing contract identity, candidate-only compliance checks, and process-cost measurements.

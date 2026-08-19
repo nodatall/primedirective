@@ -17,7 +17,7 @@ Load references by path, not all up front:
 - `skills/review-plan/SKILL.md` when the user asks for an adversarial plan review before implementation
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
-- `skills/shared/references/review/finding-disposition.md` and `skills/shared/references/review/review-protocol.md` before the final review; during Deliver final-review remediation, enforce their owned `test_disposition` and `rereview_scope` decisions without copying their rubrics or applying them to other review workflows
+- `skills/shared/references/review/finding-disposition.md` before step 7 when implementation may add or change tests, and again with `skills/shared/references/review/review-protocol.md` before the final review; enforce their owned Deliver-only `test_disposition` and final-review `rereview_scope` decisions without copying their rubrics or applying them to other review workflows
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
 - `skills/deliver/references/plan-format.md` when drafting or refining the plan
 - `skills/deliver/references/worker-packet.md` before assigning a worker packet
@@ -60,6 +60,8 @@ Examples:
 After `$deliver discuss` has created or loaded a draft execution plan in the thread, the draft workflow stays active until the user asks to refine it, cancels it, or explicitly switches workflows. Later planning messages update `tasks/execution-plan-<plan-key>.md` when they materially change the current plan. If the user says `refine it`, `turn this into a deliver plan`, `make the plan`, `$deliver`, `$deliver refine`, `$deliver plan`, or equivalent, keep the same checklist file, replace the draft instruction with the Deliver implementation instruction, run `--deep-research` immediately when present, run `--pro-analysis` immediately when present, refine it, and stop for the user to review the Markdown file before implementation unless `--fast` is present.
 
 After `$deliver` has created or loaded an execution plan in the thread, the workflow stays active until final handoff, explicit cancellation, or an explicit workflow switch. Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals for the active `$deliver` plan even when `$deliver` is not repeated. Re-open the active `tasks/execution-plan-<plan-key>.md`, apply any correction, and resume this workflow instead of treating the message as generic implementation.
+
+When resuming a fixed, already-approved Deliver execution plan or an approved fixed remediation packet whose remaining work is remediation, do not rerun plan refinement. Re-open the exact plan, or import the packet as execution tracking without changing its approved scope, and begin or resume implementation at step 7. Return to refinement only when the user materially changes the plan or implementation evidence exposes a plan contradiction that blocks safe execution. This resume rule does not weaken the initial refinement required for a new or materially changed plan.
 
 When a plan document contains the Deliver implementation instruction, that document is enough to route implementation back through this skill. Do not require the user to say `$deliver execute <plan-path>`. If the user asks to implement the document, load the document, scan every checkbox, and run the closeout path in this file. If the document is not already named `tasks/execution-plan-<plan-key>.md`, first import it into that canonical filename unless doing so would change scope.
 
@@ -258,6 +260,7 @@ Rules:
    - Plan discussion does not clear `$deliver` activation. If the user approves after back-and-forth plan review, continue to step 7 for the active execution plan.
 7. Execute one item at a time.
    - `implement the doc` or `--fast` mode starts here after loading the canonical execution plan and confirming the branch/finalization baseline from earlier steps is available or recapturing it if needed.
+   - Before keeping any new or changed test as permanent coverage, apply the Deliver test-value decision from `finding-disposition.md`; fixes may use `probe_only` or `no_test`, but every implementation change still requires verification.
    - Choose the next unchecked item in plan order unless new evidence makes a different next item clearly better; update the plan first when order changes.
    - Create a tiny active-step note only when it helps execution. Keep it private and disposable.
    - Identify repo-local implementation and validation patterns before editing.
@@ -297,6 +300,8 @@ Rules:
    - Stop only for a required user decision, a missing environment/service/credential, an unsafe/destructive action needing approval, an unresolved material plan contradiction, or a verification blocker.
 12. Run final review before declaring completion.
    - Use the final full-branch review path from `review-protocol.md`.
+   - Run one initial fresh full-branch review. After authorized repairs, use the protocol's targeted/full escalation decision; do not add another full review only as closeout ceremony.
+   - When a trusted fixed remediation packet from the active workflow records a completed full-branch review against an exact base state, count that review as the initial full round. Do not repeat it before repair; proceed directly to the protocol's targeted/full rereview decision after repair.
    - Use the execution plan as the scope artifact instead of PRD/TDD/tasks-plan.
    - Write the final review log to `tasks/tmp/review-deliver-final-<plan-key>.md` unless a repo-local convention requires a different temp path.
    - Use a fresh final reviewer when available.
