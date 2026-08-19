@@ -1,4 +1,4 @@
-# Deliver Regression Eval Suite v3
+# Deliver Regression Eval Suite v5
 
 This tracked suite compares two versions of the `$deliver` contract through the existing `$skill-review` workflow. It does not add an orchestration layer. The suite freezes two scenarios, evaluator outcomes, runner isolation, staged review packets, normalization, and the blinded judge contract.
 
@@ -12,14 +12,14 @@ $skill-review skill=deliver scenario=evals/deliver/suite.md baseline=<ref> candi
 
 `$skill-review` owns baseline/candidate reconstruction, fresh runner and judge allocation, the durable state document, and preserved scratch root. This suite supplies the realistic scenarios and deterministic gates. Use the same runner model, reasoning, tools, outer execution boundary, and local-only stop boundary for both arms. Do not use native Plan mode or Pro analysis in this required regression lane.
 
-This v3 iteration retains the v2 active-execution budget for every baseline and candidate arm: 90 minutes total across its pre-packet and remediation phases, with a 15-minute inactivity timeout. Inactivity means no structurally valid event from the fixed Codex JSONL event-type allowlist has arrived on runner stdout; unknown, fabricated, malformed, partial, or arbitrary bytes do not extend the deadline. The earlier 900-second and 1,800-second candidate attempts did not produce authoritative terminal traces. The later v2 Queuectl arms completed, but the historical holdout disclosed its defect-specific acceptance contract before packet staging. All earlier attempts remain diagnostic artifacts and are excluded from v3 scoring.
+This v5 iteration retains the v2 active-execution budget for every baseline and candidate arm: 90 minutes total across its pre-packet and remediation phases, with a 15-minute inactivity timeout. Inactivity means no structurally valid event from the fixed Codex JSONL event-type allowlist has arrived on runner stdout; unknown, fabricated, malformed, partial, or arbitrary bytes do not extend the deadline. The earlier 900-second and 1,800-second candidate attempts did not produce authoritative terminal traces. The later v2 Queuectl arms completed, but the historical holdout disclosed its defect-specific acceptance contract before packet staging. All earlier attempts and completed comparisons remain diagnostic artifacts and are excluded from v5 scoring.
 
 ## Frozen scenarios
 
 1. [`retry-failed`](retry-failed/scenario.json) is the original Queuectl known case. The clean fixture preserves the pilot's semantic contents with only trailing blank EOF lines normalized, then freezes that normalized tree and every fixture-file hash. Its three public tests, source bullets, acceptance contract, fixed approval, and original seven hidden checks remain the pilot cases. Its eleven later reviewer-derived checks are unchanged diagnostic post-hoc challenges, not unbiased acceptance checks.
 2. [`preflight-remediation-holdout`](preflight-remediation-holdout/scenario.json) replays the already-approved May 30 remediation from the two required scripts at exact commit `27103d3a05eb20072d29917532326a5cbd59dc8f`. The fixture records the source commit, source tree, and exact blob/mode for each script but deliberately does not materialize the rest of that historical repository, so the runner sees only one Deliver contract: the separately extracted arm package. Before packet staging the runner sees only a generic inspection-only starting-state contract. The packet later supplies the corrupt-throttle and asynchronous-preflight findings, deterministic versions of the original probes, the paused plan, and the behavior later fixed in `2e0c01916bebceca619f1b209a101e591ebfd07d`.
 
-The evaluator-owned [`outcome-ledger.json`](evaluator/outcome-ledger.json) is frozen before contract edits. It is not supplied to either runner. It spans all four test dispositions and both rereview scopes.
+The v5 evaluator-owned [`outcome-ledger.json`](evaluator/outcome-ledger.json) is frozen before contract edits. It is not supplied to either runner. It spans all four test dispositions and both rereview scopes.
 
 ## Staged protocol
 

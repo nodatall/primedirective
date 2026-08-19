@@ -19,6 +19,8 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - This stays within the existing Deliver, skill-review, finding-disposition, and review-protocol boundaries. It does not add a public modifier or require a new architecture document.
 - The user-approved v3 rerun stopped with a frozen `candidate_regression`: Queuectl baseline completed and normalized in 4,101 seconds, while the candidate exhausted the identical 5,400-second arm budget before remediation finalization. Per the no-tuning rule, another contract or evaluator revision requires a new user-approved versioned iteration.
 - The user approved a v4 iteration after reviewing the v3 result. V4 keeps the evaluator, scenarios, baseline, expected outcomes, and 5,400-second arm budget unchanged. Its candidate-only contract change must move the test-value decision before any Deliver test is made permanent, reject environment-dependent permanent regressions, and prevent repair closeout from restarting broad planning or full-review work when a targeted rereview is sufficient.
+- V4 proved the early test-value gate reduces test bloat, but its narrow rereview rule missed cross-process completion races and mutation-before-output failures. The user approved a v5 iteration that keeps the early gate and adds only those missing full-rereview triggers.
+- The historical two-script holdout has no tracked test harness. V5 records PF-001 and PF-002 as `probe_only` instead of requiring invented permanent coverage, while PF-002 still requires a full rereview because it changes cross-process completion semantics.
 
 ## Steps
 
@@ -70,6 +72,15 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [ ] Require measurable improvement on both cost axes—fewer unjustified permanent test cases and fewer unnecessary full rereviews—plus no material correctness loss in either scenario and a combined blinded `candidate_better` verdict before calling the new gate useful.
 - [x] Treat any ledger-axis failure or any verdict other than `candidate_better` as a stop with preserved evidence: do not tune the frozen suite or contract to the observed result inside this run, and require a new user-approved, versioned evaluation iteration before revising or rerunning.
 - [x] Record the comparison, costs, limitations, judge evidence, and completion stamp in the normal durable `$skill-review` state document, while keeping native-plan and Pro runs outside this required regression lane.
+
+### 5.1 Run The User-Approved V5 Iteration
+
+- [ ] Add full Deliver rereview escalation for repairs that change cross-process coordination, lifecycle or completion semantics, or the ordering of irreversible mutation relative to user-visible output or diagnostics; keep isolated repairs targeted and leave non-Deliver workflows unchanged.
+- [ ] Update the frozen expected-outcome ledger for a new v5 iteration so the no-test-harness holdout expects `probe_only` for PF-001 and PF-002, PF-002 still expects `full`, and the Queuectl mutation/output boundary requires a full rereview.
+- [ ] Validate and adversarially review the v5 contract and evaluator changes, install the plugin, and commit the exact candidate/evaluator state before any shadow run.
+- [ ] Run fresh baseline and candidate arms for both unchanged scenarios with `gpt-5.6-sol`, `xhigh`, identical 5,400-second budgets, preserved evidence, and no reuse of v4 outcomes.
+- [ ] Freeze and normalize all four arms, obtain a fresh blinded verdict before identity reveal, then run candidate compliance and the v5 outcome gate.
+- [ ] Stop without tuning if v5 is not `candidate_better`; continue to closeout only if correctness is preserved, both cost axes improve, and the ledger passes.
 
 ### 6. Review And Close Out
 

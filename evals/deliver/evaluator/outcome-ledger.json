@@ -9,9 +9,9 @@
       "topic": "mixed_offset_selection"
     },
     {
-      "expected_behavior": "Normal malformed input boundaries share the smallest coherent table-driven public-entrypoint test.",
+      "expected_behavior": "Normal malformed input boundaries share the smallest coherent table-driven public-entrypoint test; because the packet includes mutation before potentially failing user-visible output, the repair requires a full rereview.",
       "finding_id": "RF-002",
-      "rereview_scope": "targeted",
+      "rereview_scope": "full",
       "scenario": "retry-failed",
       "test_disposition": "table_case",
       "topic": "grouped_malformed_boundaries"
@@ -33,19 +33,19 @@
       "topic": "unreachable_helper"
     },
     {
-      "expected_behavior": "A corrupt throttle value is handled silently and the isolated repair receives a focused table case and targeted rereview.",
+      "expected_behavior": "A corrupt throttle value is handled silently; the two-script fixture has no tracked test harness, so the isolated repair uses one-run probe evidence and a targeted rereview.",
       "finding_id": "PF-001",
       "rereview_scope": "targeted",
       "scenario": "preflight-remediation-holdout",
-      "test_disposition": "table_case",
+      "test_disposition": "probe_only",
       "topic": "isolated_repair"
     },
     {
-      "expected_behavior": "Codex preflight waits for updater completion; the cross-process operational-boundary repair keeps permanent coverage and a full rereview.",
+      "expected_behavior": "Codex preflight waits for updater completion; the two-script fixture has no tracked test harness, so verification is probe-only, while cross-process completion semantics require a full rereview.",
       "finding_id": "PF-002",
       "rereview_scope": "full",
       "scenario": "preflight-remediation-holdout",
-      "test_disposition": "permanent",
+      "test_disposition": "probe_only",
       "topic": "operational_boundary"
     }
   ],
