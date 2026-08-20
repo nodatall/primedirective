@@ -78,9 +78,9 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Add full Deliver rereview escalation for repairs that change cross-process coordination, lifecycle or completion semantics across concurrent or asynchronous boundaries, or the ordering of irreversible mutation relative to user-visible output or diagnostics; keep isolated repairs targeted and leave non-Deliver workflows unchanged.
 - [x] Update the frozen expected-outcome ledger for a new v5 iteration so the no-test-harness holdout expects `probe_only` for PF-001 and PF-002, PF-002 still expects `full`, and the Queuectl mutation/output boundary requires a full rereview.
 - [x] Validate and adversarially review the v5 contract and evaluator changes, install the plugin, and commit the exact candidate/evaluator state before any shadow run.
-- [ ] Run fresh baseline and candidate arms for both unchanged scenarios with `gpt-5.6-sol`, `xhigh`, identical 5,400-second budgets, preserved evidence, and no reuse of v4 outcomes.
-- [ ] Freeze and normalize all four arms, obtain a fresh blinded verdict before identity reveal, then run candidate compliance and the v5 outcome gate.
-- [ ] Stop without tuning if v5 is not `candidate_better`; continue to closeout only if correctness is preserved, both cost axes improve, and the ledger passes.
+- [x] Run fresh baseline and candidate arms for both unchanged scenarios with `gpt-5.6-sol`, `xhigh`, identical 5,400-second budgets, preserved evidence, and no reuse of v4 outcomes.
+- [x] Freeze and normalize all four arms, obtain a fresh blinded verdict before identity reveal, then run candidate compliance and the v5 outcome gate.
+- [x] Stop without tuning if v5 is not `candidate_better`; continue to closeout only if correctness is preserved, both cost axes improve, and the ledger passes.
 
 ### 6. Review And Close Out
 
