@@ -397,12 +397,15 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
     readme = (ROOT / "README.md").read_text()
 
     skill_tokens = [
-        "Return one best revision by default.",
-        "Do not automatically follow a completed rewrite with `Strongest wording`, `Structural issues`, `Weakest sentences`",
-        "Show editorial diagnosis only when the user explicitly asks for feedback, critique",
+        "Return concise feedback and ideas by default.",
+        "Do not produce a complete rewritten draft unless the user explicitly asks for one.",
+        "When the user explicitly asks for a rewrite, return one best revision.",
         "Never produce two versions merely to satisfy a quota.",
         "## Source Material",
         "Relevant repository or filesystem material retrieved for this task.",
+        "### Semantic scope lock",
+        "Treat the immediate draft as the default semantic boundary for any visible rewrite.",
+        "Relevance and truth are not sufficient permission.",
         "## Choose the Task Mode",
         "Use only when the user explicitly limits the request to a phrase, sentence, typo, repeated word, grammar point, or punctuation choice.",
         "Do not infer this mode merely because the source is short or appears easy.",
@@ -410,18 +413,19 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
         "Search only the most likely relevant files and passages.",
         "Do not claim to have searched the conversation or filesystem unless that context was actually available and inspected.",
         "## Full-Pass Dispatch Gate",
-        "Launch one fresh `clarifier-orchestrator` subagent",
-        "The orchestrator launches two independent fresh direction workers",
+        "The parent launches two independent fresh direction workers, `faithful-thesis` and `buried-tension`",
+        "Do not put the two workers behind a nested orchestrator",
         "For every Clarifier request outside Explicit local edit, including a one-line resume bullet or professional statement, dispatch the work",
-        "selects the strongest supported direction, assembles one best revision",
-        "The runtime gate for every explicit `$clarifier` request outside Explicit local edit requires the dispatcher, the two named worker launches, and one complete visible response.",
+        "returns concise ideas by default or one selected revision when explicitly requested",
+        "The runtime gate for every explicit `$clarifier` request outside Explicit local edit requires the two parent-launched named workers and one complete visible response.",
         "It has no minimum draft length.",
         "## Bounded private direction search",
         "Require every direction to anchor itself in a source quote or source-specific fact.",
         "Wait no more than 25 seconds for the parallel wave",
+        "The timebox limits waiting, not quality: never return the first synthesized draft merely because the worker wave timed out.",
         "Use only one delegated wave.",
         "Select two to four private finalists when useful, but expose only the winner unless another direction creates a material user decision.",
-        "If subagents are unavailable, run the three role-separated passes privately and sequentially; do not claim that they ran in parallel.",
+        "If subagents are unavailable, run the two role-separated passes privately and sequentially; do not claim that they ran in parallel.",
         "## Job-Search Context",
         "Distinguish what the project or team did from what the user personally did.",
         "## Editing Order",
@@ -429,6 +433,10 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
         "**Compression:** Remove words and clauses that add no information.",
         "## Private Refinement Gate",
         "Do not launch critic subagents.",
+        "### Fidelity veto",
+        "adds a proper name, metric, achievement, technology, credential, product feature, or resume keyword",
+        "translates live language into networking, consulting, marketing, or resume language",
+        "Do not turn language such as `my agent found this`, `kind of rabbit-holing`, or `this could be fun` into a resume pitch",
         "create a compressed challenger to the leading candidate",
         "Replace framing phrases such as `took ownership of`, `was responsible for`, `worked to`, and `made improvements to` with the main action verb",
         "reject the longer version unless it adds a distinct fact, necessary attribution, or important qualification.",
@@ -456,9 +464,12 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
         "Avoid unexplained jargon, acronyms, and abbreviations when they would exclude the intended reader.",
         "lead with the shortest truthful answer that fits: `yes`, `no`, a number, or `I don't know` plus what would resolve the uncertainty.",
         "## Final Quality Gate",
-        "A direct compressed challenger cannot improve it without losing meaning.",
+        "For an explicit rewrite, a direct compressed challenger cannot improve it without losing meaning.",
         "## Response Format",
-        "**Revision:** The one best supported version.",
+        "### Default coaching or thought-development request",
+        "**Ideas:** The two to five most useful decisions, directions, questions, cuts, or emphasis changes.",
+        "### Explicit rewrite request",
+        "**Revision:** The one best supported version within the immediate draft's semantic scope.",
         "Do not append a diagnosis of weaknesses the revision already fixed.",
         "### Explicit feedback or critique request",
         "**Feedback:** The requested material critique of the original writing.",
@@ -469,21 +480,22 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
             fail(errors, "PD-CLARIFIER-EDITORIAL-REVIEW", f"skills/clarifier/SKILL.md missing token: {token}")
 
     readme_tokens = [
-        "return one selected natural revision",
-        "shows editorial diagnosis only when you explicitly ask for feedback or critique",
-        "a dispatch gate sends every request through a fresh orchestrator plus two independent direction workers",
-        "reconstructs only the conversation and repository context likely to change the writing",
-        "selects one best revision",
-        "does not expose two versions by quota or append a diagnosis of weaknesses the rewrite already fixed",
-        "An alternative appears only for a genuinely useful different direction or material tradeoff",
-        "compares the leading sentence with a compressed challenger",
+        "returns concise feedback and useful directions rather than ghostwriting a finished version",
+        "a complete revision requires an explicit rewrite request",
+        "the parent launches `faithful-thesis` and `buried-tension` directly",
+        "treats the immediate draft as a semantic boundary",
+        "do not enter rewritten prose without explicit permission",
+        "turn casual curiosity into a resume pitch",
+        "Worker timeouts never permit returning an unchecked first synthesis",
+        "compares an explicitly requested revision with a compressed challenger",
         "prefers direct action verbs over framing such as `took ownership of turning`",
         "treats long sentences as a diagnostic",
         "prefers supported data to subjective qualifiers",
         "flags evidence-masking weasel words",
         "applies a `so what?` test",
         "defines necessary jargon",
-        "does not invent metrics, erase honest uncertainty, or impose business-writing rules on creative prose",
+        "does not invent metrics, erase honest uncertainty",
+        "or impose business-writing rules on creative prose",
     ]
     for token in readme_tokens:
         if token not in readme:
@@ -506,6 +518,8 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
         fail(errors, "PD-CLARIFIER-META", "meta question incorrectly entered the full pass")
     if module.LOCAL_ONLY.search("$clarifier rewrite just this phrase") is None:
         fail(errors, "PD-CLARIFIER-LOCAL", "explicit phrase-only request did not match Near-Done Mode")
+    if module.requested_response_kind(short_resume_prompt) != "ideas":
+        fail(errors, "PD-CLARIFIER-DEFAULT-IDEAS", "bare Clarifier draft did not select feedback-and-ideas output")
     if module.requested_response_kind("$clarifier feedback on this paragraph") != "feedback":
         fail(errors, "PD-CLARIFIER-FEEDBACK", "explicit critique did not select feedback output")
     if module.requested_response_kind("$clarifier rewrite this paragraph") != "rewrite":
@@ -514,6 +528,16 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
         fail(errors, "PD-CLARIFIER-BOTH", "combined feedback and rewrite did not keep revision-first output")
     if not module.full_response_is_present("**Revision:** Turned the prototype into a fast, polished product."):
         fail(errors, "PD-CLARIFIER-ONE-REVISION", "one selected revision did not satisfy the dispatch gate")
+    if not module.full_response_is_present(
+        "**Ideas:** Keep the genuine curiosity and cut anything that turns it into a resume pitch.",
+        "ideas",
+    ):
+        fail(errors, "PD-CLARIFIER-IDEAS-SHAPE", "default coaching output did not satisfy the dispatch gate")
+    if module.full_response_is_present(
+        "**Revision:** I built Prime Directive and reduced evaluation time from eight hours to one.",
+        "ideas",
+    ):
+        fail(errors, "PD-CLARIFIER-SLOP-SHAPE", "unsolicited resume-style rewrite satisfied the default ideas gate")
     if module.full_response_is_present("**Plain version** A.\n\n**Alternative version** B."):
         fail(errors, "PD-CLARIFIER-OLD-SHAPE", "old two-version output incorrectly satisfied the new dispatch gate")
     if not module.full_response_is_present(
@@ -521,6 +545,19 @@ def validate_clarifier_editorial_review(errors: list[str]) -> None:
         "feedback",
     ):
         fail(errors, "PD-CLARIFIER-FEEDBACK-SHAPE", "explicit feedback output did not satisfy the dispatch gate")
+    if module.agent_task_name("Agent", {"task_name": "faithful_thesis"}) != "faithful-thesis":
+        fail(errors, "PD-CLARIFIER-DIRECT-WORKER", "direct faithful-thesis launch was not detected")
+    exec_wrapped_worker = {
+        "input": "await tools.multi_agent_v1__spawn_agent({task_name: 'buried-tension'})"
+    }
+    if module.agent_task_name("exec", exec_wrapped_worker) != "buried-tension":
+        fail(errors, "PD-CLARIFIER-EXEC-WORKER", "exec-wrapped buried-tension launch was not detected")
+    if not module.required_workers_present(
+        {"faithful_thesis_launched": True, "buried_tension_launched": True}
+    ):
+        fail(errors, "PD-CLARIFIER-WORKER-GATE", "complete direct worker wave did not satisfy the gate")
+    if module.required_workers_present({"faithful_thesis_launched": True}):
+        fail(errors, "PD-CLARIFIER-MISSING-WORKER", "incomplete direct worker wave satisfied the gate")
 
 
 def validate_first_principles_adversarial_council(errors: list[str]) -> None:

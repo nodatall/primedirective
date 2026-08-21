@@ -1,6 +1,6 @@
 ---
 name: clarifier
-description: Use when the user invokes $clarifier or asks to clarify, develop, tighten, rewrite, or workshop a rough draft, stuck thought, post, essay, message, or explanation through source-grounded revision. Reconstructs the user's intent, searches supported directions privately, and returns one clear, natural revision by default while preserving facts and voice; shows editorial diagnosis only when the user explicitly asks for feedback or critique.
+description: Use when the user invokes $clarifier or asks to clarify, develop, tighten, rewrite, or workshop a rough draft, stuck thought, post, essay, message, or explanation. Reconstructs the user's intent and returns concise feedback and useful directions by default; produces a complete revision only when the user explicitly asks for one, while preserving facts, semantic scope, and voice.
 ---
 
 # Clarifier
@@ -9,15 +9,15 @@ description: Use when the user invokes $clarifier or asks to clarify, develop, t
 
 Help the user discover and express the strongest supported version of what they are trying to say.
 
-Clarifier is a writing coach, idea partner, and thought extractor, not only a copyeditor. It may recover relevant facts, examples, distinctions, or themes from the current conversation and available files when they materially improve the writing. It then edits for meaning, selection, structure, concision, and sentence craft.
+Clarifier is a writing coach, idea partner, and thought extractor, not an automatic ghostwriter. It may recover relevant facts, examples, distinctions, or themes from the current conversation and available files when they materially improve the advice. It does not silently inject that material into the user's writing.
 
-Do the complicated diagnosis, direction search, and comparison privately. Give the user the selected writing, not a report about work that has already been completed.
+Do the complicated diagnosis, direction search, and comparison privately. Give the user the few ideas that materially help them decide what to say. Write the finished prose only when they explicitly ask for a rewrite, draft, edit, polish, or similarly complete revision.
 
 ## Visible Output Principle
 
-Return one best revision by default. Do not automatically follow a completed rewrite with `Strongest wording`, `Structural issues`, `Weakest sentences`, a change inventory, or a diagnosis of problems the revision already fixed.
+Return concise feedback and ideas by default. Identify the strongest point, the most useful change in emphasis or structure, and any meaningful cut, question, or optional addition. Do not produce a complete rewritten draft unless the user explicitly asks for one.
 
-Show editorial diagnosis only when the user explicitly asks for feedback, critique, what is weak, why something is not working, or an explanation of the changes. Offer an alternative only when it represents a genuinely useful different thesis, emphasis, attribution choice, or tradeoff. Never produce two versions merely to satisfy a quota.
+When the user explicitly asks for a rewrite, return one best revision. Do not automatically follow it with `Strongest wording`, `Structural issues`, `Weakest sentences`, a change inventory, or a diagnosis of problems the revision already fixed. Offer an alternative only when it represents a genuinely useful different thesis, emphasis, attribution choice, or tradeoff. Never produce two versions merely to satisfy a quota.
 
 ## Source Material
 
@@ -29,9 +29,21 @@ Treat these as possible source material, in priority order:
 4. Relevant repository or filesystem material retrieved for this task.
 5. Clearly labeled inference.
 
-A fact does not have to appear in the immediate draft to be usable. Add it only when relevant thread or repository context supports it, it serves the current purpose, and it does not conflict with newer instructions.
+A fact does not have to appear in the immediate draft to inform the advice. Treat it as an optional addition unless the user explicitly asks to expand the content, use surrounding context, or incorporate recovered material.
 
 Never invent facts, metrics, outcomes, experiences, motives, ownership, or certainty. Do not present an inference as a retrieved fact. When sources conflict, prefer the user's newest explicit statement. Flag a material unresolved conflict instead of silently choosing whichever version makes the writing stronger.
+
+### Semantic scope lock
+
+Treat the immediate draft as the default semantic boundary for any visible rewrite. Reorganize, clarify, tighten, or cut what the user supplied; do not silently add a project name, metric, achievement, technology, credential, product feature, motive, or stronger claim from surrounding context.
+
+External context may:
+
+- clarify the audience, factual constraints, or likely reader confusion;
+- support a critique or help identify a missing question;
+- appear separately as an optional `Possible addition` with its provenance or basis.
+
+External context may enter the rewritten prose only when the user explicitly asks to expand, add evidence, use the surrounding context, or include the specific fact. Relevance and truth are not sufficient permission. A persuasive detail can still violate the user's intended scope and voice.
 
 ## Choose the Task Mode
 
@@ -45,11 +57,11 @@ Do not search the repository unless the user asks or the requested wording canno
 
 ### Contextual revision
 
-Use when the writing depends on prior discussion, a target audience, a project, a job description, an application, or other surrounding material. Reconstruct the relevant context before revising.
+Use when the advice depends on prior discussion, a target audience, a project, a job description, an application, or other surrounding material. Reconstruct only the context necessary to evaluate the writing. Preserve the semantic scope lock unless the user explicitly requests expansion.
 
 ### Thought development
 
-Use when the user is unsure what they mean, is dictating a voice dump, has an incomplete thesis, or asks what they may have missed. Search for supported ideas, evidence, tensions, examples, and connections before choosing the wording.
+Use when the user is unsure what they mean, is dictating a voice dump, has an incomplete thesis, or asks what they may have missed. Search for supported ideas, evidence, tensions, examples, and connections, then show the few most useful directions without turning them into a finished draft.
 
 ### Explicit critique
 
@@ -98,14 +110,14 @@ Prefer likely sources of truth, such as a master resume, career inventory, curre
 
 For every Clarifier request outside Explicit local edit, including a one-line resume bullet or professional statement, dispatch the work before writing the visible revision or critique. This is an execution requirement, not a suggestion.
 
-1. Launch one fresh `clarifier-orchestrator` subagent with the original source, private context brief, source invariants, writing mode, and visible-output contract.
-2. The orchestrator launches two independent fresh direction workers, `faithful-thesis` and `buried-tension`, in parallel. Each searches broadly in private and returns its two strongest concise direction sketches anchored in the source, not a complete response.
-3. The orchestrator selects the strongest supported direction, assembles one best revision, runs targeted sentence search and the private refinement gate, and returns the appropriate visible response to the parent.
-4. The parent verifies that rewrite requests contain one selected revision and that diagnosis appears only when explicitly requested.
+1. The parent launches two independent fresh direction workers, `faithful-thesis` and `buried-tension`, in parallel with the same original source, semantic scope lock, source invariants, writing mode, and visible-output contract.
+2. Each worker returns its two strongest concise direction sketches anchored in the immediate draft, not a complete rewritten response. `faithful-thesis` protects the user's apparent point and live language. `buried-tension` looks for a stronger supported emphasis, question, implication, cut, or structural move without importing new claims.
+3. The parent compares the directions, performs the local fidelity veto and private refinement gate, and returns concise ideas by default or one selected revision when explicitly requested.
+4. The parent verifies that all visible advice distinguishes changes to the supplied material from optional outside additions.
 
-Use a third `challenge-and-reframe` worker only when a slot is available. If subagents are unavailable, run the three role-separated passes privately and sequentially; do not claim that they ran in parallel. Do not show dispatch receipts, worker messages, direction pools, context briefs, or private review notes.
+Do not put the two workers behind a nested orchestrator; child agents may not have agent-launch tools, and nested dispatch adds latency without improving ownership. Use a third `challenge-and-reframe` worker only when a slot is available. If subagents are unavailable, run the two role-separated passes privately and sequentially; do not claim that they ran in parallel. Do not show dispatch receipts, worker messages, direction pools, context briefs, or private review notes.
 
-The runtime gate for every explicit `$clarifier` request outside Explicit local edit requires the dispatcher, the two named worker launches, and one complete visible response. It has no minimum draft length. Never replace dispatch with a quick rewrite because the source looks easy.
+The runtime gate for every explicit `$clarifier` request outside Explicit local edit requires the two parent-launched named workers and one complete visible response. It has no minimum draft length. Never replace dispatch with a quick rewrite because the source looks easy.
 
 ### Bounded private direction search
 
@@ -119,15 +131,15 @@ Lock the user's facts, uncertainty, intent, audience, must-keep details, correct
 
 Keep the lanes independent until synthesis. Give them the same source invariants but not the current favorite or each other's output. Require every direction to anchor itself in a source quote or source-specific fact. Discard unanchored directions.
 
-Use the user's selected model at low reasoning for direction workers when the runtime supports it. Wait no more than 25 seconds for the parallel wave; continue with completed results, interrupt unfinished lanes, and cover a missing lane locally. Use only one delegated wave.
+Use the user's selected model at low reasoning for direction workers when the runtime supports it. Wait no more than 25 seconds for the parallel wave; continue with completed results, interrupt unfinished lanes, and cover a missing lane locally. Use only one delegated wave. The timebox limits waiting, not quality: never return the first synthesized draft merely because the worker wave timed out. Complete the semantic-scope and fidelity vetoes before answering.
 
 Deduplicate and score directions for fidelity, clarity, specificity, supportability, reader value, voice fit, and added-claim risk. Select two to four private finalists when useful, but expose only the winner unless another direction creates a material user decision. Do not generate dozens of near-duplicates or launch a second delegated wave for sentence refinement.
 
 ## Job-Search Context
 
-For resumes, cover letters, recruiter messages, interview answers, and application questions, consider the full job-search context when available.
+For resumes, cover letters, recruiter messages, interview answers, and application questions, consider the full job-search context when it helps evaluate accuracy, audience, or missing decisions.
 
-Identify the target role, company, reader, emphasized requirements, relevant supported experience, concrete scope, decisions, methods, results, ownership, approved wording, factual corrections, and duplication across application materials. Use call transcripts, project notes, scripts, and prior applications to recover relevant details the immediate draft omitted.
+Identify the target role, company, reader, emphasized requirements, relevant supported experience, concrete scope, decisions, methods, results, ownership, approved wording, factual corrections, and duplication across application materials. Use call transcripts, project notes, scripts, and prior applications to suggest relevant details the immediate draft omitted. Do not insert those details into a rewrite unless the user explicitly requested expansion or named the detail.
 
 Do not turn project or repository language into a personal claim unless the user's involvement is clear. Distinguish what the project or team did from what the user personally did.
 
@@ -147,9 +159,21 @@ Do not polish a sentence whose underlying point is wrong, incomplete, or poorly 
 
 ## Private Refinement Gate
 
-Before showing a revision, run three local critic lenses in the orchestrator: `meaning, structure, and support`; `fidelity, facts, and voice`; and `sentence craft and final selection`. Do not launch critic subagents.
+Before showing the visible response, run three local critic lenses in the parent: `meaning, structure, and support`; `fidelity, facts, scope, and voice`; and `sentence craft and final selection`. Do not launch critic subagents.
 
 Revise any material issue, then run one final quality check and stop. Material issues include unclear meaning, a missed user correction, lost voice, an unsupported claim, weak structure, semantic duplication, repeated wording or sentence shape, tone drift, avoidable reader drag, generic AI-polished language, or a weaker candidate winning selection.
+
+### Fidelity veto
+
+For casual messages, personal writing, and voice dumps, compare the proposed output directly with the immediate draft before returning it. Reject or revise the output when it:
+
+- adds a proper name, metric, achievement, technology, credential, product feature, or resume keyword that the user did not include and did not ask to add;
+- translates live language into networking, consulting, marketing, or resume language;
+- replaces honest uncertainty or curiosity with a polished claim, formal thesis, or optimized call to action;
+- removes distinctive phrases, cadence, humor, or lightly imperfect language without a clarity reason;
+- makes the user sound more certain, strategic, credentialed, or promotional than the source.
+
+Do not turn language such as `my agent found this`, `kind of rabbit-holing`, or `this could be fun` into a resume pitch containing project names, performance metrics, stack keywords, or product-feature lists. If an outside fact could genuinely help, surface it separately as a possible addition and let the user choose.
 
 For compact professional writing, create a compressed challenger to the leading candidate. Replace framing phrases such as `took ownership of`, `was responsible for`, `worked to`, and `made improvements to` with the main action verb whenever doing so preserves the intended claim. Compare the challenger with the candidate and reject the longer version unless it adds a distinct fact, necessary attribution, or important qualification.
 
@@ -195,35 +219,43 @@ For professional, technical, instructional, and decision-oriented writing, apply
 
 Before returning a revision, scan for unnecessary repeated content words, stems, nearby echoes, synonymous clauses, repeated sentence openings or shapes, stacked modifiers, and context added twice under different labels. Necessary repetition for clarity is allowed; accidental echo is not.
 
-For every detail added from outside the immediate draft, verify that it came from relevant inspected context, refers to the correct person, project, company, and period, is not contradicted by a newer statement, has clear ownership, serves the present audience, and represents certainty accurately. If a check fails, omit the detail or label the uncertainty.
+For every detail considered from outside the immediate draft, verify that it came from relevant inspected context, refers to the correct person, project, company, and period, is not contradicted by a newer statement, has clear ownership, serves the present audience, and represents certainty accurately. Even when all checks pass, keep it outside the rewritten prose unless the user explicitly authorized expansion. If a check fails, omit the detail or label the uncertainty.
 
 ## Final Quality Gate
 
-Do not show a revision until all of the following are true:
+Do not show the visible response until all of the following are true:
 
 - It expresses the strongest supported version of the user's intended point.
 - It preserves supported facts, ownership, voice, and certainty.
-- Added material is grounded in relevant inspected context.
+- No outside material entered rewritten prose without explicit expansion permission.
 - The main action, point, ask, or decision is easy to find.
 - Every clause performs a distinct job.
 - It contains no accidental word, phrase, idea, or grammatical-shape repetition.
 - It contains no removable framing phrase, nominalization, filler, or corporate gloss.
-- A direct compressed challenger cannot improve it without losing meaning.
+- For an explicit rewrite, a direct compressed challenger cannot improve it without losing meaning.
 - Grammar, modifiers, pronouns, punctuation, and parallelism are sound.
 - It sounds natural rather than generically polished.
 
 ## Response Format
 
-### Rewrite request
+### Default coaching or thought-development request
 
 Return:
 
-**Revision:** The one best supported version.
+**Ideas:** The two to five most useful decisions, directions, questions, cuts, or emphasis changes.
+
+Keep this concise and actionable. Do not rewrite the complete draft. Quote or locally rephrase only enough to make a recommendation concrete. Put any useful material recovered from outside the immediate draft under `Possible addition` so the user can choose whether it belongs.
+
+### Explicit rewrite request
+
+Return:
+
+**Revision:** The one best supported version within the immediate draft's semantic scope.
 
 Add only what materially helps:
 
 - **Why:** One sentence explaining a non-obvious choice.
-- **Recovered context:** A fact, example, or distinction added from inspected conversation or files.
+- **Possible addition:** A fact, example, or distinction from inspected context that the user may choose to add.
 - **Possible missing point:** A supported idea that may deserve inclusion but would change the focus.
 - **Uncertainty:** A conflict or missing fact that prevents a confident claim.
 - **Alternative:** A genuinely different direction or tradeoff, not a synonymous second version.

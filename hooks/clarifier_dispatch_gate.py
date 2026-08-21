@@ -34,6 +34,15 @@ REVISION_HEADING = re.compile(
     r"(?:^|\n)\s*(?:#{1,6}\s*)?(?:\*\*)?revision(?:\*\*)?\s*:",
     re.IGNORECASE,
 )
+IDEAS_HEADING = re.compile(
+    r"(?:^|\n)\s*(?:#{1,6}\s*)?(?:\*\*)?ideas(?:\*\*)?\s*:",
+    re.IGNORECASE,
+)
+FEEDBACK_HEADING = re.compile(
+    r"(?:^|\n)\s*(?:#{1,6}\s*)?(?:\*\*)?(?:feedback|critique)(?:\*\*)?\s*:",
+    re.IGNORECASE,
+)
+WORKER_NAMES = ("faithful-thesis", "buried-tension")
 
 
 def read_event() -> dict[str, Any]:
@@ -128,25 +137,48 @@ def explicit_request_needs_full_pass(prompt: str) -> bool:
 
 
 def requested_response_kind(prompt: str) -> str:
-    """Use critique-only output only when feedback is explicit and revision is not."""
-    feedback = FEEDBACK_REQUEST.search(prompt) is not None
+    """Default to coaching; write finished prose only after an explicit rewrite request."""
     rewrite = REWRITE_REQUEST.search(prompt) is not None
-    return "feedback" if feedback and not rewrite else "rewrite"
+    if rewrite:
+        return "rewrite"
+    if FEEDBACK_REQUEST.search(prompt) is not None:
+        return "feedback"
+    return "ideas"
 
 
 def full_response_is_present(message: object, response_kind: str = "rewrite") -> bool:
     if not isinstance(message, str):
         return False
     if response_kind == "feedback":
-        normalized = message.lower()
-        return (
-            ("reader effect" in normalized and "recommendation" in normalized)
-            or "**feedback:**" in normalized
-            or "## feedback" in normalized
-            or "**critique:**" in normalized
-            or "## critique" in normalized
-        )
+        return FEEDBACK_HEADING.search(message) is not None
+    if response_kind == "ideas":
+        return IDEAS_HEADING.search(message) is not None
     return REVISION_HEADING.search(message) is not None
+
+
+def agent_task_name(tool_name: object, tool_input: object) -> str:
+    """Find a Clarifier worker name across direct and exec-wrapped agent launches."""
+    name = str(tool_name or "").lower()
+    if not any(token in name for token in ("agent", "exec")):
+        return ""
+    if isinstance(tool_input, dict):
+        direct = tool_input.get("task_name")
+        if isinstance(direct, str):
+            normalized = direct.lower().replace("_", "-")
+            if normalized in WORKER_NAMES:
+                return normalized
+    try:
+        serialized = json.dumps(tool_input).lower().replace("_", "-")
+    except (TypeError, ValueError):
+        serialized = str(tool_input).lower().replace("_", "-")
+    for worker in WORKER_NAMES:
+        if worker in serialized:
+            return worker
+    return ""
+
+
+def required_workers_present(state: dict[str, Any]) -> bool:
+    return all(state.get(f"{worker.replace('-', '_')}_launched") is True for worker in WORKER_NAMES)
 
 
 def handle_prompt(event: dict[str, Any]) -> None:
@@ -169,10 +201,15 @@ def handle_prompt(event: dict[str, Any]) -> None:
         "The user explicitly requested feedback. Show only the material critique requested; "
         "do not automatically rewrite the whole draft unless the prompt also asks for a revision."
         if response_kind == "feedback"
-        else
+        else (
         "Return one best result under a Revision heading. Keep the diagnosis private: do not "
         "append Strongest wording, Structural issues, Weakest sentences, or a change inventory. "
-        "Include an alternative only for a genuinely different direction or material tradeoff."
+        "Stay inside the immediate draft's semantic scope; put outside facts under Possible addition."
+        if response_kind == "rewrite"
+        else
+        "Return concise coaching under an Ideas heading. Do not rewrite the complete draft. "
+        "Put any useful outside fact under Possible addition so the user chooses whether it belongs."
+        )
     )
     print(
         json.dumps(
@@ -180,10 +217,10 @@ def handle_prompt(event: dict[str, Any]) -> None:
                 "hookSpecificOutput": {
                     "hookEventName": "UserPromptSubmit",
                     "additionalContext": (
-                        "Clarifier full-pass gate is active. Delegate synthesis to a fresh "
-                        "orchestrator subagent; it must launch two independent direction workers. "
-                        "Before the visible answer, select the strongest supported direction and "
-                        "complete the local refinement and compressed-challenger checks. "
+                        "Clarifier full-pass gate is active. The parent must launch two independent "
+                        "direction workers directly: faithful-thesis and buried-tension. Do not put "
+                        "them behind a nested orchestrator. Before the visible answer, compare their "
+                        "directions and complete the semantic-scope, fidelity, voice, and refinement checks. "
                         f"{visible_contract} For "
                         "resume bullets and compact professional copy, map each clause to its job "
                         "and remove semantic duplicates: every clause must add a distinct action, "
@@ -203,12 +240,10 @@ def handle_agent(event: dict[str, Any]) -> None:
     state = load_state(event)
     if state is None:
         return
+    task_name = agent_task_name(event.get("tool_name"), event.get("tool_input"))
+    if not task_name:
+        return
     state["agent_launches"] = int(state.get("agent_launches", 0)) + 1
-    tool_input = event.get("tool_input")
-    task_name = tool_input.get("task_name", "") if isinstance(tool_input, dict) else ""
-    task_name = task_name.lower().replace("_", "-") if isinstance(task_name, str) else ""
-    if "clarifier" in task_name and "orchestrator" in task_name:
-        state["orchestrator_launched"] = True
     if "faithful-thesis" in task_name:
         state["faithful_thesis_launched"] = True
     if "buried-tension" in task_name:
@@ -221,10 +256,8 @@ def handle_stop(event: dict[str, Any]) -> None:
     if state is None:
         return
     complete = (
-        int(state.get("agent_launches", 0)) >= 3
-        and state.get("orchestrator_launched") is True
-        and state.get("faithful_thesis_launched") is True
-        and state.get("buried_tension_launched") is True
+        int(state.get("agent_launches", 0)) >= 2
+        and required_workers_present(state)
         and full_response_is_present(
             event.get("last_assistant_message"),
             str(state.get("response_kind", "rewrite")),
@@ -243,11 +276,12 @@ def handle_stop(event: dict[str, Any]) -> None:
             {
                 "decision": "block",
                 "reason": (
-                    "Complete the required Clarifier full pass now. Do not return a quick rewrite. "
-                    "Use the dispatcher plus two independent direction workers, run the local "
-                    "refinement and compressed-challenger checks, and return the requested visible "
-                    "response. Rewrite requests need one selected Revision and no automatic diagnosis; "
-                    "feedback-only requests need the requested material critique. For compact "
+                    "Complete the required Clarifier full pass now. The parent must launch the "
+                    "faithful-thesis and buried-tension workers directly, then run the semantic-scope, "
+                    "fidelity, voice, and refinement checks. A worker timeout is not permission to "
+                    "return the first synthesized draft. Default requests need concise Ideas without "
+                    "a complete rewrite; explicit rewrite requests need one selected Revision inside "
+                    "the immediate draft's semantic scope; feedback requests need the requested critique. For compact "
                     "professional copy, remove clauses that describe the same work under different "
                     "labels and replace indirect ownership framing with the direct action verb when "
                     "meaning is preserved."
@@ -262,7 +296,7 @@ def main() -> None:
     event_name = event.get("hook_event_name")
     if event_name == "UserPromptSubmit":
         handle_prompt(event)
-    elif event_name == "PreToolUse" and event.get("tool_name") == "Agent":
+    elif event_name == "PreToolUse":
         handle_agent(event)
     elif event_name == "Stop":
         handle_stop(event)
