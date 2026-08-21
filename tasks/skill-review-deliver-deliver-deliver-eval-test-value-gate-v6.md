@@ -30,7 +30,7 @@
 - Contract validation, the frozen Deliver ledger, and `git diff --check` pass.
 - A fresh `gpt-5.6-sol` `xhigh` forward-test derived an isolated repair as `targeted`, a persistent-state/output repair as `full`, and their grouped round as `full`; both validator phases passed.
 - The local Prime Directive plugin links were reinstalled from the exact candidate checkout.
-- The generic system `quick_validate.py` could not run because its PyYAML dependency is not installed in the available Python runtimes. The repo's stricter skill-contract validator passed; no dependency was installed for this change.
+- The generic system `quick_validate.py` passed using PyYAML 6.0.3 in an isolated temporary virtual environment; the system Python remained unchanged.
 
 ## Skill Review Completion Stamp
 
