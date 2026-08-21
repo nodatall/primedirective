@@ -38,20 +38,34 @@
 - The official baseline remains the original pre-policy Deliver control `a4116bb`, matching v5 so the unchanged hard gate can measure both test-value and rereview-cost axes.
 - One completed Queuectl arm using the failed v5 candidate `3c71231` as an incremental baseline was excluded before any v6 candidate arm, normalization, judge packet, or outcome scoring. It remains diagnostic only.
 
+## V6 Frozen Result
+
+- Final result: `candidate_regression`. The blinded judge preferred the candidate, but the frozen category gate rejected it.
+- Correctness was preserved. Both Queuectl arms passed all 7 frozen acceptance checks and 7 of 11 post-hoc diagnostics; both historical holdout arms passed the corrupt-throttle and asynchronous-preflight probes.
+- Queuectl baseline: 24 added test functions, 930 added test lines, one full rereview, and 5,139 seconds. Queuectl candidate: 8 added test functions, 388 added test lines, one full rereview, and 2,751 seconds.
+- Historical baseline: 79 added test lines, one full rereview, and 1,142 seconds. Historical candidate: no permanent test additions, two full rereviews, and 1,364 seconds. The second candidate round was safety-required after the first rereview found and repaired a leading-zero throttle defect.
+- Aggregate baseline: 1,009 added test lines, two full rereviews, and 6,281 seconds. Aggregate candidate: 388 added test lines, three full rereviews, and 4,115 seconds.
+- The fresh blinded `gpt-5.6-sol` `xhigh` judge froze `Run A better`; identity reveal mapped Run A to the candidate.
+- Candidate field compliance passed. The hard gate improved unjustified permanent decisions from 4 to 0 and unnecessary full classifications from 3 to 1.
+- The remaining regression is Queuectl `RF-001`: expected `rereview_scope: targeted`, actual `full`. The deterministic rule correctly repaired v5's `RF-002` under-scoping but overcorrected the separate chronological-selection repair.
+- The first historical pre-packet launch from the enclosing workspace sandbox produced an empty trace because nested `sandbox-exec` was denied. It was excluded before any result; both official historical arms were freshly prepared and completed under the evaluator's approved outer Seatbelt boundary.
+- Preserved artifacts: `agent-scratch/skill-review/deliver-deliver-deliver-eval-test-value-gate-v6/results/`, including all four sealed normalized arms, blind packets, frozen verdict, compliance report, and outcome gate.
+- Per the frozen no-tuning rule, do not revise v6 or rerun it inside this comparison. Any narrower RF-001 rule is a separately approved v7 iteration.
+
 ## Skill Review Completion Stamp
 
-skill_review_complete: no
+skill_review_complete: yes
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v6.md
 baseline_ref: a4116bb
 candidate_ref: 733810b
 scenario: evals/deliver/suite.md
-baseline_run_complete: no
-candidate_run_complete: no
-comparable_inputs: no
-judge_run_complete: no
-judge_blinded: no
-verdict: inconclusive
+baseline_run_complete: yes
+candidate_run_complete: yes
+comparable_inputs: yes
+judge_run_complete: yes
+judge_blinded: yes
+verdict: candidate_regression
 artifact_evidence_preserved: yes
 ready_for_merge_review: no
-stop_reason: comparison_not_requested
+stop_reason: candidate_regression

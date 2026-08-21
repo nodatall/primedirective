@@ -22,6 +22,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - V4 proved the early test-value gate reduces test bloat, but its narrow rereview rule missed cross-process completion races and mutation-before-output failures. The user approved a v5 iteration that keeps the early gate and adds only those missing full-rereview triggers.
 - The historical two-script holdout has no tracked test harness. V5 records PF-001 and PF-002 as `probe_only` instead of requiring invented permanent coverage, while PF-002 still requires a full rereview because it changes cross-process completion semantics.
 - V5 reduced test and review cost but still classified Queuectl RF-002 as targeted. The user approved a v6 contract iteration that keeps the v5 policy and adds a deterministic scope-record validator; the frozen scenarios, outcome ledger, and correctness expectations remain unchanged.
+- The user-approved v6 rerun preserved correctness and the blinded judge preferred the candidate. The hard category gate still stopped the run because the mechanical rule classified Queuectl RF-001 as full instead of targeted; no v6 tuning or rerun is authorized inside that frozen comparison.
 
 ## Steps
 
@@ -89,6 +90,10 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Require Deliver to run the validator before starting a repair rereview and again after recording the executed round; keep the test-value policy, existing trigger semantics, and all non-Deliver workflows unchanged.
 - [x] Add focused validator tests for isolated targeted repair, cross-process completion, mutation plus user-visible output, grouped widest scope, malformed or incomplete records, and incomplete executed-round evidence.
 - [x] Validate the skill contract and bundled script, install the exact v6 candidate, and commit the change without rerunning the expensive comparison unless separately approved.
+- [x] Run the separately approved fresh two-scenario comparison using original baseline `a4116bb`, exact v6 candidate `733810b`, and fresh `gpt-5.6-sol` `xhigh` runners.
+- [x] Freeze and normalize all four official arms, obtain a fresh blinded verdict before identity reveal, then run candidate compliance and the unchanged outcome gate.
+- [x] Record that the blinded judge preferred v6 and both cost axes strictly improved, but the hard gate rejected RF-001 `full` versus expected `targeted`.
+- [x] Stop without tuning or rerunning v6; require a separately approved v7 iteration for any narrower mechanical rule.
 
 ### 6. Review And Close Out
 
