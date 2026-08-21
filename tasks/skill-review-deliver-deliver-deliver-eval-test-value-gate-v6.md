@@ -32,12 +32,18 @@
 - The local Prime Directive plugin links were reinstalled from the exact candidate checkout.
 - The generic system `quick_validate.py` passed using PyYAML 6.0.3 in an isolated temporary virtual environment; the system Python remained unchanged.
 
+## V6 Run Setup
+
+- The user separately approved the full two-scenario rerun on 2026-08-21.
+- The official baseline remains the original pre-policy Deliver control `a4116bb`, matching v5 so the unchanged hard gate can measure both test-value and rereview-cost axes.
+- One completed Queuectl arm using the failed v5 candidate `3c71231` as an incremental baseline was excluded before any v6 candidate arm, normalization, judge packet, or outcome scoring. It remains diagnostic only.
+
 ## Skill Review Completion Stamp
 
 skill_review_complete: no
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v6.md
-baseline_ref: 3c71231
+baseline_ref: a4116bb
 candidate_ref: 733810b
 scenario: evals/deliver/suite.md
 baseline_run_complete: no
