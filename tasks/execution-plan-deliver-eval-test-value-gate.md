@@ -85,10 +85,10 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 5.2 Add The User-Approved V6 Mechanical Scope Gate
 
-- [ ] Add one bundled Deliver validator that derives each repair action's required rereview scope from an explicit, complete risk-flag record and rejects a targeted action or grouped round when any full-review trigger applies.
-- [ ] Require Deliver to run the validator before starting a repair rereview and again after recording the executed round; keep the test-value policy, existing trigger semantics, and all non-Deliver workflows unchanged.
-- [ ] Add focused validator tests for isolated targeted repair, cross-process completion, mutation plus user-visible output, grouped widest scope, malformed or incomplete records, and incomplete executed-round evidence.
-- [ ] Validate the skill contract and bundled script, install the exact v6 candidate, and commit the change without rerunning the expensive comparison unless separately approved.
+- [x] Add one bundled Deliver validator that derives each repair action's required rereview scope from an explicit, complete risk-flag record and rejects a targeted action or grouped round when any full-review trigger applies.
+- [x] Require Deliver to run the validator before starting a repair rereview and again after recording the executed round; keep the test-value policy, existing trigger semantics, and all non-Deliver workflows unchanged.
+- [x] Add focused validator tests for isolated targeted repair, cross-process completion, mutation plus user-visible output, grouped widest scope, malformed or incomplete records, and incomplete executed-round evidence.
+- [x] Validate the skill contract and bundled script, install the exact v6 candidate, and commit the change without rerunning the expensive comparison unless separately approved.
 
 ### 6. Review And Close Out
 
