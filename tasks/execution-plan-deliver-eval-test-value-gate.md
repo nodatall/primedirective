@@ -21,6 +21,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - The user approved a v4 iteration after reviewing the v3 result. V4 keeps the evaluator, scenarios, baseline, expected outcomes, and 5,400-second arm budget unchanged. Its candidate-only contract change must move the test-value decision before any Deliver test is made permanent, reject environment-dependent permanent regressions, and prevent repair closeout from restarting broad planning or full-review work when a targeted rereview is sufficient.
 - V4 proved the early test-value gate reduces test bloat, but its narrow rereview rule missed cross-process completion races and mutation-before-output failures. The user approved a v5 iteration that keeps the early gate and adds only those missing full-rereview triggers.
 - The historical two-script holdout has no tracked test harness. V5 records PF-001 and PF-002 as `probe_only` instead of requiring invented permanent coverage, while PF-002 still requires a full rereview because it changes cross-process completion semantics.
+- V5 reduced test and review cost but still classified Queuectl RF-002 as targeted. The user approved a v6 contract iteration that keeps the v5 policy and adds a deterministic scope-record validator; the frozen scenarios, outcome ledger, and correctness expectations remain unchanged.
 
 ## Steps
 
@@ -81,6 +82,13 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Run fresh baseline and candidate arms for both unchanged scenarios with `gpt-5.6-sol`, `xhigh`, identical 5,400-second budgets, preserved evidence, and no reuse of v4 outcomes.
 - [x] Freeze and normalize all four arms, obtain a fresh blinded verdict before identity reveal, then run candidate compliance and the v5 outcome gate.
 - [x] Stop without tuning if v5 is not `candidate_better`; continue to closeout only if correctness is preserved, both cost axes improve, and the ledger passes.
+
+### 5.2 Add The User-Approved V6 Mechanical Scope Gate
+
+- [ ] Add one bundled Deliver validator that derives each repair action's required rereview scope from an explicit, complete risk-flag record and rejects a targeted action or grouped round when any full-review trigger applies.
+- [ ] Require Deliver to run the validator before starting a repair rereview and again after recording the executed round; keep the test-value policy, existing trigger semantics, and all non-Deliver workflows unchanged.
+- [ ] Add focused validator tests for isolated targeted repair, cross-process completion, mutation plus user-visible output, grouped widest scope, malformed or incomplete records, and incomplete executed-round evidence.
+- [ ] Validate the skill contract and bundled script, install the exact v6 candidate, and commit the change without rerunning the expensive comparison unless separately approved.
 
 ### 6. Review And Close Out
 
