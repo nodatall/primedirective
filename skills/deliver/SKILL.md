@@ -17,7 +17,7 @@ Load references by path, not all up front:
 - `skills/review-plan/SKILL.md` when the user asks for an adversarial plan review before implementation
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
 - `skills/shared/references/analysis/pro-browser-analysis.md` when `--pro-analysis` is present
-- `skills/shared/references/review/finding-disposition.md` before step 7 when implementation may add or change tests, and again with `skills/shared/references/review/review-protocol.md` before the final review; enforce their owned Deliver-only `test_disposition` and final-review `rereview_scope` decisions without copying their rubrics or applying them to other review workflows
+- `skills/shared/references/review/finding-disposition.md` before step 7 when implementation may add or change tests, and again with `skills/shared/references/review/review-protocol.md` plus `skills/deliver/references/rereview-scope-record.md` before the final review; enforce their owned Deliver-only `test_disposition` and final-review `rereview_scope` decisions without copying their rubrics or applying them to other review workflows
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
 - `skills/deliver/references/plan-format.md` when drafting or refining the plan
 - `skills/deliver/references/worker-packet.md` before assigning a worker packet
@@ -73,6 +73,7 @@ Use these files:
 - Optional frontend mockup: `tasks/ui-mockup-<plan-key>.html`
 - Durable goal plan: `tasks/goal-plan-<plan-key>.md`
 - Optional active-step note: `tasks/tmp/active-step-<plan-key>-<step>.md`
+- Deliver repair-scope record: `tasks/tmp/review-deliver-final-<plan-key>.rereview.json`
 - Completed plan archive: `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`
 
 The draft plan is for discussion. Keep it as plain as possible: short full sentences, concrete words, and only the structure needed to make the current plan easy to read. It is not approved implementation scope until it has been refined, carries the Deliver implementation instruction, and the user approves implementation.
@@ -302,6 +303,8 @@ Rules:
    - Use the final full-branch review path from `review-protocol.md`.
    - Run one initial fresh full-branch review. After authorized repairs, use the protocol's targeted/full escalation decision; do not add another full review only as closeout ceremony.
    - When a trusted fixed remediation packet from the active workflow records a completed full-branch review against an exact base state, count that review as the initial full round. Do not repeat it before repair; proceed directly to the protocol's targeted/full rereview decision after repair.
+   - Before starting any repair rereview, create `tasks/tmp/review-deliver-final-<plan-key>.rereview.json` using `references/rereview-scope-record.md`. Resolve `<deliver-skill-root>` to the directory containing this loaded `SKILL.md`, then run `python3 <deliver-skill-root>/scripts/validate_rereview_scope.py <record> --phase plan`. Do not start the rereview unless it passes.
+   - After recording every executed repair rereview round, run `python3 <deliver-skill-root>/scripts/validate_rereview_scope.py <record> --phase complete`. Do not mark final review complete, archive the plan, or proceed to finalization unless it passes. The validator-derived action scope and grouped widest scope are authoritative.
    - Use the execution plan as the scope artifact instead of PRD/TDD/tasks-plan.
    - Write the final review log to `tasks/tmp/review-deliver-final-<plan-key>.md` unless a repo-local convention requires a different temp path.
    - Use a fresh final reviewer when available.

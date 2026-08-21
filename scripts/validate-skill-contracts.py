@@ -1067,11 +1067,15 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
     ownership_path = "skills/shared/references/contract-ownership.md"
     deliver_path = "skills/deliver/SKILL.md"
     worker_packet_path = "skills/deliver/references/worker-packet.md"
+    rereview_reference_path = "skills/deliver/references/rereview-scope-record.md"
+    rereview_script_path = "skills/deliver/scripts/validate_rereview_scope.py"
     disposition = (ROOT / disposition_path).read_text()
     protocol = (ROOT / protocol_path).read_text()
     ownership = (ROOT / ownership_path).read_text()
     deliver = (ROOT / deliver_path).read_text()
     worker_packet = (ROOT / worker_packet_path).read_text()
+    rereview_reference = (ROOT / rereview_reference_path).read_text()
+    rereview_script = (ROOT / rereview_script_path).read_text()
 
     disposition_tokens = [
         "## Deliver Test Value",
@@ -1124,6 +1128,11 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "use the widest scope required by any repair",
         "the executed rereview round",
         "an isolated action can remain `targeted` in its own record",
+        "bundled rereview-scope validator",
+        "complete fixed Boolean risk-flag set",
+        "both `irreversible_mutation` and `user_visible_output_or_diagnostics` are true",
+        "passing plan-phase validation",
+        "passing complete-phase validation",
         "no unresolved verified `fix` findings",
         "does not change `$review-chain`, `$merge-review`, `$repo-sweep`",
         "All non-Deliver consumers retain their existing full resweep or rereview behavior unchanged.",
@@ -1150,6 +1159,11 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "trusted fixed remediation packet from the active workflow",
         "count that review as the initial full round",
         "Do not repeat it before repair",
+        rereview_reference_path,
+        "review-deliver-final-<plan-key>.rereview.json",
+        "validate_rereview_scope.py <record> --phase plan",
+        "validate_rereview_scope.py <record> --phase complete",
+        "validator-derived action scope and grouped widest scope are authoritative",
     ]
     for token in deliver_tokens:
         if token not in deliver:
@@ -1166,9 +1180,62 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         if token not in worker_packet:
             fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{worker_packet_path} missing token: {token}")
 
+    rereview_reference_tokens = [
+        "review-deliver-final-<plan-key>.rereview.json",
+        "all eight Boolean `risk_flags`",
+        "architecture_or_trust_boundary",
+        "cross_process_or_async_completion",
+        "irreversible_mutation",
+        "user_visible_output_or_diagnostics",
+        "public_contract",
+        "broad_security_or_data_integrity",
+        "isolation_unproven",
+        "new_material_finding",
+        "--phase plan",
+        "--phase complete",
+        "widest scope derived for its listed actions",
+    ]
+    for token in rereview_reference_tokens:
+        if token not in rereview_reference:
+            fail(errors, "PD-DELIVER-REREVIEW-SCOPE-GATE", f"{rereview_reference_path} missing token: {token}")
+
+    rereview_script_tokens = [
+        "RISK_FLAGS",
+        "DIRECT_FULL_FLAGS",
+        "def derived_scope",
+        "irreversible_mutation",
+        "user_visible_output_or_diagnostics",
+        "plan-phase record must have an empty rounds array",
+        "complete-phase record must include at least one executed round",
+        "requires {expected_scope} rereview from its widest action",
+        "actions missing executed rereview evidence",
+    ]
+    for token in rereview_script_tokens:
+        if token not in rereview_script:
+            fail(errors, "PD-DELIVER-REREVIEW-SCOPE-GATE", f"{rereview_script_path} missing token: {token}")
+
+    try:
+        spec = importlib.util.spec_from_file_location("deliver_rereview_scope_validator", ROOT / rereview_script_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("could not load validator module")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        isolated = {name: False for name in module.RISK_FLAGS}
+        mutation_output = dict(isolated)
+        mutation_output["irreversible_mutation"] = True
+        mutation_output["user_visible_output_or_diagnostics"] = True
+        if module.derived_scope(isolated) != "targeted":
+            raise RuntimeError("isolated scope was not targeted")
+        if module.derived_scope(mutation_output) != "full":
+            raise RuntimeError("mutation/output scope was not full")
+    except Exception as exc:
+        fail(errors, "PD-DELIVER-REREVIEW-SCOPE-GATE", f"{rereview_script_path} functional check failed: {exc}")
+
     ownership_tokens = [
         "Deliver-final-review-only targeted/full rereview topology",
-        "cross-process or concurrent/asynchronous lifecycle/completion, irreversible-mutation ordering, and grouped-round scope rules",
+        "cross-process or concurrent/asynchronous lifecycle/completion, irreversible-mutation ordering, grouped-round scope rules",
+        "requirement for deterministic Deliver scope validation",
+        "Deliver skill owns the concrete scope-record schema and bundled validator",
         "The Deliver-only topology does not apply to other consumers.",
         "Deliver-only implementation-and-final-review test-persistence vocabulary",
         "The Deliver-only vocabulary does not apply to other consumers.",
