@@ -22,7 +22,7 @@
 - [x] Implement the schema, validator, owner wording, mirrors, and focused tests.
 - [x] Validate and forward-test the candidate.
 - [x] Run a fresh adversarial implementation review and install the exact candidate.
-- [ ] Commit and record the exact candidate ref.
+- [x] Commit and record the exact candidate ref.
 - [ ] Run the four-arm frozen comparison and blind judge.
 - [ ] Apply candidate compliance and the unchanged hard outcome gate.
 - [ ] Preserve artifacts and record the final verdict without in-run tuning.
@@ -33,7 +33,7 @@ skill_review_complete: no
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v7.md
 baseline_ref: a4116bb
-candidate_ref: pending
+candidate_ref: 3b07ee8
 scenario: evals/deliver/suite.md
 baseline_run_complete: no
 candidate_run_complete: no
@@ -43,4 +43,4 @@ judge_blinded: no
 verdict: inconclusive
 artifact_evidence_preserved: yes
 ready_for_merge_review: no
-stop_reason: missing_candidate
+stop_reason: missing_runs
