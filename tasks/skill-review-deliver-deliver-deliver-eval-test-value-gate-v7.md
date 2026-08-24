@@ -23,24 +23,35 @@
 - [x] Validate and forward-test the candidate.
 - [x] Run a fresh adversarial implementation review and install the exact candidate.
 - [x] Commit and record the exact candidate ref.
-- [ ] Run the four-arm frozen comparison and blind judge.
-- [ ] Apply candidate compliance and the unchanged hard outcome gate.
-- [ ] Preserve artifacts and record the final verdict without in-run tuning.
+- [x] Run the four-arm frozen comparison and blind judge.
+- [x] Apply candidate compliance and the unchanged hard outcome gate.
+- [x] Preserve artifacts and record the final verdict without in-run tuning.
+
+## V7 Result
+
+- The first live attempt was interrupted before either arm reached a freeze and left no usable scoring artifact. The official `r2` run restarted the unchanged frozen inputs; only its four sealed arms were scored.
+- The blinded judge froze `Run A better`; identity reveal mapped Run A to candidate `3b07ee8`, so the qualitative verdict was `candidate_better`.
+- Both runs passed the supplied acceptance probes. The judge preferred the candidate because it caught an additional mutation-before-output defect while using less test surface, fewer review rounds, and less wall time.
+- Aggregate normalized cost: baseline 20 test functions, 1,017 added test lines, 7 full review rounds, and 7,529 seconds; candidate 13 test functions, 448 added test lines, 3 full review rounds, and 3,563 seconds.
+- Candidate field compliance passed. The hard cost gate also found strict improvement on both pre-registered axes: unjustified permanent decisions `4 -> 0` and unnecessary full rereviews `3 -> 2`.
+- The unchanged outcome ledger rejected RF-001 and RF-003 because the candidate recorded `full` where `targeted` was required. RF-001 was escalated through the separate `public_contract` flag; RF-003 was also treated as a public diagnostic/no-write contract change.
+- Per the no-tuning rule, v7 stops as `candidate_regression` despite the favorable blind verdict and cost improvements. A further rule change would require a separately approved v8.
+- Preserved artifacts: `agent-scratch/skill-review/deliver-deliver-deliver-eval-test-value-gate-v7/results/`.
 
 ## Skill Review Completion Stamp
 
-skill_review_complete: no
+skill_review_complete: yes
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v7.md
 baseline_ref: a4116bb
 candidate_ref: 3b07ee8
 scenario: evals/deliver/suite.md
-baseline_run_complete: no
-candidate_run_complete: no
-comparable_inputs: no
-judge_run_complete: no
-judge_blinded: no
-verdict: inconclusive
+baseline_run_complete: yes
+candidate_run_complete: yes
+comparable_inputs: yes
+judge_run_complete: yes
+judge_blinded: yes
+verdict: candidate_regression
 artifact_evidence_preserved: yes
 ready_for_merge_review: no
-stop_reason: missing_runs
+stop_reason: candidate_regression
