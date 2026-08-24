@@ -23,6 +23,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - The historical two-script holdout has no tracked test harness. V5 records PF-001 and PF-002 as `probe_only` instead of requiring invented permanent coverage, while PF-002 still requires a full rereview because it changes cross-process completion semantics.
 - V5 reduced test and review cost but still classified Queuectl RF-002 as targeted. The user approved a v6 contract iteration that keeps the v5 policy and adds a deterministic scope-record validator; the frozen scenarios, outcome ledger, and correctness expectations remain unchanged.
 - The user-approved v6 rerun preserved correctness and the blinded judge preferred the candidate. The hard category gate still stopped the run because the mechanical rule classified Queuectl RF-001 as full instead of targeted; no v6 tuning or rerun is authorized inside that frozen comparison.
+- The user approved a v7 iteration that keeps v6's successful test-value behavior and RF-002 protection, but distinguishes a genuinely fallible output step after committed mutation from a repair that merely touches mutation and reporting in the same command.
 
 ## Steps
 
@@ -94,6 +95,16 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Freeze and normalize all four official arms, obtain a fresh blinded verdict before identity reveal, then run candidate compliance and the unchanged outcome gate.
 - [x] Record that the blinded judge preferred v6 and both cost axes strictly improved, but the hard gate rejected RF-001 `full` versus expected `targeted`.
 - [x] Stop without tuning or rerunning v6; require a separately approved v7 iteration for any narrower mechanical rule.
+
+### 5.3 Add The User-Approved V7 Ordered-Failure Gate
+
+- [ ] Add one explicit risk flag for a fallible user-visible output or diagnostic step that occurs after irreversible mutation, and require it to agree with the existing mutation and output flags.
+- [ ] Derive `full` from that ordered-failure flag, while allowing mutation plus unchanged safe reporting to remain `targeted`; preserve every other v6 full-review trigger and grouped-round rule.
+- [ ] Add focused tests proving the RF-001 shape is targeted, the RF-002 shape is full, inconsistent records fail closed, and grouped rounds still use the widest action scope.
+- [ ] Update only the Deliver-owned scope schema, shared review-protocol summary, and validator mirrors needed to enforce the rule; leave the frozen evaluator and outcome ledger unchanged.
+- [ ] Validate, forward-test, adversarially review, install, commit, and record the exact v7 candidate before any official arm starts.
+- [ ] Run four fresh `gpt-5.6-sol` `xhigh` arms against original baseline `a4116bb`, then freeze, normalize, blind-judge, reveal identity, and apply candidate compliance plus the unchanged hard gate.
+- [ ] Stop without tuning if v7 is not `candidate_better`; otherwise continue to exact-candidate merge review and closeout.
 
 ### 6. Review And Close Out
 
