@@ -15,6 +15,7 @@ RISK_FLAGS = {
     "cross_process_or_async_completion",
     "irreversible_mutation",
     "user_visible_output_or_diagnostics",
+    "fallible_output_after_irreversible_mutation",
     "public_contract",
     "broad_security_or_data_integrity",
     "isolation_unproven",
@@ -24,6 +25,7 @@ RISK_FLAGS = {
 DIRECT_FULL_FLAGS = RISK_FLAGS - {
     "irreversible_mutation",
     "user_visible_output_or_diagnostics",
+    "fallible_output_after_irreversible_mutation",
 }
 
 
@@ -46,12 +48,18 @@ def require_nonempty_string(value: Any, label: str) -> str:
 
 
 def derived_scope(flags: dict[str, bool]) -> str:
-    direct_full = any(flags[name] for name in DIRECT_FULL_FLAGS)
+    ordered_failure = flags["fallible_output_after_irreversible_mutation"]
     mutation_output = (
         flags["irreversible_mutation"]
         and flags["user_visible_output_or_diagnostics"]
     )
-    return "full" if direct_full or mutation_output else "targeted"
+    if ordered_failure and not mutation_output:
+        raise RecordError(
+            "fallible_output_after_irreversible_mutation requires both "
+            "irreversible_mutation and user_visible_output_or_diagnostics"
+        )
+    direct_full = any(flags[name] for name in DIRECT_FULL_FLAGS)
+    return "full" if direct_full or ordered_failure else "targeted"
 
 
 def validate_record(record: Any, phase: str) -> dict[str, str]:
@@ -60,8 +68,8 @@ def validate_record(record: Any, phase: str) -> dict[str, str]:
     if not isinstance(record, dict):
         raise RecordError("record must be a JSON object")
     require_exact_keys(record, {"schema_version", "actions", "rounds"}, "record")
-    if type(record["schema_version"]) is not int or record["schema_version"] != 1:
-        raise RecordError("schema_version must be 1")
+    if type(record["schema_version"]) is not int or record["schema_version"] != 2:
+        raise RecordError("schema_version must be 2")
 
     actions = record["actions"]
     if not isinstance(actions, list) or not actions:

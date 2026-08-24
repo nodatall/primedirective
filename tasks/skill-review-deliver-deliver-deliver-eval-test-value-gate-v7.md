@@ -19,9 +19,9 @@
 
 ## Status
 
-- [ ] Implement the schema, validator, owner wording, mirrors, and focused tests.
-- [ ] Validate and forward-test the candidate.
-- [ ] Run a fresh adversarial implementation review and install the exact candidate.
+- [x] Implement the schema, validator, owner wording, mirrors, and focused tests.
+- [x] Validate and forward-test the candidate.
+- [x] Run a fresh adversarial implementation review and install the exact candidate.
 - [ ] Commit and record the exact candidate ref.
 - [ ] Run the four-arm frozen comparison and blind judge.
 - [ ] Apply candidate compliance and the unchanged hard outcome gate.

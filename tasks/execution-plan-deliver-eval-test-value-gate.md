@@ -98,10 +98,10 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 5.3 Add The User-Approved V7 Ordered-Failure Gate
 
-- [ ] Add one explicit risk flag for a fallible user-visible output or diagnostic step that occurs after irreversible mutation, and require it to agree with the existing mutation and output flags.
-- [ ] Derive `full` from that ordered-failure flag, while allowing mutation plus unchanged safe reporting to remain `targeted`; preserve every other v6 full-review trigger and grouped-round rule.
-- [ ] Add focused tests proving the RF-001 shape is targeted, the RF-002 shape is full, inconsistent records fail closed, and grouped rounds still use the widest action scope.
-- [ ] Update only the Deliver-owned scope schema, shared review-protocol summary, and validator mirrors needed to enforce the rule; leave the frozen evaluator and outcome ledger unchanged.
+- [x] Add one explicit risk flag for a fallible user-visible output or diagnostic step that occurs after irreversible mutation, and require it to agree with the existing mutation and output flags.
+- [x] Derive `full` from that ordered-failure flag, while allowing mutation plus unchanged safe reporting to remain `targeted`; preserve every other v6 full-review trigger and grouped-round rule.
+- [x] Add focused tests proving the RF-001 shape is targeted, the RF-002 shape is full, inconsistent records fail closed, and grouped rounds still use the widest action scope.
+- [x] Update only the Deliver-owned scope schema, shared review-protocol summary, and validator mirrors needed to enforce the rule; leave the frozen evaluator and outcome ledger unchanged.
 - [ ] Validate, forward-test, adversarially review, install, commit, and record the exact v7 candidate before any official arm starts.
 - [ ] Run four fresh `gpt-5.6-sol` `xhigh` arms against original baseline `a4116bb`, then freeze, normalize, blind-judge, reveal identity, and apply candidate compliance plus the unchanged hard gate.
 - [ ] Stop without tuning if v7 is not `candidate_better`; otherwise continue to exact-candidate merge review and closeout.

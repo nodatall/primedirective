@@ -27,7 +27,7 @@ def action(finding_id: str, **enabled_flags: bool) -> dict:
 
 def record(*actions: dict, rounds: list[dict] | None = None) -> dict:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "actions": list(actions),
         "rounds": [] if rounds is None else rounds,
     }
@@ -42,12 +42,27 @@ class RereviewScopeValidatorTests(unittest.TestCase):
         value = record(action("F-1", cross_process_or_async_completion=True))
         self.assertEqual(MODULE.validate_record(value, "plan"), {"F-1": "full"})
 
-    def test_mutation_plus_output_requires_full(self) -> None:
+    def test_rf_001_mutation_plus_safe_output_is_targeted(self) -> None:
+        value = record(
+            action(
+                "RF-001",
+                irreversible_mutation=True,
+                user_visible_output_or_diagnostics=True,
+            )
+        )
+        self.assertEqual(MODULE.validate_record(value, "plan"), {"RF-001": "targeted"})
+
+        value["actions"][0]["required_scope"] = "full"
+        with self.assertRaisesRegex(MODULE.RecordError, "requires targeted rereview"):
+            MODULE.validate_record(value, "plan")
+
+    def test_rf_002_fallible_output_after_mutation_requires_full(self) -> None:
         value = record(
             action(
                 "RF-002",
                 irreversible_mutation=True,
                 user_visible_output_or_diagnostics=True,
+                fallible_output_after_irreversible_mutation=True,
             )
         )
         self.assertEqual(MODULE.validate_record(value, "plan"), {"RF-002": "full"})
@@ -55,6 +70,24 @@ class RereviewScopeValidatorTests(unittest.TestCase):
         value["actions"][0]["required_scope"] = "targeted"
         with self.assertRaisesRegex(MODULE.RecordError, "requires full rereview"):
             MODULE.validate_record(value, "plan")
+
+    def test_ordered_failure_requires_mutation_and_output_flags(self) -> None:
+        inconsistent_flags = (
+            {"user_visible_output_or_diagnostics": True},
+            {"irreversible_mutation": True},
+        )
+        for prerequisite_flags in inconsistent_flags:
+            with self.subTest(prerequisite_flags=prerequisite_flags):
+                value = record(action("F-1"))
+                value["actions"][0]["risk_flags"].update(
+                    prerequisite_flags,
+                    fallible_output_after_irreversible_mutation=True,
+                )
+                with self.assertRaisesRegex(
+                    MODULE.RecordError,
+                    "fallible_output_after_irreversible_mutation requires both",
+                ):
+                    MODULE.validate_record(value, "plan")
 
     def test_grouped_round_uses_widest_action_scope(self) -> None:
         value = record(
@@ -76,12 +109,16 @@ class RereviewScopeValidatorTests(unittest.TestCase):
 
     def test_missing_or_malformed_risk_flags_fail_closed(self) -> None:
         missing = record(action("F-1"))
-        del missing["actions"][0]["risk_flags"]["public_contract"]
+        del missing["actions"][0]["risk_flags"][
+            "fallible_output_after_irreversible_mutation"
+        ]
         with self.assertRaisesRegex(MODULE.RecordError, "keys mismatch"):
             MODULE.validate_record(missing, "plan")
 
         malformed = record(action("F-1"))
-        malformed["actions"][0]["risk_flags"]["public_contract"] = "no"
+        malformed["actions"][0]["risk_flags"][
+            "fallible_output_after_irreversible_mutation"
+        ] = "no"
         with self.assertRaisesRegex(MODULE.RecordError, "must be a boolean"):
             MODULE.validate_record(malformed, "plan")
 

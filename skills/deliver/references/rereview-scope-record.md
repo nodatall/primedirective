@@ -2,11 +2,13 @@
 
 Use this record only for repairs authorized during `$deliver` final review. Create `tasks/tmp/review-deliver-final-<plan-key>.rereview.json` before starting a repair rereview.
 
+For every record, set `schema_version: 2`.
+
 For every repair action, record:
 
 - `finding_id`
 - a concise `repair_boundary`
-- all eight Boolean `risk_flags`
+- all nine Boolean `risk_flags`
 - the validator-derived `required_scope`
 - a concise `scope_rationale`
 
@@ -16,12 +18,13 @@ The required risk flags are:
 - `cross_process_or_async_completion`
 - `irreversible_mutation`
 - `user_visible_output_or_diagnostics`
+- `fallible_output_after_irreversible_mutation`
 - `public_contract`
 - `broad_security_or_data_integrity`
 - `isolation_unproven`
 - `new_material_finding`
 
-The validator derives `full` when any direct full-review flag is true. It also derives `full` when both `irreversible_mutation` and `user_visible_output_or_diagnostics` are true. Otherwise it derives `targeted`.
+The validator derives `full` when any direct full-review flag is true or when `fallible_output_after_irreversible_mutation` is true. Set that ordered-failure flag when the repair changes or protects a failure boundary where a fallible user-visible output or diagnostic step runs after irreversible mutation. The flag may be true only when both `irreversible_mutation` and `user_visible_output_or_diagnostics` are true. Mere mutation plus reporting does not require the flag when their ordering and failure boundary are unchanged. Otherwise the validator derives `targeted`.
 
 Before rereview, leave `rounds` empty and run:
 

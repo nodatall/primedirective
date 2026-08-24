@@ -1156,7 +1156,8 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "evidence from one fresh reviewer",
         "crosses an architecture or trust boundary",
         "changes cross-process coordination or lifecycle/completion semantics across concurrent or asynchronous boundaries",
-        "changes the ordering or atomicity of irreversible mutation relative to user-visible output or diagnostics",
+        "changes or protects a failure boundary where a fallible user-visible output or diagnostic step runs after irreversible mutation",
+        "Mere mutation plus reporting remains `targeted` when the repair leaves their ordering and failure boundary unchanged",
         "changes a public contract",
         "broadly affects security or data integrity",
         "cannot be shown to be isolated",
@@ -1167,7 +1168,9 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "an isolated action can remain `targeted` in its own record",
         "bundled rereview-scope validator",
         "complete fixed Boolean risk-flag set",
-        "both `irreversible_mutation` and `user_visible_output_or_diagnostics` are true",
+        "from `fallible_output_after_irreversible_mutation`",
+        "requires both `irreversible_mutation` and `user_visible_output_or_diagnostics`",
+        "the two prerequisite flags without ordered failure remain `targeted`",
         "passing plan-phase validation",
         "passing complete-phase validation",
         "no unresolved verified `fix` findings",
@@ -1219,11 +1222,15 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
 
     rereview_reference_tokens = [
         "review-deliver-final-<plan-key>.rereview.json",
-        "all eight Boolean `risk_flags`",
+        "`schema_version: 2`",
+        "all nine Boolean `risk_flags`",
         "architecture_or_trust_boundary",
         "cross_process_or_async_completion",
         "irreversible_mutation",
         "user_visible_output_or_diagnostics",
+        "fallible_output_after_irreversible_mutation",
+        "changes or protects a failure boundary",
+        "Mere mutation plus reporting does not require the flag when their ordering and failure boundary are unchanged",
         "public_contract",
         "broad_security_or_data_integrity",
         "isolation_unproven",
@@ -1242,6 +1249,9 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "def derived_scope",
         "irreversible_mutation",
         "user_visible_output_or_diagnostics",
+        "fallible_output_after_irreversible_mutation",
+        "schema_version must be 2",
+        "requires both",
         "plan-phase record must have an empty rounds array",
         "complete-phase record must include at least one executed round",
         "requires {expected_scope} rereview from its widest action",
@@ -1261,10 +1271,22 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         mutation_output = dict(isolated)
         mutation_output["irreversible_mutation"] = True
         mutation_output["user_visible_output_or_diagnostics"] = True
+        ordered_failure = dict(mutation_output)
+        ordered_failure["fallible_output_after_irreversible_mutation"] = True
+        inconsistent = dict(isolated)
+        inconsistent["fallible_output_after_irreversible_mutation"] = True
         if module.derived_scope(isolated) != "targeted":
             raise RuntimeError("isolated scope was not targeted")
-        if module.derived_scope(mutation_output) != "full":
-            raise RuntimeError("mutation/output scope was not full")
+        if module.derived_scope(mutation_output) != "targeted":
+            raise RuntimeError("mutation/output scope was not targeted")
+        if module.derived_scope(ordered_failure) != "full":
+            raise RuntimeError("ordered-failure scope was not full")
+        try:
+            module.derived_scope(inconsistent)
+        except module.RecordError:
+            pass
+        else:
+            raise RuntimeError("inconsistent ordered-failure flags were accepted")
     except Exception as exc:
         fail(errors, "PD-DELIVER-REREVIEW-SCOPE-GATE", f"{rereview_script_path} functional check failed: {exc}")
 
