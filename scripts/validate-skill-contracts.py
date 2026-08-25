@@ -1158,7 +1158,8 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "changes cross-process coordination or lifecycle/completion semantics across concurrent or asynchronous boundaries",
         "changes or protects a failure boundary where a fallible user-visible output or diagnostic step runs after irreversible mutation",
         "Mere mutation plus reporting remains `targeted` when the repair leaves their ordering and failure boundary unchanged",
-        "changes a public contract",
+        "changes the approved caller-visible contract",
+        "Restoring implementation behavior to a cited pre-repair approved contract remains `targeted`",
         "broadly affects security or data integrity",
         "cannot be shown to be isolated",
         "targeted rereview discovers a new material defect",
@@ -1168,6 +1169,11 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "an isolated action can remain `targeted` in its own record",
         "bundled rereview-scope validator",
         "complete fixed Boolean risk-flag set",
+        "approved_contract_basis",
+        "effect: none | restore | change | uncertain",
+        "non-empty evidence or approval `source`",
+        "`changes_approved_public_contract` is true if and only if the effect is `change`",
+        "an `uncertain` effect keeps it false and requires `isolation_unproven`",
         "from `fallible_output_after_irreversible_mutation`",
         "requires both `irreversible_mutation` and `user_visible_output_or_diagnostics`",
         "the two prerequisite flags without ordered failure remain `targeted`",
@@ -1222,8 +1228,13 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
 
     rereview_reference_tokens = [
         "review-deliver-final-<plan-key>.rereview.json",
-        "`schema_version: 2`",
+        "`schema_version: 3`",
+        "Schema v2 records and records that mix the retired and current risk-flag keys fail closed",
         "all nine Boolean `risk_flags`",
+        "`approved_contract_basis` with exactly `effect` and `source`",
+        "`none`, `restore`, `change`, or `uncertain`",
+        "non-empty evidence or approval citation",
+        "structural support required for a restoration",
         "architecture_or_trust_boundary",
         "cross_process_or_async_completion",
         "irreversible_mutation",
@@ -1231,7 +1242,7 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "fallible_output_after_irreversible_mutation",
         "changes or protects a failure boundary",
         "Mere mutation plus reporting does not require the flag when their ordering and failure boundary are unchanged",
-        "public_contract",
+        "changes_approved_public_contract",
         "broad_security_or_data_integrity",
         "isolation_unproven",
         "new_material_finding",
@@ -1246,11 +1257,16 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
     rereview_script_tokens = [
         "RISK_FLAGS",
         "DIRECT_FULL_FLAGS",
+        "APPROVED_CONTRACT_EFFECTS",
         "def derived_scope",
+        "def validate_approved_contract_basis",
         "irreversible_mutation",
         "user_visible_output_or_diagnostics",
         "fallible_output_after_irreversible_mutation",
-        "schema_version must be 2",
+        "schema_version must be 3",
+        "approved_contract_basis",
+        "changes_approved_public_contract must be true iff",
+        "effect uncertain requires isolation_unproven",
         "requires both",
         "plan-phase record must have an empty rounds array",
         "complete-phase record must include at least one executed round",
@@ -1273,6 +1289,10 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         mutation_output["user_visible_output_or_diagnostics"] = True
         ordered_failure = dict(mutation_output)
         ordered_failure["fallible_output_after_irreversible_mutation"] = True
+        contract_change = dict(isolated)
+        contract_change["changes_approved_public_contract"] = True
+        uncertain_contract = dict(isolated)
+        uncertain_contract["isolation_unproven"] = True
         inconsistent = dict(isolated)
         inconsistent["fallible_output_after_irreversible_mutation"] = True
         if module.derived_scope(isolated) != "targeted":
@@ -1281,6 +1301,35 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
             raise RuntimeError("mutation/output scope was not targeted")
         if module.derived_scope(ordered_failure) != "full":
             raise RuntimeError("ordered-failure scope was not full")
+        if module.derived_scope(contract_change) != "full":
+            raise RuntimeError("approved-contract change scope was not full")
+        if module.derived_scope(uncertain_contract) != "full":
+            raise RuntimeError("uncertain approved-contract scope was not full")
+        module.validate_approved_contract_basis(
+            isolated,
+            {"effect": "restore", "source": "approved contract evidence"},
+            "functional approved-contract basis",
+        )
+        module.validate_approved_contract_basis(
+            contract_change,
+            {"effect": "change", "source": "approved contract evidence"},
+            "functional approved-contract basis",
+        )
+        module.validate_approved_contract_basis(
+            uncertain_contract,
+            {"effect": "uncertain", "source": "review evidence"},
+            "functional approved-contract basis",
+        )
+        try:
+            module.validate_approved_contract_basis(
+                isolated,
+                {"effect": "restore", "source": ""},
+                "functional approved-contract basis",
+            )
+        except module.RecordError:
+            pass
+        else:
+            raise RuntimeError("unsupported approved-contract restoration was accepted")
         try:
             module.derived_scope(inconsistent)
         except module.RecordError:
@@ -1292,7 +1341,7 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
 
     ownership_tokens = [
         "Deliver-final-review-only targeted/full rereview topology",
-        "cross-process or concurrent/asynchronous lifecycle/completion, irreversible-mutation ordering, grouped-round scope rules",
+        "cross-process or concurrent/asynchronous lifecycle/completion, irreversible-mutation ordering, approved-contract change or restoration evidence, grouped-round scope rules",
         "requirement for deterministic Deliver scope validation",
         "Deliver skill owns the concrete scope-record schema and bundled validator",
         "The Deliver-only topology does not apply to other consumers.",

@@ -2,12 +2,13 @@
 
 Use this record only for repairs authorized during `$deliver` final review. Create `tasks/tmp/review-deliver-final-<plan-key>.rereview.json` before starting a repair rereview.
 
-For every record, set `schema_version: 2`.
+For every record, set `schema_version: 3`. Schema v2 records and records that mix the retired and current risk-flag keys fail closed.
 
 For every repair action, record:
 
 - `finding_id`
 - a concise `repair_boundary`
+- `approved_contract_basis` with exactly `effect` and `source`
 - all nine Boolean `risk_flags`
 - the validator-derived `required_scope`
 - a concise `scope_rationale`
@@ -19,10 +20,14 @@ The required risk flags are:
 - `irreversible_mutation`
 - `user_visible_output_or_diagnostics`
 - `fallible_output_after_irreversible_mutation`
-- `public_contract`
+- `changes_approved_public_contract`
 - `broad_security_or_data_integrity`
 - `isolation_unproven`
 - `new_material_finding`
+
+Set `approved_contract_basis.effect` to `none`, `restore`, `change`, or `uncertain`, and set `source` to a non-empty evidence or approval citation. `change` means changing, expanding, withdrawing, or otherwise revising the approved caller-visible contract. `restore` means bringing the implementation back into agreement with a pre-repair approved contract without changing that contract. The non-empty `source` is the structural support required for a restoration; the validator does not attempt semantic citation parsing.
+
+Set `changes_approved_public_contract` to true if and only if `effect` is `change`. For `uncertain`, keep that Boolean false and set `isolation_unproven` to true, which independently derives `full`. A supported `restore` remains `targeted` unless another full-review flag applies.
 
 The validator derives `full` when any direct full-review flag is true or when `fallible_output_after_irreversible_mutation` is true. Set that ordered-failure flag when the repair changes or protects a failure boundary where a fallible user-visible output or diagnostic step runs after irreversible mutation. The flag may be true only when both `irreversible_mutation` and `user_visible_output_or_diagnostics` are true. Mere mutation plus reporting does not require the flag when their ordering and failure boundary are unchanged. Otherwise the validator derives `targeted`.
 

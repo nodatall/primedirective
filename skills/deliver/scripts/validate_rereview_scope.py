@@ -16,11 +16,13 @@ RISK_FLAGS = {
     "irreversible_mutation",
     "user_visible_output_or_diagnostics",
     "fallible_output_after_irreversible_mutation",
-    "public_contract",
+    "changes_approved_public_contract",
     "broad_security_or_data_integrity",
     "isolation_unproven",
     "new_material_finding",
 }
+
+APPROVED_CONTRACT_EFFECTS = {"none", "restore", "change", "uncertain"}
 
 DIRECT_FULL_FLAGS = RISK_FLAGS - {
     "irreversible_mutation",
@@ -62,14 +64,38 @@ def derived_scope(flags: dict[str, bool]) -> str:
     return "full" if direct_full or ordered_failure else "targeted"
 
 
+def validate_approved_contract_basis(
+    flags: dict[str, bool], basis: Any, label: str
+) -> None:
+    if not isinstance(basis, dict):
+        raise RecordError(f"{label} must be an object")
+    require_exact_keys(basis, {"effect", "source"}, label)
+    effect = basis["effect"]
+    if not isinstance(effect, str) or effect not in APPROVED_CONTRACT_EFFECTS:
+        allowed = ", ".join(sorted(APPROVED_CONTRACT_EFFECTS))
+        raise RecordError(f"{label}.effect must be one of: {allowed}")
+    require_nonempty_string(basis["source"], f"{label}.source")
+
+    changes_contract = flags["changes_approved_public_contract"]
+    if changes_contract != (effect == "change"):
+        raise RecordError(
+            "changes_approved_public_contract must be true iff "
+            "approved_contract_basis.effect is change"
+        )
+    if effect == "uncertain" and not flags["isolation_unproven"]:
+        raise RecordError(
+            "approved_contract_basis.effect uncertain requires isolation_unproven"
+        )
+
+
 def validate_record(record: Any, phase: str) -> dict[str, str]:
     if phase not in {"plan", "complete"}:
         raise RecordError("phase must be plan or complete")
     if not isinstance(record, dict):
         raise RecordError("record must be a JSON object")
     require_exact_keys(record, {"schema_version", "actions", "rounds"}, "record")
-    if type(record["schema_version"]) is not int or record["schema_version"] != 2:
-        raise RecordError("schema_version must be 2")
+    if type(record["schema_version"]) is not int or record["schema_version"] != 3:
+        raise RecordError("schema_version must be 3")
 
     actions = record["actions"]
     if not isinstance(actions, list) or not actions:
@@ -85,6 +111,7 @@ def validate_record(record: Any, phase: str) -> dict[str, str]:
             {
                 "finding_id",
                 "repair_boundary",
+                "approved_contract_basis",
                 "risk_flags",
                 "required_scope",
                 "scope_rationale",
@@ -104,6 +131,12 @@ def validate_record(record: Any, phase: str) -> dict[str, str]:
         for name, value in flags.items():
             if not isinstance(value, bool):
                 raise RecordError(f"{label}.risk_flags.{name} must be a boolean")
+
+        validate_approved_contract_basis(
+            flags,
+            action["approved_contract_basis"],
+            f"{label}.approved_contract_basis",
+        )
 
         expected_scope = derived_scope(flags)
         if action["required_scope"] != expected_scope:
