@@ -222,6 +222,38 @@ class RereviewScopeValidatorTests(unittest.TestCase):
         with self.assertRaisesRegex(MODULE.RecordError, "widest action"):
             MODULE.validate_record(value, "complete")
 
+    def test_ordinary_post_repair_full_round_may_cover_targeted_actions(self) -> None:
+        value = record(
+            action("F-1"),
+            action("F-2", contract_effect="restore"),
+            rounds=[
+                {
+                    "round_id": "ordinary-full",
+                    "reviewed_finding_ids": ["F-1", "F-2"],
+                    "scope": "full",
+                }
+            ],
+        )
+        with self.assertRaisesRegex(MODULE.RecordError, "widest action"):
+            MODULE.validate_record(value, "complete")
+
+        self.assertEqual(
+            MODULE.validate_record(
+                value,
+                "complete",
+                ordinary_post_repair_full_round="ordinary-full",
+            ),
+            {"F-1": "targeted", "F-2": "targeted"},
+        )
+
+        value["rounds"][0]["reviewed_finding_ids"] = ["F-1"]
+        with self.assertRaisesRegex(MODULE.RecordError, "cover every action"):
+            MODULE.validate_record(
+                value,
+                "complete",
+                ordinary_post_repair_full_round="ordinary-full",
+            )
+
     def test_missing_or_malformed_risk_flags_fail_closed(self) -> None:
         missing = record(action("F-1"))
         del missing["actions"][0]["risk_flags"][

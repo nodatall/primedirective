@@ -88,7 +88,11 @@ def validate_approved_contract_basis(
         )
 
 
-def validate_record(record: Any, phase: str) -> dict[str, str]:
+def validate_record(
+    record: Any,
+    phase: str,
+    ordinary_post_repair_full_round: str | None = None,
+) -> dict[str, str]:
     if phase not in {"plan", "complete"}:
         raise RecordError("phase must be plan or complete")
     if not isinstance(record, dict):
@@ -150,6 +154,10 @@ def validate_record(record: Any, phase: str) -> dict[str, str]:
     if not isinstance(rounds, list):
         raise RecordError("rounds must be an array")
     if phase == "plan":
+        if ordinary_post_repair_full_round is not None:
+            raise RecordError(
+                "ordinary post-repair full round is valid only in complete phase"
+            )
         if rounds:
             raise RecordError("plan-phase record must have an empty rounds array")
         return required_by_id
@@ -158,6 +166,7 @@ def validate_record(record: Any, phase: str) -> dict[str, str]:
 
     reviewed_ids: set[str] = set()
     round_ids: set[str] = set()
+    ordinary_round_found = False
     for index, review_round in enumerate(rounds):
         label = f"rounds[{index}]"
         if not isinstance(review_round, dict):
@@ -190,12 +199,31 @@ def validate_record(record: Any, phase: str) -> dict[str, str]:
             if any(required_by_id[finding_id] == "full" for finding_id in finding_ids)
             else "targeted"
         )
-        if review_round["scope"] != expected_scope:
+        is_ordinary_full = round_id == ordinary_post_repair_full_round
+        if is_ordinary_full:
+            ordinary_round_found = True
+            if review_round["scope"] != "full":
+                raise RecordError(
+                    f"{round_id} designated as ordinary post-repair full round "
+                    "must have full scope"
+                )
+            if set(finding_ids) != set(required_by_id):
+                raise RecordError(
+                    f"{round_id} designated as ordinary post-repair full round "
+                    "must cover every action"
+                )
+        elif review_round["scope"] != expected_scope:
             raise RecordError(
                 f"{round_id} requires {expected_scope} rereview from its widest action, "
                 f"not {review_round['scope']!r}"
             )
         reviewed_ids.update(finding_ids)
+
+    if ordinary_post_repair_full_round is not None and not ordinary_round_found:
+        raise RecordError(
+            "designated ordinary post-repair full round was not found: "
+            f"{ordinary_post_repair_full_round}"
+        )
 
     missing = sorted(set(required_by_id) - reviewed_ids)
     if missing:
@@ -207,11 +235,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("record", type=Path)
     parser.add_argument("--phase", required=True, choices=("plan", "complete"))
+    parser.add_argument("--ordinary-post-repair-full-round")
     args = parser.parse_args(argv)
 
     try:
         record = json.loads(args.record.read_text(encoding="utf-8"))
-        required = validate_record(record, args.phase)
+        required = validate_record(
+            record,
+            args.phase,
+            ordinary_post_repair_full_round=args.ordinary_post_repair_full_round,
+        )
     except (OSError, json.JSONDecodeError, RecordError) as exc:
         print(f"deliver rereview scope validation failed: {exc}", file=sys.stderr)
         return 2

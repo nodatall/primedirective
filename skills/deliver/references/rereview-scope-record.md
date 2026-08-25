@@ -1,6 +1,6 @@
 # Deliver Rereview Scope Record
 
-Use this record only for repairs authorized during `$deliver` final review. Create `tasks/tmp/review-deliver-final-<plan-key>.rereview.json` before starting a repair rereview.
+Use this record only for repairs authorized during `$deliver` final review. Create `tasks/tmp/review-deliver-final-<plan-key>.rereview.json` before starting a repair rereview. For repairs imported from a fixed remediation packet, create every action before the first post-repair review, including when that review will be the ordinary mandatory full-branch review.
 
 For every record, set `schema_version: 3`. Schema v2 records and records that mix the retired and current risk-flag keys fail closed.
 
@@ -44,3 +44,15 @@ python3 <deliver-skill-root>/scripts/validate_rereview_scope.py tasks/tmp/review
 ```
 
 Do not start the repair rereview unless the plan-phase command passes. Do not mark the final review complete unless the complete-phase command passes. For a grouped round, the validator requires the widest scope derived for its listed actions.
+
+An ordinary mandatory full-branch review performed after fixed-packet repairs may be recorded as the grouped repair round when it covers every action; its `full` scope satisfies any validator-derived targeted or full action scope. A qualifying attested review imported as the initial round happened before repair and cannot serve this second purpose, so it still requires a separate post-repair round at the derived scope.
+
+When that ordinary review is broader than an all-targeted action set, name its exact `round_id` explicitly during complete-phase validation:
+
+```bash
+python3 <deliver-skill-root>/scripts/validate_rereview_scope.py tasks/tmp/review-deliver-final-<plan-key>.rereview.json --phase complete --ordinary-post-repair-full-round <round-id>
+```
+
+The option is fail-closed: it is valid only during complete phase, the named round must exist with `full` scope, and that round must cover every recorded action. Do not use it for an ordinary repair rereview merely to inflate a targeted derived scope.
+
+Resolve `<deliver-skill-root>` to the directory containing the loaded Deliver `SKILL.md` and execute this bundled validator in place. Do not copy the validator into the target repository or include a copied validator in the target diff.
