@@ -32,10 +32,10 @@ Use the v8 table's precedence with `current_version=v9` and `next_candidate_vers
 ## Status
 
 - [x] Freeze the v9 scope after a fresh `gpt-5.6-sol` `xhigh` adversarial plan review returned clean.
-- [ ] Implement the fixed-packet resume and pathological-probe contract wording plus validator mirrors.
-- [ ] Validate and independently forward-test the candidate.
-- [ ] Run a fresh adversarial implementation review and install the exact candidate.
-- [ ] Commit and record the exact candidate ref.
+- [x] Implement the fixed-packet resume and pathological-probe contract wording plus validator mirrors.
+- [x] Validate and independently forward-test the candidate; all nine decision branches passed.
+- [x] Run a fresh adversarial implementation review and install the exact candidate; review returned clean.
+- [x] Commit and record exact candidate `c891282`.
 - [ ] Run the four-arm frozen comparison and blind judge.
 - [ ] Apply candidate compliance and the unchanged hard outcome gate.
 - [ ] Preserve artifacts and record the final verdict without in-run tuning.
@@ -46,14 +46,14 @@ skill_review_complete: no
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v9.md
 baseline_ref: a4116bb
-candidate_ref: pending
+candidate_ref: c891282
 scenario: evals/deliver/suite.md
 baseline_run_complete: no
 candidate_run_complete: no
-comparable_inputs: no
+comparable_inputs: yes
 judge_run_complete: no
 judge_blinded: no
 verdict: inconclusive
 artifact_evidence_preserved: no
 ready_for_merge_review: no
-stop_reason: missing_candidate
+stop_reason: awaiting_official_arms
