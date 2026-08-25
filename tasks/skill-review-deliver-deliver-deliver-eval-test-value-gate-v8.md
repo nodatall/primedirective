@@ -45,13 +45,21 @@ Every next-version candidate revision keeps the evaluator, outcome ledger, scena
 
 ## Status
 
-- [ ] Implement the schema, validator, owner wording, mirrors, and focused tests.
-- [ ] Validate and forward-test the candidate.
-- [ ] Run a fresh adversarial implementation review and install the exact candidate.
-- [ ] Commit and record the exact candidate ref.
+- [x] Implement the schema, validator, owner wording, mirrors, and focused tests.
+- [x] Validate and forward-test the candidate.
+- [x] Run a fresh adversarial implementation review and install the exact candidate.
+- [x] Commit and record the exact candidate ref.
 - [ ] Run the four-arm frozen comparison and blind judge.
 - [ ] Apply candidate compliance and the unchanged hard outcome gate.
 - [ ] Preserve artifacts and record the final verdict without in-run tuning.
+
+## Candidate Freeze
+
+- Candidate ref: `beb346a`
+- The 13 focused validator tests, full skill-contract validation, quick skill validation, frozen-ledger validation, and `git diff --check` passed.
+- The independent forward test produced RF-001/RF-003 `targeted`, a genuine approved-contract change `full`, and an uncertain contract effect `full`; the schema-v3 plan record passed validation.
+- The fresh `gpt-5.6-sol` `xhigh` adversarial review found no material issue and confirmed the new cases are table-consolidated and proportional.
+- All 25 frozen harness tests passed except the known nested `sandbox-exec` check, which the enclosing sandbox skipped; `evals/deliver/**` is unchanged.
 
 ## Skill Review Completion Stamp
 
@@ -59,7 +67,7 @@ skill_review_complete: no
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v8.md
 baseline_ref: a4116bb
-candidate_ref: pending
+candidate_ref: beb346a
 scenario: evals/deliver/suite.md
 baseline_run_complete: no
 candidate_run_complete: no
