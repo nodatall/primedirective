@@ -49,9 +49,9 @@ Every next-version candidate revision keeps the evaluator, outcome ledger, scena
 - [x] Validate and forward-test the candidate.
 - [x] Run a fresh adversarial implementation review and install the exact candidate.
 - [x] Commit and record the exact candidate ref.
-- [ ] Run the four-arm frozen comparison and blind judge.
-- [ ] Apply candidate compliance and the unchanged hard outcome gate.
-- [ ] Preserve artifacts and record the final verdict without in-run tuning.
+- [x] Run the four-arm frozen comparison and blind judge.
+- [x] Apply candidate compliance and the unchanged hard outcome gate.
+- [x] Preserve artifacts and record the final verdict without in-run tuning.
 
 ## Candidate Freeze
 
@@ -61,20 +61,31 @@ Every next-version candidate revision keeps the evaluator, outcome ledger, scena
 - The fresh `gpt-5.6-sol` `xhigh` adversarial review found no material issue and confirmed the new cases are table-consolidated and proportional.
 - All 25 frozen harness tests passed except the known nested `sandbox-exec` check, which the enclosing sandbox skipped; `evals/deliver/**` is unchanged.
 
+## V8 Result
+
+- All four official arms completed with valid terminal seals and were normalized from sealed output. No arm or judge stage was rerun.
+- The blinded judge froze `Run A better`; identity reveal mapped Run A to baseline `a4116bb` and Run B to candidate `beb346a`, so the qualitative verdict is `candidate_regression`.
+- Both runs passed all frozen behavioral probes. The judge preferred the baseline because the candidate's holdout described a 192-line validation script as probe-only, added a 231-line temporary scope validator, and still took longer overall.
+- Aggregate normalized cost: baseline 26 test functions, 762 added test lines, 2 full review rounds, and 3,056 seconds; candidate 12 test functions, 464 added test lines, 2 full review rounds, and 3,547 seconds.
+- Candidate field compliance passed. Both cost axes strictly improved: unjustified permanent decisions `4 -> 1` and unnecessary full rereviews `3 -> 2`.
+- The unchanged outcome ledger rejected RF-001 `full` versus `targeted`, RF-003 `permanent` versus `probe_only`, and RF-003 `full` versus `targeted`.
+- Failure layer: candidate contract/application. In Queuectl, the runner did not count the staged fixed remediation packet as the initial completed review, so it skipped the schema-v3 repair-scope record and ran one fresh full review after all repairs. It also treated a deterministic extreme-depth serialization trigger as economical permanent coverage despite the resource-limit default.
+- This is a conclusive scored regression. Per the frozen transition table, v8 cannot rerun; artifacts are preserved at `agent-scratch/skill-review/deliver-deliver-deliver-eval-test-value-gate-v8/results/`, and only a separately frozen candidate-contract v9 revision may continue.
+
 ## Skill Review Completion Stamp
 
-skill_review_complete: no
+skill_review_complete: yes
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v8.md
 baseline_ref: a4116bb
 candidate_ref: beb346a
 scenario: evals/deliver/suite.md
-baseline_run_complete: no
-candidate_run_complete: no
-comparable_inputs: no
-judge_run_complete: no
-judge_blinded: no
-verdict: inconclusive
-artifact_evidence_preserved: no
+baseline_run_complete: yes
+candidate_run_complete: yes
+comparable_inputs: yes
+judge_run_complete: yes
+judge_blinded: yes
+verdict: candidate_regression
+artifact_evidence_preserved: yes
 ready_for_merge_review: no
-stop_reason: missing_candidate
+stop_reason: candidate_regression

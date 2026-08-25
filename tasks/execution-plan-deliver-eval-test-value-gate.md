@@ -25,6 +25,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - The user-approved v6 rerun preserved correctness and the blinded judge preferred the candidate. The hard category gate still stopped the run because the mechanical rule classified Queuectl RF-001 as full instead of targeted; no v6 tuning or rerun is authorized inside that frozen comparison.
 - The user approved a v7 iteration that keeps v6's successful test-value behavior and RF-002 protection, but distinguishes a genuinely fallible output step after committed mutation from a repair that merely touches mutation and reporting in the same command.
 - V7 proved that ordered-failure distinction, but RF-001 and RF-003 were still escalated by the broader `public_contract` flag. The user approved continued versioned iteration through a passing, merge-ready result. V8 keeps the frozen evaluator and narrows that flag to an actual change to the approved external contract, not a repair that restores already-approved behavior.
+- V8's scope schema worked in the historical holdout, but the Queuectl runner did not treat its staged fixed remediation packet as the initial completed review, so it never used the scope record and performed one full review after all repairs. It also kept a permanent extreme-depth serialization regression. The blinded judge preferred the baseline and the hard gate rejected RF-001 full, RF-003 permanent, and RF-003 full; v9 must revise only the candidate contract while every evaluator-owned surface stays frozen.
 
 ## Steps
 
@@ -115,9 +116,9 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Add focused tests covering every contract-effect/Boolean combination, proving approved-contract restoration is targeted, a genuine approved-contract change and an uncertain assessment are full, unsupported restoration plus v2 and mixed schemas fail closed, RF-002 remains full through the ordered-failure flag, PF-002 remains full through the cross-process flag, and grouped rounds still use the widest action scope.
 - [x] Update only the Deliver-owned scope schema, shared review-protocol summary, contract validator mirrors, and focused tests; leave the frozen evaluator, outcome ledger, scenarios, and cost gates unchanged.
 - [x] Validate and forward-test the actual candidate workflow on RF-001 restoration, RF-003 restoration, a genuine approved-contract change, and an ambiguous contract case; then run a fresh adversarial review, install, commit, and record the exact v8 candidate before any official arm starts.
-- [ ] Run four fresh `gpt-5.6-sol` `xhigh` arms against original baseline `a4116bb`, then freeze, normalize, blind-judge, reveal identity, and apply candidate compliance plus the unchanged hard gate.
-- [ ] Use `gpt-5.6-sol` `xhigh` for implementation review, all arm runners, and the blinded judge.
-- [ ] Apply the frozen failure-transition table in the v8 state document. A valid arm terminal seal closes that arm's rerun window; later normalization may resume only from its sealed output. A frozen judge verdict likewise cannot be rerun. Only an external interruption before the relevant seal may restart the same version with unchanged inputs. If v8 passes, continue to exact-candidate merge review and closeout.
+- [x] Run four fresh `gpt-5.6-sol` `xhigh` arms against original baseline `a4116bb`, then freeze, normalize, blind-judge, reveal identity, and apply candidate compliance plus the unchanged hard gate.
+- [x] Use `gpt-5.6-sol` `xhigh` for implementation review, all arm runners, and the blinded judge.
+- [x] Apply the frozen failure-transition table in the v8 state document. A valid arm terminal seal closes that arm's rerun window; later normalization may resume only from its sealed output. A frozen judge verdict likewise cannot be rerun. Only an external interruption before the relevant seal may restart the same version with unchanged inputs. If v8 passes, continue to exact-candidate merge review and closeout.
 
 ### 6. Review And Close Out
 
