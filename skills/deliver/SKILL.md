@@ -275,6 +275,8 @@ Rules:
    - Do not mention whether worker agents were or were not used unless it creates a real blocker or residual risk.
 8. Verify each useful step.
    - Run the narrow check that proves the current item.
+   - For a parser or validation repair, verify accepted-looking values against the downstream consumer grammar instead of stopping at the new guard. For shell numeric state, probe empty, non-digit, leading-zero or base-sensitive, and bounded-length inputs when relevant; in a disposable or historical fixture, keep those checks `probe_only` and do not invent a permanent harness.
+   - For an approved cross-process lifecycle repair, check synchronous completion after any intermediate readiness signal, concurrent waiters, the active owner or lock, failed or stale owner recovery, and default-versus-foreground behavior before the first full review. A synchronous caller must not return while protected work or its live owner or lock remains active. Do not expand the approved lifecycle contract to satisfy this verification.
    - For UI, layout, styling, or rendered-content changes, inspect the affected UI when practical and capture visual evidence.
    - If a check fails, classify the failure layer before patching again.
    - If another patch would be a guess, use the verification pivot: add the smallest useful log, deterministic test, replay, or temporary probe under `/agent-scratch/`.

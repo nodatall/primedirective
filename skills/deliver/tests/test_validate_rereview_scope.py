@@ -17,6 +17,7 @@ def action(
     *,
     contract_effect: str = "none",
     contract_source: str | None = None,
+    repair_boundary: str | None = None,
     **enabled_flags: bool,
 ) -> dict:
     flags = {name: False for name in MODULE.RISK_FLAGS}
@@ -26,7 +27,7 @@ def action(
     required_scope = MODULE.derived_scope(flags)
     return {
         "finding_id": finding_id,
-        "repair_boundary": f"repair boundary for {finding_id}",
+        "repair_boundary": repair_boundary or f"repair boundary for {finding_id}",
         "approved_contract_basis": {
             "effect": contract_effect,
             "source": contract_source or f"approved contract evidence for {finding_id}",
@@ -86,16 +87,22 @@ class RereviewScopeValidatorTests(unittest.TestCase):
                 ):
                     MODULE.validate_record(value, "plan")
 
-    def test_rf_002_fallible_output_after_mutation_requires_full(self) -> None:
+    def test_ordered_failure_uses_pre_repair_defect_boundary(self) -> None:
         value = record(
             action(
-                "RF-002",
+                "F-ordered",
+                repair_boundary=(
+                    "before repair, fallible reporting followed irreversible mutation; "
+                    "the repair moves validation before mutation"
+                ),
                 irreversible_mutation=True,
                 user_visible_output_or_diagnostics=True,
                 fallible_output_after_irreversible_mutation=True,
             )
         )
-        self.assertEqual(MODULE.validate_record(value, "plan"), {"RF-002": "full"})
+        self.assertEqual(
+            MODULE.validate_record(value, "plan"), {"F-ordered": "full"}
+        )
 
         value["actions"][0]["required_scope"] = "targeted"
         with self.assertRaisesRegex(MODULE.RecordError, "requires full rereview"):

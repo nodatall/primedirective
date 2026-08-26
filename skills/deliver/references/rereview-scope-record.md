@@ -7,7 +7,7 @@ For every record, set `schema_version: 3`. Schema v2 records and records that mi
 For every repair action, record:
 
 - `finding_id`
-- a concise `repair_boundary`
+- a concise `repair_boundary` that describes the pre-repair defect boundary changed or protected, not only the post-repair control flow
 - `approved_contract_basis` with exactly `effect` and `source`
 - all nine Boolean `risk_flags`
 - the validator-derived `required_scope`
@@ -29,7 +29,7 @@ Set `approved_contract_basis.effect` to `none`, `restore`, `change`, or `uncerta
 
 Set `changes_approved_public_contract` to true if and only if `effect` is `change`. For `uncertain`, keep that Boolean false and set `isolation_unproven` to true, which independently derives `full`. A supported `restore` remains `targeted` unless another full-review flag applies.
 
-The validator derives `full` when any direct full-review flag is true or when `fallible_output_after_irreversible_mutation` is true. Set that ordered-failure flag when the repair changes or protects a failure boundary where a fallible user-visible output or diagnostic step runs after irreversible mutation. The flag may be true only when both `irreversible_mutation` and `user_visible_output_or_diagnostics` are true. Mere mutation plus reporting does not require the flag when their ordering and failure boundary are unchanged. Otherwise the validator derives `targeted`.
+The validator derives `full` when any direct full-review flag is true or when `fallible_output_after_irreversible_mutation` is true. Set every risk flag from the pre-repair defect boundary changed or protected by the repair, not merely from the repaired control flow. Set the ordered-failure flag when that boundary has a fallible user-visible output or diagnostic step after irreversible mutation, even when the repair moves validation or output before mutation. The flag may be true only when both `irreversible_mutation` and `user_visible_output_or_diagnostics` are true. Mere mutation plus unchanged reporting does not require the flag when their ordering and failure boundary are unchanged. Otherwise the validator derives `targeted`.
 
 Before rereview, leave `rounds` empty and run:
 
