@@ -36,24 +36,36 @@ Use the v9 precedence and restart limits with `current_version=v10` and `next_ca
 - [x] Implement only candidate-owned contract wording and proportional validator tests.
 - [x] Validate and independently forward-test all six frozen action outcomes plus RF-004 null scope, same-mechanism table and unchanged-reporting targeted negative controls, parser-consumer grammar, concurrent waiters, failed/stale owners, and post-readiness protected-work completion.
 - [x] Complete fresh adversarial implementation review, install, commit, and record the exact candidate.
-- [ ] Run four sealed official arms and a fresh blind judge.
-- [ ] Apply candidate compliance and the unchanged hard gate.
-- [ ] Preserve artifacts and record the terminal v10 verdict without in-run tuning.
+- [x] Run four sealed official arms and a fresh blind judge.
+- [x] Apply candidate compliance and the unchanged hard gate.
+- [x] Preserve artifacts and record the terminal v10 verdict without in-run tuning.
+
+## Terminal Result
+
+- Verdict: `candidate_better` / `clean_benefit`.
+- Blinded judge: Run B better; the frozen operator reveal mapped Run B to the candidate.
+- Material correctness: both arms passed the frozen acceptance checks; the judge preferred the candidate's additional supported output-after-persistence and cross-process completion protection.
+- Test-value gate: unjustified permanent decisions improved from 2 to 0.
+- Rereview-scope gate: unnecessary full rereviews improved from 3 to 0.
+- Candidate category regressions: none across all six frozen findings.
+- Candidate compliance: passed with no violations.
+- Aggregate measured execution: baseline 19 test functions, 531 test lines, 3 full rounds, 2,777 seconds; candidate 14 test functions, 615 test lines, 4 full rounds, 5,718 seconds. The qualitative judge accepted the higher time and line cost because the candidate closed material adjacent correctness boundaries and removed unjustified permanent/scope decisions.
+- Preserved evidence: `agent-scratch/skill-review/deliver-deliver-deliver-eval-test-value-gate-v10/results/` and `/private/tmp/deliver-eval-8a489bc-v10-official/`.
 
 ## Skill Review Completion Stamp
 
-skill_review_complete: no
+skill_review_complete: yes
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v10.md
 baseline_ref: a4116bb
 candidate_ref: 8a489bc
 scenario: evals/deliver/suite.md
-baseline_run_complete: no
-candidate_run_complete: no
-comparable_inputs: no
-judge_run_complete: no
-judge_blinded: no
-verdict: inconclusive
-artifact_evidence_preserved: no
-ready_for_merge_review: no
-stop_reason: evaluation_pending
+baseline_run_complete: yes
+candidate_run_complete: yes
+comparable_inputs: yes
+judge_run_complete: yes
+judge_blinded: yes
+verdict: candidate_better
+artifact_evidence_preserved: yes
+ready_for_merge_review: yes
+stop_reason: clean_benefit
