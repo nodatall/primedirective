@@ -47,8 +47,8 @@
 ## Status
 
 - [x] Complete a fresh adversarial plan review.
-- [ ] Implement and validate the evaluator isolation fix without changing candidate `8a489bc`.
-- [ ] Complete a fresh adversarial implementation review and freeze the exact evaluator.
+- [x] Implement and validate the evaluator isolation fix without changing candidate `8a489bc`.
+- [x] Complete a fresh adversarial implementation review and freeze the exact evaluator.
 - [ ] Run four fresh sealed official arms and a fresh blind judge.
 - [ ] Apply candidate compliance and the unchanged hard gate.
 - [ ] Preserve artifacts and record the terminal v11 verdict.
@@ -60,7 +60,9 @@ skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v11.md
 baseline_ref: a4116bb
 candidate_ref: 8a489bc
-evaluator_ref: pending
+evaluator_ref: 73fa8de6b3d10c3c8111debcaf525dd2cfcc87aa
+evaluator_tree: 0971260022313abbd0a1111bf9f20fa7c7a08113
+evaluator_manifest_sha256: c15d17e58533ad2c9bbb88109bcca75e5679230c738d6bb251c1a456c0270fec
 scenario: evals/deliver/suite.md
 baseline_run_complete: no
 candidate_run_complete: no
@@ -70,4 +72,4 @@ judge_blinded: no
 verdict: inconclusive
 artifact_evidence_preserved: no
 ready_for_merge_review: no
-stop_reason: evaluator_implementation_pending
+stop_reason: official_comparison_pending
