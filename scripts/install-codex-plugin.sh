@@ -10,6 +10,18 @@ CODEX_CONFIG_PATH="${CODEX_CONFIG_DIR}/config.toml"
 CODEX_SKILLS_DIR="${CODEX_CONFIG_DIR}/skills"
 CODEX_PLUGIN_DIR="${CODEX_CONFIG_DIR}/plugins"
 CODEX_PLUGIN_PATH="${CODEX_PLUGIN_DIR}/prime-directive"
+CODEX_BIN="${CODEX_BIN:-}"
+
+if [[ -z "$CODEX_BIN" ]]; then
+  if [[ -x "/Applications/ChatGPT.app/Contents/Resources/codex" ]]; then
+    CODEX_BIN="/Applications/ChatGPT.app/Contents/Resources/codex"
+  elif command -v codex >/dev/null 2>&1; then
+    CODEX_BIN="$(command -v codex)"
+  else
+    echo "Cannot install Prime Directive plugin: Codex CLI is unavailable" >&2
+    exit 1
+  fi
+fi
 
 mkdir -p "$MARKETPLACE_DIR"
 mkdir -p "$CODEX_CONFIG_DIR"
@@ -124,6 +136,9 @@ config_path.write_text(config_text, encoding="utf-8")
 print(f"Registered {plugin_name} in {marketplace_path}")
 print(f"Enabled {plugin_config_key} in {config_path}")
 PY
+
+"$CODEX_BIN" plugin add prime-directive@local-marketplace --json >/dev/null
+echo "Refreshed prime-directive@local-marketplace plugin cache"
 
 active_skills=()
 for skill_dir in "$ROOT_DIR"/skills/*; do
