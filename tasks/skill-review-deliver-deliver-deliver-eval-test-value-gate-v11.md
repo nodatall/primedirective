@@ -50,13 +50,21 @@
 - [x] Complete a fresh adversarial plan review.
 - [x] Implement and validate the evaluator isolation fix without changing candidate `8a489bc`.
 - [x] Complete a fresh adversarial implementation review and freeze the exact evaluator.
-- [ ] Run four fresh sealed official arms and a fresh blind judge.
-- [ ] Apply candidate compliance and the unchanged hard gate.
-- [ ] Preserve artifacts and record the terminal v11 verdict.
+- [x] Run four fresh sealed official arms and a fresh blind judge.
+- [x] Apply candidate compliance and the unchanged hard gate.
+- [x] Preserve artifacts and record the terminal v11 verdict.
+
+## Official V11 Result
+
+- All four official arms sealed without a rerun. Aggregate baseline measurements were 11 test functions, 391 test lines, 2 full review rounds, and 2,019 seconds. Aggregate candidate measurements were 8 test functions, 329 test lines, 5 full review rounds, and 7,160 seconds.
+- The fresh blinded Sol/xhigh judge selected Run B because it retained the smaller consolidated Queuectl suite while its additional holdout review rounds found and repaired verified cross-process lifecycle defects. Identity reveal then proved Run B was candidate `8a489bc`.
+- Candidate compliance passed all six exact ledger decisions with no category regression. Unjustified permanent decisions improved from 2 to 0; unnecessary full-rereview decisions improved from 3 to 0. Material correctness was preserved and the official outcome gate passed.
+- The terminal chain replayed after the cleanup receipt was frozen. Verdict: `candidate_better`; stop reason: `clean_benefit`; merge-ready gate: true, subject to the required final full-branch merge review.
+- Canonical final evidence, comparison state, and the cleanup receipt are preserved under `agent-scratch/skill-review/deliver-deliver-deliver-eval-test-value-gate-v11/`. The live runtime and sentinel remain intact only through final merge rereview, as required by the amended plan.
 
 ## Skill Review Completion Stamp
 
-skill_review_complete: no
+skill_review_complete: yes
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v11.md
 baseline_ref: a4116bb
@@ -68,12 +76,12 @@ comparison_manifest_sha256: 332dc12d83242e794d64e2432b85c10be957bd14cfc017859615
 baseline_package_manifest_sha256: c178218a3972199f038bee8271a32be036223159afcdb2481ff37ffdfbba055e
 candidate_package_manifest_sha256: 87c659fbb29cd7bdeafff7b0b67e1ca69671df708d60f8e0bef55e483748ad4a
 scenario: evals/deliver/suite.md
-baseline_run_complete: no
-candidate_run_complete: no
-comparable_inputs: no
-judge_run_complete: no
-judge_blinded: no
-verdict: inconclusive
-artifact_evidence_preserved: no
-ready_for_merge_review: no
-stop_reason: official_comparison_pending
+baseline_run_complete: yes
+candidate_run_complete: yes
+comparable_inputs: yes
+judge_run_complete: yes
+judge_blinded: yes
+verdict: candidate_better
+artifact_evidence_preserved: yes
+ready_for_merge_review: yes
+stop_reason: clean_benefit
