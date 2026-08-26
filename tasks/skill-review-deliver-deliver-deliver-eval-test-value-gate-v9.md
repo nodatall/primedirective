@@ -36,24 +36,36 @@ Use the v8 table's precedence with `current_version=v9` and `next_candidate_vers
 - [x] Validate and independently forward-test the candidate; all nine decision branches passed.
 - [x] Run a fresh adversarial implementation review and install the exact candidate; review returned clean.
 - [x] Commit and record exact candidate `c891282`.
-- [ ] Run the four-arm frozen comparison and blind judge.
-- [ ] Apply candidate compliance and the unchanged hard outcome gate.
-- [ ] Preserve artifacts and record the final verdict without in-run tuning.
+- [x] Run the four-arm frozen comparison and blind judge.
+- [x] Apply candidate compliance and the unchanged hard outcome gate.
+- [x] Preserve artifacts and record the final verdict without in-run tuning.
+
+## Results
+
+- Frozen blinded verdict: `Run B better`; reveal mapped Run B to candidate.
+- Candidate compliance: passed.
+- Queuectl baseline: 32 added test functions, 983 test lines, 1 full round, 4,730 seconds.
+- Queuectl candidate: 8 added test functions, 311 test lines, 1 full round, 2,550 seconds.
+- Historical baseline: 0 recognized test lines, 2 full rounds, 1,907 seconds.
+- Historical candidate: 0 recognized test lines, 3 full rounds, 4,711 seconds.
+- Hard-gate cost axes both improved: unjustified permanent decisions `2 -> 0`; unnecessary full rereview actions `3 -> 1`.
+- Hard-gate category regressions: PF-001 `rereview_scope=full` expected `targeted`; RF-001 `test_disposition=table_case` expected `permanent`; RF-002 `rereview_scope=targeted` expected `full`.
+- Final v9 verdict: `candidate_regression`. No same-version rerun is permitted; v10 may change candidate-owned surfaces only.
 
 ## Skill Review Completion Stamp
 
-skill_review_complete: no
+skill_review_complete: yes
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v9.md
 baseline_ref: a4116bb
 candidate_ref: c891282
 scenario: evals/deliver/suite.md
-baseline_run_complete: no
-candidate_run_complete: no
+baseline_run_complete: yes
+candidate_run_complete: yes
 comparable_inputs: yes
-judge_run_complete: no
-judge_blinded: no
-verdict: inconclusive
-artifact_evidence_preserved: no
+judge_run_complete: yes
+judge_blinded: yes
+verdict: candidate_regression
+artifact_evidence_preserved: yes
 ready_for_merge_review: no
-stop_reason: awaiting_official_arms
+stop_reason: outcome_gate_category_regressions
