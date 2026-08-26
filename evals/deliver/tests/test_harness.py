@@ -52,6 +52,9 @@ class FakeStdout:
     def read1(self, _size: int) -> bytes:
         return self.chunks.pop(0) if self.chunks else b""
 
+    def close(self) -> None:
+        pass
+
 
 class FakeProcess:
     def __init__(self, chunks: list[bytes]) -> None:
@@ -529,6 +532,35 @@ for label, path, read in (("source-read", ledger, True), ("home-read", auth, Tru
             for path in denied:
                 if path.exists() or path.is_symlink():
                     path.unlink()
+
+    def test_real_preflight_canonicalizes_isolated_codex_home_under_seatbelt(self) -> None:
+        output = self.root / "real-runner-preflight.json"
+        try:
+            harness.preflight_runner(output)
+        except harness.HarnessError as exc:
+            if "sandbox_apply: Operation not permitted" in str(exc):
+                self.skipTest("the enclosing test sandbox forbids nested sandbox-exec")
+            raise
+        artifact = harness.validate_runner_preflight(output, check_binary=False)
+        smoke = artifact["smoke"]
+        environment = dict(item.split("=", 1) for item in smoke["environment"])
+        codex_home = Path(environment["CODEX_HOME"])
+        runtime_root = codex_home.parents[2]
+        self.assertEqual(smoke["command"][0], str(harness.SANDBOX_EXEC))
+        self.assertIn(str(harness.BUNDLED_CODEX), smoke["command"])
+        self.assertIn(
+            f'(allow file-read-metadata (literal "{harness.STAGE_ROOT}"))',
+            smoke["profile"],
+        )
+        self.assertIn(
+            f'(allow file-read-metadata (literal "{runtime_root}"))',
+            smoke["profile"],
+        )
+        self.assertNotIn(
+            f'(allow file-read* file-write* (subpath "{runtime_root}"))',
+            smoke["profile"],
+        )
+        harness.validate_runner_trace(smoke["trace"].encode())
 
     def test_v11_comparison_freezes_identity_packages_order_and_one_time_seals(self) -> None:
         manifest, identity = self.initialize_v11_comparison("comparison-state")

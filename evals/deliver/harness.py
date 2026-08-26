@@ -64,7 +64,7 @@ FIRST_TOOL_GATE_COMMAND = (
     f'/bin/test -z "${{{INHERITED_SENTINEL}+x}}" && '
     f'/bin/test -n "${{{EXTERNAL_SENTINEL_ENV}:-}}" && '
     f'! /bin/cat "${EXTERNAL_SENTINEL_ENV}" >/dev/null 2>&1 && '
-    f'! /usr/bin/printf blocked > "${EXTERNAL_SENTINEL_ENV}" 2>/dev/null && '
+    f'! ( /usr/bin/printf blocked > "${EXTERNAL_SENTINEL_ENV}" ) 2>/dev/null && '
     f'! /bin/cat ../../{SIBLING_PROBE}/{SIBLING_SENTINEL} >/dev/null 2>&1 && '
     f"/usr/bin/printf {FIRST_TOOL_GATE_OUTPUT}"
 )
@@ -4430,6 +4430,8 @@ def execute_codex(
         auth_copy.unlink(missing_ok=True)
         if process is not None and process_group_id is not None:
             stop_process_group(process, process_group_id)
+        if process is not None and process.stdout is not None:
+            process.stdout.close()
 
 
 def runner_identity() -> dict[str, str]:
@@ -4454,6 +4456,10 @@ def seatbelt_path(path: Path) -> str:
 
 def sandbox_profile(stage_root: Path) -> str:
     stage_root = stage_root.resolve()
+    traversal_rules = "".join(
+        f'(allow file-read-metadata (literal "{seatbelt_path(path)}"))\n'
+        for path in (STAGE_ROOT, stage_root.parent)
+    )
     existing = {
         path.name for path in stage_root.parent.iterdir() if path.is_dir()
     } if stage_root.parent.is_dir() else set()
@@ -4470,6 +4476,7 @@ def sandbox_profile(stage_root: Path) -> str:
         '(deny file-read* file-write* (subpath "/Users/fromdarkness"))\n'
         '(deny file-read* file-write* (subpath "/Volumes"))\n'
         '(deny file-read* file-write* (subpath "/private/tmp"))\n'
+        f"{traversal_rules}"
         f'(allow file-read* file-write* (subpath "{seatbelt_path(stage_root)}"))\n'
         f"{sibling_rules}"
     )
