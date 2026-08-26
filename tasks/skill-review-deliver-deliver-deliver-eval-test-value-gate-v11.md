@@ -25,6 +25,7 @@
 - Obtain one fresh blinded `gpt-5.6-sol` `xhigh` judge verdict before identity reveal.
 - After reveal, require candidate compliance, zero category regressions, strict improvement on both frozen cost axes, preserved material correctness, and a blinded candidate-better verdict.
 - Preserve all v10 evidence as the superseded comparison that exposed the isolation defect; do not reuse its normalized outputs in v11.
+- Pre-arm diagnostic: evaluator `73fa8de` reached no arm. Its real preflight exposed denied metadata traversal while Codex canonicalized isolated `CODEX_HOME`; clean-reviewed repair `2df9796` fixed that boundary, and the unused runtime was removed before this fresh comparison was initialized.
 
 ## Failure Transitions
 
@@ -60,10 +61,10 @@ skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v11.md
 baseline_ref: a4116bb
 candidate_ref: 8a489bc
-evaluator_ref: f053d741bb4db5621a78a5ced8d16ab67e841d60
-evaluator_tree: 0971260022313abbd0a1111bf9f20fa7c7a08113
-evaluator_manifest_sha256: c15d17e58533ad2c9bbb88109bcca75e5679230c738d6bb251c1a456c0270fec
-comparison_manifest_sha256: b4d0fcb2681134ebd5c08323b1101dedb557071b3ebedb239097d1f2ec306e9b
+evaluator_ref: 2df979694124c8a49c58892e497ead35a4a4aa07
+evaluator_tree: b5b9ef162da1a949df25449877907fb56f9a156d
+evaluator_manifest_sha256: bf2c7af42144561b85ccea9e80eee5fc44b0adb77c8071996b67119552bb48fd
+comparison_manifest_sha256: 332dc12d83242e794d64e2432b85c10be957bd14cfc017859615dc62d9ab38aa
 baseline_package_manifest_sha256: c178218a3972199f038bee8271a32be036223159afcdb2481ff37ffdfbba055e
 candidate_package_manifest_sha256: 87c659fbb29cd7bdeafff7b0b67e1ca69671df708d60f8e0bef55e483748ad4a
 scenario: evals/deliver/suite.md
