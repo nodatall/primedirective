@@ -2,6 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "arm_binding": {
+      "additionalProperties": false,
+      "properties": {
+        "arm_name": {"enum": ["retry-failed-baseline", "retry-failed-candidate", "preflight-remediation-holdout-baseline", "preflight-remediation-holdout-candidate"]},
+        "terminal_seal_sha256": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
+      },
+      "required": ["arm_name", "terminal_seal_sha256"],
+      "type": "object"
+    },
+    "comparison_binding": {"$ref": "comparison-artifacts-schema.json#/$defs/comparisonBinding"},
     "behavior": {
       "additionalProperties": false,
       "properties": {
@@ -34,8 +44,8 @@
     "snapshots": {
       "additionalProperties": false,
       "properties": {
-        "post_remediation": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+        "post_remediation": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
       },
       "required": ["pre_packet", "post_remediation"],
       "type": "object"
@@ -43,32 +53,41 @@
     "source_hashes": {
       "additionalProperties": false,
       "properties": {
-        "implementation_diff": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_manifest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_metadata": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_profile": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_prompt": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_snapshot": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_stderr": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_trace": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet_validation": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "probe_results": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "remediation_manifest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "remediation_metadata": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "remediation_profile": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "remediation_prompt": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "remediation_stderr": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "remediation_trace": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "review_log": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "review_rounds": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "run_record": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "runner_preflight": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "test_diff": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+        "implementation_diff": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_manifest": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_metadata": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_profile": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_prompt": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_snapshot": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_stderr": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_trace": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_validation": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "probe_results": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_manifest": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_metadata": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_profile": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_prompt": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_stderr": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_trace": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "review_log": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "review_rounds": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "run_record": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "runner_preflight": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "test_diff": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
       },
       "required": ["implementation_diff", "test_diff", "probe_results", "review_log", "review_rounds", "run_record", "runner_preflight", "pre_packet_snapshot", "pre_packet_validation", "pre_packet_trace", "pre_packet_stderr", "pre_packet_metadata", "pre_packet_prompt", "pre_packet_manifest", "pre_packet_profile", "remediation_trace", "remediation_stderr", "remediation_metadata", "remediation_prompt", "remediation_manifest", "remediation_profile"],
       "type": "object"
+    },
+    "upstream_sha256s": {
+      "additionalProperties": false,
+      "properties": {
+        "output_freeze": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "terminal_seal": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
+      },
+      "required": ["output_freeze", "terminal_seal"],
+      "type": "object"
     }
   },
-  "required": ["schema_version", "scenario_id", "snapshots", "behavior", "measurements", "source_hashes"],
+  "required": ["schema_version", "comparison_binding", "arm_binding", "scenario_id", "snapshots", "behavior", "measurements", "source_hashes", "upstream_sha256s"],
   "type": "object"
 }

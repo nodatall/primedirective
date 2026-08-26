@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import hashlib
 import json
 import math
@@ -17,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -46,11 +49,22 @@ ARM_NAMES = tuple(
 PREFLIGHT_ARM = "runner-preflight"
 SIBLING_PROBE = "runner-sibling-probe"
 SIBLING_SENTINEL = "sentinel.txt"
+COMPARISON_CONTROL = ".deliver-evaluator"
+COMPARISON_MANIFEST = "comparison-manifest.json"
+COMPARISON_STATE = "attempt-state.json"
+COMPARISON_LOCK = "attempt-state.lock"
+EXTERNAL_SENTINEL = "external-temp-sentinel.txt"
+EXTERNAL_SENTINEL_BYTES = b"deliver-eval-external-temp-sentinel-v11\n"
+EXTERNAL_SENTINEL_SHA256 = hashlib.sha256(EXTERNAL_SENTINEL_BYTES).hexdigest()
+EXTERNAL_SENTINEL_ENV = "DELIVER_EVAL_EXTERNAL_TEMP_SENTINEL"
 INHERITED_SENTINEL = "DELIVER_EVAL_INHERITED_SENTINEL"
 FIRST_TOOL_GATE_OUTPUT = "deliver-eval-first-tool-gate-ok"
 FIRST_TOOL_GATE_COMMAND = (
     '/bin/test ! -e "$CODEX_HOME/auth.json" && '
     f'/bin/test -z "${{{INHERITED_SENTINEL}+x}}" && '
+    f'/bin/test -n "${{{EXTERNAL_SENTINEL_ENV}:-}}" && '
+    f'! /bin/cat "${EXTERNAL_SENTINEL_ENV}" >/dev/null 2>&1 && '
+    f'! /usr/bin/printf blocked > "${EXTERNAL_SENTINEL_ENV}" 2>/dev/null && '
     f'! /bin/cat ../../{SIBLING_PROBE}/{SIBLING_SENTINEL} >/dev/null 2>&1 && '
     f"/usr/bin/printf {FIRST_TOOL_GATE_OUTPUT}"
 )
@@ -109,6 +123,83 @@ SNAPSHOT_FIELDS = {
     "head", "status", "implementation_diff_sha256", "test_diff_sha256",
     "validation", "runner_artifacts", "runner_preflight_sha256",
 }
+EVALUATOR_ALLOWLIST = (
+    "evals/deliver/harness.py",
+    "evals/deliver/tests/test_harness.py",
+    "evals/deliver/suite.md",
+    "evals/deliver/evaluator/comparison-artifacts-schema.json",
+    "evals/deliver/evaluator/output-freeze-schema.json",
+    "evals/deliver/evaluator/behavior-schema.json",
+    "evals/deliver/evaluator/terminal-seal-schema.json",
+    "evals/deliver/evaluator/candidate-compliance-schema.json",
+)
+CANDIDATE_OWNED_PATHS = (
+    "scripts/validate-skill-contracts.py",
+    "skills/deliver/SKILL.md",
+    "skills/deliver/references/rereview-scope-record.md",
+    "skills/deliver/references/worker-packet.md",
+    "skills/deliver/tests/test_validate_rereview_scope.py",
+    "skills/shared/references/review/finding-disposition.md",
+    "skills/shared/references/review/review-protocol.md",
+)
+BASELINE_REF = "a4116bb"
+CANDIDATE_REF = "8a489bc"
+EVALUATOR_BASE_REF = "beb346a"
+BASELINE_PACKAGE_PATHS = (
+    "skills/deliver/SKILL.md",
+    "skills/deliver/references/plan-format.md",
+    "skills/deliver/references/worker-packet.md",
+    "skills/shared/references/analysis/verification-pivot.md",
+    "skills/shared/references/execution/finalization-gate.md",
+    "skills/shared/references/plain-language.md",
+    "skills/shared/references/reasoning-budget.md",
+    "skills/shared/references/review/finding-disposition.md",
+    "skills/shared/references/review/review-protocol.md",
+)
+CANDIDATE_PACKAGE_PATHS = (
+    "skills/deliver/SKILL.md",
+    "skills/deliver/references/plan-format.md",
+    "skills/deliver/references/rereview-scope-record.md",
+    "skills/deliver/references/worker-packet.md",
+    "skills/deliver/scripts/validate_rereview_scope.py",
+    "skills/shared/references/analysis/verification-pivot.md",
+    "skills/shared/references/execution/finalization-gate.md",
+    "skills/shared/references/plain-language.md",
+    "skills/shared/references/reasoning-budget.md",
+    "skills/shared/references/review/finding-disposition.md",
+    "skills/shared/references/review/review-protocol.md",
+)
+OFFICIAL_ARM_ORDER = (
+    "retry-failed-baseline",
+    "retry-failed-candidate",
+    "preflight-remediation-holdout-baseline",
+    "preflight-remediation-holdout-candidate",
+)
+FAILURE_FACTS = {
+    ("integrity_defect", "evaluator"): "evaluator_defect",
+    ("terminal_failure", "baseline"): "baseline_terminal",
+    ("failure_attribution", "ambiguous"): "ambiguous",
+    ("comparability_failure", "comparison"): "incomparable",
+    ("terminal_failure", "candidate"): "candidate_unscorable",
+    ("hard_gate_failure", "candidate"): "candidate_hard_gate",
+    ("blinded_regression", "candidate"): "blinded_regression",
+    ("scenario_coverage_failure", "changed_contract"): "candidate_not_exposed",
+}
+FAILURE_PRECEDENCE = tuple(FAILURE_FACTS.values())
+FINAL_CHAIN_FILES = (
+    ("normalized_retry_failed_baseline", "final-evidence/normalized-retry-failed-baseline.json"),
+    ("normalized_preflight_remediation_holdout_baseline", "final-evidence/normalized-preflight-remediation-holdout-baseline.json"),
+    ("normalized_retry_failed_candidate", "final-evidence/normalized-retry-failed-candidate.json"),
+    ("normalized_preflight_remediation_holdout_candidate", "final-evidence/normalized-preflight-remediation-holdout-candidate.json"),
+    ("blind_packet", "final-evidence/blind-packet.json"),
+    ("judge_record", "final-evidence/judge-record.json"),
+    ("identity_reveal", "final-evidence/identity-reveal.json"),
+    ("candidate_compliance", "final-evidence/candidate-compliance.json"),
+    ("outcome_gate", "final-evidence/outcome-gate.json"),
+)
+FINAL_FAILURE_FILES = (
+    ("failure_evidence", "final-evidence/failure-evidence.json"),
+)
 
 
 class HarnessError(RuntimeError):
@@ -164,6 +255,85 @@ def write_json(path: Path, value: object) -> None:
     path.write_bytes(canonical_json(value))
 
 
+def atomic_write_json(path: Path, value: object) -> None:
+    """Publish canonical JSON without exposing a partially written state file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp")
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(canonical_json(value))
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists() or temporary.is_symlink():
+            temporary.unlink()
+
+
+def require_regular_file(path: Path, label: str) -> Path:
+    if path.is_symlink() or not path.is_file() or not stat.S_ISREG(path.stat().st_mode):
+        raise HarnessError(f"{label} must be a canonical regular file")
+    return path
+
+
+def comparison_control(runtime_root: Path) -> Path:
+    return runtime_root / COMPARISON_CONTROL
+
+
+def external_sentinel_path(runtime_root: Path) -> Path:
+    return comparison_control(runtime_root) / EXTERNAL_SENTINEL
+
+
+def ensure_external_sentinel(runtime_root: Path) -> dict[str, object]:
+    """Create or verify the evaluator-owned sentinel outside every arm stage."""
+    runtime_root = runtime_root.resolve()
+    control = comparison_control(runtime_root)
+    if control.is_symlink():
+        raise HarnessError("comparison control directory cannot be a symlink")
+    control.mkdir(mode=0o700, parents=True, exist_ok=True)
+    sentinel = external_sentinel_path(runtime_root)
+    if sentinel.exists() or sentinel.is_symlink():
+        require_regular_file(sentinel, "external temporary sentinel")
+        if sentinel.read_bytes() != EXTERNAL_SENTINEL_BYTES:
+            raise HarnessError("external temporary sentinel bytes or digest changed")
+    else:
+        fd = os.open(sentinel, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(EXTERNAL_SENTINEL_BYTES)
+            handle.flush()
+            os.fsync(handle.fileno())
+    if (
+        sentinel.stat().st_mode & 0o777 != 0o600
+        or sentinel.stat().st_size != len(EXTERNAL_SENTINEL_BYTES)
+        or sha256_file(sentinel) != EXTERNAL_SENTINEL_SHA256
+    ):
+        raise HarnessError("external temporary sentinel metadata or digest changed")
+    return {
+        "path": str(sentinel),
+        "size": len(EXTERNAL_SENTINEL_BYTES),
+        "sha256": EXTERNAL_SENTINEL_SHA256,
+    }
+
+
+def verify_external_sentinel(binding: dict[str, object], runtime_root: Path) -> Path:
+    sentinel = external_sentinel_path(runtime_root.resolve())
+    require_regular_file(sentinel, "external temporary sentinel")
+    expected = {
+        "path": str(sentinel),
+        "size": sentinel.stat().st_size,
+        "sha256": sha256_file(sentinel),
+    }
+    if binding != expected:
+        raise HarnessError("external temporary sentinel binding drifted")
+    if (
+        sentinel.read_bytes() != EXTERNAL_SENTINEL_BYTES
+        or sentinel.stat().st_mode & 0o777 != 0o600
+    ):
+        raise HarnessError("external temporary sentinel bytes or mode changed")
+    return sentinel
+
+
 def run(command: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> str:
     result = subprocess.run(
         command,
@@ -178,6 +348,851 @@ def run(command: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> 
             f"command failed ({result.returncode}): {' '.join(command)}\n{result.stderr}"
         )
     return result.stdout
+
+
+def git_output(arguments: list[str]) -> str:
+    return run(["git", *arguments], cwd=SOURCE_ROOT).strip()
+
+
+def canonical_file_manifest(root: Path) -> dict[str, object]:
+    root = root.resolve(strict=True)
+    if root.is_symlink() or not root.is_dir():
+        raise HarnessError("package manifest root must be a regular directory")
+    files: list[dict[str, object]] = []
+    for path in sorted(root.rglob("*")):
+        relative = path.relative_to(root)
+        reject_symlink_chain(root, relative)
+        if path.is_dir():
+            continue
+        require_regular_file(path, "package manifest input")
+        files.append({
+            "path": relative.as_posix(),
+            "mode": f"{stat.S_IMODE(path.stat().st_mode):06o}",
+            "size": path.stat().st_size,
+            "sha256": sha256_file(path),
+        })
+    if not files:
+        raise HarnessError("package manifest cannot be empty")
+    payload: dict[str, object] = {"files": files}
+    payload["manifest_sha256"] = sha256_bytes(canonical_json(payload))
+    return payload
+
+
+def git_ref_package_manifest(ref: str, paths: tuple[str, ...]) -> dict[str, object]:
+    resolved = git_output(["rev-parse", f"{ref}^{{commit}}"])
+    files: list[dict[str, object]] = []
+    for relative in paths:
+        listing = git_output(["ls-tree", resolved, "--", relative])
+        if not listing:
+            raise HarnessError(f"frozen package path missing from {ref}: {relative}")
+        metadata, listed_path = listing.split("\t", 1)
+        mode, object_type, object_id = metadata.split()
+        if listed_path != relative or object_type != "blob" or mode == "120000":
+            raise HarnessError(f"frozen package path is not a regular blob: {relative}")
+        result = subprocess.run(
+            ["git", "cat-file", "blob", object_id], cwd=SOURCE_ROOT,
+            check=False, capture_output=True,
+        )
+        if result.returncode:
+            raise HarnessError(f"cannot read frozen package blob: {relative}")
+        files.append({
+            "path": relative,
+            "mode": f"{int(mode, 8) & 0o777:06o}",
+            "size": len(result.stdout),
+            "sha256": sha256_bytes(result.stdout),
+        })
+    payload: dict[str, object] = {"files": files}
+    payload["manifest_sha256"] = sha256_bytes(canonical_json(payload))
+    return payload
+
+
+def validate_supplied_package(
+    root: Path, expected: dict[str, object], paths: tuple[str, ...], label: str
+) -> None:
+    actual = canonical_file_manifest(root)
+    if [item["path"] for item in actual["files"]] != list(paths):
+        raise HarnessError(f"{label} package path set differs from its frozen ref")
+    if actual != expected:
+        raise HarnessError(f"{label} package bytes or modes differ from its frozen ref")
+
+
+def evaluator_identity(*, require_clean: bool = True) -> dict[str, str]:
+    if require_clean:
+        status = git_output([
+            "status", "--porcelain=v1", "--untracked-files=all", "--",
+            "evals/deliver",
+        ])
+        if status:
+            raise HarnessError("evaluator tree must be clean before comparison freeze")
+    commit = git_output(["rev-parse", "HEAD"])
+    tree = git_output(["rev-parse", "HEAD:evals/deliver"])
+    if not GIT_OBJECT_ID.fullmatch(commit) or not GIT_OBJECT_ID.fullmatch(tree):
+        raise HarnessError("evaluator Git identity is invalid")
+    tracked = [
+        line for line in git_output(["ls-files", "--", "evals/deliver"]).splitlines()
+        if line
+    ]
+    files: list[dict[str, object]] = []
+    for relative in tracked:
+        path = SOURCE_ROOT / relative
+        require_regular_file(path, "tracked evaluator input")
+        files.append({
+            "path": relative,
+            "size": path.stat().st_size,
+            "sha256": sha256_file(path),
+        })
+    if not files:
+        raise HarnessError("evaluator file manifest cannot be empty")
+    return {
+        "commit": commit,
+        "evals_tree": tree,
+        "file_manifest_sha256": sha256_bytes(canonical_json({"files": files})),
+    }
+
+
+def git_commit_is_ancestor(ancestor: str, descendant: str) -> bool:
+    return subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+        cwd=SOURCE_ROOT, check=False, capture_output=True,
+    ).returncode == 0
+
+
+def git_history_touches_evaluator(ancestor: str, descendant: str) -> bool:
+    result = subprocess.run(
+        [
+            "git", "log", "--full-history", "--format=%H",
+            f"{ancestor}..{descendant}",
+            "--", "evals/deliver",
+        ],
+        cwd=SOURCE_ROOT, check=False, capture_output=True, text=True,
+    )
+    if result.returncode:
+        raise HarnessError("cannot validate frozen evaluator path history")
+    return bool(result.stdout.strip())
+
+
+def validate_evaluator_identity(value: object, *, recompute: bool = True) -> dict[str, str]:
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"commit", "evals_tree", "file_manifest_sha256"}
+        or not GIT_OBJECT_ID.fullmatch(value.get("commit", ""))
+        or not GIT_OBJECT_ID.fullmatch(value.get("evals_tree", ""))
+        or not is_digest(value.get("file_manifest_sha256"))
+    ):
+        raise HarnessError("evaluator identity fields are invalid")
+    if recompute:
+        current = evaluator_identity()
+        if (
+            current["evals_tree"] != value["evals_tree"]
+            or current["file_manifest_sha256"] != value["file_manifest_sha256"]
+            or current["commit"] != value["commit"]
+            and (
+                not git_commit_is_ancestor(value["commit"], current["commit"])
+                or git_history_touches_evaluator(
+                    value["commit"], current["commit"]
+                )
+            )
+        ):
+            raise HarnessError("frozen evaluator identity drifted")
+    return value
+
+
+def assert_candidate_owned_paths_frozen() -> None:
+    changed = git_output([
+        "diff", "--name-only", CANDIDATE_REF, "--", *CANDIDATE_OWNED_PATHS
+    ]).splitlines()
+    if changed:
+        raise HarnessError(
+            "candidate-owned paths drifted from exact candidate " + CANDIDATE_REF
+        )
+
+
+def comparison_manifest_path(runtime_root: Path) -> Path:
+    return comparison_control(runtime_root) / COMPARISON_MANIFEST
+
+
+def comparison_for_stage(stage_root: Path) -> Path | None:
+    path = comparison_manifest_path(stage_root.parent)
+    return path if path.is_file() and not path.is_symlink() else None
+
+
+def initialize_comparison(
+    runtime_root: Path,
+    baseline_package: Path,
+    candidate_package: Path,
+    *,
+    comparison_id: str | None = None,
+) -> Path:
+    runtime_root = runtime_root.resolve()
+    if (
+        runtime_root.parent != STAGE_ROOT
+        or not re.fullmatch(r"deliver-eval-[A-Za-z0-9._-]+", runtime_root.name)
+    ):
+        raise HarnessError("comparison runtime must be /private/tmp/deliver-eval-<run>")
+    runtime_root.mkdir(mode=0o700, exist_ok=True)
+    manifest_path = comparison_manifest_path(runtime_root)
+    if manifest_path.exists() or manifest_path.is_symlink():
+        raise HarnessError("comparison manifest already exists")
+    assert_candidate_owned_paths_frozen()
+    identity = evaluator_identity()
+    changed = set(git_output([
+        "diff", "--name-only", EVALUATOR_BASE_REF, "HEAD", "--", "evals/deliver"
+    ]).splitlines())
+    if not changed or not changed.issubset(set(EVALUATOR_ALLOWLIST)):
+        raise HarnessError("evaluator commit changed paths outside the v11 allowlist")
+    baseline_expected = git_ref_package_manifest(BASELINE_REF, BASELINE_PACKAGE_PATHS)
+    candidate_expected = git_ref_package_manifest(CANDIDATE_REF, CANDIDATE_PACKAGE_PATHS)
+    validate_supplied_package(
+        baseline_package, baseline_expected, BASELINE_PACKAGE_PATHS, "baseline"
+    )
+    validate_supplied_package(
+        candidate_package, candidate_expected, CANDIDATE_PACKAGE_PATHS, "candidate"
+    )
+    sentinel = ensure_external_sentinel(runtime_root)
+    manifest = {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_id": comparison_id or str(uuid.uuid4()),
+        "evaluator_identity": identity,
+        "evaluator_base_ref": EVALUATOR_BASE_REF,
+        "evaluator_allowlist": list(EVALUATOR_ALLOWLIST),
+        "evaluator_changed_paths": sorted(changed),
+        "baseline": {
+            "ref": BASELINE_REF,
+            "package_manifest": baseline_expected,
+        },
+        "candidate": {
+            "ref": CANDIDATE_REF,
+            "package_manifest": candidate_expected,
+        },
+        "runtime_root": str(runtime_root),
+        "arm_order": list(OFFICIAL_ARM_ORDER),
+        "attempt_policy": {
+            "restart_cause": "external_interruption_only",
+            "maximum_attempts_per_arm": 2,
+        },
+        "external_sentinel": sentinel,
+    }
+    atomic_write_json(manifest_path, manifest)
+    comparison = validate_comparison_manifest(manifest_path)
+    state = {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_manifest_sha256": comparison["comparison_manifest_sha256"],
+        "next_arm_index": 0,
+        "arms": {
+            arm: {
+                "status": "pending",
+                "attempts": [],
+                "terminal_seal_sha256": None,
+            }
+            for arm in OFFICIAL_ARM_ORDER
+        },
+        "blind": {
+            "status": "pending",
+            "blind_packet_sha256": None,
+            "private_mapping_sha256": None,
+        },
+        "judge": {"status": "pending", "attempts": [], "frozen_record_sha256": None},
+        "final_verdict_sha256": None,
+        "cleanup_receipt_sha256": None,
+    }
+    atomic_write_json(comparison_control(runtime_root) / COMPARISON_STATE, state)
+    (comparison_control(runtime_root) / COMPARISON_LOCK).touch(mode=0o600)
+    return manifest_path
+
+
+def validate_comparison_manifest(
+    path: Path, *, recompute_evaluator: bool = True,
+    recompute_packages: bool = False,
+) -> dict[str, Any]:
+    require_regular_file(path, "comparison manifest")
+    document = json.loads(path.read_text(encoding="utf-8"))
+    fields = {
+        "schema_version", "comparison_id", "evaluator_identity",
+        "evaluator_base_ref",
+        "evaluator_allowlist", "evaluator_changed_paths", "baseline", "candidate",
+        "runtime_root", "arm_order", "attempt_policy", "external_sentinel",
+    }
+    if not isinstance(document, dict) or set(document) != fields:
+        raise HarnessError("comparison manifest fields are not exact")
+    runtime_root = Path(document["runtime_root"])
+    if (
+        document["schema_version"] != SCHEMA_VERSION
+        or not isinstance(document["comparison_id"], str)
+        or not document["comparison_id"].strip()
+        or document["evaluator_allowlist"] != list(EVALUATOR_ALLOWLIST)
+        or document["evaluator_base_ref"] != EVALUATOR_BASE_REF
+        or not isinstance(document["evaluator_changed_paths"], list)
+        or not set(document["evaluator_changed_paths"]).issubset(set(EVALUATOR_ALLOWLIST))
+        or document["arm_order"] != list(OFFICIAL_ARM_ORDER)
+        or document["attempt_policy"] != {
+            "restart_cause": "external_interruption_only",
+            "maximum_attempts_per_arm": 2,
+        }
+        or runtime_root.resolve() != runtime_root
+        or path.resolve() != comparison_manifest_path(runtime_root).resolve()
+    ):
+        raise HarnessError("comparison manifest frozen conditions are invalid")
+    validate_evaluator_identity(
+        document["evaluator_identity"], recompute=recompute_evaluator
+    )
+    for variant, expected_ref, expected_paths in (
+        ("baseline", BASELINE_REF, BASELINE_PACKAGE_PATHS),
+        ("candidate", CANDIDATE_REF, CANDIDATE_PACKAGE_PATHS),
+    ):
+        package = document[variant]
+        if (
+            not isinstance(package, dict)
+            or set(package) != {"ref", "package_manifest"}
+            or package["ref"] != expected_ref
+            or not isinstance(package["package_manifest"], dict)
+            or set(package["package_manifest"]) != {"files", "manifest_sha256"}
+        ):
+            raise HarnessError(f"comparison {variant} package binding is invalid")
+        payload = {"files": package["package_manifest"]["files"]}
+        if package["package_manifest"]["manifest_sha256"] != sha256_bytes(
+            canonical_json(payload)
+        ):
+            raise HarnessError(f"comparison {variant} package manifest digest drifted")
+        if recompute_packages and package["package_manifest"] != git_ref_package_manifest(
+            expected_ref, expected_paths
+        ):
+            raise HarnessError(f"comparison {variant} package ref provenance drifted")
+    verify_external_sentinel(document["external_sentinel"], runtime_root)
+    document["comparison_manifest_sha256"] = sha256_file(path)
+    return document
+
+
+def binding_from_comparison(document: dict[str, Any]) -> dict[str, object]:
+    return {
+        "comparison_manifest_sha256": document["comparison_manifest_sha256"],
+        "evaluator_identity": document["evaluator_identity"],
+    }
+
+
+@contextlib.contextmanager
+def locked_attempt_state(
+    manifest_path: Path, *, _comparison: dict[str, Any] | None = None
+) -> Iterable[tuple[dict[str, Any], dict[str, Any]]]:
+    comparison = _comparison or validate_comparison_manifest(manifest_path)
+    runtime_root = Path(comparison["runtime_root"])
+    lock_path = comparison_control(runtime_root) / COMPARISON_LOCK
+    require_regular_file(lock_path, "comparison attempt lock")
+    with lock_path.open("r+b") as lock_handle:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+        state_path = comparison_control(runtime_root) / COMPARISON_STATE
+        require_regular_file(state_path, "comparison attempt state")
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        if state.get("comparison_manifest_sha256") != comparison["comparison_manifest_sha256"]:
+            raise HarnessError("attempt state belongs to a different comparison")
+        validate_attempt_state_document(state, comparison)
+        yield comparison, state
+        validate_attempt_state_document(state, comparison)
+        atomic_write_json(state_path, state)
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+
+
+def validate_attempt_state_document(
+    state: object, comparison: dict[str, Any]
+) -> dict[str, Any]:
+    fields = {
+        "schema_version", "comparison_manifest_sha256", "next_arm_index",
+        "arms", "blind", "judge", "final_verdict_sha256",
+        "cleanup_receipt_sha256",
+    }
+    if (
+        not isinstance(state, dict)
+        or set(state) != fields
+        or state["schema_version"] != SCHEMA_VERSION
+        or not isinstance(state["next_arm_index"], int)
+        or isinstance(state["next_arm_index"], bool)
+        or not 0 <= state["next_arm_index"] <= len(OFFICIAL_ARM_ORDER)
+        or set(state["arms"]) != set(OFFICIAL_ARM_ORDER)
+        or state["final_verdict_sha256"] is not None
+        and not is_digest(state["final_verdict_sha256"])
+        or state["cleanup_receipt_sha256"] is not None
+        and not is_digest(state["cleanup_receipt_sha256"])
+    ):
+        raise HarnessError("comparison attempt state fields are invalid")
+    blind = state["blind"]
+    if (
+        not isinstance(blind, dict)
+        or set(blind) != {
+            "status", "blind_packet_sha256", "private_mapping_sha256"
+        }
+        or blind["status"] not in {"pending", "frozen"}
+        or blind["blind_packet_sha256"] is not None
+        and not is_digest(blind["blind_packet_sha256"])
+        or blind["private_mapping_sha256"] is not None
+        and not is_digest(blind["private_mapping_sha256"])
+    ):
+        raise HarnessError("comparison blind state is invalid")
+    for arm_name in OFFICIAL_ARM_ORDER:
+        arm = state["arms"][arm_name]
+        if (
+            not isinstance(arm, dict)
+            or set(arm) != {"status", "attempts", "terminal_seal_sha256"}
+            or arm["status"] not in {"pending", "running", "interrupted", "sealed"}
+            or not isinstance(arm["attempts"], list)
+            or len(arm["attempts"]) > comparison["attempt_policy"]["maximum_attempts_per_arm"]
+            or arm["terminal_seal_sha256"] is not None
+            and not is_digest(arm["terminal_seal_sha256"])
+        ):
+            raise HarnessError("comparison arm attempt state is invalid")
+        for index, attempt in enumerate(arm["attempts"], 1):
+            if (
+                not isinstance(attempt, dict)
+                or set(attempt) != {
+                    "attempt", "input_sha256", "start_phase", "phase_inputs",
+                    "status", "interruption"
+                }
+                or attempt["attempt"] != index
+                or not is_digest(attempt["input_sha256"])
+                or attempt["start_phase"] not in RUNNER_PHASES
+                or not isinstance(attempt["phase_inputs"], dict)
+                or not set(attempt["phase_inputs"]).issubset(set(RUNNER_PHASES))
+                or any(not is_digest(value) for value in attempt["phase_inputs"].values())
+                or attempt["status"] not in {"running", "interrupted", "sealed"}
+                or (
+                    attempt["interruption"] is not None
+                    and (
+                        not isinstance(attempt["interruption"], dict)
+                        or set(attempt["interruption"]) != {"cause", "reason", "phase"}
+                        or attempt["interruption"]["cause"] != "external_interruption"
+                        or not isinstance(attempt["interruption"]["reason"], str)
+                        or not attempt["interruption"]["reason"].strip()
+                        or attempt["interruption"]["phase"] not in RUNNER_PHASES
+                    )
+                )
+            ):
+                raise HarnessError("comparison arm attempt record is invalid")
+            if (
+                attempt["phase_inputs"].get(attempt["start_phase"])
+                != attempt["input_sha256"]
+                or (attempt["status"] == "interrupted")
+                != (attempt["interruption"] is not None)
+                or index == 1 and attempt["start_phase"] != "pre-packet"
+            ):
+                raise HarnessError("comparison arm attempt lineage is incoherent")
+            active_phase = active_attempt_phase(attempt)
+            if (
+                attempt["interruption"] is not None
+                and attempt["interruption"]["phase"] != active_phase
+            ):
+                raise HarnessError("comparison arm interruption is not on the active phase")
+            if index > 1:
+                previous = arm["attempts"][index - 2]
+                if (
+                    previous["status"] != "interrupted"
+                    or previous["interruption"]["phase"] != attempt["start_phase"]
+                    or previous["phase_inputs"].get(attempt["start_phase"])
+                    != attempt["input_sha256"]
+                ):
+                    raise HarnessError("comparison arm restart lineage is incoherent")
+        attempts = arm["attempts"]
+        if arm["status"] == "pending":
+            coherent = not attempts and arm["terminal_seal_sha256"] is None
+        else:
+            coherent = bool(attempts) and attempts[-1]["status"] == arm["status"]
+            coherent = coherent and all(
+                attempt["status"] == "interrupted" for attempt in attempts[:-1]
+            )
+            coherent = coherent and (
+                (arm["status"] == "sealed")
+                == (arm["terminal_seal_sha256"] is not None)
+            )
+        if not coherent:
+            raise HarnessError("comparison arm state is semantically incoherent")
+    judge = state["judge"]
+    if (
+        not isinstance(judge, dict)
+        or set(judge) != {"status", "attempts", "frozen_record_sha256"}
+        or judge["status"] not in {"pending", "running", "interrupted", "frozen"}
+        or not isinstance(judge["attempts"], list)
+        or len(judge["attempts"]) > 2
+        or judge["frozen_record_sha256"] is not None
+        and not is_digest(judge["frozen_record_sha256"])
+    ):
+        raise HarnessError("comparison judge attempt state is invalid")
+    for index, attempt in enumerate(judge["attempts"], 1):
+        if (
+            not isinstance(attempt, dict)
+            or set(attempt) != {
+                "attempt", "blind_packet_sha256", "status", "interruption"
+            }
+            or attempt["attempt"] != index
+            or not is_digest(attempt["blind_packet_sha256"])
+            or attempt["status"] not in {"running", "interrupted", "frozen"}
+            or (
+                attempt["interruption"] is not None
+                and (
+                    not isinstance(attempt["interruption"], dict)
+                    or set(attempt["interruption"]) != {"cause", "reason"}
+                    or attempt["interruption"]["cause"] != "external_interruption"
+                    or not isinstance(attempt["interruption"]["reason"], str)
+                    or not attempt["interruption"]["reason"].strip()
+                )
+            )
+        ):
+            raise HarnessError("comparison judge attempt record is invalid")
+        if (
+            (attempt["status"] == "interrupted")
+            != (attempt["interruption"] is not None)
+            or state["blind"]["blind_packet_sha256"]
+            != attempt["blind_packet_sha256"]
+        ):
+            raise HarnessError("comparison judge attempt lineage is incoherent")
+    sealed_prefix = 0
+    for arm_name in OFFICIAL_ARM_ORDER:
+        if state["arms"][arm_name]["status"] != "sealed":
+            break
+        sealed_prefix += 1
+    if (
+        state["next_arm_index"] != sealed_prefix
+        or any(
+            state["arms"][arm]["status"] != "pending"
+            for arm in OFFICIAL_ARM_ORDER[sealed_prefix + 1:]
+        )
+        or (blind["status"] == "pending")
+        != (blind["blind_packet_sha256"] is None and blind["private_mapping_sha256"] is None)
+        or blind["status"] == "frozen" and not (
+            is_digest(blind["blind_packet_sha256"])
+            and is_digest(blind["private_mapping_sha256"])
+        )
+        or blind["status"] == "frozen" and sealed_prefix != len(OFFICIAL_ARM_ORDER)
+    ):
+        raise HarnessError("comparison state order or blind lifecycle is incoherent")
+    if judge["status"] == "pending":
+        judge_coherent = not judge["attempts"] and judge["frozen_record_sha256"] is None
+    else:
+        judge_coherent = (
+            blind["status"] == "frozen" and bool(judge["attempts"])
+            and judge["attempts"][-1]["status"] == judge["status"]
+            and all(
+                attempt["status"] == "interrupted"
+                for attempt in judge["attempts"][:-1]
+            )
+            and (judge["status"] == "frozen")
+            == (judge["frozen_record_sha256"] is not None)
+        )
+    if (
+        not judge_coherent
+        or state["cleanup_receipt_sha256"] is not None
+        and state["final_verdict_sha256"] is None
+    ):
+        raise HarnessError("comparison judge or final lifecycle is incoherent")
+    return state
+
+
+def attempt_state_projection(state: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema_version": state["schema_version"],
+        "comparison_manifest_sha256": state["comparison_manifest_sha256"],
+        "next_arm_index": state["next_arm_index"],
+        "arms": state["arms"],
+        "blind": state["blind"],
+        "judge": state["judge"],
+    }
+
+
+def attempt_state_sha256(state: dict[str, Any]) -> str:
+    return sha256_bytes(canonical_json(attempt_state_projection(state)))
+
+
+def require_unfinalized_state(state: dict[str, Any]) -> None:
+    if state["final_verdict_sha256"] is not None:
+        raise HarnessError("comparison is immutable after the final verdict")
+
+
+def active_attempt_phase(attempt: dict[str, Any]) -> str:
+    phases = set(attempt["phase_inputs"])
+    start = RUNNER_PHASES.index(attempt["start_phase"])
+    latest = max(RUNNER_PHASES.index(phase) for phase in phases)
+    if phases != set(RUNNER_PHASES[start:latest + 1]):
+        raise HarnessError("comparison arm phases are not monotonic")
+    return RUNNER_PHASES[latest]
+
+
+def begin_arm_attempt(
+    manifest_path: Path, arm_name: str, input_sha256: str, phase: str = "pre-packet",
+    *, _comparison: dict[str, Any] | None = None,
+) -> dict[str, object]:
+    if not is_digest(input_sha256):
+        raise HarnessError("arm attempt input digest is invalid")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (comparison, state):
+        require_unfinalized_state(state)
+        order = comparison["arm_order"]
+        if (
+            arm_name not in order
+            or state["next_arm_index"] >= len(order)
+            or order[state["next_arm_index"]] != arm_name
+        ):
+            raise HarnessError("arm start is out of the precommitted four-arm order")
+        arm = state["arms"][arm_name]
+        if arm["terminal_seal_sha256"] is not None or arm["status"] == "sealed":
+            raise HarnessError("sealed arm cannot be started again")
+        attempts = arm["attempts"]
+        if arm["status"] == "pending":
+            if attempts or phase != "pre-packet":
+                raise HarnessError("pending arm already has an attempt")
+        elif arm["status"] == "interrupted":
+            if (
+                len(attempts) != 1
+                or attempts[0]["phase_inputs"].get(phase) != input_sha256
+                or attempts[0].get("interruption") is None
+                or attempts[0]["interruption"].get("phase") != phase
+            ):
+                raise HarnessError("arm restart is not a recorded byte-identical interruption")
+        else:
+            raise HarnessError("arm already has an active unsealed attempt")
+        if len(attempts) >= comparison["attempt_policy"]["maximum_attempts_per_arm"]:
+            raise HarnessError("arm attempt policy is exhausted")
+        attempt = {
+            "attempt": len(attempts) + 1,
+            "input_sha256": input_sha256,
+            "start_phase": phase,
+            "phase_inputs": {phase: input_sha256},
+            "status": "running",
+            "interruption": None,
+        }
+        attempts.append(attempt)
+        arm["status"] = "running"
+        return json.loads(json.dumps(attempt))
+
+
+def bind_arm_phase_input(
+    manifest_path: Path, arm_name: str, phase: str, input_sha256: str, *,
+    _comparison: dict[str, Any] | None = None,
+) -> int:
+    if phase not in RUNNER_PHASES or not is_digest(input_sha256):
+        raise HarnessError("arm phase input binding is invalid")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (_locked_comparison, state):
+        require_unfinalized_state(state)
+        arm = state["arms"][arm_name]
+        if arm["status"] != "running" or not arm["attempts"]:
+            raise HarnessError("arm phase requires an active attempt")
+        attempt = arm["attempts"][-1]
+        previous = attempt["phase_inputs"].get(phase)
+        if previous is not None and previous != input_sha256:
+            raise HarnessError("arm phase inputs drifted within the active attempt")
+        active = active_attempt_phase(attempt)
+        if RUNNER_PHASES.index(phase) not in {
+            RUNNER_PHASES.index(active), RUNNER_PHASES.index(active) + 1,
+        }:
+            raise HarnessError("arm phase binding is not monotonic")
+        attempt["phase_inputs"][phase] = input_sha256
+        return attempt["attempt"]
+
+
+def record_external_interruption(
+    manifest_path: Path, arm_name: str, reason: str, phase: str = "pre-packet", *,
+    _comparison: dict[str, Any] | None = None,
+) -> None:
+    if not isinstance(reason, str) or not reason.strip():
+        raise HarnessError("external interruption reason is required")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (_locked_comparison, state):
+        require_unfinalized_state(state)
+        arm = state["arms"].get(arm_name)
+        if (
+            not isinstance(arm, dict)
+            or arm["status"] != "running"
+            or arm["terminal_seal_sha256"] is not None
+            or not arm["attempts"]
+            or arm["attempts"][-1]["status"] != "running"
+            or phase != active_attempt_phase(arm["attempts"][-1])
+        ):
+            raise HarnessError("only an active unsealed arm can record interruption")
+        arm["attempts"][-1]["status"] = "interrupted"
+        arm["attempts"][-1]["interruption"] = {
+            "cause": "external_interruption",
+            "reason": reason.strip(),
+            "phase": phase,
+        }
+        arm["status"] = "interrupted"
+
+
+def register_terminal_seal(
+    manifest_path: Path, arm_name: str, terminal_seal_sha256: str, *,
+    _comparison: dict[str, Any] | None = None,
+) -> None:
+    if not is_digest(terminal_seal_sha256):
+        raise HarnessError("terminal seal digest is invalid")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (comparison, state):
+        require_unfinalized_state(state)
+        arm = state["arms"].get(arm_name)
+        if (
+            not isinstance(arm, dict)
+            or arm["status"] != "running"
+            or arm["terminal_seal_sha256"] is not None
+            or not arm["attempts"]
+            or arm["attempts"][-1]["status"] != "running"
+        ):
+            raise HarnessError("duplicate, concurrent, or inactive terminal seal rejected")
+        arm["attempts"][-1]["status"] = "sealed"
+        arm["terminal_seal_sha256"] = terminal_seal_sha256
+        arm["status"] = "sealed"
+        state["next_arm_index"] += 1
+        if state["next_arm_index"] > len(comparison["arm_order"]):
+            raise HarnessError("attempt state advanced past the four-arm order")
+
+
+def validate_attempt_state(
+    manifest_path: Path, *, require_all_sealed: bool = False,
+    _comparison: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (comparison, state):
+        if set(state.get("arms", {})) != set(OFFICIAL_ARM_ORDER):
+            raise HarnessError("attempt state arm fields are not exact")
+        if require_all_sealed and (
+            state.get("next_arm_index") != len(OFFICIAL_ARM_ORDER)
+            or any(
+                state["arms"][arm]["status"] != "sealed"
+                or not is_digest(state["arms"][arm]["terminal_seal_sha256"])
+                for arm in OFFICIAL_ARM_ORDER
+            )
+        ):
+            raise HarnessError("comparison does not have four terminally sealed arms")
+        return json.loads(json.dumps({"comparison": comparison, "state": state}))
+
+
+def begin_judge_attempt(
+    manifest_path: Path, blind_packet_sha256: str, *,
+    _comparison: dict[str, Any] | None = None,
+) -> None:
+    if not is_digest(blind_packet_sha256):
+        raise HarnessError("blind packet digest is invalid")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (_locked_comparison, state):
+        require_unfinalized_state(state)
+        if any(state["arms"][arm]["status"] != "sealed" for arm in OFFICIAL_ARM_ORDER):
+            raise HarnessError("judge cannot start before all four arms are sealed")
+        if (
+            state["blind"]["status"] != "frozen"
+            or state["blind"]["blind_packet_sha256"] != blind_packet_sha256
+        ):
+            raise HarnessError("judge input is not the frozen blind packet")
+        judge = state["judge"]
+        attempts = judge["attempts"]
+        if judge["status"] == "pending":
+            if attempts:
+                raise HarnessError("pending judge already has an attempt")
+        elif judge["status"] == "interrupted":
+            if (
+                len(attempts) != 1
+                or attempts[0]["blind_packet_sha256"] != blind_packet_sha256
+                or attempts[0].get("interruption") is None
+            ):
+                raise HarnessError("judge restart is not a byte-identical interruption")
+        else:
+            raise HarnessError("judge is already active or frozen")
+        if len(attempts) >= 2:
+            raise HarnessError("judge attempt policy is exhausted")
+        attempts.append({
+            "attempt": len(attempts) + 1,
+            "blind_packet_sha256": blind_packet_sha256,
+            "status": "running",
+            "interruption": None,
+        })
+        judge["status"] = "running"
+
+
+def register_blind_packet(
+    manifest_path: Path, blind_packet_sha256: str, mapping_sha256: str, *,
+    _comparison: dict[str, Any] | None = None,
+) -> None:
+    if not is_digest(blind_packet_sha256) or not is_digest(mapping_sha256):
+        raise HarnessError("blind packet or private mapping digest is invalid")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (_locked_comparison, state):
+        require_unfinalized_state(state)
+        if any(state["arms"][arm]["status"] != "sealed" for arm in OFFICIAL_ARM_ORDER):
+            raise HarnessError("blind packet cannot freeze before all arms are sealed")
+        if state["blind"] != {
+            "status": "pending",
+            "blind_packet_sha256": None,
+            "private_mapping_sha256": None,
+        }:
+            raise HarnessError("blind packet or private mapping is already frozen")
+        state["blind"] = {
+            "status": "frozen",
+            "blind_packet_sha256": blind_packet_sha256,
+            "private_mapping_sha256": mapping_sha256,
+        }
+
+
+def record_judge_interruption(
+    manifest_path: Path, reason: str, *,
+    _comparison: dict[str, Any] | None = None,
+) -> None:
+    if not isinstance(reason, str) or not reason.strip():
+        raise HarnessError("judge interruption reason is required")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (_locked_comparison, state):
+        require_unfinalized_state(state)
+        judge = state["judge"]
+        if (
+            judge["status"] != "running"
+            or judge["frozen_record_sha256"] is not None
+            or not judge["attempts"]
+        ):
+            raise HarnessError("only an active unfrozen judge can record interruption")
+        judge["attempts"][-1]["status"] = "interrupted"
+        judge["attempts"][-1]["interruption"] = {
+            "cause": "external_interruption", "reason": reason.strip()
+        }
+        judge["status"] = "interrupted"
+
+
+def register_judge_record(
+    manifest_path: Path, record_sha256: str, *,
+    _comparison: dict[str, Any] | None = None,
+) -> None:
+    if not is_digest(record_sha256):
+        raise HarnessError("frozen judge record digest is invalid")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (_locked_comparison, state):
+        require_unfinalized_state(state)
+        judge = state["judge"]
+        if (
+            judge["status"] != "running"
+            or judge["frozen_record_sha256"] is not None
+            or not judge["attempts"]
+            or judge["attempts"][-1]["status"] != "running"
+        ):
+            raise HarnessError("duplicate or restarted frozen judge rejected")
+        judge["attempts"][-1]["status"] = "frozen"
+        judge["status"] = "frozen"
+        judge["frozen_record_sha256"] = record_sha256
+
+
+def register_final_verdict(
+    manifest_path: Path, verdict_sha256: str, *, require_judge: bool = True,
+    _comparison: dict[str, Any] | None = None,
+) -> None:
+    if not is_digest(verdict_sha256):
+        raise HarnessError("final verdict digest is invalid")
+    with locked_attempt_state(
+        manifest_path, _comparison=_comparison
+    ) as (_locked_comparison, state):
+        require_unfinalized_state(state)
+        if require_judge and state["judge"]["status"] != "frozen":
+            raise HarnessError("final verdict requires a frozen judge")
+        if state["final_verdict_sha256"] is not None:
+            raise HarnessError("final verdict is already frozen")
+        state["final_verdict_sha256"] = verdict_sha256
 
 
 def reject_symlink_chain(root: Path, relative: Path) -> None:
@@ -214,7 +1229,7 @@ def require_stage_root(path: Path, scenario_id: str | None = None) -> Path:
         or (
             runtime.is_dir()
             and any(
-                child.name not in set((*ARM_NAMES, SIBLING_PROBE))
+                child.name not in set((*ARM_NAMES, SIBLING_PROBE, COMPARISON_CONTROL))
                 for child in runtime.iterdir()
             )
         )
@@ -396,7 +1411,11 @@ def write_manifest(
 
 
 def prepare_scenario(
-    scenario_id: str, contract: Path, destination: Path, runner_preflight: Path
+    scenario_id: str,
+    contract: Path,
+    destination: Path,
+    runner_preflight: Path,
+    comparison_manifest: Path | None = None,
 ) -> dict[str, object]:
     destination = require_stage_root(destination, scenario_id)
     try:
@@ -410,6 +1429,21 @@ def prepare_scenario(
     if contract.is_symlink() or not (contract.is_file() or contract.is_dir()):
         raise HarnessError("contract must be a regular extracted file or package directory")
     preflight = validate_runner_preflight(runner_preflight)
+    if comparison_manifest is not None:
+        comparison = validate_comparison_manifest(comparison_manifest)
+        if Path(comparison["runtime_root"]) != destination.parent:
+            raise HarnessError("arm stage belongs to a different comparison runtime")
+        expected_binding = binding_from_comparison(comparison)
+        if preflight.get("comparison_binding") != expected_binding:
+            raise HarnessError("runner preflight belongs to a different comparison")
+        variant = destination.name.rsplit("-", 1)[-1]
+        package_root = contract if contract.is_dir() else contract.parent
+        validate_supplied_package(
+            package_root,
+            comparison[variant]["package_manifest"],
+            BASELINE_PACKAGE_PATHS if variant == "baseline" else CANDIDATE_PACKAGE_PATHS,
+            variant,
+        )
     destination.mkdir(parents=True, exist_ok=True)
     repo = destination / "repo"
     scenario_destination = destination / "scenario"
@@ -471,7 +1505,12 @@ def prepare_scenario(
     }
     write_manifest(destination, descriptor, fixture_source, initial_snapshot, "pre_packet")
     verify_manifest(destination)
-    return {"head": head, "tree": initial_snapshot["tree"], "fixture_source": fixture_source}
+    result: dict[str, object] = {
+        "head": head, "tree": initial_snapshot["tree"], "fixture_source": fixture_source
+    }
+    if comparison_manifest is not None:
+        result["comparison_binding"] = binding_from_comparison(comparison)
+    return result
 
 
 def tree_hash(root: Path) -> str:
@@ -1111,10 +2150,52 @@ def runner_artifact_names() -> set[str]:
     }
 
 
-def runner_paths(stage_root: Path, phases: tuple[str, ...] = RUNNER_PHASES) -> dict[str, Path]:
+def runner_paths(
+    stage_root: Path, phases: tuple[str, ...] = RUNNER_PHASES, *,
+    _comparison: dict[str, Any] | None = None,
+    _state: dict[str, Any] | None = None,
+) -> dict[str, Path]:
     paths: dict[str, Path] = {}
+    comparison_manifest = comparison_for_stage(stage_root)
+    arm_attempts: list[dict[str, Any]] | None = None
+    runner_parent: Path | None = None
+    if comparison_manifest is not None:
+        comparison = _comparison or validate_comparison_manifest(comparison_manifest)
+        state = _state or validate_attempt_state(
+            comparison_manifest, _comparison=comparison
+        )["state"]
+        arm = state["arms"].get(stage_root.name)
+        if not isinstance(arm, dict):
+            raise HarnessError("runner stage is not a registered comparison arm")
+        arm_attempts = arm["attempts"]
+        runner_parent = safe_path(stage_root, "runner")
     for phase in phases:
-        root, prefix = safe_path(stage_root, Path("runner") / phase), phase.replace("-", "_")
+        relative_root = Path("runner") / phase
+        if arm_attempts is not None and runner_parent is not None:
+            registered = {
+                attempt["attempt"] for attempt in arm_attempts
+                if phase in attempt["phase_inputs"]
+            }
+            observed: set[int] = set()
+            for attempt_root in runner_parent.iterdir():
+                phase_root = attempt_root / phase
+                if not phase_root.exists() and not phase_root.is_symlink():
+                    continue
+                match = re.fullmatch(r"attempt-([0-9]+)", attempt_root.name)
+                if (
+                    match is None or attempt_root.is_symlink()
+                    or not attempt_root.is_dir() or phase_root.is_symlink()
+                    or not phase_root.is_dir()
+                ):
+                    raise HarnessError(f"invalid attempt-scoped {phase} runner directory")
+                observed.add(int(match.group(1)))
+            if observed - registered:
+                raise HarnessError(f"unregistered attempt-scoped {phase} runner artifacts")
+            if not registered or registered - observed:
+                raise HarnessError(f"missing attempt-scoped {phase} runner artifacts")
+            selected_attempt = max(registered)
+            relative_root = Path("runner") / f"attempt-{selected_attempt}" / phase
+        root, prefix = safe_path(stage_root, relative_root), phase.replace("-", "_")
         for kind, filename in RUNNER_FILES.items():
             path = safe_path(root, filename)
             if path.is_symlink() or not path.is_file():
@@ -1150,6 +2231,8 @@ def validate_runner_bundles(
     else:
         preflight_path = None
     identity = (preflight["binary_path"], preflight["binary_version"], preflight["binary_sha256"])
+    if "comparison_binding" in preflight:
+        metadata_fields.update({"comparison_binding", "arm_attempt"})
     elapsed_milliseconds = 0
     for phase in phases:
         prefix = phase.replace("-", "_")
@@ -1179,16 +2262,33 @@ def validate_runner_bundles(
             sha256_file(preflight_path) if preflight_path is not None
             else sha256_bytes(canonical_json(preflight))
         )
+        sentinel_entries = [
+            item.split("=", 1)[1] for item in metadata["environment"]
+            if isinstance(item, str) and item.startswith(f"{EXTERNAL_SENTINEL_ENV}=")
+        ] if isinstance(metadata["environment"], list) else []
+        if len(sentinel_entries) != 1:
+            raise HarnessError(f"{phase} runner sentinel environment is invalid")
+        external_sentinel = Path(sentinel_entries[0])
         if (
-            command != codex_command(expected_repo, expected_profile)
-            or metadata["environment"] != runner_environment(expected_profile)
+            command != codex_command(expected_repo, expected_profile, external_sentinel)
+            or metadata["environment"] != runner_environment(
+                expected_profile, external_sentinel
+            )
             or actual != fixed
             or actual_identity != identity
             or metadata["runner_preflight_sha256"] != expected_preflight
             or metadata["timeout_policy"] != ARM_TIMEOUT_POLICY
             or metadata["arm_elapsed_before_milliseconds"] != elapsed_milliseconds
+            or metadata.get("comparison_binding") != preflight.get("comparison_binding")
         ):
             raise HarnessError(f"{phase} runner metadata violates fixed conditions")
+        if "comparison_binding" in preflight:
+            attempt_parent = command_profile.parent.parent.name
+            if (
+                not re.fullmatch(r"attempt-[12]", attempt_parent)
+                or metadata["arm_attempt"] != int(attempt_parent.rsplit("-", 1)[1])
+            ):
+                raise HarnessError(f"{phase} runner attempt binding is invalid")
         duration = metadata["duration_milliseconds"]
         if (
             isinstance(duration, bool)
@@ -1289,12 +2389,16 @@ def validate_terminal_seal(
     if seal_path.is_symlink() or not seal_path.is_file():
         raise HarnessError("evaluator terminal seal is missing")
     seal = json.loads(seal_path.read_text(encoding="utf-8"))
-    if not isinstance(seal, dict) or set(seal) != {"schema_version", "event", "output_freeze_sha256", "phase_bindings"}:
+    seal_fields = {"schema_version", "event", "output_freeze_sha256", "phase_bindings"}
+    if "comparison_binding" in freeze:
+        seal_fields.add("comparison_binding")
+    if not isinstance(seal, dict) or set(seal) != seal_fields:
         raise HarnessError("evaluator terminal seal fields are not exact")
     if (
         seal["schema_version"] != SCHEMA_VERSION
         or seal["event"] != TERMINAL_SEAL_EVENT
         or seal["output_freeze_sha256"] != sha256_file(output_freeze)
+        or seal.get("comparison_binding") != freeze.get("comparison_binding")
     ):
         raise HarnessError("evaluator terminal seal does not bind the output freeze")
     expected_bindings = {
@@ -1320,6 +2424,22 @@ def post_snapshot_digest(
 
 
 def finalize_arm(stage_root: Path, record: Path) -> Path:
+    stage_root = require_stage_root(stage_root)
+    comparison_manifest = comparison_for_stage(stage_root)
+    comparison = (
+        validate_comparison_manifest(comparison_manifest)
+        if comparison_manifest is not None else None
+    )
+    binding = binding_from_comparison(comparison) if comparison is not None else None
+    comparison_state: dict[str, Any] | None = None
+    if comparison_manifest is not None:
+        comparison_state = validate_attempt_state(
+            comparison_manifest, _comparison=comparison
+        )["state"]
+        arm_state = comparison_state["arms"][stage_root.name]
+        if arm_state["status"] != "running" or arm_state["terminal_seal_sha256"] is not None:
+            raise HarnessError("arm finalization requires one active unsealed attempt")
+        verify_external_sentinel(comparison["external_sentinel"], stage_root.parent)
     manifest = verify_manifest(stage_root, allow_repo_changes=True)
     if manifest["scenario_stage"] != "review_packet":
         raise HarnessError("arm finalization requires the staged review packet")
@@ -1328,7 +2448,9 @@ def finalize_arm(stage_root: Path, record: Path) -> Path:
     current_manifest = stage_root / "runner-manifest.json"
     repo = safe_path(stage_root, "repo")
     snapshot_data = validate_pre_packet_snapshot(stage_root, manifest)
-    runner_sources = runner_paths(stage_root)
+    runner_sources = runner_paths(
+        stage_root, _comparison=comparison, _state=comparison_state
+    )
     bundles = validate_runner_bundles(runner_sources, repo=repo, stage_root=stage_root)
     if sha256_file(current_manifest) != sha256_file(runner_sources["remediation_manifest"]):
         raise HarnessError("remediation runner did not use the current review manifest")
@@ -1421,6 +2543,8 @@ def finalize_arm(stage_root: Path, record: Path) -> Path:
         "repository_state": {"head": run(["git", "rev-parse", "HEAD"], cwd=repo).strip(), "status": status},
         "artifacts": artifacts,
     }
+    if binding is not None:
+        evidence["comparison_binding"] = binding
     write_json(output, evidence)
     seal = {
         "schema_version": SCHEMA_VERSION,
@@ -1434,7 +2558,16 @@ def finalize_arm(stage_root: Path, record: Path) -> Path:
             for phase in RUNNER_PHASES
         },
     }
-    write_json(evaluator_root / "terminal-seal.json", seal)
+    if binding is not None:
+        seal["comparison_binding"] = binding
+    seal_path = evaluator_root / "terminal-seal.json"
+    write_json(seal_path, seal)
+    if comparison_manifest is not None:
+        register_terminal_seal(
+            comparison_manifest, stage_root.name, sha256_file(seal_path),
+            _comparison=comparison,
+        )
+        verify_external_sentinel(comparison["external_sentinel"], stage_root.parent)
     return output
 
 
@@ -1498,7 +2631,7 @@ def frozen_artifacts(output_freeze: Path) -> tuple[dict[str, Any], dict[str, Pat
     if output_freeze.is_symlink() or not output_freeze.is_file():
         raise HarnessError("output freeze must be a regular evaluator file")
     freeze = json.loads(output_freeze.read_text(encoding="utf-8"))
-    if not isinstance(freeze, dict) or set(freeze) != {
+    expected_fields = {
         "schema_version",
         "scenario_id",
         "input_manifest_sha256",
@@ -1506,10 +2639,22 @@ def frozen_artifacts(output_freeze: Path) -> tuple[dict[str, Any], dict[str, Pat
         "snapshots",
         "repository_state",
         "artifacts",
-    }:
+    }
+    if isinstance(freeze, dict) and "comparison_binding" in freeze:
+        expected_fields.add("comparison_binding")
+    if not isinstance(freeze, dict) or set(freeze) != expected_fields:
         raise HarnessError("output freeze fields are not exact")
     if freeze["schema_version"] != SCHEMA_VERSION:
         raise HarnessError("output freeze schema version is invalid")
+    if "comparison_binding" in freeze:
+        binding = freeze["comparison_binding"]
+        if (
+            not isinstance(binding, dict)
+            or set(binding) != {"comparison_manifest_sha256", "evaluator_identity"}
+            or not is_digest(binding.get("comparison_manifest_sha256"))
+        ):
+            raise HarnessError("output freeze comparison binding is invalid")
+        validate_evaluator_identity(binding["evaluator_identity"], recompute=False)
     if freeze["scenario_id"] not in {"retry-failed", "preflight-remediation-holdout"}:
         raise HarnessError("output freeze scenario is invalid")
     if (
@@ -1577,15 +2722,20 @@ def frozen_artifacts(output_freeze: Path) -> tuple[dict[str, Any], dict[str, Pat
     return freeze, paths
 
 
-def validate_normalized_output(output: object) -> dict[str, Any]:
-    if not isinstance(output, dict) or set(output) != {
+def validate_normalized_output(
+    output: object, *, require_arm_binding: bool = False
+) -> dict[str, Any]:
+    expected_fields = {
         "schema_version",
         "scenario_id",
         "snapshots",
         "behavior",
         "measurements",
         "source_hashes",
-    }:
+    }
+    if isinstance(output, dict) and "comparison_binding" in output:
+        expected_fields.update({"comparison_binding", "upstream_sha256s", "arm_binding"})
+    if not isinstance(output, dict) or set(output) != expected_fields:
         raise HarnessError("normalized behavior fields are not exact")
     if output["schema_version"] != SCHEMA_VERSION or output["scenario_id"] not in {
         "retry-failed",
@@ -1600,6 +2750,28 @@ def validate_normalized_output(output: object) -> dict[str, Any]:
     ):
         raise HarnessError("normalized snapshots must be evaluator-generated 64-hex digests")
     validate_measurements(output["measurements"], "normalized")
+    if "comparison_binding" in output:
+        binding = output["comparison_binding"]
+        if (
+            not isinstance(binding, dict)
+            or set(binding) != {"comparison_manifest_sha256", "evaluator_identity"}
+            or not is_digest(binding.get("comparison_manifest_sha256"))
+            or not exact_digest_map(
+                output["upstream_sha256s"], {"output_freeze", "terminal_seal"}
+            )
+        ):
+            raise HarnessError("normalized comparison or upstream binding is invalid")
+        validate_evaluator_identity(binding["evaluator_identity"], recompute=False)
+        arm_binding = output["arm_binding"]
+        if (
+            not isinstance(arm_binding, dict)
+            or set(arm_binding) != {"arm_name", "terminal_seal_sha256"}
+            or arm_binding.get("arm_name") not in OFFICIAL_ARM_ORDER
+            or not is_digest(arm_binding.get("terminal_seal_sha256"))
+        ):
+            raise HarnessError("normalized arm binding is invalid")
+    elif require_arm_binding:
+        raise HarnessError("official normalized output requires an arm binding")
     behavior = output["behavior"]
     if not isinstance(behavior, dict) or set(behavior) != {
         "implementation_diff",
@@ -1649,8 +2821,28 @@ def validate_normalized_output(output: object) -> dict[str, Any]:
     return output
 
 
-def normalize_run(output_freeze: Path) -> dict[str, object]:
+def normalize_run(
+    output_freeze: Path, comparison_manifest: Path | None = None,
+    *, _comparison: dict[str, Any] | None = None,
+    _state: dict[str, Any] | None = None,
+) -> dict[str, object]:
     freeze, paths = frozen_artifacts(output_freeze)
+    if comparison_manifest is not None:
+        comparison = _comparison or validate_comparison_manifest(comparison_manifest)
+        binding = binding_from_comparison(comparison)
+        if freeze.get("comparison_binding") != binding:
+            raise HarnessError("output freeze belongs to another comparison")
+        state = _state or validate_attempt_state(
+            comparison_manifest, _comparison=comparison
+        )["state"]
+        arm_name = output_freeze.parents[1].name
+        if (
+            arm_name not in state["arms"]
+            or state["arms"][arm_name]["status"] != "sealed"
+            or state["arms"][arm_name]["terminal_seal_sha256"]
+            != sha256_file(output_freeze.parent / "terminal-seal.json")
+        ):
+            raise HarnessError("normalization arm seal is not registered by the comparison")
     bundles = validate_terminal_seal(output_freeze, freeze, paths)
     expected_post = post_snapshot_digest(
         freeze["initial_snapshot"], freeze["artifacts"]["implementation_diff"]["sha256"],
@@ -1734,25 +2926,1012 @@ def normalize_run(output_freeze: Path) -> dict[str, object]:
             for name in freeze["artifacts"]
         },
     }
+    if "comparison_binding" in freeze:
+        arm_name = output_freeze.parents[1].name
+        terminal_seal_sha256 = sha256_file(output_freeze.parent / "terminal-seal.json")
+        output["comparison_binding"] = freeze["comparison_binding"]
+        output["arm_binding"] = {
+            "arm_name": arm_name,
+            "terminal_seal_sha256": terminal_seal_sha256,
+        }
+        output["upstream_sha256s"] = {
+            "output_freeze": sha256_file(output_freeze),
+            "terminal_seal": terminal_seal_sha256,
+        }
     validate_normalized_output(output)
-    assert_identity_blind(output, clues)
+    assert_identity_blind(
+        public_normalized(output) if "comparison_binding" in output else output,
+        clues,
+    )
     return output
 
 
-def build_blind_packet(run_paths: list[Path]) -> dict[str, object]:
-    if len(run_paths) != 2:
-        raise HarnessError("the binary skill review requires exactly two runs")
-    runs = [
-        validate_normalized_output(json.loads(path.read_text(encoding="utf-8")))
-        for path in run_paths
-    ]
-    ordered = sorted(runs, key=lambda value: sha256_bytes(canonical_json(value)))
-    packet = {
-        "schema_version": SCHEMA_VERSION,
-        "runs": {f"Run {chr(65 + index)}": value for index, value in enumerate(ordered)},
-    }
+def build_blind_packet(
+    run_paths: list[Path], comparison_manifest: Path | None = None
+) -> dict[str, object]:
+    expected_count = 4 if comparison_manifest is not None else 2
+    if len(run_paths) != expected_count:
+        raise HarnessError(f"the blinded comparison requires exactly {expected_count} runs")
+    packet: dict[str, object]
+    if comparison_manifest is None:
+        runs = [
+            validate_normalized_output(json.loads(path.read_text(encoding="utf-8")))
+            for path in run_paths
+        ]
+        ordered: list[object] = sorted(
+            runs, key=lambda value: sha256_bytes(canonical_json(value))
+        )
+        packet = {
+            "schema_version": SCHEMA_VERSION,
+            "runs": {f"Run {chr(65 + index)}": value for index, value in enumerate(ordered)},
+        }
+    else:
+        comparison = validate_comparison_manifest(comparison_manifest)
+        binding = binding_from_comparison(comparison)
+        state = validate_attempt_state(
+            comparison_manifest, require_all_sealed=True,
+            _comparison=comparison,
+        )["state"]
+        by_arm: dict[str, dict[str, Any]] = {}
+        path_by_arm: dict[str, Path] = {}
+        for path in run_paths:
+            document = validate_official_normalized(
+                path, comparison_manifest, _comparison=comparison, _state=state
+            )
+            arm_name = document["arm_binding"]["arm_name"]
+            if arm_name in by_arm:
+                raise HarnessError("blind packet received a duplicate normalized arm")
+            by_arm[arm_name] = document
+            path_by_arm[arm_name] = path
+        if set(by_arm) != set(OFFICIAL_ARM_ORDER):
+            raise HarnessError("blind packet does not contain the exact four frozen arms")
+        workflows_by_identity = {
+            variant: {
+                "scenarios": {
+                    scenario: public_normalized(
+                        by_arm[f"{scenario}-{variant}"]
+                    )
+                    for scenario in OUTCOME_SCENARIOS
+                }
+            }
+            for variant in ("baseline", "candidate")
+        }
+        ordered_pairs = sorted(
+            workflows_by_identity.items(),
+            key=lambda item: sha256_bytes(canonical_json(item[1])),
+        )
+        packet = {
+            "schema_version": SCHEMA_VERSION,
+            "comparison_binding": binding,
+            "upstream_sha256s": {
+                f"normalized_{index + 1}": sha256_file(path_by_arm[arm])
+                for index, arm in enumerate(OFFICIAL_ARM_ORDER)
+            },
+            "runs": {
+                f"Run {chr(65 + index)}": value
+                for index, (_identity, value) in enumerate(ordered_pairs)
+            },
+        }
+        private_mapping = {
+            "schema_version": SCHEMA_VERSION,
+            "comparison_binding": binding,
+            "blind_packet_sha256": sha256_bytes(canonical_json(packet)),
+            "mapping": {
+                f"Run {chr(65 + index)}": identity
+                for index, (identity, _value) in enumerate(ordered_pairs)
+            },
+            "arm_normalized_sha256s": {
+                arm: sha256_file(path_by_arm[arm]) for arm in OFFICIAL_ARM_ORDER
+            },
+        }
+        assert_identity_blind(packet)
+        control = comparison_control(Path(comparison["runtime_root"]))
+        packet_path = control / "blind-packet.json"
+        mapping_path = control / "private-identity-map.json"
+        if state["blind"]["status"] == "frozen":
+            require_regular_file(packet_path, "authoritative blind packet")
+            require_regular_file(mapping_path, "private identity mapping")
+            authoritative_packet = json.loads(packet_path.read_text(encoding="utf-8"))
+            authoritative_mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+            if (
+                packet_path.read_bytes() != canonical_json(authoritative_packet)
+                or mapping_path.read_bytes() != canonical_json(authoritative_mapping)
+                or authoritative_packet != packet
+                or authoritative_mapping != private_mapping
+                or state["blind"]["blind_packet_sha256"] != sha256_file(packet_path)
+                or state["blind"]["private_mapping_sha256"] != sha256_file(mapping_path)
+            ):
+                raise HarnessError("frozen blind recovery inputs or bindings drifted")
+            packet = authoritative_packet
+        else:
+            if any(path.exists() or path.is_symlink() for path in (packet_path, mapping_path)):
+                raise HarnessError("unregistered authoritative blind artifacts exist")
+            published: list[tuple[Path, str]] = []
+            try:
+                atomic_write_json(packet_path, packet)
+                published.append((packet_path, private_mapping["blind_packet_sha256"]))
+                atomic_write_json(mapping_path, private_mapping)
+                published.append((mapping_path, sha256_file(mapping_path)))
+                if (
+                    sha256_file(packet_path) != private_mapping["blind_packet_sha256"]
+                    or json.loads(packet_path.read_text(encoding="utf-8")) != packet
+                    or json.loads(mapping_path.read_text(encoding="utf-8")) != private_mapping
+                ):
+                    raise HarnessError("authoritative blind artifacts failed to freeze")
+                register_blind_packet(
+                    comparison_manifest,
+                    private_mapping["blind_packet_sha256"],
+                    published[-1][1],
+                    _comparison=comparison,
+                )
+            except BaseException as exc:
+                for published_path, published_sha256 in reversed(published):
+                    if not published_path.exists() and not published_path.is_symlink():
+                        continue
+                    if (
+                        published_path.is_symlink()
+                        or not published_path.is_file()
+                        or sha256_file(published_path) != published_sha256
+                    ):
+                        raise HarnessError(
+                            "authoritative blind rollback evidence drifted"
+                        ) from exc
+                    published_path.unlink()
+                raise
     assert_identity_blind(packet)
     return packet
+
+
+def validate_official_normalized(
+    path: Path,
+    manifest_path: Path,
+    expected_arm: str | None = None,
+    *,
+    _comparison: dict[str, Any] | None = None,
+    _state: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    require_regular_file(path, "official normalized output")
+    raw = path.read_bytes()
+    document = validate_normalized_output(
+        json.loads(raw), require_arm_binding=True
+    )
+    comparison = _comparison or validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    if document["comparison_binding"] != binding:
+        raise HarnessError("normalized output belongs to another comparison")
+    arm_name = document["arm_binding"]["arm_name"]
+    if expected_arm is not None and arm_name != expected_arm:
+        raise HarnessError("normalized output is swapped or mislabeled")
+    state = _state or validate_attempt_state(
+        manifest_path, _comparison=comparison
+    )["state"]
+    arm_state = state["arms"][arm_name]
+    stage_root = safe_path(Path(comparison["runtime_root"]), arm_name)
+    output_freeze = safe_path(stage_root, "evaluator/output-freeze.json")
+    terminal_seal = safe_path(stage_root, "evaluator/terminal-seal.json")
+    if (
+        arm_state["status"] != "sealed"
+        or arm_state["terminal_seal_sha256"]
+        != sha256_file(terminal_seal)
+        or document["arm_binding"]["terminal_seal_sha256"]
+        != sha256_file(terminal_seal)
+        or document["upstream_sha256s"] != {
+            "output_freeze": sha256_file(output_freeze),
+            "terminal_seal": sha256_file(terminal_seal),
+        }
+    ):
+        raise HarnessError("normalized output does not bind its registered terminal seal")
+    expected = normalize_run(
+        output_freeze, manifest_path, _comparison=comparison, _state=state
+    )
+    if raw != canonical_json(document) or document != expected:
+        raise HarnessError("official normalized output is not the canonical arm normalization")
+    return document
+
+
+def public_normalized(document: dict[str, Any]) -> dict[str, Any]:
+    public = json.loads(json.dumps(document))
+    for field in ("arm_binding", "comparison_binding", "upstream_sha256s"):
+        public.pop(field, None)
+    return public
+
+
+def validate_blind_packet(
+    path: Path, manifest_path: Path, *,
+    _comparison: dict[str, Any] | None = None,
+    _state: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    require_regular_file(path, "blind packet")
+    packet = json.loads(path.read_text(encoding="utf-8"))
+    comparison = _comparison or validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    if (
+        not isinstance(packet, dict)
+        or set(packet) != {
+            "schema_version", "comparison_binding", "upstream_sha256s", "runs"
+        }
+        or packet["schema_version"] != SCHEMA_VERSION
+        or packet["comparison_binding"] != binding
+        or not exact_digest_map(
+            packet["upstream_sha256s"],
+            {f"normalized_{index}" for index in range(1, 5)},
+        )
+        or not isinstance(packet["runs"], dict)
+        or set(packet["runs"]) != {"Run A", "Run B"}
+    ):
+        raise HarnessError("blind packet fields or comparison binding are invalid")
+    for workflow in packet["runs"].values():
+        if (
+            not isinstance(workflow, dict)
+            or set(workflow) != {"scenarios"}
+            or not isinstance(workflow["scenarios"], dict)
+            or set(workflow["scenarios"]) != set(OUTCOME_SCENARIOS)
+        ):
+            raise HarnessError("blind packet workflow scenarios are invalid")
+        for scenario, normalized in workflow["scenarios"].items():
+            validated = validate_normalized_output(normalized)
+            if validated["scenario_id"] != scenario:
+                raise HarnessError("blind packet scenario is mislabeled")
+    state = _state or validate_attempt_state(
+        manifest_path, require_all_sealed=True, _comparison=comparison
+    )["state"]
+    authoritative = require_regular_file(
+        comparison_control(Path(comparison["runtime_root"])) / "blind-packet.json",
+        "authoritative blind packet",
+    )
+    if (
+        state["blind"]["status"] != "frozen"
+        or state["blind"]["blind_packet_sha256"] != sha256_file(path)
+        or path.read_bytes() != authoritative.read_bytes()
+    ):
+        raise HarnessError("blind packet does not match frozen comparison state")
+    assert_identity_blind(packet)
+    return packet
+
+
+def freeze_judge_record(
+    manifest_path: Path, blind_packet_path: Path, decision_path: Path, output: Path
+) -> dict[str, object]:
+    comparison = validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    state = validate_attempt_state(
+        manifest_path, require_all_sealed=True, _comparison=comparison
+    )["state"]
+    judge_state = state["judge"]
+    if (
+        judge_state["status"] != "running"
+        or judge_state["frozen_record_sha256"] is not None
+    ):
+        raise HarnessError("judge freeze requires one active unfrozen attempt")
+    packet = validate_blind_packet(
+        blind_packet_path, manifest_path, _comparison=comparison, _state=state
+    )
+    require_regular_file(decision_path, "blinded judge decision")
+    decision = json.loads(decision_path.read_text(encoding="utf-8"))
+    if (
+        not isinstance(decision, dict)
+        or set(decision) != {"verdict", "rationale", "material_correctness_preserved"}
+        or decision["verdict"] not in {
+            "Run A better", "Run B better", "materially neutral", "inconclusive"
+        }
+        or not isinstance(decision["rationale"], str)
+        or not decision["rationale"].strip()
+        or not isinstance(decision["material_correctness_preserved"], bool)
+    ):
+        raise HarnessError("blinded judge decision fields are invalid")
+    if output.exists() or output.is_symlink():
+        raise HarnessError("frozen judge record already exists")
+    record = {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_binding": binding,
+        "upstream_sha256s": {
+            "blind_packet": sha256_file(blind_packet_path),
+            "judge_decision": sha256_bytes(canonical_json(decision)),
+        },
+        **decision,
+    }
+    atomic_write_json(output, record)
+    register_judge_record(
+        manifest_path, sha256_file(output), _comparison=comparison
+    )
+    verify_external_sentinel(comparison["external_sentinel"], Path(comparison["runtime_root"]))
+    return record
+
+
+def validate_judge_record(
+    path: Path, manifest_path: Path, blind_packet_path: Path, *,
+    _comparison: dict[str, Any] | None = None,
+    _state: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    require_regular_file(path, "frozen judge record")
+    record = json.loads(path.read_text(encoding="utf-8"))
+    comparison = _comparison or validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    decision = {
+        key: record.get(key)
+        for key in ("verdict", "rationale", "material_correctness_preserved")
+    }
+    if (
+        not isinstance(record, dict)
+        or set(record) != {
+            "schema_version", "comparison_binding", "upstream_sha256s",
+            "verdict", "rationale", "material_correctness_preserved",
+        }
+        or record["schema_version"] != SCHEMA_VERSION
+        or record["comparison_binding"] != binding
+        or not exact_digest_map(
+            record["upstream_sha256s"], {"blind_packet", "judge_decision"}
+        )
+        or record["upstream_sha256s"]["blind_packet"]
+        != sha256_file(blind_packet_path)
+        or record["upstream_sha256s"]["judge_decision"]
+        != sha256_bytes(canonical_json(decision))
+        or record["verdict"] not in {
+            "Run A better", "Run B better", "materially neutral", "inconclusive"
+        }
+        or not isinstance(record["rationale"], str)
+        or not record["rationale"].strip()
+        or not isinstance(record["material_correctness_preserved"], bool)
+    ):
+        raise HarnessError("frozen judge record or upstream digests are invalid")
+    state = _state or validate_attempt_state(
+        manifest_path, require_all_sealed=True, _comparison=comparison
+    )["state"]
+    if (
+        state["judge"]["status"] != "frozen"
+        or state["judge"]["frozen_record_sha256"] != sha256_file(path)
+    ):
+        raise HarnessError("judge record does not match frozen comparison state")
+    return record
+
+
+def reveal_identities(
+    manifest_path: Path,
+    blind_packet_path: Path,
+    judge_record_path: Path,
+    *,
+    _comparison: dict[str, Any] | None = None,
+    _state: dict[str, Any] | None = None,
+    _packet: dict[str, Any] | None = None,
+    _judge: dict[str, Any] | None = None,
+) -> dict[str, object]:
+    comparison = _comparison or validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    state = _state or validate_attempt_state(
+        manifest_path, require_all_sealed=True, _comparison=comparison
+    )["state"]
+    packet = _packet or validate_blind_packet(
+        blind_packet_path, manifest_path, _comparison=comparison, _state=state
+    )
+    judge = _judge or validate_judge_record(
+        judge_record_path, manifest_path, blind_packet_path,
+        _comparison=comparison, _state=state,
+    )
+    if (
+        state["judge"].get("status") != "frozen"
+        or state["judge"].get("frozen_record_sha256") != sha256_file(judge_record_path)
+    ):
+        raise HarnessError("judge record does not match the frozen comparison state")
+    mapping_path = comparison_control(
+        Path(comparison["runtime_root"])
+    ) / "private-identity-map.json"
+    require_regular_file(mapping_path, "private identity mapping")
+    private_mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+    mapping = private_mapping.get("mapping")
+    normalized_sha256s = private_mapping.get("arm_normalized_sha256s")
+    if (
+        not isinstance(private_mapping, dict)
+        or set(private_mapping) != {
+            "schema_version", "comparison_binding", "blind_packet_sha256",
+            "mapping", "arm_normalized_sha256s",
+        }
+        or private_mapping["schema_version"] != SCHEMA_VERSION
+        or private_mapping["comparison_binding"] != binding
+        or private_mapping["blind_packet_sha256"] != sha256_file(blind_packet_path)
+        or not isinstance(mapping, dict)
+        or set(mapping) != {"Run A", "Run B"}
+        or set(mapping.values()) != {"baseline", "candidate"}
+        or not exact_digest_map(normalized_sha256s, set(OFFICIAL_ARM_ORDER))
+        or packet["upstream_sha256s"] != {
+            f"normalized_{index + 1}": normalized_sha256s[arm]
+            for index, arm in enumerate(OFFICIAL_ARM_ORDER)
+        }
+        or state["blind"]["private_mapping_sha256"] != sha256_file(mapping_path)
+    ):
+        raise HarnessError("private identity mapping is invalid or not frozen")
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_binding": binding,
+        "upstream_sha256s": {
+            "blind_packet": sha256_file(blind_packet_path),
+            "judge_record": sha256_file(judge_record_path),
+            "private_identity_mapping": sha256_file(mapping_path),
+        },
+        "mapping": mapping,
+        "baseline_run": next(run for run, identity in mapping.items() if identity == "baseline"),
+        "candidate_run": next(run for run, identity in mapping.items() if identity == "candidate"),
+    }
+
+
+def validate_identity_reveal(
+    path: Path,
+    manifest_path: Path,
+    blind_packet_path: Path,
+    judge_record_path: Path,
+    *,
+    _comparison: dict[str, Any] | None = None,
+    _state: dict[str, Any] | None = None,
+    _packet: dict[str, Any] | None = None,
+    _judge: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    require_regular_file(path, "identity reveal")
+    reveal = json.loads(path.read_text(encoding="utf-8"))
+    if reveal != reveal_identities(
+        manifest_path, blind_packet_path, judge_record_path,
+        _comparison=_comparison, _state=_state, _packet=_packet, _judge=_judge,
+    ):
+        raise HarnessError("identity reveal or upstream digests are invalid")
+    return reveal
+
+
+def check_candidate_compliance_bound(
+    manifest_path: Path,
+    report_path: Path,
+    reveal_path: Path,
+    blind_packet_path: Path,
+    judge_record_path: Path,
+) -> dict[str, object]:
+    comparison = validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    validate_identity_reveal(
+        reveal_path, manifest_path, blind_packet_path, judge_record_path,
+        _comparison=comparison,
+    )
+    require_regular_file(report_path, "candidate compliance report")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    result = check_candidate_compliance(report_path)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_binding": binding,
+        "upstream_sha256s": {
+            "identity_reveal": sha256_file(reveal_path),
+            "candidate_report": sha256_bytes(canonical_json(report)),
+        },
+        "candidate_report": report,
+        **result,
+    }
+
+
+def validate_candidate_compliance_result(
+    path: Path,
+    manifest_path: Path,
+    reveal_path: Path,
+    blind_packet_path: Path,
+    judge_record_path: Path,
+    *,
+    _comparison: dict[str, Any] | None = None,
+    _reveal: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    require_regular_file(path, "candidate compliance result")
+    result = json.loads(path.read_text(encoding="utf-8"))
+    comparison = _comparison or validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    if _reveal is None:
+        validate_identity_reveal(
+            reveal_path, manifest_path, blind_packet_path, judge_record_path,
+            _comparison=comparison,
+        )
+    if (
+        not isinstance(result, dict)
+        or set(result) != {
+            "schema_version", "comparison_binding", "upstream_sha256s",
+            "candidate_report", "compliant", "violations",
+        }
+        or result["schema_version"] != SCHEMA_VERSION
+        or result["comparison_binding"] != binding
+        or not exact_digest_map(
+            result["upstream_sha256s"], {"identity_reveal", "candidate_report"}
+        )
+        or result["upstream_sha256s"]["identity_reveal"] != sha256_file(reveal_path)
+        or result["upstream_sha256s"]["candidate_report"]
+        != sha256_bytes(canonical_json(result["candidate_report"]))
+        or not isinstance(result["compliant"], bool)
+        or not isinstance(result["violations"], list)
+        or any(not isinstance(item, str) for item in result["violations"])
+    ):
+        raise HarnessError("candidate compliance result or upstream digests are invalid")
+    expected = check_candidate_compliance_document(result["candidate_report"])
+    if {
+        "compliant": result["compliant"], "violations": result["violations"]
+    } != expected:
+        raise HarnessError("candidate compliance result does not match embedded report")
+    return result
+
+
+def gate_official_outcomes(
+    manifest_path: Path,
+    baseline_paths: list[Path],
+    candidate_paths: list[Path],
+    blind_packet_path: Path,
+    judge_record_path: Path,
+    reveal_path: Path,
+    compliance_path: Path,
+    *,
+    _comparison: dict[str, Any] | None = None,
+) -> dict[str, object]:
+    comparison = _comparison or validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    state = validate_attempt_state(
+        manifest_path, require_all_sealed=True, _comparison=comparison
+    )["state"]
+    path_by_arm: dict[str, Path] = {}
+    expected_groups = (
+        (baseline_paths, "baseline"), (candidate_paths, "candidate")
+    )
+    for paths, variant in expected_groups:
+        if len(paths) != len(OUTCOME_SCENARIOS):
+            raise HarnessError(f"official {variant} gate requires both scenarios")
+        for path in paths:
+            document = validate_official_normalized(
+                path, manifest_path, _comparison=comparison, _state=state
+            )
+            arm_name = document["arm_binding"]["arm_name"]
+            if not arm_name.endswith(f"-{variant}") or arm_name in path_by_arm:
+                raise HarnessError("official gate normalized arms are duplicate or mislabeled")
+            path_by_arm[arm_name] = path
+    if set(path_by_arm) != set(OFFICIAL_ARM_ORDER):
+        raise HarnessError("official gate requires the exact four registered arms")
+    packet = validate_blind_packet(
+        blind_packet_path, manifest_path, _comparison=comparison, _state=state
+    )
+    expected_packet_upstreams = {
+        f"normalized_{index + 1}": sha256_file(path_by_arm[arm])
+        for index, arm in enumerate(OFFICIAL_ARM_ORDER)
+    }
+    if packet["upstream_sha256s"] != expected_packet_upstreams:
+        raise HarnessError("blind packet normalized upstream digests drifted")
+    judge = validate_judge_record(
+        judge_record_path, manifest_path, blind_packet_path,
+        _comparison=comparison, _state=state,
+    )
+    reveal = validate_identity_reveal(
+        reveal_path, manifest_path, blind_packet_path, judge_record_path,
+        _comparison=comparison, _state=state, _packet=packet, _judge=judge,
+    )
+    compliance = validate_candidate_compliance_result(
+        compliance_path, manifest_path, reveal_path,
+        blind_packet_path, judge_record_path,
+        _comparison=comparison, _reveal=reveal,
+    )
+    outcome = gate_outcomes(baseline_paths, candidate_paths)
+    winning_run = (
+        f"Run {judge['verdict'].split()[1]}"
+        if judge.get("verdict") in {"Run A better", "Run B better"}
+        else None
+    )
+    blind_candidate_better = winning_run == reveal.get("candidate_run")
+    correctness = bool(judge.get("material_correctness_preserved"))
+    compliant = compliance.get("compliant") is True
+    non_preference_hard_gates = bool(outcome["passed"] and correctness and compliant)
+    outcome.update({
+        "comparison_binding": binding,
+        "upstream_sha256s": {
+            "blind_packet": sha256_file(blind_packet_path),
+            "judge_record": sha256_file(judge_record_path),
+            "identity_reveal": sha256_file(reveal_path),
+            "candidate_compliance": sha256_file(compliance_path),
+            **{
+                f"normalized_{index + 1}": sha256_file(path)
+                for index, path in enumerate(
+                    path_by_arm[arm] for arm in OFFICIAL_ARM_ORDER
+                )
+            },
+        },
+        "correctness_gate_evaluated": True,
+        "correctness_preserved": correctness,
+        "judge_verdict_evaluated": True,
+        "judge_verdict": judge["verdict"],
+        "blind_candidate_better": blind_candidate_better,
+        "candidate_compliant": compliant,
+        "non_preference_hard_gates_passed": non_preference_hard_gates,
+    })
+    outcome["passed"] = bool(non_preference_hard_gates and blind_candidate_better)
+    return outcome
+
+
+def validate_official_outcome_gate(
+    path: Path,
+    manifest_path: Path,
+    baseline_paths: list[Path],
+    candidate_paths: list[Path],
+    blind_packet_path: Path,
+    judge_record_path: Path,
+    reveal_path: Path,
+    compliance_path: Path,
+    *,
+    _comparison: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    require_regular_file(path, "official outcome gate")
+    gate = json.loads(path.read_text(encoding="utf-8"))
+    expected = gate_official_outcomes(
+        manifest_path, baseline_paths, candidate_paths, blind_packet_path,
+        judge_record_path, reveal_path, compliance_path,
+        _comparison=_comparison,
+    )
+    if gate != expected:
+        raise HarnessError("official outcome gate or an upstream digest drifted")
+    return gate
+
+
+def final_transition(
+    failure_class: str | None,
+    gate: dict[str, Any],
+    judge: dict[str, Any],
+) -> tuple[str, str, bool]:
+    if failure_class in {
+        "evaluator_defect", "baseline_terminal", "ambiguous", "incomparable"
+    }:
+        return "inconclusive", "uncomparable_runs", False
+    if failure_class in {
+        "candidate_unscorable", "candidate_hard_gate", "blinded_regression"
+    }:
+        return "candidate_regression", "candidate_regression", False
+    if failure_class == "candidate_not_exposed":
+        return "inconclusive", "inconclusive_scenario", False
+    if failure_class is not None:
+        raise HarnessError("final verdict failure class is invalid")
+    if judge.get("verdict") == "inconclusive":
+        return "inconclusive", "uncomparable_runs", False
+    if gate.get("passed") is True:
+        return "candidate_better", "clean_benefit", True
+    if (
+        judge.get("verdict") == "materially neutral"
+        and gate.get("non_preference_hard_gates_passed") is True
+    ):
+        return "candidate_neutral", "candidate_neutral", False
+    return "candidate_regression", "candidate_regression", False
+
+
+def validate_failure_evidence(
+    path: Path, binding: dict[str, object], state: dict[str, Any]
+) -> tuple[dict[str, Any], str]:
+    require_regular_file(path, "failure evidence")
+    raw = path.read_bytes()
+    evidence = json.loads(raw)
+    if (
+        not isinstance(evidence, dict)
+        or set(evidence) != {
+            "schema_version", "comparison_binding", "attempt_state_sha256",
+            "observations",
+        }
+        or evidence["schema_version"] != SCHEMA_VERSION
+        or evidence["comparison_binding"] != binding
+        or evidence["attempt_state_sha256"] != attempt_state_sha256(state)
+        or raw != canonical_json(evidence)
+        or not isinstance(evidence["observations"], list)
+        or not evidence["observations"]
+    ):
+        raise HarnessError("failure evidence identity or shape is invalid")
+    if not any(state["arms"][arm]["attempts"] for arm in OFFICIAL_ARM_ORDER):
+        raise HarnessError("failure evidence is invalid before the first arm starts")
+    bound_digests: set[str] = set()
+
+    def collect(value: object) -> None:
+        if is_digest(value):
+            bound_digests.add(value)
+        elif isinstance(value, dict):
+            for item in value.values():
+                collect(item)
+        elif isinstance(value, list):
+            for item in value:
+                collect(item)
+
+    collect({"arms": state["arms"], "blind": state["blind"], "judge": state["judge"]})
+    observed: set[str] = set()
+    for observation in evidence["observations"]:
+        fact = (
+            observation.get("event"), observation.get("subject")
+        ) if isinstance(observation, dict) else (None, None)
+        condition = FAILURE_FACTS.get(fact)
+        if (
+            not isinstance(observation, dict)
+            or set(observation) != {
+                "event", "subject", "evidence_sha256", "summary"
+            }
+            or condition is None
+            or observation["evidence_sha256"] not in bound_digests
+            or not isinstance(observation["summary"], str)
+            or not observation["summary"].strip()
+            or condition in observed
+        ):
+            raise HarnessError("failure evidence observation is invalid or unbound")
+        observed.add(condition)
+    return evidence, next(
+        condition for condition in FAILURE_PRECEDENCE if condition in observed
+    )
+
+
+def copy_final_evidence(
+    comparison: dict[str, Any],
+    sources: dict[str, Path],
+    contract: tuple[tuple[str, str], ...],
+) -> dict[str, Path]:
+    if set(sources) != {label for label, _relative in contract}:
+        raise HarnessError("final evidence sources are not exact")
+    control = comparison_control(Path(comparison["runtime_root"]))
+    evidence_root = control / "final-evidence"
+    if evidence_root.exists() or evidence_root.is_symlink():
+        raise HarnessError("final evidence is already frozen")
+    evidence_root.mkdir(mode=0o700)
+    copied: dict[str, Path] = {}
+    for label, relative in contract:
+        source = require_regular_file(sources[label], label.replace("_", " "))
+        try:
+            document = json.loads(source.read_text(encoding="utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise HarnessError(f"{label} is not canonical JSON evidence") from exc
+        if source.read_bytes() != canonical_json(document):
+            raise HarnessError(f"{label} is not canonical JSON evidence")
+        target = safe_path(control, relative, must_exist=False)
+        atomic_write_json(target, document)
+        copied[label] = target
+    return copied
+
+
+def validate_cleanup_receipt(
+    comparison: dict[str, Any],
+    state: dict[str, Any],
+    final_path: Path,
+) -> dict[str, Any] | None:
+    receipt_sha256 = state["cleanup_receipt_sha256"]
+    if receipt_sha256 is None:
+        return None
+    control = comparison_control(Path(comparison["runtime_root"]))
+    receipt_path = require_regular_file(
+        control / "cleanup-receipt.json", "cleanup receipt"
+    )
+    sentinel = verify_external_sentinel(
+        comparison["external_sentinel"], Path(comparison["runtime_root"])
+    )
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    expected = {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_binding": binding_from_comparison(comparison),
+        "attempt_state_sha256": attempt_state_sha256(state),
+        "action": "sentinel_retained_through_merge_rereview",
+        "upstream_sha256s": {
+            "final_verdict": sha256_file(final_path),
+            "external_sentinel": sha256_file(sentinel),
+        },
+    }
+    if sha256_file(receipt_path) != receipt_sha256 or receipt != expected:
+        raise HarnessError("cleanup receipt or retained sentinel binding drifted")
+    return receipt
+
+
+def validate_final_verdict(manifest_path: Path) -> dict[str, Any]:
+    comparison = validate_comparison_manifest(
+        manifest_path, recompute_packages=True
+    )
+    binding = binding_from_comparison(comparison)
+    state = validate_attempt_state(
+        manifest_path, _comparison=comparison
+    )["state"]
+    control = comparison_control(Path(comparison["runtime_root"]))
+    final_path = require_regular_file(control / "final-verdict.json", "final verdict")
+    result = json.loads(final_path.read_text(encoding="utf-8"))
+    fields = {
+        "schema_version", "comparison_binding", "evidence_paths",
+        "upstream_sha256s", "verdict", "stop_reason", "merge_ready",
+        "failure_class", "attempt_state_sha256",
+    }
+    if (
+        not isinstance(result, dict) or set(result) != fields
+        or result["schema_version"] != SCHEMA_VERSION
+        or result["comparison_binding"] != binding
+        or state["final_verdict_sha256"] != sha256_file(final_path)
+        or result["attempt_state_sha256"] != attempt_state_sha256(state)
+    ):
+        raise HarnessError("final verdict identity or frozen state drifted")
+    contract = FINAL_FAILURE_FILES if result["failure_class"] else FINAL_CHAIN_FILES
+    expected_paths = dict(contract)
+    if (
+        result["evidence_paths"] != expected_paths
+        or not exact_digest_map(
+            result["upstream_sha256s"], set(expected_paths)
+        )
+    ):
+        raise HarnessError("final verdict evidence contract is invalid")
+    evidence: dict[str, Path] = {}
+    for label, relative in contract:
+        path = require_regular_file(
+            safe_path(control, relative), f"final {label.replace('_', ' ')}"
+        )
+        if result["upstream_sha256s"][label] != sha256_file(path):
+            raise HarnessError("final verdict evidence digest drifted")
+        evidence[label] = path
+    gate: dict[str, Any] = {}
+    judge: dict[str, Any] = {}
+    if result["failure_class"] is None:
+        baseline = [
+            evidence["normalized_retry_failed_baseline"],
+            evidence["normalized_preflight_remediation_holdout_baseline"],
+        ]
+        candidate = [
+            evidence["normalized_retry_failed_candidate"],
+            evidence["normalized_preflight_remediation_holdout_candidate"],
+        ]
+        gate = validate_official_outcome_gate(
+            evidence["outcome_gate"], manifest_path, baseline, candidate,
+            evidence["blind_packet"], evidence["judge_record"],
+            evidence["identity_reveal"], evidence["candidate_compliance"],
+            _comparison=comparison,
+        )
+        judge = {"verdict": gate["judge_verdict"]}
+    else:
+        _failure_evidence, derived_failure = validate_failure_evidence(
+            evidence["failure_evidence"], binding, state
+        )
+        if result["failure_class"] != derived_failure:
+            raise HarnessError("final failure class does not match structured evidence")
+    if (result["verdict"], result["stop_reason"], result["merge_ready"]) != (
+        final_transition(result["failure_class"], gate, judge)
+    ):
+        raise HarnessError("final verdict does not replay from frozen evidence")
+    validate_cleanup_receipt(comparison, state, final_path)
+    return result
+
+
+def freeze_final_verdict(
+    manifest_path: Path,
+    outcome_gate_path: Path | None,
+    judge_record_path: Path | None,
+    compliance_path: Path | None,
+    baseline_paths: list[Path] | None = None,
+    candidate_paths: list[Path] | None = None,
+    blind_packet_path: Path | None = None,
+    reveal_path: Path | None = None,
+    *,
+    failure_evidence_path: Path | None = None,
+) -> dict[str, object]:
+    comparison = validate_comparison_manifest(manifest_path)
+    binding = binding_from_comparison(comparison)
+    state = validate_attempt_state(
+        manifest_path, _comparison=comparison
+    )["state"]
+    if failure_evidence_path is not None:
+        _failure_evidence, failure_class = validate_failure_evidence(
+            failure_evidence_path, binding, state
+        )
+        sources = {"failure_evidence": failure_evidence_path}
+        gate: dict[str, Any] = {}
+        judge: dict[str, Any] = {}
+        contract = FINAL_FAILURE_FILES
+    else:
+        failure_class = None
+        if (
+            outcome_gate_path is None or judge_record_path is None
+            or compliance_path is None
+            or baseline_paths is None
+            or candidate_paths is None
+            or blind_packet_path is None
+            or reveal_path is None
+        ):
+            raise HarnessError("normal final verdict requires the complete frozen chain")
+        gate = validate_official_outcome_gate(
+            outcome_gate_path, manifest_path, baseline_paths, candidate_paths,
+            blind_packet_path, judge_record_path, reveal_path, compliance_path,
+            _comparison=comparison,
+        )
+        judge = {"verdict": gate["judge_verdict"]}
+        normalized_by_arm: dict[str, Path] = {}
+        for normalized_path in [*baseline_paths, *candidate_paths]:
+            normalized = validate_normalized_output(
+                json.loads(require_regular_file(
+                    normalized_path, "final normalized source"
+                ).read_text(encoding="utf-8")),
+                require_arm_binding=True,
+            )
+            arm_name = normalized["arm_binding"]["arm_name"]
+            if arm_name in normalized_by_arm:
+                raise HarnessError("final normalized sources contain a duplicate arm")
+            normalized_by_arm[arm_name] = normalized_path
+        if set(normalized_by_arm) != set(OFFICIAL_ARM_ORDER):
+            raise HarnessError("final normalized sources do not contain the exact four arms")
+        sources = {
+            "normalized_retry_failed_baseline": normalized_by_arm["retry-failed-baseline"],
+            "normalized_preflight_remediation_holdout_baseline": normalized_by_arm[
+                "preflight-remediation-holdout-baseline"
+            ],
+            "normalized_retry_failed_candidate": normalized_by_arm["retry-failed-candidate"],
+            "normalized_preflight_remediation_holdout_candidate": normalized_by_arm[
+                "preflight-remediation-holdout-candidate"
+            ],
+            "blind_packet": blind_packet_path,
+            "judge_record": judge_record_path,
+            "identity_reveal": reveal_path,
+            "candidate_compliance": compliance_path,
+            "outcome_gate": outcome_gate_path,
+        }
+        contract = FINAL_CHAIN_FILES
+    verdict, stop_reason, merge_ready = final_transition(failure_class, gate, judge)
+    evidence = copy_final_evidence(comparison, sources, contract)
+    result = {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_binding": binding,
+        "attempt_state_sha256": attempt_state_sha256(state),
+        "evidence_paths": dict(contract),
+        "upstream_sha256s": {
+            name: sha256_file(path) for name, path in evidence.items()
+        },
+        "verdict": verdict,
+        "stop_reason": stop_reason,
+        "merge_ready": merge_ready,
+        "failure_class": failure_class,
+    }
+    final_path = comparison_control(Path(comparison["runtime_root"])) / "final-verdict.json"
+    if final_path.exists() or final_path.is_symlink():
+        raise HarnessError("final verdict is already frozen")
+    atomic_write_json(final_path, result)
+    register_final_verdict(
+        manifest_path, sha256_file(final_path),
+        require_judge=failure_class is None,
+        _comparison=comparison,
+    )
+    frozen_state = validate_attempt_state(
+        manifest_path, _comparison=comparison
+    )["state"]
+    if (
+        frozen_state["final_verdict_sha256"] != sha256_file(final_path)
+        or result["attempt_state_sha256"] != attempt_state_sha256(frozen_state)
+        or json.loads(final_path.read_text(encoding="utf-8")) != result
+    ):
+        raise HarnessError("final verdict publication or state binding drifted")
+    return result
+
+
+def cleanup_comparison(manifest_path: Path) -> None:
+    validate_final_verdict(manifest_path)
+    comparison = validate_comparison_manifest(
+        manifest_path, recompute_evaluator=False
+    )
+    state = validate_attempt_state(
+        manifest_path, _comparison=comparison
+    )["state"]
+    if not is_digest(state.get("final_verdict_sha256")):
+        raise HarnessError("comparison cleanup requires a frozen final verdict")
+    if state.get("cleanup_receipt_sha256") is not None:
+        raise HarnessError("comparison cleanup receipt is already frozen")
+    runtime_root = Path(comparison["runtime_root"])
+    sentinel = verify_external_sentinel(comparison["external_sentinel"], runtime_root)
+    final_path = comparison_control(runtime_root) / "final-verdict.json"
+    require_regular_file(final_path, "final verdict")
+    if sha256_file(final_path) != state["final_verdict_sha256"]:
+        raise HarnessError("cleanup final verdict binding drifted")
+    receipt = {
+        "schema_version": SCHEMA_VERSION,
+        "comparison_binding": binding_from_comparison(comparison),
+        "attempt_state_sha256": attempt_state_sha256(state),
+        "action": "sentinel_retained_through_merge_rereview",
+        "upstream_sha256s": {
+            "final_verdict": sha256_file(final_path),
+            "external_sentinel": sha256_file(sentinel),
+        },
+    }
+    receipt_path = comparison_control(runtime_root) / "cleanup-receipt.json"
+    if receipt_path.exists() or receipt_path.is_symlink():
+        raise HarnessError("cleanup receipt already exists")
+    atomic_write_json(receipt_path, receipt)
+    with locked_attempt_state(
+        manifest_path, _comparison=comparison
+    ) as (_comparison, mutable):
+        if mutable["cleanup_receipt_sha256"] is not None:
+            raise HarnessError("cleanup receipt already registered")
+        mutable["cleanup_receipt_sha256"] = sha256_file(receipt_path)
+    cleaned_state = validate_attempt_state(
+        manifest_path, _comparison=comparison
+    )["state"]
+    validate_cleanup_receipt(comparison, cleaned_state, final_path)
 
 
 def validate_ledger() -> None:
@@ -1887,6 +4066,10 @@ def check_candidate_compliance(report_path: Path) -> dict[str, object]:
     if report_path.is_symlink() or not report_path.is_file():
         raise HarnessError("candidate compliance report must be a regular post-reveal file")
     report = json.loads(report_path.read_text(encoding="utf-8"))
+    return check_candidate_compliance_document(report)
+
+
+def check_candidate_compliance_document(report: object) -> dict[str, object]:
     if not isinstance(report, dict) or set(report) != {"revealed_identity", "records"}:
         return {"compliant": False, "violations": ["document fields"]}
     if not isinstance(report["revealed_identity"], str) or report["revealed_identity"] != "candidate":
@@ -1902,6 +4085,8 @@ def check_candidate_compliance(report_path: Path) -> dict[str, object]:
         "rereview_rationale",
     }
     violations: list[str] = []
+    if len(report["records"]) != 6:
+        violations.append("records must contain exactly six findings")
     finding_ids: list[str] = []
     for index, record in enumerate(report["records"]):
         if not isinstance(record, dict) or set(record) != required:
@@ -2031,13 +4216,18 @@ def stop_process_group(process: Any, process_group_id: int) -> None:
         raise HarnessError("unable to stop the runner process group") from signal_error
 
 
-def parent_stream_paths(stage_root: Path, phase: str) -> tuple[Path, Path]:
+def parent_stream_paths(
+    stage_root: Path, phase: str, attempt: int | None = None
+) -> tuple[Path, Path]:
     probe_root = ensure_sibling_probe(stage_root).parent
     streams_root = probe_root / "runner-streams"
     if streams_root.is_symlink():
         raise HarnessError("parent stream root must not be a symlink")
     streams_root.mkdir(mode=0o700, exist_ok=True)
-    stream_root = streams_root / stage_root.name / phase
+    stream_root = streams_root / stage_root.name
+    if attempt is not None:
+        stream_root = stream_root / f"attempt-{attempt}"
+    stream_root = stream_root / phase
     if stream_root.exists() or stream_root.is_symlink():
         raise HarnessError(f"parent stream artifacts already exist: {phase}")
     stream_root.mkdir(parents=True, mode=0o700)
@@ -2164,7 +4354,14 @@ def execute_codex(
         env_start = command.index("-i") + 1
     except (ValueError, IndexError) as exc:
         raise HarnessError("Codex command is missing its isolated environment") from exc
-    environment = runner_environment(profile)
+    sentinel_entries = [
+        item.split("=", 1)[1]
+        for item in command[env_start:]
+        if item.startswith(f"{EXTERNAL_SENTINEL_ENV}=")
+    ]
+    if len(sentinel_entries) != 1:
+        raise HarnessError("Codex command is missing its external sentinel binding")
+    environment = runner_environment(profile, Path(sentinel_entries[0]))
     if command[env_start:env_start + len(environment)] != environment:
         raise HarnessError("Codex command environment is not the fixed allowlist")
     child_env = dict(item.split("=", 1) for item in environment)
@@ -2261,7 +4458,8 @@ def sandbox_profile(stage_root: Path) -> str:
         path.name for path in stage_root.parent.iterdir() if path.is_dir()
     } if stage_root.parent.is_dir() else set()
     sibling_names = sorted(
-        (set((*ARM_NAMES, PREFLIGHT_ARM, SIBLING_PROBE)) | existing) - {stage_root.name}
+        (set((*ARM_NAMES, PREFLIGHT_ARM, SIBLING_PROBE, COMPARISON_CONTROL)) | existing)
+        - {stage_root.name}
     )
     sibling_rules = "".join(
         f'(deny file-read* file-write* (subpath "{seatbelt_path(stage_root.parent / name)}"))\n'
@@ -2271,17 +4469,30 @@ def sandbox_profile(stage_root: Path) -> str:
         '(version 1)\n(allow default)\n'
         '(deny file-read* file-write* (subpath "/Users/fromdarkness"))\n'
         '(deny file-read* file-write* (subpath "/Volumes"))\n'
+        '(deny file-read* file-write* (subpath "/private/tmp"))\n'
+        f'(allow file-read* file-write* (subpath "{seatbelt_path(stage_root)}"))\n'
         f"{sibling_rules}"
     )
 
 
-def runner_environment(profile: Path) -> list[str]:
+def runner_environment(profile: Path, external_sentinel: Path | None = None) -> list[str]:
     state_root = profile.parent / "codex-state"
     state_home = state_root / "home"
+    if external_sentinel is None:
+        stage_candidates = [
+            parent for parent in profile.parents
+            if parent.name in set((*ARM_NAMES, PREFLIGHT_ARM))
+        ]
+        if len(stage_candidates) != 1:
+            raise HarnessError("runner profile is not nested under one canonical stage")
+        external_sentinel = Path(
+            ensure_external_sentinel(stage_candidates[0].parent)["path"]
+        )
     return [
         f"CODEX_HOME={state_home}",
         f"HOME={state_home}",
         f"TMPDIR={profile.parent / 'tmp'}",
+        f"{EXTERNAL_SENTINEL_ENV}={external_sentinel}",
         "PATH=/usr/bin:/bin",
         "LANG=en_US.UTF-8",
         "LC_ALL=en_US.UTF-8",
@@ -2289,11 +4500,13 @@ def runner_environment(profile: Path) -> list[str]:
     ]
 
 
-def codex_command(repo: Path, profile: Path) -> list[str]:
+def codex_command(
+    repo: Path, profile: Path, external_sentinel: Path | None = None
+) -> list[str]:
     state_root = profile.parent / "codex-state"
     return [
         str(SANDBOX_EXEC), "-f", str(profile), "/usr/bin/env", "-i",
-        *runner_environment(profile), str(BUNDLED_CODEX), "exec", "--json",
+        *runner_environment(profile, external_sentinel), str(BUNDLED_CODEX), "exec", "--json",
         "--ephemeral", "--ignore-user-config", "--strict-config", "--model",
         "gpt-5.6-sol", "--config", 'model_reasoning_effort="xhigh"',
         "--config", f'sqlite_home="{state_root}"',
@@ -2330,6 +4543,8 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
         "schema_version", "binary_path", "binary_version", "binary_sha256",
         "arm_timeout_policy", "smoke",
     }
+    if "comparison_binding" in data:
+        fields.add("comparison_binding")
     smoke_fields = {
         "command", "environment", "prompt_sha256", "profile", "profile_sha256", "trace",
         "trace_sha256", "stderr", "stderr_sha256", "exit_code", "timeout_policy",
@@ -2361,9 +4576,16 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
     except (AttributeError, ValueError, IndexError) as exc:
         raise HarnessError("runner preflight command is invalid") from exc
     profile, trace, stderr = smoke["profile"], smoke["trace"], smoke["stderr"]
+    sentinel_entries = [
+        item.split("=", 1)[1] for item in smoke["environment"]
+        if isinstance(item, str) and item.startswith(f"{EXTERNAL_SENTINEL_ENV}=")
+    ] if isinstance(smoke["environment"], list) else []
+    if len(sentinel_entries) != 1:
+        raise HarnessError("runner preflight sentinel environment is invalid")
+    external_sentinel = Path(sentinel_entries[0])
     if (
-        command != codex_command(repo, profile_path)
-        or smoke["environment"] != runner_environment(profile_path)
+        command != codex_command(repo, profile_path, external_sentinel)
+        or smoke["environment"] != runner_environment(profile_path, external_sentinel)
         or not all(isinstance(value, str) for value in (profile, trace, stderr))
         or profile != sandbox_profile(repo.parent)
         or smoke["profile_sha256"] != sha256_bytes(profile.encode())
@@ -2378,11 +4600,26 @@ def validate_runner_preflight(path: Path, *, check_binary: bool = True) -> dict[
     validate_runner_trace(trace.encode())
     if check_binary and runner_identity() != identity:
         raise HarnessError("bundled Codex identity drifted from runner preflight")
+    if "comparison_binding" in data:
+        binding = data["comparison_binding"]
+        if (
+            not isinstance(binding, dict)
+            or set(binding) != {"comparison_manifest_sha256", "evaluator_identity"}
+            or not is_digest(binding.get("comparison_manifest_sha256"))
+        ):
+            raise HarnessError("runner preflight comparison binding is invalid")
+        validate_evaluator_identity(binding["evaluator_identity"], recompute=False)
     return data
 
 
-def preflight_runner(output: Path) -> Path:
+def preflight_runner(output: Path, comparison_manifest: Path | None = None) -> Path:
     identity = runner_identity()
+    comparison = (
+        validate_comparison_manifest(comparison_manifest, recompute_packages=True)
+        if comparison_manifest is not None
+        else None
+    )
+    binding = binding_from_comparison(comparison) if comparison is not None else None
     with tempfile.TemporaryDirectory(
         prefix="deliver-eval-preflight-", dir=STAGE_ROOT
     ) as temporary:
@@ -2390,6 +4627,12 @@ def preflight_runner(output: Path) -> Path:
         stage_root = root / PREFLIGHT_ARM
         stage_root.mkdir()
         ensure_sibling_probe(stage_root)
+        sentinel_binding = (
+            comparison["external_sentinel"]
+            if comparison is not None
+            else ensure_external_sentinel(root)
+        )
+        external_sentinel = Path(sentinel_binding["path"])
         repo, profile_path = stage_root / "repo", stage_root / "runner.sb"
         repo.mkdir()
         run(["git", "init", "-q", "-b", "eval"], cwd=repo)
@@ -2401,7 +4644,7 @@ def preflight_runner(output: Path) -> Path:
         )
         auth_copy = prepare_codex_state(profile_path)
         try:
-            command = codex_command(repo, profile_path)
+            command = codex_command(repo, profile_path, external_sentinel)
             result = execute_codex(
                 command,
                 PREFLIGHT_PROMPT,
@@ -2422,6 +4665,10 @@ def preflight_runner(output: Path) -> Path:
                 f"bundled Codex preflight failed with exit {result.returncode}: {result.stderr}"
             )
         validate_runner_trace(result.stdout.encode())
+        verify_external_sentinel(
+            sentinel_binding,
+            Path(comparison["runtime_root"]) if comparison is not None else root,
+        )
         artifact = {
             "schema_version": SCHEMA_VERSION,
             "binary_path": identity["path"],
@@ -2430,7 +4677,7 @@ def preflight_runner(output: Path) -> Path:
             "arm_timeout_policy": ARM_TIMEOUT_POLICY,
             "smoke": {
                 "command": command, "prompt_sha256": sha256_bytes(PREFLIGHT_PROMPT.encode()),
-                "environment": runner_environment(profile_path),
+                "environment": runner_environment(profile_path, external_sentinel),
                 "profile": profile, "profile_sha256": sha256_bytes(profile.encode()),
                 "trace": result.stdout, "trace_sha256": sha256_bytes(result.stdout.encode()),
                 "stderr": result.stderr, "stderr_sha256": sha256_bytes(result.stderr.encode()),
@@ -2438,17 +4685,87 @@ def preflight_runner(output: Path) -> Path:
                 "timeout_policy": PREFLIGHT_TIMEOUT_POLICY,
             },
         }
+        if binding is not None:
+            artifact["comparison_binding"] = binding
     write_json(output, artifact)
     validate_runner_preflight(output, check_binary=False)
     return output
 
 
+def rollback_new_runner_artifacts(path: Path, boundary: Path) -> None:
+    if not path.exists() and not path.is_symlink():
+        return
+    if path.is_symlink() or not path.is_dir() or path == boundary:
+        raise HarnessError("runner setup rollback path is invalid")
+    try:
+        path.relative_to(boundary)
+    except ValueError as exc:
+        raise HarnessError("runner setup rollback escaped its boundary") from exc
+    shutil.rmtree(path)
+    parent = path.parent
+    while parent != boundary:
+        try:
+            parent.rmdir()
+        except OSError:
+            break
+        parent = parent.parent
+
+
 def run_scenario(stage_root: Path, phase: str) -> Path:
     stage_root = require_stage_root(stage_root)
     ensure_sibling_probe(stage_root)
+    comparison_manifest = comparison_for_stage(stage_root)
+    comparison = (
+        validate_comparison_manifest(comparison_manifest)
+        if comparison_manifest is not None
+        else None
+    )
+    sentinel_binding = (
+        comparison["external_sentinel"]
+        if comparison is not None
+        else ensure_external_sentinel(stage_root.parent)
+    )
+    external_sentinel = Path(sentinel_binding["path"])
     prompt, manifest = assemble_runner_prompt(stage_root, phase)
     preflight_path = safe_path(stage_root, "evidence/runner-preflight.json")
     preflight = validate_runner_preflight(preflight_path)
+    arm_attempt: int | None = None
+    attempt_action: str | None = None
+    attempt_input: str | None = None
+    comparison_state: dict[str, Any] | None = None
+    if comparison_manifest is not None:
+        binding = binding_from_comparison(comparison)
+        if preflight.get("comparison_binding") != binding:
+            raise HarnessError("runner phase belongs to a different comparison")
+        repo_for_input = safe_path(stage_root, "repo")
+        initial = manifest["initial_snapshot"]["commit"]
+        code_diff, test_diff = repository_diffs(repo_for_input, initial)
+        attempt_input = sha256_bytes(canonical_json({
+            "comparison_binding": binding,
+            "runner_preflight_sha256": sha256_file(preflight_path),
+            "runner_manifest_sha256": sha256_file(stage_root / "runner-manifest.json"),
+            "arm_name": stage_root.name,
+            "phase": phase,
+            "head": run(["git", "rev-parse", "HEAD"], cwd=repo_for_input).strip(),
+            "status": run(
+                ["git", "status", "--short", "--untracked-files=all"],
+                cwd=repo_for_input,
+            ),
+            "implementation_diff_sha256": sha256_bytes(code_diff.encode()),
+            "test_diff_sha256": sha256_bytes(test_diff.encode()),
+        }))
+        comparison_state = validate_attempt_state(
+            comparison_manifest, _comparison=comparison
+        )["state"]
+        arm_state = comparison_state["arms"][stage_root.name]
+        if arm_state["status"] in {"pending", "interrupted"}:
+            arm_attempt = len(arm_state["attempts"]) + 1
+            attempt_action = "begin"
+        elif arm_state["status"] == "running" and arm_state["attempts"]:
+            arm_attempt = arm_state["attempts"][-1]["attempt"]
+            attempt_action = "bind"
+        else:
+            raise HarnessError("runner phase requires an active or restartable arm")
     identity = {
         "path": preflight["binary_path"], "version": preflight["binary_version"],
         "sha256": preflight["binary_sha256"],
@@ -2457,7 +4774,10 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
     elapsed_before_milliseconds = 0
     if phase == "remediation":
         prior = validate_runner_bundles(
-            runner_paths(stage_root, phases=("pre-packet",)),
+            runner_paths(
+                stage_root, phases=("pre-packet",),
+                _comparison=comparison, _state=comparison_state,
+            ),
             phases=("pre-packet",),
             repo=repo,
             stage_root=stage_root,
@@ -2471,22 +4791,46 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
     )
     if remaining_milliseconds <= 0:
         raise HarnessError("codex runner arm total timeout before phase start")
-    runner_root = stage_root / "runner" / phase
+    profile_text = sandbox_profile(stage_root)
+    runner_root = stage_root / "runner"
+    if arm_attempt is not None:
+        runner_root = runner_root / f"attempt-{arm_attempt}"
+    runner_root = runner_root / phase
     if runner_root.exists():
         raise HarnessError(f"runner phase artifacts already exist: {phase}")
-    runner_root.mkdir(parents=True)
-    trace_stream_path, stderr_stream_path = parent_stream_paths(stage_root, phase)
-    profile = runner_root / RUNNER_FILES["profile"]
-    profile.write_text(sandbox_profile(stage_root), encoding="utf-8")
-    auth_copy = prepare_codex_state(profile)
+    stream_root: Path | None = None
+    auth_copy: Path | None = None
+    attempt_registered = comparison_manifest is None
     try:
-        command = codex_command(repo, profile)
+        runner_root.mkdir(parents=True)
+        trace_stream_path, stderr_stream_path = parent_stream_paths(
+            stage_root, phase, arm_attempt
+        )
+        stream_root = trace_stream_path.parent
+        profile = runner_root / RUNNER_FILES["profile"]
+        profile.write_text(profile_text, encoding="utf-8")
+        auth_copy = prepare_codex_state(profile)
+        command = codex_command(repo, profile, external_sentinel)
         (runner_root / "prompt.txt").write_text(prompt, encoding="utf-8")
         (runner_root / "input-manifest.json").write_bytes(
             (stage_root / "runner-manifest.json").read_bytes()
         )
         trace = runner_root / RUNNER_FILES["trace"]
         stderr = runner_root / RUNNER_FILES["stderr"]
+        if comparison_manifest is not None:
+            if attempt_action == "begin":
+                registered_attempt = begin_arm_attempt(
+                    comparison_manifest, stage_root.name, attempt_input, phase,
+                    _comparison=comparison,
+                )["attempt"]
+            else:
+                registered_attempt = bind_arm_phase_input(
+                    comparison_manifest, stage_root.name, phase, attempt_input,
+                    _comparison=comparison,
+                )
+            attempt_registered = True
+            if registered_attempt != arm_attempt:
+                raise HarnessError("runner setup attempt no longer matches locked state")
         started = time.monotonic_ns()
         result = execute_codex(
             command,
@@ -2499,9 +4843,21 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
             total_timeout_seconds=remaining_milliseconds / 1000,
             inactivity_timeout_seconds=ARM_TIMEOUT_POLICY["inactivity_seconds"],
         )
+    except BaseException:
+        if not attempt_registered:
+            rollback_new_runner_artifacts(runner_root, stage_root / "runner")
+            if stream_root is not None:
+                stream_boundary = (
+                    stream_root.parents[1]
+                    if arm_attempt is not None else stream_root.parent
+                )
+                rollback_new_runner_artifacts(stream_root, stream_boundary)
+        raise
     finally:
-        auth_copy.unlink(missing_ok=True)
+        if auth_copy is not None:
+            auth_copy.unlink(missing_ok=True)
     ensure_sibling_probe(stage_root)
+    verify_external_sentinel(sentinel_binding, stage_root.parent)
     duration_milliseconds = max(1, math.ceil((time.monotonic_ns() - started) / 1_000_000))
     bind_executor_output(trace, result.stdout)
     bind_executor_output(stderr, result.stderr)
@@ -2514,7 +4870,7 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
         "schema_version": SCHEMA_VERSION,
         "phase": phase,
         "command": command,
-        "environment": runner_environment(profile),
+        "environment": runner_environment(profile, external_sentinel),
         "model": "gpt-5.6-sol",
         "reasoning": "xhigh",
         "execution_boundary": "outer_sandbox_only",
@@ -2533,6 +4889,9 @@ def run_scenario(stage_root: Path, phase: str) -> Path:
         "timeout_policy": ARM_TIMEOUT_POLICY,
         "arm_elapsed_before_milliseconds": elapsed_before_milliseconds,
     }
+    if "comparison_binding" in preflight:
+        metadata["comparison_binding"] = preflight["comparison_binding"]
+        metadata["arm_attempt"] = arm_attempt
     write_json(runner_root / "metadata.json", metadata)
     if result.returncode:
         raise HarnessError(f"codex runner failed with exit {result.returncode}")
@@ -2543,14 +4902,22 @@ def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(description=__doc__)
     commands = root.add_subparsers(dest="command", required=True)
 
+    initialize = commands.add_parser("initialize-comparison")
+    initialize.add_argument("--runtime-root", type=Path, required=True)
+    initialize.add_argument("--baseline-package", type=Path, required=True)
+    initialize.add_argument("--candidate-package", type=Path, required=True)
+    initialize.add_argument("--comparison-id")
+
     prepare = commands.add_parser("prepare")
     prepare.add_argument("--scenario", required=True)
     prepare.add_argument("--contract", type=Path, required=True)
     prepare.add_argument("--destination", type=Path, required=True)
     prepare.add_argument("--runner-preflight", type=Path, required=True)
+    prepare.add_argument("--comparison-manifest", type=Path)
 
     preflight = commands.add_parser("preflight-runner")
     preflight.add_argument("--output", type=Path, required=True)
+    preflight.add_argument("--comparison-manifest", type=Path)
 
     verify = commands.add_parser("verify-manifest")
     verify.add_argument("stage_root", type=Path)
@@ -2573,19 +4940,79 @@ def parser() -> argparse.ArgumentParser:
     normalize = commands.add_parser("normalize")
     normalize.add_argument("output_freeze", type=Path)
     normalize.add_argument("--output", type=Path, required=True)
+    normalize.add_argument("--comparison-manifest", type=Path)
 
     blind = commands.add_parser("blind-packet")
-    blind.add_argument("runs", type=Path, nargs=2)
+    blind.add_argument("runs", type=Path, nargs="+")
     blind.add_argument("--output", type=Path, required=True)
+    blind.add_argument("--comparison-manifest", type=Path)
+
+    interruption = commands.add_parser("record-external-interruption")
+    interruption.add_argument("--comparison-manifest", type=Path, required=True)
+    interruption.add_argument("--arm", choices=OFFICIAL_ARM_ORDER, required=True)
+    interruption.add_argument("--phase", choices=RUNNER_PHASES, required=True)
+    interruption.add_argument("--reason", required=True)
+
+    begin_judge = commands.add_parser("begin-judge")
+    begin_judge.add_argument("--comparison-manifest", type=Path, required=True)
+    begin_judge.add_argument("--blind-packet", type=Path, required=True)
+
+    judge_interruption = commands.add_parser("record-judge-interruption")
+    judge_interruption.add_argument("--comparison-manifest", type=Path, required=True)
+    judge_interruption.add_argument("--reason", required=True)
+
+    judge = commands.add_parser("freeze-judge")
+    judge.add_argument("--comparison-manifest", type=Path, required=True)
+    judge.add_argument("--blind-packet", type=Path, required=True)
+    judge.add_argument("--decision", type=Path, required=True)
+    judge.add_argument("--output", type=Path, required=True)
+
+    reveal = commands.add_parser("reveal-identities")
+    reveal.add_argument("--comparison-manifest", type=Path, required=True)
+    reveal.add_argument("--blind-packet", type=Path, required=True)
+    reveal.add_argument("--judge-record", type=Path, required=True)
+    reveal.add_argument("--output", type=Path, required=True)
 
     compliance = commands.add_parser("check-candidate-compliance")
     compliance.add_argument("report", type=Path)
     compliance.add_argument("--output", type=Path, required=True)
+    compliance.add_argument("--comparison-manifest", type=Path)
+    compliance.add_argument("--identity-reveal", type=Path)
+    compliance.add_argument("--blind-packet", type=Path)
+    compliance.add_argument("--judge-record", type=Path)
 
     outcomes = commands.add_parser("gate-outcomes")
     outcomes.add_argument("--baseline", type=Path, nargs=2, required=True)
     outcomes.add_argument("--candidate", type=Path, nargs=2, required=True)
     outcomes.add_argument("--output", type=Path, required=True)
+
+    official_gate = commands.add_parser("gate-official")
+    official_gate.add_argument("--comparison-manifest", type=Path, required=True)
+    official_gate.add_argument("--baseline", type=Path, nargs=2, required=True)
+    official_gate.add_argument("--candidate", type=Path, nargs=2, required=True)
+    official_gate.add_argument("--blind-packet", type=Path, required=True)
+    official_gate.add_argument("--judge-record", type=Path, required=True)
+    official_gate.add_argument("--identity-reveal", type=Path, required=True)
+    official_gate.add_argument("--candidate-compliance", type=Path, required=True)
+    official_gate.add_argument("--output", type=Path, required=True)
+
+    final = commands.add_parser("freeze-final-verdict")
+    final.add_argument("--comparison-manifest", type=Path, required=True)
+    final.add_argument("--outcome-gate", type=Path)
+    final.add_argument("--judge-record", type=Path)
+    final.add_argument("--candidate-compliance", type=Path)
+    final.add_argument("--failure-evidence", type=Path)
+    final.add_argument("--baseline", type=Path, nargs=2)
+    final.add_argument("--candidate", type=Path, nargs=2)
+    final.add_argument("--blind-packet", type=Path)
+    final.add_argument("--identity-reveal", type=Path)
+    final.add_argument("--output", type=Path, required=True)
+
+    replay = commands.add_parser("validate-final-verdict")
+    replay.add_argument("--comparison-manifest", type=Path, required=True)
+
+    cleanup = commands.add_parser("cleanup-comparison")
+    cleanup.add_argument("--comparison-manifest", type=Path, required=True)
 
     commands.add_parser("validate-ledger")
     return root
@@ -2593,13 +5020,18 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     arguments = parser().parse_args(argv)
-    if arguments.command == "prepare":
+    if arguments.command == "initialize-comparison":
+        print(initialize_comparison(
+            arguments.runtime_root, arguments.baseline_package,
+            arguments.candidate_package, comparison_id=arguments.comparison_id,
+        ))
+    elif arguments.command == "prepare":
         print(json.dumps(prepare_scenario(
             arguments.scenario, arguments.contract, arguments.destination,
-            arguments.runner_preflight,
+            arguments.runner_preflight, arguments.comparison_manifest,
         ), sort_keys=True))
     elif arguments.command == "preflight-runner":
-        print(preflight_runner(arguments.output))
+        print(preflight_runner(arguments.output, arguments.comparison_manifest))
     elif arguments.command == "verify-manifest":
         verify_manifest(arguments.stage_root)
     elif arguments.command == "freeze-pre-packet":
@@ -2611,11 +5043,52 @@ def main(argv: list[str] | None = None) -> int:
     elif arguments.command == "run-scenario":
         print(run_scenario(arguments.stage_root, arguments.phase))
     elif arguments.command == "normalize":
-        write_json(arguments.output, normalize_run(arguments.output_freeze))
+        write_json(arguments.output, normalize_run(
+            arguments.output_freeze, arguments.comparison_manifest
+        ))
     elif arguments.command == "blind-packet":
-        write_json(arguments.output, build_blind_packet(arguments.runs))
+        write_json(arguments.output, build_blind_packet(
+            arguments.runs, arguments.comparison_manifest
+        ))
+    elif arguments.command == "record-external-interruption":
+        record_external_interruption(
+            arguments.comparison_manifest, arguments.arm, arguments.reason,
+            arguments.phase,
+        )
+    elif arguments.command == "begin-judge":
+        begin_judge_attempt(
+            arguments.comparison_manifest, sha256_file(arguments.blind_packet)
+        )
+    elif arguments.command == "record-judge-interruption":
+        record_judge_interruption(arguments.comparison_manifest, arguments.reason)
+    elif arguments.command == "freeze-judge":
+        freeze_judge_record(
+            arguments.comparison_manifest, arguments.blind_packet,
+            arguments.decision, arguments.output,
+        )
+    elif arguments.command == "reveal-identities":
+        write_json(arguments.output, reveal_identities(
+            arguments.comparison_manifest, arguments.blind_packet,
+            arguments.judge_record,
+        ))
     elif arguments.command == "check-candidate-compliance":
-        result = check_candidate_compliance(arguments.report)
+        bound_values = (
+            arguments.comparison_manifest, arguments.identity_reveal,
+            arguments.blind_packet, arguments.judge_record,
+        )
+        if any(value is None for value in bound_values) and any(
+            value is not None for value in bound_values
+        ):
+            raise HarnessError("bound compliance requires the complete revealed chain")
+        result = (
+            check_candidate_compliance_bound(
+                arguments.comparison_manifest, arguments.report,
+                arguments.identity_reveal, arguments.blind_packet,
+                arguments.judge_record,
+            )
+            if arguments.comparison_manifest is not None
+            else check_candidate_compliance(arguments.report)
+        )
         write_json(arguments.output, result)
         if not result["compliant"]:
             return 1
@@ -2624,6 +5097,32 @@ def main(argv: list[str] | None = None) -> int:
         write_json(arguments.output, result)
         if not result["passed"]:
             return 1
+    elif arguments.command == "gate-official":
+        result = gate_official_outcomes(
+            arguments.comparison_manifest, arguments.baseline, arguments.candidate,
+            arguments.blind_packet, arguments.judge_record, arguments.identity_reveal,
+            arguments.candidate_compliance,
+        )
+        write_json(arguments.output, result)
+        if not result["passed"]:
+            return 1
+    elif arguments.command == "freeze-final-verdict":
+        result = freeze_final_verdict(
+            arguments.comparison_manifest, arguments.outcome_gate,
+            arguments.judge_record, arguments.candidate_compliance,
+            failure_evidence_path=arguments.failure_evidence,
+            baseline_paths=arguments.baseline,
+            candidate_paths=arguments.candidate,
+            blind_packet_path=arguments.blind_packet,
+            reveal_path=arguments.identity_reveal,
+        )
+        write_json(arguments.output, result)
+        if not result["merge_ready"]:
+            return 1
+    elif arguments.command == "validate-final-verdict":
+        validate_final_verdict(arguments.comparison_manifest)
+    elif arguments.command == "cleanup-comparison":
+        cleanup_comparison(arguments.comparison_manifest)
     elif arguments.command == "validate-ledger":
         validate_ledger()
     return 0

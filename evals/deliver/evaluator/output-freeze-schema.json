@@ -5,7 +5,7 @@
       "additionalProperties": false,
       "properties": {
         "path": {"pattern": "^frozen/", "type": "string"},
-        "sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "sha256": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
         "size": {"minimum": 0, "type": "integer"}
       },
       "required": ["path", "sha256", "size"],
@@ -14,6 +14,7 @@
   },
   "additionalProperties": false,
   "properties": {
+    "comparison_binding": {"$ref": "comparison-artifacts-schema.json#/$defs/comparisonBinding"},
     "artifacts": {
       "additionalProperties": false,
       "properties": {
@@ -51,7 +52,7 @@
       "required": ["commit", "tree"],
       "type": "object"
     },
-    "input_manifest_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "input_manifest_sha256": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
     "repository_state": {
       "additionalProperties": false,
       "properties": {
@@ -66,13 +67,13 @@
     "snapshots": {
       "additionalProperties": false,
       "properties": {
-        "post_remediation": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "pre_packet": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+        "post_remediation": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
       },
       "required": ["pre_packet", "post_remediation"],
       "type": "object"
     }
   },
-  "required": ["schema_version", "scenario_id", "input_manifest_sha256", "initial_snapshot", "snapshots", "repository_state", "artifacts"],
+  "required": ["schema_version", "comparison_binding", "scenario_id", "input_manifest_sha256", "initial_snapshot", "snapshots", "repository_state", "artifacts"],
   "type": "object"
 }

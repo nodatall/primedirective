@@ -4,12 +4,12 @@
     "phase": {
       "additionalProperties": false,
       "properties": {
-        "manifest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "metadata": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "profile": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "prompt": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "stderr": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
-        "trace": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+        "manifest": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "metadata": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "profile": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "prompt": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "stderr": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "trace": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
       },
       "required": ["trace", "stderr", "metadata", "prompt", "manifest", "profile"],
       "type": "object"
@@ -17,8 +17,9 @@
   },
   "additionalProperties": false,
   "properties": {
+    "comparison_binding": {"$ref": "comparison-artifacts-schema.json#/$defs/comparisonBinding"},
     "event": {"const": "deliver_eval_arm_finalized"},
-    "output_freeze_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "output_freeze_sha256": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
     "phase_bindings": {
       "additionalProperties": false,
       "properties": {
@@ -30,6 +31,6 @@
     },
     "schema_version": {"const": 1}
   },
-  "required": ["schema_version", "event", "output_freeze_sha256", "phase_bindings"],
+  "required": ["schema_version", "comparison_binding", "event", "output_freeze_sha256", "phase_bindings"],
   "type": "object"
 }

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "comparisonBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "comparison_manifest_sha256": {"$ref": "#/$defs/digest"},
+        "evaluator_identity": {"$ref": "#/$defs/evaluatorIdentity"}
+      },
+      "required": ["comparison_manifest_sha256", "evaluator_identity"],
+      "type": "object"
+    },
+    "digest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "evaluatorIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "commit": {"pattern": "^[0-9a-f]{40}$", "type": "string"},
+        "evals_tree": {"pattern": "^[0-9a-f]{40}$", "type": "string"},
+        "file_manifest_sha256": {"$ref": "#/$defs/digest"}
+      },
+      "required": ["commit", "evals_tree", "file_manifest_sha256"],
+      "type": "object"
+    }
+  }
+}
