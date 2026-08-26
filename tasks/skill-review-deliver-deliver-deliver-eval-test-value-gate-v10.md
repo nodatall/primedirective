@@ -33,9 +33,9 @@ Use the v9 precedence and restart limits with `current_version=v10` and `next_ca
 ## Status
 
 - [x] Complete a fresh adversarial v10 plan review; the revised mechanism-based plan returned clean.
-- [ ] Implement only candidate-owned contract wording and proportional validator tests.
-- [ ] Validate and independently forward-test all six frozen action outcomes plus RF-004 null scope, same-mechanism table and unchanged-reporting targeted negative controls, parser-consumer grammar, concurrent waiters, failed/stale owners, and post-readiness protected-work completion.
-- [ ] Complete fresh adversarial implementation review, install, commit, and record the exact candidate.
+- [x] Implement only candidate-owned contract wording and proportional validator tests.
+- [x] Validate and independently forward-test all six frozen action outcomes plus RF-004 null scope, same-mechanism table and unchanged-reporting targeted negative controls, parser-consumer grammar, concurrent waiters, failed/stale owners, and post-readiness protected-work completion.
+- [x] Complete fresh adversarial implementation review, install, commit, and record the exact candidate.
 - [ ] Run four sealed official arms and a fresh blind judge.
 - [ ] Apply candidate compliance and the unchanged hard gate.
 - [ ] Preserve artifacts and record the terminal v10 verdict without in-run tuning.
@@ -46,7 +46,7 @@ skill_review_complete: no
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-deliver-deliver-eval-test-value-gate-v10.md
 baseline_ref: a4116bb
-candidate_ref: pending
+candidate_ref: 8a489bc
 scenario: evals/deliver/suite.md
 baseline_run_complete: no
 candidate_run_complete: no
@@ -56,4 +56,4 @@ judge_blinded: no
 verdict: inconclusive
 artifact_evidence_preserved: no
 ready_for_merge_review: no
-stop_reason: missing_candidate
+stop_reason: evaluation_pending
