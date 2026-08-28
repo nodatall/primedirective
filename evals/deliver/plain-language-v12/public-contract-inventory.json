@@ -1,0 +1,1015 @@
+{
+  "schema_version": 1,
+  "inventory_id": "deliver-plain-language-v12-public-contract",
+  "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
+  "purpose": "Public inventory of the observable Deliver contract before a wording-only rewrite.",
+  "category_vocabulary": [
+    "activation",
+    "mode_order",
+    "branch",
+    "planning",
+    "implementation",
+    "test_value",
+    "verification",
+    "review",
+    "stop",
+    "archive",
+    "finalization"
+  ],
+  "location_semantics": "Line numbers are one-based and inclusive in baseline_commit. canonical_owner_clause identifies the owner; repeated_or_mirror_locations lists meaningful repetitions, gates, templates, or interface mirrors of the same behavior.",
+  "source_scope": [
+    "skills/deliver/SKILL.md",
+    "skills/deliver/agents/openai.yaml",
+    "skills/deliver/references/plan-format.md",
+    "skills/deliver/references/rereview-scope-record.md",
+    "skills/deliver/references/worker-packet.md",
+    "skills/shared/references/contract-ownership.md",
+    "skills/shared/references/plain-language.md",
+    "skills/shared/references/reasoning-budget.md",
+    "skills/shared/references/analysis/verification-pivot.md",
+    "skills/shared/references/architecture/architecture-guidance.md",
+    "skills/plan-to-goal/SKILL.md",
+    "skills/review-plan/SKILL.md",
+    "skills/shared/references/planning/deep-research.md",
+    "skills/shared/references/analysis/pro-browser-analysis.md",
+    "skills/shared/references/review/finding-disposition.md",
+    "skills/shared/references/review/review-calibration.md",
+    "skills/shared/references/review/review-protocol.md",
+    "skills/shared/references/execution/finalization-gate.md"
+  ],
+  "behaviors": [
+    {
+      "behavior_id": "DLV-ACT-001",
+      "category": "activation",
+      "summary": "Activate Deliver for its explicit commands and for equivalent plain-language requests to create, refine, implement, start, or continue a Deliver plan.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 25, "line_end": 27},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/agents/openai.yaml", "line_start": 1, "line_end": 4}
+      ]
+    },
+    {
+      "behavior_id": "DLV-ACT-002",
+      "category": "activation",
+      "summary": "The supported public modifiers are exactly --deep-research, --pro-analysis, and --fast.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 29, "line_end": 33},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 1, "line_end": 3},
+        {"path": "skills/deliver/agents/openai.yaml", "line_start": 3, "line_end": 4}
+      ]
+    },
+    {
+      "behavior_id": "DLV-ACT-003",
+      "category": "activation",
+      "summary": "Once an execution plan is active, ordinary approval or resume phrases reopen that exact plan and resume Deliver until final handoff, cancellation, or an explicit workflow switch.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 62, "line_end": 62},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 41, "line_end": 41},
+        {"path": "skills/deliver/SKILL.md", "line_start": 293, "line_end": 294}
+      ]
+    },
+    {
+      "behavior_id": "DLV-ACT-004",
+      "category": "activation",
+      "summary": "A document carrying the Deliver implementation instruction routes back to Deliver; implementation requests do not need a special execute syntax, but a non-canonical document must be imported into tasks/execution-plan-<plan-key>.md without changing scope.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 66, "line_end": 66},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/plan-format.md", "line_start": 64, "line_end": 65},
+        {"path": "skills/deliver/SKILL.md", "line_start": 216, "line_end": 218},
+        {"path": "skills/deliver/SKILL.md", "line_start": 294, "line_end": 294}
+      ]
+    },
+    {
+      "behavior_id": "DLV-ACT-005",
+      "category": "activation",
+      "summary": "Draft discussion remains active across later planning messages until refinement, cancellation, or an explicit workflow switch, and material discussion updates the same canonical execution-plan file.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 60, "line_end": 60},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/plan-format.md", "line_start": 43, "line_end": 50}
+      ]
+    },
+    {
+      "behavior_id": "DLV-MODE-001",
+      "category": "mode_order",
+      "summary": "The normal workflow order is readable plan, optional deep research, optional Pro analysis, refinement, direct Markdown review and approval, implementation, validation, final review, archive, commit, finalization, then final handoff.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 8, "line_end": 8},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 37, "line_end": 41},
+        {"path": "skills/deliver/agents/openai.yaml", "line_start": 3, "line_end": 4}
+      ]
+    },
+    {
+      "behavior_id": "DLV-MODE-002",
+      "category": "mode_order",
+      "summary": "Bare Deliver and refine/plan requests create or reuse the same plan, run requested research gates and refinement in the same command, then pause for review unless fast mode is active.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 37, "line_end": 39},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 200, "line_end": 200},
+        {"path": "skills/deliver/SKILL.md", "line_start": 224, "line_end": 251}
+      ]
+    },
+    {
+      "behavior_id": "DLV-MODE-003",
+      "category": "mode_order",
+      "summary": "Fast mode treats the refined plan as approved scope and skips only the initial plan-review pause; it does not skip the plan, optional gates, refinement, validation, final review, archive, commit, or finalization.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 8, "line_end": 8},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 38, "line_end": 38},
+        {"path": "skills/deliver/SKILL.md", "line_start": 255, "line_end": 256},
+        {"path": "skills/deliver/agents/openai.yaml", "line_start": 3, "line_end": 4}
+      ]
+    },
+    {
+      "behavior_id": "DLV-MODE-004",
+      "category": "mode_order",
+      "summary": "Draft mode is used only for explicit discussion or update requests; $deliver discuss is a legacy alias and must not become a separate preferred workflow.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 40, "line_end": 40},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 8, "line_end": 8},
+        {"path": "skills/deliver/SKILL.md", "line_start": 199, "line_end": 200},
+        {"path": "skills/deliver/agents/openai.yaml", "line_start": 3, "line_end": 4}
+      ]
+    },
+    {
+      "behavior_id": "DLV-MODE-005",
+      "category": "mode_order",
+      "summary": "Resume a fixed approved plan or fixed remediation packet at implementation without rerunning refinement; return to refinement only for a material plan change or a blocking plan contradiction revealed by evidence.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 64, "line_end": 64},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-MODE-006",
+      "category": "mode_order",
+      "summary": "When both optional analysis modifiers are present, complete deep research and apply it to the plan before Pro analysis; complete and apply Pro analysis before refinement.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 155, "line_end": 178},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 224, "line_end": 236},
+        {"path": "skills/shared/references/planning/deep-research.md", "line_start": 45, "line_end": 55},
+        {"path": "skills/shared/references/analysis/pro-browser-analysis.md", "line_start": 66, "line_end": 73}
+      ]
+    },
+    {
+      "behavior_id": "DLV-MODE-007",
+      "category": "mode_order",
+      "summary": "An adversarial plan-review request routes through $review-plan, which reviews only the plan and returns control without starting implementation; Deliver resumes only when the plan is ready for approval.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 260, "line_end": 260},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 17, "line_end": 17},
+        {"path": "skills/review-plan/SKILL.md", "line_start": 6, "line_end": 8},
+        {"path": "skills/review-plan/SKILL.md", "line_start": 80, "line_end": 80}
+      ]
+    },
+    {
+      "behavior_id": "DLV-BRANCH-001",
+      "category": "branch",
+      "summary": "Inspect git status before edits, preserve unrelated changes, and stop before editing when unrelated or dangerous changes overlap the work.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 182, "line_end": 185},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 191, "line_end": 191},
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 25, "line_end": 27}
+      ]
+    },
+    {
+      "behavior_id": "DLV-BRANCH-002",
+      "category": "branch",
+      "summary": "If already on a non-base branch, keep that branch.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 186, "line_end": 187},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-BRANCH-003",
+      "category": "branch",
+      "summary": "If on main, master, or the resolved local base branch, create a feature branch before writing plan or implementation files and prefer a deliver/<plan-key> name when local conventions do not supply a better one.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 188, "line_end": 189},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-BRANCH-004",
+      "category": "branch",
+      "summary": "Stop and ask on detached HEAD, and stop before carrying overlapping unrelated or dangerous changes onto a new branch.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 190, "line_end": 191},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-BRANCH-005",
+      "category": "branch",
+      "summary": "After branch decisions and before creating plan, goal-plan, or implementation changes, capture the finalization dirty-state baseline.",
+      "canonical_owner_clause": {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 9, "line_end": 25},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 192, "line_end": 192}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-001",
+      "category": "planning",
+      "summary": "Use the named canonical Deliver artifact paths for the execution plan, optional mockup, goal plan, active-step note, rereview record, and archived execution plan.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 68, "line_end": 77},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/plan-format.md", "line_start": 50, "line_end": 50},
+        {"path": "skills/deliver/references/rereview-scope-record.md", "line_start": 1, "line_end": 5}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-002",
+      "category": "planning",
+      "summary": "New Deliver work uses one readable execution plan and does not generate the retired PRD, TDD, or full tasks-plan stack.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 8, "line_end": 10},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/contract-ownership.md", "line_start": 25, "line_end": 28}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-003",
+      "category": "planning",
+      "summary": "Treat tasks-plans, specs, pasted checklists, and review notes as source material only; convert the in-scope content into the canonical execution-plan file before implementation and use that file for scope, review, archive, and finalization.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 83, "line_end": 85},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 214, "line_end": 218},
+        {"path": "skills/deliver/SKILL.md", "line_start": 294, "line_end": 294}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-004",
+      "category": "planning",
+      "summary": "Build the plan from the available thread, pasted material, plan, review, research, or named path, and inspect the repo enough to honor obvious local constraints.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 182, "line_end": 185},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-PLAN-005",
+      "category": "planning",
+      "summary": "A draft plan uses the canonical file, stays checklist-shaped, includes the exact Draft instruction and review request near the top, and is not approved implementation scope.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 5, "line_end": 33},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 79, "line_end": 79},
+        {"path": "skills/deliver/SKILL.md", "line_start": 95, "line_end": 108},
+        {"path": "skills/deliver/SKILL.md", "line_start": 201, "line_end": 205}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-006",
+      "category": "planning",
+      "summary": "Draft plans use short concrete language, phases and checkboxes, useful open-question checkboxes, and avoid legacy planning, audit-log, readiness, and topical essay structures.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 35, "line_end": 49},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 97, "line_end": 108}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-007",
+      "category": "planning",
+      "summary": "When the user removes scope, delete it from the current plan; keep at most one concise positive decision note only when needed to prevent accidental reintroduction.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 43, "line_end": 46},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 105, "line_end": 106},
+        {"path": "skills/deliver/SKILL.md", "line_start": 207, "line_end": 208},
+        {"path": "skills/deliver/SKILL.md", "line_start": 215, "line_end": 215}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-008",
+      "category": "planning",
+      "summary": "A normal refined plan uses phases with one checkbox level, includes the exact Deliver implementation instruction near the top, and asks for direct Markdown review in normal mode.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 52, "line_end": 89},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 110, "line_end": 126},
+        {"path": "skills/deliver/SKILL.md", "line_start": 211, "line_end": 213}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-009",
+      "category": "planning",
+      "summary": "Refined plans record chosen decisions, constraints, checks, and executable outcomes without plan-justifying prose, nested checkboxes, or unresolved meta-planning placeholders disguised as work.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 91, "line_end": 104},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 112, "line_end": 123},
+        {"path": "skills/deliver/SKILL.md", "line_start": 245, "line_end": 247}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-010",
+      "category": "planning",
+      "summary": "Keep the main plan high-level and readable; put detailed files, commands, tests, done conditions, and worker context in the active-step packet when that slice begins.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 219, "line_end": 223},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/worker-packet.md", "line_start": 5, "line_end": 44}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-011",
+      "category": "planning",
+      "summary": "Do not add Status, Result, or Commit lines by default, and keep validation transcripts and commit details out of the plan unless they change later work.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 108, "line_end": 109},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 127, "line_end": 128},
+        {"path": "skills/deliver/SKILL.md", "line_start": 287, "line_end": 291}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-012",
+      "category": "planning",
+      "summary": "Frontend-facing plans create and link a lightweight standalone tasks/ui-mockup-<plan-key>.html before approval; it is visual intent, not production code or a substitute for implementation-time browser verification.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 111, "line_end": 116},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 130, "line_end": 135},
+        {"path": "skills/deliver/SKILL.md", "line_start": 223, "line_end": 223}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-013",
+      "category": "planning",
+      "summary": "For a frontend plan, read docs/DESIGN.md when present and stop with an Open question rather than inventing an unresolved product or design decision.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/plan-format.md", "line_start": 113, "line_end": 117},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 132, "line_end": 136}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-014",
+      "category": "planning",
+      "summary": "Classify work as goal-shaped only when next implementation steps depend on repeatable validation results in an adaptive inspect-patch-validate loop with a meaningful target, comparator, or success signal.",
+      "canonical_owner_clause": {"path": "skills/plan-to-goal/SKILL.md", "line_start": 29, "line_end": 44},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 138, "line_end": 147},
+        {"path": "skills/deliver/SKILL.md", "line_start": 193, "line_end": 198}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-015",
+      "category": "planning",
+      "summary": "Do not choose goal mode when the decisive evidence is slow, paid, approval-gated, nightly, externally scheduled, or otherwise not repeatable inside the goal; use a normal plan to prepare cheap checks and the human-approved decision run.",
+      "canonical_owner_clause": {"path": "skills/plan-to-goal/SKILL.md", "line_start": 40, "line_end": 44},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 147, "line_end": 147}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-016",
+      "category": "planning",
+      "summary": "Goal-shaped work routes to $plan-to-goal and creates tasks/goal-plan-<plan-key>.md with Goal, Done When, Not Done Yet If, and a compact absolute-path /goal Start Prompt; it is not a normal Deliver checklist.",
+      "canonical_owner_clause": {"path": "skills/plan-to-goal/SKILL.md", "line_start": 51, "line_end": 61},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 74, "line_end": 83},
+        {"path": "skills/deliver/SKILL.md", "line_start": 149, "line_end": 151},
+        {"path": "skills/deliver/SKILL.md", "line_start": 193, "line_end": 197}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-017",
+      "category": "planning",
+      "summary": "Deep research uses local reconnaissance plus live web research, writes tasks/tmp/research-plan-<plan-key>.md, applies adopted findings to the execution plan, and prints a short Deep Research Summary before later gates.",
+      "canonical_owner_clause": {"path": "skills/shared/references/planning/deep-research.md", "line_start": 45, "line_end": 56},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 155, "line_end": 165},
+        {"path": "skills/deliver/SKILL.md", "line_start": 224, "line_end": 230},
+        {"path": "skills/shared/references/planning/deep-research.md", "line_start": 97, "line_end": 151}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-018",
+      "category": "planning",
+      "summary": "A completed deep-research memo satisfies the owner evidence bar and ends with the exact Deep Research Completion Stamp fields, including evidence_bar_met: yes, before Pro analysis, refinement, review, or implementation.",
+      "canonical_owner_clause": {"path": "skills/shared/references/planning/deep-research.md", "line_start": 304, "line_end": 333},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 164, "line_end": 165},
+        {"path": "skills/deliver/SKILL.md", "line_start": 229, "line_end": 230},
+        {"path": "skills/shared/references/analysis/pro-browser-analysis.md", "line_start": 66, "line_end": 73}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-019",
+      "category": "planning",
+      "summary": "Pro analysis uses the visible normal Chrome ChatGPT surface, requires Pro Extended or Extended Pro before submission, curates safe repo context, and does not use the in-app Browser, standalone Playwright, or a private profile as the Pro path.",
+      "canonical_owner_clause": {"path": "skills/shared/references/analysis/pro-browser-analysis.md", "line_start": 5, "line_end": 33},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 167, "line_end": 178}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-020",
+      "category": "planning",
+      "summary": "The explicit Pro modifier consents to sending selected context, but likely secrets, credentials, customer data, unrelated personal files, or an obviously overbroad bundle require a stop and user direction.",
+      "canonical_owner_clause": {"path": "skills/shared/references/analysis/pro-browser-analysis.md", "line_start": 35, "line_end": 54},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-PLAN-021",
+      "category": "planning",
+      "summary": "After Pro, write tasks/tmp/pro-analysis-<plan-key>.md with browser evidence, a verified findings ledger, conflict reconciliation, artifact delta, and the exact synthesis fields; apply adopted findings and emit Pro Findings Summary before refinement.",
+      "canonical_owner_clause": {"path": "skills/shared/references/analysis/pro-browser-analysis.md", "line_start": 75, "line_end": 92},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 171, "line_end": 178},
+        {"path": "skills/deliver/SKILL.md", "line_start": 231, "line_end": 236},
+        {"path": "skills/shared/references/analysis/pro-browser-analysis.md", "line_start": 114, "line_end": 118}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-022",
+      "category": "planning",
+      "summary": "Run at least one refinement round and continue with a new post-edit round whenever material issues or plan changes remain; refinement is clean only after a full round finds no material backlog issues.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 237, "line_end": 242},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-PLAN-023",
+      "category": "planning",
+      "summary": "Use a fresh reviewer by default for refinement; check missing scope, vagueness, ordering, duplication, oversized work, hidden dependencies, contradictions, meta-planning placeholders, and whether slices stay dependency-ordered without becoming per-file scripts.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 243, "line_end": 249},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-PLAN-024",
+      "category": "planning",
+      "summary": "The plan and user-facing explanations follow the shared plain-language standard: lead with the main point, use short full sentences and concrete words, define required jargon, and add technical detail only when it changes a decision, confidence, or next step.",
+      "canonical_owner_clause": {"path": "skills/shared/references/plain-language.md", "line_start": 5, "line_end": 30},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 14, "line_end": 14},
+        {"path": "skills/deliver/references/plan-format.md", "line_start": 35, "line_end": 41}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-025",
+      "category": "planning",
+      "summary": "Choose reasoning by role within the user's selected model family or budget: strong for planning/refinement/final review, strongest for deep research and blocker recovery, strong for implementation, and standard or medium for mechanical work.",
+      "canonical_owner_clause": {"path": "skills/shared/references/reasoning-budget.md", "line_start": 1, "line_end": 24},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 14, "line_end": 14},
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 81, "line_end": 100}
+      ]
+    },
+    {
+      "behavior_id": "DLV-PLAN-026",
+      "category": "planning",
+      "summary": "For boundary-affecting work, load architecture guidance, read docs/ARCHITECTURE.md when present, create or update it first in a non-trivial repo unless this is a narrow local fix, and update it in the same run when intentionally changing a boundary.",
+      "canonical_owner_clause": {"path": "skills/shared/references/architecture/architecture-guidance.md", "line_start": 106, "line_end": 114},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 15, "line_end": 15},
+        {"path": "skills/deliver/SKILL.md", "line_start": 87, "line_end": 89}
+      ]
+    },
+    {
+      "behavior_id": "DLV-IMPL-001",
+      "category": "implementation",
+      "summary": "Start implementation only from the canonical approved execution plan, then select one unchecked item at a time in plan order unless evidence justifies updating the plan order first.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 262, "line_end": 266},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-IMPL-002",
+      "category": "implementation",
+      "summary": "Before editing, identify repo-local implementation and validation patterns; use a small private active-step note only when useful and create a packet for each non-trivial item.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 267, "line_end": 269},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-IMPL-003",
+      "category": "implementation",
+      "summary": "Assign one worker by default for non-trivial implementation when available, never run implementation workers in parallel, and implement directly only when workers are unavailable.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 270, "line_end": 275},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 360, "line_end": 364}
+      ]
+    },
+    {
+      "behavior_id": "DLV-IMPL-004",
+      "category": "implementation",
+      "summary": "The orchestrator owns item selection, packets, integration, validation judgment, plan updates, commits, and plan changes; workers receive one bounded item rather than the whole backlog.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/worker-packet.md", "line_start": 47, "line_end": 47},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 272, "line_end": 273},
+        {"path": "skills/deliver/SKILL.md", "line_start": 366, "line_end": 366}
+      ]
+    },
+    {
+      "behavior_id": "DLV-IMPL-005",
+      "category": "implementation",
+      "summary": "A worker packet names the exact plan item, needed context, repo surface, focused validation, UI need, test disposition when relevant, edit boundary, no-commit rule, and required return evidence.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/worker-packet.md", "line_start": 3, "line_end": 45},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 22, "line_end": 23}
+      ]
+    },
+    {
+      "behavior_id": "DLV-IMPL-006",
+      "category": "implementation",
+      "summary": "Commit each useful completed item or tightly coupled group, exclude unrelated user changes, and do not create an empty commit for a no-change step.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 283, "line_end": 286},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-IMPL-007",
+      "category": "implementation",
+      "summary": "After each item, check it off and update, split, reorder, add, remove, or clarify later plan items when evidence changes the right path, while keeping the plan readable.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 287, "line_end": 291},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-IMPL-008",
+      "category": "implementation",
+      "summary": "Execution scope is the entire unchecked remainder, not one phase; after every useful commit or plan update, rescan the full plan and immediately continue with the next item.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 292, "line_end": 298},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 327, "line_end": 329}
+      ]
+    },
+    {
+      "behavior_id": "DLV-IMPL-009",
+      "category": "implementation",
+      "summary": "Do not send a recap or handoff while in-scope checkboxes remain, and do not treat a phase, focused check, or useful commit as a stopping point.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 299, "line_end": 303},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 29, "line_end": 34}
+      ]
+    },
+    {
+      "behavior_id": "DLV-IMPL-010",
+      "category": "implementation",
+      "summary": "After the last checkbox, continue through final review, authorized remediation, archive, closeout commit, and finalization rather than handing off immediately.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 301, "line_end": 303},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 41, "line_end": 41}
+      ]
+    },
+    {
+      "behavior_id": "DLV-TEST-001",
+      "category": "test_value",
+      "summary": "Before keeping a new or changed test as permanent Deliver coverage, classify it with test_disposition: permanent | table_case | probe_only | no_test and record a concise evidence-backed rationale.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 41, "line_end": 46},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 20, "line_end": 20},
+        {"path": "skills/deliver/SKILL.md", "line_start": 263, "line_end": 265},
+        {"path": "skills/deliver/references/worker-packet.md", "line_start": 36, "line_end": 38}
+      ]
+    },
+    {
+      "behavior_id": "DLV-TEST-002",
+      "category": "test_value",
+      "summary": "Permanent or table-driven coverage must protect a supported, material, uniquely uncovered, deterministic, stable, and economical behavior.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 47, "line_end": 55},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-TEST-003",
+      "category": "test_value",
+      "summary": "Use permanent for one durable standalone regression when the criteria hold and the behavior does not belong in an existing coherent case group.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 56, "line_end": 58},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-TEST-004",
+      "category": "test_value",
+      "summary": "Use table_case only when related inputs share the same supported boundary, expected result, and failure mechanism, and avoid duplicate permanent tests.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 59, "line_end": 59},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-TEST-005",
+      "category": "test_value",
+      "summary": "Use probe_only for useful one-run proof that lacks economical durable value; exact pathological depth, size, recursion, interpreter, or resource-limit triggers default to probes unless a distinct supported semantic boundary deserves the smallest permanent case.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 60, "line_end": 60},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-TEST-006",
+      "category": "test_value",
+      "summary": "Use no_test when stronger coverage already proves the boundary or a permanent reproduction would add no durable protection, and record that evidence or reason.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 61, "line_end": 61},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-TEST-007",
+      "category": "test_value",
+      "summary": "In a disposable or historical fixture without a permanent-test path, keep shell checks and one-run reproductions as probe_only and do not invent a permanent harness.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 63, "line_end": 63},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 265, "line_end": 265}
+      ]
+    },
+    {
+      "behavior_id": "DLV-TEST-008",
+      "category": "test_value",
+      "summary": "Every implementation change and fixed finding still needs verification; test disposition is independent of whether a verified in-scope defect must be fixed.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 65, "line_end": 65},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 264, "line_end": 264}
+      ]
+    },
+    {
+      "behavior_id": "DLV-VER-001",
+      "category": "verification",
+      "summary": "Run the narrow check that proves each useful implementation item.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 276, "line_end": 277},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-VER-002",
+      "category": "verification",
+      "summary": "For parser or validator repairs, test accepted-looking inputs against the downstream consumer grammar; for shell numeric state include empty, non-digit, leading-zero or base-sensitive, and bounded-length inputs when relevant.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 278, "line_end": 278},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/worker-packet.md", "line_start": 51, "line_end": 51}
+      ]
+    },
+    {
+      "behavior_id": "DLV-VER-003",
+      "category": "verification",
+      "summary": "For approved cross-process lifecycle repairs, verify synchronous completion after readiness, concurrent waiters, owner or lock state, failed or stale owner recovery, and default versus foreground behavior without expanding the approved contract.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 279, "line_end": 279},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/worker-packet.md", "line_start": 51, "line_end": 51}
+      ]
+    },
+    {
+      "behavior_id": "DLV-VER-004",
+      "category": "verification",
+      "summary": "For UI, layout, styling, or rendered-content changes, inspect the affected real UI when practical and capture visual evidence.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 280, "line_end": 280},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 260, "line_end": 280}
+      ]
+    },
+    {
+      "behavior_id": "DLV-VER-005",
+      "category": "verification",
+      "summary": "After a failed check, classify the failure layer before patching again; if another patch would be a guess, pivot to the smallest useful log, deterministic test, replay, or temporary probe under /agent-scratch/.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 281, "line_end": 282},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/analysis/verification-pivot.md", "line_start": 11, "line_end": 34}
+      ]
+    },
+    {
+      "behavior_id": "DLV-VER-006",
+      "category": "verification",
+      "summary": "When evidence cannot distinguish leading explanations, state the unknown, competing explanations, smallest discriminating check, expected signals, and whether Deliver will implement it; execution may build and run that smallest probe and promotes it only if it should remain.",
+      "canonical_owner_clause": {"path": "skills/shared/references/analysis/verification-pivot.md", "line_start": 24, "line_end": 54},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 14, "line_end": 14},
+        {"path": "skills/deliver/SKILL.md", "line_start": 282, "line_end": 282}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-001",
+      "category": "review",
+      "summary": "Before completion, run one initial fresh full-branch review over the entire branch diff using the execution plan as scope, a Deliver final-review log, and a fresh final reviewer when available.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 383, "line_end": 389},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 305, "line_end": 315}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-002",
+      "category": "review",
+      "summary": "Use codex-short for Codex or GPT-family reviewers and full-chain otherwise: codex-short runs A, applicable G, applicable H, then I; full-chain runs A through I with G and H conditional.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 114, "line_end": 131},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 357, "line_end": 381}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-003",
+      "category": "review",
+      "summary": "Final full-branch review runs bounded bug, smaller-delta, and skeptic/falsifier priors without inventing findings, then attacks its own findings for overstatement, misses, and severity or disposition errors before declaring clean.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 147, "line_end": 177},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 303, "line_end": 321}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-004",
+      "category": "review",
+      "summary": "Material review findings use the shared severity, execution-gate, disposition, confidence, scope, evidence, impact, fix-path, and owner shape; the reviewer discovers evidence while the main agent decides and repairs.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 5, "line_end": 29},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 20, "line_end": 20}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-005",
+      "category": "review",
+      "summary": "A fixed remediation packet replaces the initial review only with fail-closed evidence of active-workflow provenance, unchanged base commit/tree/diff, complete full-branch profile, fresh reviewer, final quality audit, finding evidence, repair authorization, and fixed stop boundary.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 387, "line_end": 387},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 64, "line_end": 64},
+        {"path": "skills/deliver/SKILL.md", "line_start": 308, "line_end": 308}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-006",
+      "category": "review",
+      "summary": "After authorized repairs, run the protocol-derived targeted or full rereview rather than an extra ceremonial full review; a pre-repair attested review cannot close repairs.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 389, "line_end": 402},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 307, "line_end": 309}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-007",
+      "category": "review",
+      "summary": "A targeted rereview records finding IDs, pre-repair base, boundary and diff, adjacent callers and tests, originating and testing prompts, conditional Prompt H, validation reruns, and fresh-reviewer closure evidence.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 391, "line_end": 400},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-REV-008",
+      "category": "review",
+      "summary": "Escalate a repair rereview to full for architecture or trust-boundary changes, cross-process or concurrent lifecycle semantics, fallible output after irreversible mutation, approved public-contract changes, broad security or data-integrity impact, unproven isolation, or a new material finding; a supported contract restoration stays targeted absent another trigger.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 402, "line_end": 402},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/rereview-scope-record.md", "line_start": 28, "line_end": 32}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-009",
+      "category": "review",
+      "summary": "Every repair action uses schema_version 3 and records finding_id, pre-repair repair_boundary, approved_contract_basis with exact effect and source fields, all nine named Boolean risk flags, validator-derived required_scope, and scope_rationale.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/rereview-scope-record.md", "line_start": 3, "line_end": 27},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 309, "line_end": 310},
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 404, "line_end": 404}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-010",
+      "category": "review",
+      "summary": "approved_contract_basis.effect is exactly none, restore, change, or uncertain; changes_approved_public_contract is true exactly for change, uncertain requires isolation_unproven, and the validator derives scope from the fixed flags.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/rereview-scope-record.md", "line_start": 28, "line_end": 32},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 404, "line_end": 404}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-011",
+      "category": "review",
+      "summary": "Before a repair rereview, run the bundled validator in place with --phase plan and do not start unless it passes; after recording rounds, run --phase complete and do not complete review, archive, or finalize unless it passes. Use --ordinary-post-repair-full-round only for the named broader ordinary full round allowed by the record contract.",
+      "canonical_owner_clause": {"path": "skills/deliver/references/rereview-scope-record.md", "line_start": 34, "line_end": 58},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 310, "line_end": 311},
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 404, "line_end": 404}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-012",
+      "category": "review",
+      "summary": "Execute each prompt required by the active profile one by one in one complete round without asking between prompts; reviewers stay read-only, while the main agent owns disposition, authorized repair, check reruns, and continuation through the round.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 357, "line_end": 375},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 314, "line_end": 316}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-013",
+      "category": "review",
+      "summary": "Run Prompt G for frontend or rendered UI work and Prompt H for deploy-bound, operational, infrastructure, migration, security, observability, agent, private-data, secret, untrusted-input, or outbound-action changes; otherwise mark each conditional prompt not applicable with a reason.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 379, "line_end": 381},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-REV-014",
+      "category": "review",
+      "summary": "Write the Deliver final-review log to tasks/tmp/review-deliver-final-<plan-key>.md unless a repo-local temp convention requires another path, and keep the log available through the finalization gate.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 313, "line_end": 313},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 408, "line_end": 420},
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 508, "line_end": 508},
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 35, "line_end": 45}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-015",
+      "category": "review",
+      "summary": "The review log records profile, round, scope, every prompt's findings, dispositions, tests, and applicability; completion requires every required or applicable prompt, at least one full round, no unresolved LARP, final-audit, or hidden material issue, the final quality check, and passing or justified tests.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 422, "line_end": 470},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 35, "line_end": 45}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-016",
+      "category": "review",
+      "summary": "Repair every verified in-scope fix finding authorized by Deliver, rerun relevant checks, and use a fresh derived-scope rereview until no fix finding remains; do not repair no-action items.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 79, "line_end": 87},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 406, "line_end": 406},
+        {"path": "skills/deliver/SKILL.md", "line_start": 316, "line_end": 316}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-017",
+      "category": "review",
+      "summary": "Frontend review uses real visual and interaction evidence for changed screens, states, breakpoints, controls, and resulting state; capture trace or video when timing matters, inspect regressions and visible accessibility, grade design quality, originality, craft, and functionality, and do not complete frontend work without visual evidence.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 260, "line_end": 280},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 280, "line_end": 280}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-018",
+      "category": "review",
+      "summary": "Production-readiness review checks realistic failure handling, configuration and secrets, destructive-data safeguards, rollback or migration safety, performance, dependencies, security, monitoring, private data, untrusted input, outbound actions, and applicable go-live risks, and fails a private-data plus untrusted-input plus outbound-capability combination without hard separation or human approval.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 283, "line_end": 301},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-REV-019",
+      "category": "review",
+      "summary": "The final audit uses executed evidence to confirm the original problem works end to end, core interactions and state transitions are real and consistent, destructive paths cannot target shared data by accident, and skipped work, assumptions, production risks, remaining issues, and accepted risks are explicit.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 303, "line_end": 320},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 315, "line_end": 317}
+      ]
+    },
+    {
+      "behavior_id": "DLV-REV-020",
+      "category": "review",
+      "summary": "For a task-based full-branch review, record evidence-tied Agent-Loop Backprop for material defects or confidence gaps using the fixed source and disposition vocabulary; process findings do not block by themselves, and workflow changes remain later proposals unless changing those docs is the task.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/review-protocol.md", "line_start": 323, "line_end": 355},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 86, "line_end": 86}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-001",
+      "category": "stop",
+      "summary": "Refinement stops after at most eight rounds; if material issues remain at that limit, show the exact blocker and do not start implementation.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 237, "line_end": 250},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-STOP-002",
+      "category": "stop",
+      "summary": "Fast mode still stops for destructive or data-loss actions, missing credentials, environment, or service access, material scope ambiguity, billing, security, schema, API, or product decisions, unresolved implementation-changing open questions, goal delegation, incomplete optional gates, unresolved refinement issues, or any unsafe or dishonest implementation blocker.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 255, "line_end": 256},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/plan-format.md", "line_start": 102, "line_end": 107}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-003",
+      "category": "stop",
+      "summary": "After implementation starts, stop only for a required user decision, missing environment, service, or credential, unsafe or destructive action needing approval, unresolved material plan contradiction, or verification blocker; incomplete closeout work is not a stopping point.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 292, "line_end": 304},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 84, "line_end": 88}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-004",
+      "category": "stop",
+      "summary": "Final review may be skipped only when a real blocker prevents it; stop with that blocker and do not claim completion.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 317, "line_end": 317},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 88, "line_end": 88}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-005",
+      "category": "stop",
+      "summary": "An incomplete deep-research pass is not a completed planning handoff: keep researching and repairing it, and stop only for unavailable web access, unsafe context exposure, a required user decision, or the user explicitly dropping --deep-research.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 164, "line_end": 165},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 224, "line_end": 230}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-006",
+      "category": "stop",
+      "summary": "A degraded or incomplete Pro pass may be recorded only as diagnostics and blocks refinement and normal Deliver progress until resolved or the user explicitly drops --pro-analysis.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 177, "line_end": 178},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 231, "line_end": 236}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-007",
+      "category": "stop",
+      "summary": "When work is goal-shaped, stop after writing the goal plan and Start Prompt; do not execute it as a normal Deliver checklist, and start the goal from the thread only when the user explicitly asks and goal mode is available.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 193, "line_end": 198},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 149, "line_end": 151}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-008",
+      "category": "stop",
+      "summary": "After a draft-discussion update, stop with a short link to the same plan and continue discussion; do not refine or execute until the user asks.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 199, "line_end": 210},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/references/plan-format.md", "line_start": 43, "line_end": 50}
+      ]
+    },
+    {
+      "behavior_id": "DLV-STOP-009",
+      "category": "stop",
+      "summary": "In a review repair loop, stop for needs human decision, carry residual risk into the final handoff without silently patching it, and let the underlying material code issue rather than process commentary control blocking.",
+      "canonical_owner_clause": {"path": "skills/shared/references/review/finding-disposition.md", "line_start": 79, "line_end": 87},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/review/review-protocol.md", "line_start": 350, "line_end": 355}
+      ]
+    },
+    {
+      "behavior_id": "DLV-ARCH-001",
+      "category": "archive",
+      "summary": "After final-review findings are dispositioned and required remediation is verified, move tasks/execution-plan-<plan-key>.md to tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md; never archive it before final review is complete.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 318, "line_end": 321},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 77, "line_end": 77},
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 60, "line_end": 68}
+      ]
+    },
+    {
+      "behavior_id": "DLV-ARCH-002",
+      "category": "archive",
+      "summary": "When tasks/ui-mockup-<plan-key>.html exists, move it into the execution plan's archive directory as ui-mockup-<plan-key>.html so the plan's relative link remains reviewable.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 320, "line_end": 320},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 73, "line_end": 77}
+      ]
+    },
+    {
+      "behavior_id": "DLV-ARCH-003",
+      "category": "archive",
+      "summary": "Do not archive a tasks/goal-plan-<plan-key>.md through Deliver finalization unless the user explicitly converts it into a normal execution plan.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 83, "line_end": 83},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-ARCH-004",
+      "category": "archive",
+      "summary": "Leave the archived execution plan readable rather than rewriting it as an audit log; remove disposable active-step files unless needed for a blocker, and remove a completed risk-free review-plan temp file unless preservation was requested.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 322, "line_end": 324},
+      "repeated_or_mirror_locations": []
+    },
+    {
+      "behavior_id": "DLV-ARCH-005",
+      "category": "archive",
+      "summary": "Commit the archive move and any final-review, checklist, cleanup, implementation, or validation edits before final handoff.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 325, "line_end": 325},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 330, "line_end": 330},
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 76, "line_end": 82}
+      ]
+    },
+    {
+      "behavior_id": "DLV-FINAL-001",
+      "category": "finalization",
+      "summary": "Immediately before any completion-shaped user message, classify it as terminal and run the finalization gate; do not send an implementation recap after the last implementation validation as a progress update.",
+      "canonical_owner_clause": {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 29, "line_end": 34},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 302, "line_end": 303}
+      ]
+    },
+    {
+      "behavior_id": "DLV-FINAL-002",
+      "category": "finalization",
+      "summary": "Before terminal handoff, require the Deliver final-review log to exist with no unchecked prompt entries and no unresolved blocker, material, or final-audit issue unless it has explicit accepted-risk or blocked status.",
+      "canonical_owner_clause": {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 35, "line_end": 45},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 305, "line_end": 317}
+      ]
+    },
+    {
+      "behavior_id": "DLV-FINAL-003",
+      "category": "finalization",
+      "summary": "Reopen the live or archived execution plan and search the entire file for unchecked task entries; if any in-scope checkbox remains, continue execution unless a real blocker prevents progress.",
+      "canonical_owner_clause": {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 47, "line_end": 58},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 327, "line_end": 329}
+      ]
+    },
+    {
+      "behavior_id": "DLV-FINAL-004",
+      "category": "finalization",
+      "summary": "Verify that the readable execution plan exists under tasks/archive before terminal handoff.",
+      "canonical_owner_clause": {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 60, "line_end": 68},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 318, "line_end": 325}
+      ]
+    },
+    {
+      "behavior_id": "DLV-FINAL-005",
+      "category": "finalization",
+      "summary": "Run git status --porcelain=v1 and compare it with tasks/tmp/finalization-baseline-<plan-key>.status: pre-existing dirty entries may remain, but no new uncommitted run work may remain; remove the baseline when it is the only new entry and commit changes created by finalization.",
+      "canonical_owner_clause": {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 70, "line_end": 82},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 330, "line_end": 330}
+      ]
+    },
+    {
+      "behavior_id": "DLV-FINAL-006",
+      "category": "finalization",
+      "summary": "Unattempted final review, commit, archive, status comparison, push, or PR work is missing closeout rather than a blocker; continue it. If the gate still fails, finish the missing work or stop with the exact failed gate item and required user action, without a completion message.",
+      "canonical_owner_clause": {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 84, "line_end": 88},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/deliver/SKILL.md", "line_start": 326, "line_end": 330}
+      ]
+    },
+    {
+      "behavior_id": "DLV-FINAL-007",
+      "category": "finalization",
+      "summary": "Write the final handoff only from post-gate evidence: name the archived plan, summarize completed items, list relevant commits and validation, report final review and material findings, name skipped checks, blockers, or residual risk, and include archive, branch or PR, and final working-tree status. Claim completion only when all in-scope checkboxes are done or user-deferred, focused validation ran, and final review completed.",
+      "canonical_owner_clause": {"path": "skills/deliver/SKILL.md", "line_start": 349, "line_end": 358},
+      "repeated_or_mirror_locations": [
+        {"path": "skills/shared/references/execution/finalization-gate.md", "line_start": 86, "line_end": 88}
+      ]
+    }
+  ]
+}
