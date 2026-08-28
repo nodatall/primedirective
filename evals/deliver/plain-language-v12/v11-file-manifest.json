@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
+  "files": [
+    {
+      "path": "evals/deliver/__init__.py",
+      "git_mode": "100644",
+      "byte_size": 52,
+      "sha256": "b23a80f0c5d68b0ff626334b55dd7e76992c10463d5b1409a9c19022b16cbec8"
+    },
+    {
+      "path": "evals/deliver/evaluator/behavior-schema.json",
+      "git_mode": "100644",
+      "byte_size": 5552,
+      "sha256": "352bb128801f333854cd11c28908c238ef4c5e2989ffa4426968c803d9175233"
+    },
+    {
+      "path": "evals/deliver/evaluator/candidate-compliance-schema.json",
+      "git_mode": "100644",
+      "byte_size": 3244,
+      "sha256": "22bba2d0950455b1f9a8984b02cb34eebe310021ecbef936198fe8c75b13adf9"
+    },
+    {
+      "path": "evals/deliver/evaluator/comparison-artifacts-schema.json",
+      "git_mode": "100644",
+      "byte_size": 865,
+      "sha256": "cba8dfc9dda93f403921b24de4abc577f176f14279596c373285888ab5bc6423"
+    },
+    {
+      "path": "evals/deliver/evaluator/evidence-records-schema.json",
+      "git_mode": "100644",
+      "byte_size": 3093,
+      "sha256": "f7064e5f40f6508b40e166e6c323da2994f7e3960d30f5ad79ee4769d529a0f4"
+    },
+    {
+      "path": "evals/deliver/evaluator/identity-denylist.txt",
+      "git_mode": "100644",
+      "byte_size": 156,
+      "sha256": "829ede172afe9a275be3fbfee6083063faa65276af3832f59e0af5ad09f21eda"
+    },
+    {
+      "path": "evals/deliver/evaluator/judge-rubric.md",
+      "git_mode": "100644",
+      "byte_size": 1478,
+      "sha256": "f9781cf50df3f1b07a8813057c3b9de083e354c6e1a252a248e868457b85d362"
+    },
+    {
+      "path": "evals/deliver/evaluator/outcome-ledger.json",
+      "git_mode": "100644",
+      "byte_size": 2376,
+      "sha256": "fa3f4a0697aa082cd44ca75a2fd883fe9089a2ffd6dfc40f6684b4bf4a8e7b56"
+    },
+    {
+      "path": "evals/deliver/evaluator/output-freeze-schema.json",
+      "git_mode": "100644",
+      "byte_size": 3664,
+      "sha256": "084de74d8cccd5bff57f3a4bb886080017025e544018dc1c682cc26c8fa75247"
+    },
+    {
+      "path": "evals/deliver/evaluator/run-record-schema.json",
+      "git_mode": "100644",
+      "byte_size": 1477,
+      "sha256": "d32c1d66a32eb658aee660810c9a9cb19f38a8e38652d8adce5e104c7c5c2a48"
+    },
+    {
+      "path": "evals/deliver/evaluator/terminal-seal-schema.json",
+      "git_mode": "100644",
+      "byte_size": 1475,
+      "sha256": "99db3297db9d3ffcfb5d8b1803cf69131d3058a749f53052bb69e5cbffd08686"
+    },
+    {
+      "path": "evals/deliver/harness.py",
+      "git_mode": "100644",
+      "byte_size": 225483,
+      "sha256": "0969dff5a248902365dd52b763d705d5e371defa950ce544fe155e3867614dc3"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/evaluator/README.md",
+      "git_mode": "100644",
+      "byte_size": 315,
+      "sha256": "0ce9bc78391a5c57c26eda50242e90067a502bbf60dd7b832b4bc0a92ba49467"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/review-packet/acceptance-contract.md",
+      "git_mode": "100644",
+      "byte_size": 1122,
+      "sha256": "b5d6de77097ecc4f1d2e10e2670a9e210a5ab3d9c9bef226b4943d4ba2a8ea5a"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/review-packet/approved-paused-plan.md",
+      "git_mode": "100644",
+      "byte_size": 944,
+      "sha256": "aeb04586524291bbbd0e463b2437c9ea907f1823643bf6173c8a0f1e576f5621"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/review-packet/findings.md",
+      "git_mode": "100644",
+      "byte_size": 1300,
+      "sha256": "f30fc7fe6718da411aadb17f5c35cf061b7fdc33f5192410014af0e714342c88"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/review-packet/historical-evidence.md",
+      "git_mode": "100644",
+      "byte_size": 1255,
+      "sha256": "b24c8fb6eb78dee0c97271062e12ebbb5ad7bb542e8052380d3456b70d0db6e5"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/review-packet/probes/async-preflight.sh",
+      "git_mode": "100644",
+      "byte_size": 720,
+      "sha256": "86358fc428148debd7011b0596bfd223fa7ab75bbfcf2d9e2e096dc2d5294a79"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/review-packet/probes/corrupt-throttle.sh",
+      "git_mode": "100644",
+      "byte_size": 453,
+      "sha256": "43ea196b5dd32382b2a67c885cc616465be292ba628859caca3da53178af4fca"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/scenario.json",
+      "git_mode": "100644",
+      "byte_size": 1531,
+      "sha256": "853f650e290ae8bff4e5b39059efa11ed4a0441a71665ddf05b21dc17a77c4e7"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/scenario/runner-prompt.md",
+      "git_mode": "100644",
+      "byte_size": 608,
+      "sha256": "571ddee0f2ff2c427bf5eaffdf1911177233efbe5db52cfa2b3c8f7e78ed34d9"
+    },
+    {
+      "path": "evals/deliver/preflight-remediation-holdout/scenario/starting-state-contract.md",
+      "git_mode": "100644",
+      "byte_size": 881,
+      "sha256": "6c9500eb2b91542e9b250262b44f0c4871e1d4e40d37e41ab6f123093e14f174"
+    },
+    {
+      "path": "evals/deliver/retry-failed/evaluator/README.md",
+      "git_mode": "100644",
+      "byte_size": 403,
+      "sha256": "fa55fcb8f303807c7dc5ef3b22590f39a1b5e9f445d194659a4bebb729505ed3"
+    },
+    {
+      "path": "evals/deliver/retry-failed/evaluator/hidden_tests.py",
+      "git_mode": "100644",
+      "byte_size": 7974,
+      "sha256": "b08f492221194bdaf2100756d89615b07106893db3e6a260c294ba8bebc8e5bc"
+    },
+    {
+      "path": "evals/deliver/retry-failed/evaluator/posthoc_review_tests.py",
+      "git_mode": "100644",
+      "byte_size": 6653,
+      "sha256": "a0e0699994e0ee3ebc87555514f0488c77f40cdba720e86595ba1239a19dab9f"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/.gitignore",
+      "git_mode": "100644",
+      "byte_size": 40,
+      "sha256": "c356d3f244c58f189b455e791d2827bab893da16bc33a696acf7284701299ad5"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/AGENTS.md",
+      "git_mode": "100644",
+      "byte_size": 630,
+      "sha256": "fec5a1f1a9de2e118261646bbf72cc6090ef013ba7bec20c3d14a0ee94e7f829"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/README.md",
+      "git_mode": "100644",
+      "byte_size": 618,
+      "sha256": "eac9bf49a2ba578c596545f98817ad35ba4e3498e706a42587dc22f564c991f9"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/pyproject.toml",
+      "git_mode": "100644",
+      "byte_size": 258,
+      "sha256": "61c6a391de0a2ee6d778df2e6d4825db53ec27f7b998f08c2baa55767b940659"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/queuectl/__init__.py",
+      "git_mode": "100644",
+      "byte_size": 24,
+      "sha256": "f3ce23d1607dd7f0c31c73e37bb65081df9f2ffc5fd08d270ac5a432435852a6"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/queuectl/cli.py",
+      "git_mode": "100644",
+      "byte_size": 2017,
+      "sha256": "0900d4fce33aa4d75bf60d65b74330b51fe0e768b38a439e0fe52e1a4174cd62"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/queuectl/store.py",
+      "git_mode": "100644",
+      "byte_size": 2783,
+      "sha256": "dff6161afb58ba0b0bff488d3d02a458f46ee8a22c9b134ddd276aae8a9e7275"
+    },
+    {
+      "path": "evals/deliver/retry-failed/fixture/tests/test_cli.py",
+      "git_mode": "100644",
+      "byte_size": 2716,
+      "sha256": "da29be1743de74923dc6ae45baca1b12950eb8e37aa33dc06a24be5889a54187"
+    },
+    {
+      "path": "evals/deliver/retry-failed/review-packet/deep-structure-probe.py",
+      "git_mode": "100644",
+      "byte_size": 974,
+      "sha256": "c41ddd0d91c74d51f0b532a86652c0e0dbf4d7210eaf4b700753dc3c7d09b57b"
+    },
+    {
+      "path": "evals/deliver/retry-failed/review-packet/findings.md",
+      "git_mode": "100644",
+      "byte_size": 2429,
+      "sha256": "78f14c043fac808b3990762d13dbfac4dd67abfea9c4fb8ef13b0ea0ddd4a7e9"
+    },
+    {
+      "path": "evals/deliver/retry-failed/scenario.json",
+      "git_mode": "100644",
+      "byte_size": 821,
+      "sha256": "d76f13ae9497112b0268bc59799b66a911de03b9e632513c3de8d56d9a97eb9b"
+    },
+    {
+      "path": "evals/deliver/retry-failed/scenario/acceptance-contract.md",
+      "git_mode": "100644",
+      "byte_size": 961,
+      "sha256": "ae927246a1adffd88cfbe7a0d02ae21452694954fe37401e4f2631c7e5b6498d"
+    },
+    {
+      "path": "evals/deliver/retry-failed/scenario/runner-prompt.md",
+      "git_mode": "100644",
+      "byte_size": 591,
+      "sha256": "9c100018b47d9ae99c6f1faa7d7db324b3bd59c57a118a127b963ff5ba7b7637"
+    },
+    {
+      "path": "evals/deliver/retry-failed/scenario/source-bullets.md",
+      "git_mode": "100644",
+      "byte_size": 1535,
+      "sha256": "84a11e783a3aaa22a76030f64854990e2c4f5cdf8e1d77b14ed937429caa656d"
+    },
+    {
+      "path": "evals/deliver/suite.md",
+      "git_mode": "100644",
+      "byte_size": 20365,
+      "sha256": "a52e9296c8867453f035b16752c7973215b52534c40a691b22166fbd01ea77d8"
+    },
+    {
+      "path": "evals/deliver/tests/test_harness.py",
+      "git_mode": "100644",
+      "byte_size": 101405,
+      "sha256": "e3f534127e16a24baa8db7336d0cf3fa8b0026ead6e25c2619472c94ff0d47a9"
+    }
+  ],
+  "manifest_sha256": "fc3cb2d9311a9f1def033f582c10a6a0af45fed9fc4cdcbda37dadcffef7b9b2"
+}
