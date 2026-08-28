@@ -740,12 +740,18 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     pro_deliver_reference_tokens = [
         "$deliver --pro-analysis",
         "$deliver --deep-research --pro-analysis",
-        "The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission.",
-        "Treat `Thinking Extended`, `Extended Thinking`, ordinary thinking modes, or any non-Pro label as a failed Pro model-selection gate",
+        "The Pro browser gate requires a visible, selected Pro reasoning state before submission.",
+        "`split-controls`: record the visible selected model label, verify that the selected reasoning or effort label is `Pro`, and, when a `Power` control exposes an ordinal, verify that it is at its maximum position, such as `5 of 5`.",
+        "`Extra High` at `4 of 5` is a lower, actionable state, not evidence that Pro is unavailable.",
+        "Discover the control by semantic role, accessible name and value, selected state, and proximity to the composer",
+        "Before submission, close the picker when necessary and verify that the qualifying state persists in the composer.",
+        "a model name containing `Pro` without selected-state evidence",
+        "a maximum ordinal without selected `Pro` semantics does not qualify.",
         "Chrome automation means the Chrome plugin/control-chrome path against the user's installed Chrome profile",
         "Do not use the in-app Browser plugin or standalone Playwright MCP surface as the Pro path",
         "If the first visible browser target is blank, `about:blank`, an empty new tab, or a non-ChatGPT page, do not treat that as an unavailable browser path.",
-        "Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.",
+        "Set `pro_model_selected: yes` only after a qualifying `legacy-combined` or `split-controls` state is verified.",
+        "The stamp field name is retained for compatibility; it certifies the selected Pro reasoning state",
         "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
         "When `$deliver --deep-research --pro-analysis` is active, the gate is hard:",
         "For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
@@ -754,6 +760,22 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     for token in pro_deliver_reference_tokens:
         if token not in pro_reference:
             fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-browser-analysis.md missing deliver pro-analysis token: {token}")
+    stale_pro_gate_tokens = [
+        "The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission.",
+        "Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.",
+    ]
+    for token in stale_pro_gate_tokens:
+        if token in pro_reference:
+            fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-browser-analysis.md still contains stale exact-label gate: {token}")
+    pro_readme_tokens = [
+        "the legacy combined labels `Pro Extended` or `Extended Pro` qualify.",
+        "In split controls, a separate selected `Pro` effort qualifies; when a `Power` control exposes an ordinal, it must be at its accessible maximum such as `5 of 5`.",
+        "`Extra High` at `4 of 5` is the control entry point one step below Pro",
+        "use Computer Use against the same Chrome window and verify that the selected state persists before submitting.",
+    ]
+    for token in pro_readme_tokens:
+        if token not in readme:
+            fail(errors, "PD-DELIVER-PRO-ANALYSIS-README", f"README.md missing Pro-analysis token: {token}")
     deliver_task_contract_tokens = [
         "`--deep-research` is valid with `$first-principles-mode`, `$deliver`, and legacy planning flows that explicitly support it",
         "`--pro-analysis` is valid with `$first-principles-mode`, `$deliver`, and `$repo-sweep`",
