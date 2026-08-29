@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "adapter_identifier": "deliver_plain_language_v12",
+  "model": "gpt-5.6-sol",
+  "reasoning": "xhigh",
+  "arm_order": [
+    "baseline",
+    "candidate"
+  ],
+  "behavior_scenarios": [
+    "retry-failed",
+    "preflight-remediation-holdout"
+  ],
+  "poll_interval_seconds": 15,
+  "shell_yield_seconds": 60,
+  "no_progress_seconds": 900,
+  "process_limit_seconds": 7200,
+  "arm_total_seconds": 10800,
+  "semantic_attempts": 1,
+  "maximum_pre_output_infrastructure_restarts": 1,
+  "restart_condition": "infrastructure_failure_before_any_output",
+  "reattachment_condition": "same_verified_process_only"
+}
