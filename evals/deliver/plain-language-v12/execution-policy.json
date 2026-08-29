@@ -3,6 +3,12 @@
   "adapter_identifier": "deliver_plain_language_v12",
   "model": "gpt-5.6-sol",
   "reasoning": "xhigh",
+  "context_window_tokens": 262144,
+  "max_input_tokens": 196608,
+  "max_output_tokens": 16384,
+  "context_reserve_tokens": 32768,
+  "maximum_contract_package_bytes": 300000,
+  "maximum_contract_package_words": 50000,
   "arm_order": [
     "baseline",
     "candidate"

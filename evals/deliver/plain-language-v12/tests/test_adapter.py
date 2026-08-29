@@ -55,7 +55,7 @@ class AdapterTests(unittest.TestCase):
         self.schema = self.inputs / "schema.json"
         self.schema_document = {
             "schema_version": 1,
-            "oracle_version": "test",
+            "oracle_version": adapter.ORACLE_VERSION,
             "per_arm_response_schema": {
                 "type": "array",
                 "minItems": 1,
@@ -75,10 +75,26 @@ class AdapterTests(unittest.TestCase):
         self.labels.write_text('{"opaque":"mapping"}\n', encoding="utf-8")
         self.readiness = self.inputs / "readiness.json"
         baseline_authority = json.loads(adapter.BASELINE_MANIFEST_PATH.read_text(encoding="utf-8"))
-        self.readiness.write_text(json.dumps({
+        inventory = json.loads(adapter.INVENTORY_PATH.read_text(encoding="utf-8"))
+        behavior_ids = [item["behavior_id"] for item in inventory["behaviors"]]
+        self.readiness_document = {
+            "schema_version": adapter.READINESS_SCHEMA_VERSION,
+            "oracle_version": adapter.ORACLE_VERSION,
             "status": "ready",
             "model": "gpt-5.6-sol",
             "reasoning": "xhigh",
+            "public_adapter_identifier": adapter.ADAPTER_IDENTIFIER,
+            "public_adapter_introducing_commit": "3" * 40,
+            "public_adapter_path": adapter.ADAPTER_RELATIVE_PATH,
+            "public_adapter_sha256": adapter.sha256_file(ADAPTER_PATH),
+            "public_execution_policy_path": adapter.POLICY_RELATIVE_PATH,
+            "public_execution_policy_sha256": adapter.sha256_file(adapter.POLICY_PATH),
+            "private_evaluator_source_commit": "4" * 40,
+            "private_evaluator_commit": "4" * 40,
+            "private_independent_review_attested_source_commit": "4" * 40,
+            "private_trusted_host_isolation_attested_source_commit": "4" * 40,
+            "private_independent_review_attestation_sha256": "5" * 64,
+            "private_trusted_host_isolation_attestation_sha256": "6" * 64,
             "public_contract_inventory_sha256": adapter.sha256_file(adapter.INVENTORY_PATH),
             "baseline_package_manifest_sha256": adapter.sha256_file(adapter.BASELINE_MANIFEST_PATH),
             "baseline_package_content_manifest_sha256": baseline_authority["manifest_sha256"],
@@ -86,28 +102,56 @@ class AdapterTests(unittest.TestCase):
             "private_projected_packet_sha256": adapter.sha256_file(self.packet),
             "per_arm_response_schema_sha256": adapter.sha256_file(self.schema),
             "projected_packet_bytes": self.packet.stat().st_size,
-            "projected_packet_words": len(self.packet.read_text(encoding="utf-8").split()),
-            "execution_limits": {
-                "context_window_tokens": 262144,
-                "max_input_tokens": 196608,
-                "max_output_tokens": 16384,
-                "context_reserve_tokens": 32768,
-                "maximum_contract_package_bytes": 300000,
-                "maximum_contract_package_words": 50000,
-                "per_process_timeout_seconds": 7200,
-                "total_arm_timeout_seconds": 10800,
-                "durable_poll_interval_seconds": 15,
-                "no_progress_timeout_seconds": 900,
-                "shell_yield_seconds": 60,
-                "semantic_attempts": 1,
-                "maximum_pre_output_infrastructure_restarts": 1,
+            "projected_packet_lexical_word_count": adapter.lexical_word_count(
+                self.packet.read_text(encoding="utf-8")
+            ),
+            "case_count": len(behavior_ids),
+            "single_behavior_case_count": len(behavior_ids),
+            "multi_behavior_case_count": 0,
+            "previous_oracle_case_reuse_count": 0,
+            "behavior_id_count": len(behavior_ids),
+            "covered_behavior_ids": behavior_ids,
+            "assertion_count": len(behavior_ids),
+            "hard_scored_field_instance_count": len(behavior_ids) * 5,
+            "hidden_comprehension_behavior_count": len(behavior_ids),
+            "full_behavior_lane_gate_count": 0,
+            "static_credit_behavior_count": 0,
+            "proportionality": {"safe_grouping_review_status": "pass"},
+            "coverage_credit_policy": {
+                "hidden_deterministic_comprehension_assertions": len(behavior_ids),
+                "full_behavior_lane_gates": 0,
+                "static_owner_or_route_proofs": 0,
+                "unchanged_owner_bytes_or_route_text_can_earn_credit": False,
+                "caller_authored_coverage_can_earn_credit": False,
+                "independent_review_status": "pass",
             },
-        }) + "\n", encoding="utf-8")
+            "author_validation_status": "pass",
+            "independent_semantic_attestation_status": "pass",
+            "case_grouping_independent_review_status": "pass",
+            "zero_static_coverage_independent_review_status": "pass",
+            "arm_projection_status": "pass",
+            "byte_identical_arm_packet_status": "pass",
+            "public_adapter_deterministic_integration_status": "pass",
+            "comparison_runtime_author_validation_status": "pass",
+            "comparison_runtime_review_status": "pass",
+            "isolation_probe_status": "pass",
+            "live_model_feasibility_status": "pending_official_execution",
+            "live_model_execution_performed": False,
+            "deterministic_controls_are_live_arm_execution": False,
+            "deterministic_controls_are_judge_verdict_evidence": False,
+            "execution_limits": dict(adapter.READINESS_EXECUTION_LIMITS),
+        }
+        self.write_readiness()
         self.identity = {
             "commit": "1" * 40,
             "evals_tree": "2" * 40,
             "adapter_sha256": adapter.sha256_file(ADAPTER_PATH),
         }
+
+    def write_readiness(self) -> None:
+        self.readiness.write_text(
+            json.dumps(self.readiness_document) + "\n", encoding="utf-8"
+        )
 
     def tearDown(self) -> None:
         for runtime in self.runtimes:
@@ -230,6 +274,174 @@ class AdapterTests(unittest.TestCase):
             self.assertTrue(manifest["files"])
             self.assertTrue(all(item["source_commit"] == manifest["source_commit"] for item in manifest["files"]))
             self.assertTrue(all(item["source_tree"] == manifest["source_tree"] for item in manifest["files"]))
+
+    def test_readiness_requires_every_review_validation_and_isolation_gate(self) -> None:
+        for field in adapter.REQUIRED_READINESS_PASS_FIELDS:
+            with self.subTest(field=field):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = "pending_independent_review"
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "gate is not passed"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_requires_bound_review_and_isolation_attestations(self) -> None:
+        for field in adapter.REQUIRED_READINESS_ATTESTATION_DIGESTS:
+            with self.subTest(field=field):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = "missing"
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "attestation binding"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_binds_attestations_to_the_evaluator_source_commit(self) -> None:
+        self.readiness_document["private_independent_review_attested_source_commit"] = "7" * 40
+        self.write_readiness()
+        with (
+            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+            self.assertRaisesRegex(adapter.AdapterError, "do not bind"),
+        ):
+            adapter.validate_readiness(self.packet, self.schema)
+
+    def test_readiness_rejects_placeholder_or_non_string_bindings(self) -> None:
+        cases = (
+            ("private_evaluator_commit", "0" * 40, "private evaluator commit"),
+            ("private_evaluator_commit", int("4" * 40), "private evaluator commit"),
+            ("private_independent_review_attestation_sha256", "0" * 64, "attestation binding"),
+        )
+        for field, value, message in cases:
+            with self.subTest(field=field, value_type=type(value).__name__):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, message),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_binds_public_adapter_policy_and_nested_reviews(self) -> None:
+        cases = (
+            ("public_adapter_identifier", "wrong", "public controller"),
+            ("public_adapter_sha256", "0" * 64, "public controller"),
+            ("public_execution_policy_sha256", "0" * 64, "public controller"),
+        )
+        for field, value, message in cases:
+            with self.subTest(field=field):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, message),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+        self.readiness_document["proportionality"]["safe_grouping_review_status"] = (
+            "pending_independent_review"
+        )
+        self.write_readiness()
+        with (
+            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+            self.assertRaisesRegex(adapter.AdapterError, "nested independent review"),
+        ):
+            adapter.validate_readiness(self.packet, self.schema)
+
+    def test_readiness_execution_limits_require_exact_integers(self) -> None:
+        self.readiness_document["execution_limits"]["semantic_attempts"] = True
+        self.write_readiness()
+        with (
+            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+            self.assertRaisesRegex(adapter.AdapterError, "execution limits"),
+        ):
+            adapter.validate_readiness(self.packet, self.schema)
+
+    def test_readiness_top_level_coverage_counts_match_direct_policy(self) -> None:
+        cases = (
+            ("hidden_comprehension_behavior_count", 0),
+            ("full_behavior_lane_gate_count", 108),
+            ("static_credit_behavior_count", 108),
+            ("static_credit_behavior_count", False),
+        )
+        for field, value in cases:
+            with self.subTest(field=field, value=value):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "direct hidden coverage"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_rejects_coordinated_counts_that_do_not_match_inventory(self) -> None:
+        fields = (
+            "behavior_id_count",
+            "case_count",
+            "single_behavior_case_count",
+            "assertion_count",
+            "hidden_comprehension_behavior_count",
+        )
+        for field in fields:
+            self.readiness_document[field] = 1
+        self.readiness_document["hard_scored_field_instance_count"] = 5
+        self.readiness_document["covered_behavior_ids"] = self.readiness_document[
+            "covered_behavior_ids"
+        ][:1]
+        self.readiness_document["coverage_credit_policy"][
+            "hidden_deterministic_comprehension_assertions"
+        ] = 1
+        self.write_readiness()
+        with (
+            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+            self.assertRaisesRegex(adapter.AdapterError, "direct hidden coverage"),
+        ):
+            adapter.validate_readiness(self.packet, self.schema)
+
+    def test_load_policy_rejects_boolean_integer_fields(self) -> None:
+        policy = self.inputs / "policy.json"
+        document = dict(adapter.EXPECTED_POLICY)
+        document["semantic_attempts"] = True
+        policy.write_text(json.dumps(document) + "\n", encoding="utf-8")
+        with (
+            mock.patch.object(adapter, "POLICY_PATH", policy),
+            self.assertRaisesRegex(adapter.AdapterError, "frozen public policy"),
+        ):
+            adapter.load_policy()
 
     def test_initialize_rejects_unexpected_package_file(self) -> None:
         extra = self.packages[1] / "unexpected.txt"

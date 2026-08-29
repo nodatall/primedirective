@@ -33,6 +33,10 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
+READINESS_SCHEMA_VERSION = 14
+ORACLE_VERSION = "deliver-plain-language-v12.17"
+ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
+POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
 CONTROL_RELATIVE = Path(v11.COMPARISON_CONTROL) / "v12"
 POLICY_PATH = V12_ROOT / "execution-policy.json"
@@ -62,6 +66,12 @@ EXPECTED_POLICY = {
     "adapter_identifier": ADAPTER_IDENTIFIER,
     "model": "gpt-5.6-sol",
     "reasoning": "xhigh",
+    "context_window_tokens": 262144,
+    "max_input_tokens": 196608,
+    "max_output_tokens": 16384,
+    "context_reserve_tokens": 32768,
+    "maximum_contract_package_bytes": 300000,
+    "maximum_contract_package_words": 50000,
     "arm_order": list(ARMS),
     "behavior_scenarios": list(SCENARIOS),
     "poll_interval_seconds": 15,
@@ -73,6 +83,40 @@ EXPECTED_POLICY = {
     "maximum_pre_output_infrastructure_restarts": 1,
     "restart_condition": "infrastructure_failure_before_any_output",
     "reattachment_condition": "same_verified_process_only",
+}
+
+REQUIRED_READINESS_PASS_FIELDS = (
+    "author_validation_status",
+    "independent_semantic_attestation_status",
+    "case_grouping_independent_review_status",
+    "zero_static_coverage_independent_review_status",
+    "arm_projection_status",
+    "byte_identical_arm_packet_status",
+    "public_adapter_deterministic_integration_status",
+    "comparison_runtime_author_validation_status",
+    "comparison_runtime_review_status",
+    "isolation_probe_status",
+)
+REQUIRED_READINESS_ATTESTATION_DIGESTS = (
+    "private_independent_review_attestation_sha256",
+    "private_trusted_host_isolation_attestation_sha256",
+)
+READINESS_EXECUTION_LIMITS = {
+    "context_window_tokens": EXPECTED_POLICY["context_window_tokens"],
+    "max_input_tokens": EXPECTED_POLICY["max_input_tokens"],
+    "max_output_tokens": EXPECTED_POLICY["max_output_tokens"],
+    "context_reserve_tokens": EXPECTED_POLICY["context_reserve_tokens"],
+    "maximum_contract_package_bytes": EXPECTED_POLICY["maximum_contract_package_bytes"],
+    "maximum_contract_package_words": EXPECTED_POLICY["maximum_contract_package_words"],
+    "per_process_timeout_seconds": EXPECTED_POLICY["process_limit_seconds"],
+    "total_arm_timeout_seconds": EXPECTED_POLICY["arm_total_seconds"],
+    "durable_poll_interval_seconds": EXPECTED_POLICY["poll_interval_seconds"],
+    "no_progress_timeout_seconds": EXPECTED_POLICY["no_progress_seconds"],
+    "shell_yield_seconds": EXPECTED_POLICY["shell_yield_seconds"],
+    "semantic_attempts": EXPECTED_POLICY["semantic_attempts"],
+    "maximum_pre_output_infrastructure_restarts": EXPECTED_POLICY[
+        "maximum_pre_output_infrastructure_restarts"
+    ],
 }
 
 
@@ -95,6 +139,14 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def nonzero_hex(value: object, pattern: re.Pattern[str], width: int) -> bool:
+    return isinstance(value, str) and value != "0" * width and pattern.fullmatch(value) is not None
+
+
+def lexical_word_count(value: str) -> int:
+    return len(re.findall(r"\b\w+\b", value))
 
 
 def load_json(path: Path, label: str) -> Any:
@@ -203,7 +255,27 @@ def repository_identity() -> dict[str, str]:
 
 def load_policy() -> dict[str, Any]:
     policy = load_json(POLICY_PATH, "execution policy")
-    if policy != EXPECTED_POLICY:
+    integer_fields = (
+        "schema_version",
+        "context_window_tokens",
+        "max_input_tokens",
+        "max_output_tokens",
+        "context_reserve_tokens",
+        "maximum_contract_package_bytes",
+        "maximum_contract_package_words",
+        "poll_interval_seconds",
+        "shell_yield_seconds",
+        "no_progress_seconds",
+        "process_limit_seconds",
+        "arm_total_seconds",
+        "semantic_attempts",
+        "maximum_pre_output_infrastructure_restarts",
+    )
+    if (
+        not isinstance(policy, dict)
+        or any(type(policy.get(field)) is not int for field in integer_fields)
+        or policy != EXPECTED_POLICY
+    ):
         raise AdapterError("execution policy differs from the frozen public policy")
     return policy
 
@@ -319,10 +391,16 @@ def verify_package(
         raise AdapterError(f"{arm} package has unexpected, missing, or unordered files")
     total_bytes = sum((root / relative).stat().st_size for relative in actual_paths)
     try:
-        total_words = sum(len((root / relative).read_text(encoding="utf-8").split()) for relative in actual_paths)
+        total_words = sum(
+            lexical_word_count((root / relative).read_text(encoding="utf-8"))
+            for relative in actual_paths
+        )
     except UnicodeDecodeError as exc:
         raise AdapterError(f"{arm} package must contain UTF-8 public contract files") from exc
-    if total_bytes > 300000 or total_words > 50000:
+    if (
+        total_bytes > EXPECTED_POLICY["maximum_contract_package_bytes"]
+        or total_words > EXPECTED_POLICY["maximum_contract_package_words"]
+    ):
         raise AdapterError(f"{arm} package exceeds the frozen public execution limits")
     role_paths: dict[str, list[str]] = {}
     for key in ("full_contract_paths", "behavior_runner_paths", "interface_paths"):
@@ -458,38 +536,139 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     readiness = load_json(READINESS_PATH, "oracle readiness")
     vocabulary = load_json(VOCABULARY_PATH, "public response schema")
     baseline_manifest = load_json(BASELINE_MANIFEST_PATH, "baseline package manifest")
+    inventory = load_json(INVENTORY_PATH, "public contract inventory")
     if not isinstance(readiness, dict) or not isinstance(vocabulary, dict):
         raise AdapterError("public readiness artifacts are malformed")
+    behaviors = inventory.get("behaviors") if isinstance(inventory, dict) else None
+    if (
+        not isinstance(behaviors, list)
+        or not behaviors
+        or any(not isinstance(item, dict) for item in behaviors)
+    ):
+        raise AdapterError("public contract inventory behaviors are malformed")
+    expected_behavior_ids = [item.get("behavior_id") for item in behaviors]
+    if (
+        any(not isinstance(item, str) or not item for item in expected_behavior_ids)
+        or len(expected_behavior_ids) != len(set(expected_behavior_ids))
+    ):
+        raise AdapterError("public contract inventory behavior IDs are malformed")
+    if (
+        readiness.get("schema_version") != READINESS_SCHEMA_VERSION
+        or readiness.get("oracle_version") != ORACLE_VERSION
+        or vocabulary.get("oracle_version") != ORACLE_VERSION
+    ):
+        raise AdapterError("oracle readiness or vocabulary version differs from the frozen adapter")
     if readiness.get("status") != "ready":
         raise AdapterError("oracle readiness is not frozen ready")
+    failed_gates = [
+        field for field in REQUIRED_READINESS_PASS_FIELDS if readiness.get(field) != "pass"
+    ]
+    if failed_gates:
+        raise AdapterError(
+            "oracle readiness review, validation, or isolation gate is not passed: "
+            + ", ".join(failed_gates)
+        )
+    invalid_attestations = [
+        field
+        for field in REQUIRED_READINESS_ATTESTATION_DIGESTS
+        if not nonzero_hex(readiness.get(field), HEX64, 64)
+    ]
+    if invalid_attestations:
+        raise AdapterError(
+            "oracle readiness attestation binding is missing or malformed: "
+            + ", ".join(invalid_attestations)
+        )
+    commit_fields = (
+        "private_evaluator_source_commit",
+        "private_evaluator_commit",
+        "private_independent_review_attested_source_commit",
+        "private_trusted_host_isolation_attested_source_commit",
+    )
+    if any(not nonzero_hex(readiness.get(field), HEX40, 40) for field in commit_fields):
+        raise AdapterError("oracle readiness private evaluator commit is missing or malformed")
+    source_commit = readiness["private_evaluator_source_commit"]
+    if (
+        readiness["private_independent_review_attested_source_commit"] != source_commit
+        or readiness["private_trusted_host_isolation_attested_source_commit"] != source_commit
+    ):
+        raise AdapterError("oracle readiness attestations do not bind the evaluator source commit")
+    if (
+        readiness.get("live_model_feasibility_status") != "pending_official_execution"
+        or readiness.get("live_model_execution_performed") is not False
+    ):
+        raise AdapterError("oracle readiness live execution state is not the frozen pre-run state")
     public_bindings = {
+        "public_adapter_identifier": ADAPTER_IDENTIFIER,
+        "public_adapter_path": ADAPTER_RELATIVE_PATH,
+        "public_adapter_sha256": sha256_file(ADAPTER_PATH),
+        "public_execution_policy_path": POLICY_RELATIVE_PATH,
+        "public_execution_policy_sha256": sha256_file(POLICY_PATH),
         "public_contract_inventory_sha256": sha256_file(INVENTORY_PATH),
         "baseline_package_manifest_sha256": sha256_file(BASELINE_MANIFEST_PATH),
         "baseline_package_content_manifest_sha256": baseline_manifest.get("manifest_sha256"),
         "baseline_commit": baseline_manifest.get("baseline_commit"),
     }
     if any(readiness.get(key) != value for key, value in public_bindings.items()):
-        raise AdapterError("oracle readiness differs from frozen public inventory or baseline")
+        raise AdapterError("oracle readiness differs from frozen public controller, inventory, or baseline")
+    if not nonzero_hex(readiness.get("public_adapter_introducing_commit"), HEX40, 40):
+        raise AdapterError("oracle readiness public adapter commit is missing or malformed")
     if readiness.get("model") != EXPECTED_POLICY["model"] or readiness.get("reasoning") != EXPECTED_POLICY["reasoning"]:
         raise AdapterError("oracle readiness model or reasoning differs from policy")
-    if readiness.get("execution_limits") != {
-        "context_window_tokens": 262144,
-        "max_input_tokens": 196608,
-        "max_output_tokens": 16384,
-        "context_reserve_tokens": 32768,
-        "maximum_contract_package_bytes": 300000,
-        "maximum_contract_package_words": 50000,
-        "per_process_timeout_seconds": EXPECTED_POLICY["process_limit_seconds"],
-        "total_arm_timeout_seconds": EXPECTED_POLICY["arm_total_seconds"],
-        "durable_poll_interval_seconds": EXPECTED_POLICY["poll_interval_seconds"],
-        "no_progress_timeout_seconds": EXPECTED_POLICY["no_progress_seconds"],
-        "shell_yield_seconds": EXPECTED_POLICY["shell_yield_seconds"],
-        "semantic_attempts": EXPECTED_POLICY["semantic_attempts"],
-        "maximum_pre_output_infrastructure_restarts": EXPECTED_POLICY[
-            "maximum_pre_output_infrastructure_restarts"
-        ],
-    }:
+    limits = readiness.get("execution_limits")
+    if (
+        not isinstance(limits, dict)
+        or set(limits) != set(READINESS_EXECUTION_LIMITS)
+        or any(type(limits[key]) is not int for key in READINESS_EXECUTION_LIMITS)
+        or limits != READINESS_EXECUTION_LIMITS
+    ):
         raise AdapterError("oracle readiness execution limits differ from public policy")
+    proportionality = readiness.get("proportionality")
+    coverage = readiness.get("coverage_credit_policy")
+    if (
+        not isinstance(proportionality, dict)
+        or proportionality.get("safe_grouping_review_status") != "pass"
+        or not isinstance(coverage, dict)
+        or coverage.get("independent_review_status") != "pass"
+    ):
+        raise AdapterError("oracle readiness nested independent review gate is not passed")
+    behavior_count = len(expected_behavior_ids)
+    if (
+        type(readiness.get("behavior_id_count")) is not int
+        or readiness.get("behavior_id_count") != behavior_count
+        or readiness.get("covered_behavior_ids") != expected_behavior_ids
+        or type(readiness.get("case_count")) is not int
+        or readiness.get("case_count") != behavior_count
+        or type(readiness.get("single_behavior_case_count")) is not int
+        or readiness.get("single_behavior_case_count") != behavior_count
+        or type(readiness.get("multi_behavior_case_count")) is not int
+        or readiness.get("multi_behavior_case_count") != 0
+        or type(readiness.get("assertion_count")) is not int
+        or readiness.get("assertion_count") != behavior_count
+        or type(readiness.get("hard_scored_field_instance_count")) is not int
+        or readiness.get("hard_scored_field_instance_count") != behavior_count * 5
+        or type(readiness.get("previous_oracle_case_reuse_count")) is not int
+        or readiness.get("previous_oracle_case_reuse_count") != 0
+        or type(readiness.get("hidden_comprehension_behavior_count")) is not int
+        or readiness.get("hidden_comprehension_behavior_count") != behavior_count
+        or type(readiness.get("full_behavior_lane_gate_count")) is not int
+        or readiness.get("full_behavior_lane_gate_count") != 0
+        or type(readiness.get("static_credit_behavior_count")) is not int
+        or readiness.get("static_credit_behavior_count") != 0
+        or type(coverage.get("hidden_deterministic_comprehension_assertions")) is not int
+        or coverage.get("hidden_deterministic_comprehension_assertions") != behavior_count
+        or type(coverage.get("full_behavior_lane_gates")) is not int
+        or coverage.get("full_behavior_lane_gates") != 0
+        or type(coverage.get("static_owner_or_route_proofs")) is not int
+        or coverage.get("static_owner_or_route_proofs") != 0
+        or coverage.get("unchanged_owner_bytes_or_route_text_can_earn_credit") is not False
+        or coverage.get("caller_authored_coverage_can_earn_credit") is not False
+    ):
+        raise AdapterError("oracle readiness direct hidden coverage policy is not exact")
+    if (
+        readiness.get("deterministic_controls_are_live_arm_execution") is not False
+        or readiness.get("deterministic_controls_are_judge_verdict_evidence") is not False
+    ):
+        raise AdapterError("oracle readiness overstates deterministic control evidence")
     require_regular_file(packet, "projected packet")
     require_regular_file(schema, "supplied public schema")
     expected_packet = readiness.get("private_projected_packet_sha256")
@@ -501,8 +680,8 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     if schema.read_bytes() != VOCABULARY_PATH.read_bytes():
         raise AdapterError("supplied public schema is not the frozen public vocabulary")
     if readiness.get("projected_packet_bytes") != packet.stat().st_size or readiness.get(
-        "projected_packet_words"
-    ) != len(packet.read_text(encoding="utf-8").split()):
+        "projected_packet_lexical_word_count"
+    ) != lexical_word_count(packet.read_text(encoding="utf-8")):
         raise AdapterError("projected packet size differs from frozen readiness")
     response_schema = vocabulary.get("per_arm_response_schema")
     if not isinstance(response_schema, dict):
