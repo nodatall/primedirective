@@ -528,6 +528,8 @@ def runtime_identity(runtime_root: Path) -> dict[str, int | str]:
 def initial_arm_state() -> dict[str, Any]:
     return {
         "status": "pending",
+        "arm_started_at": None,
+        "deadline_at": None,
         "attempts": [],
         "restart_count": 0,
         "last_poll_at": None,
@@ -701,6 +703,27 @@ def validate_state(document: Any, path: Path) -> dict[str, Any]:
             raise AdapterError(f"{arm} attempt state is invalid")
         if value["restart_count"] not in {0, 1}:
             raise AdapterError(f"{arm} restart count is invalid")
+        arm_started_at = value["arm_started_at"]
+        deadline_at = value["deadline_at"]
+        invalid_arm_clock = (
+            (arm_started_at is None) != (deadline_at is None)
+            or (
+                arm_started_at is not None
+                and (
+                    isinstance(arm_started_at, bool)
+                    or not isinstance(arm_started_at, (int, float))
+                    or not -float("inf") < arm_started_at < float("inf")
+                    or isinstance(deadline_at, bool)
+                    or not isinstance(deadline_at, (int, float))
+                    or not -float("inf") < deadline_at < float("inf")
+                    or deadline_at != arm_started_at + EXPECTED_POLICY["arm_total_seconds"]
+                )
+            )
+            or (not value["attempts"] and arm_started_at is not None)
+            or (value["attempts"] and arm_started_at is None)
+        )
+        if invalid_arm_clock:
+            raise AdapterError(f"{arm} arm deadline identity is invalid")
         for number, attempt in enumerate(value["attempts"], 1):
             if not isinstance(attempt, dict) or set(attempt) != {
                 "attempt", "started_at", "process", "result_path", "stdout_path", "stderr_path",
@@ -720,10 +743,14 @@ def validate_state(document: Any, path: Path) -> dict[str, Any]:
                 attempt["attempt"] != number
                 or isinstance(attempt["started_at"], bool)
                 or not isinstance(attempt["started_at"], (int, float))
+                or not -float("inf") < attempt["started_at"] < float("inf")
                 or invalid_process
                 or any(not isinstance(attempt[key], str) or not attempt[key] for key in (
                     "result_path", "stdout_path", "stderr_path",
                 ))
+                or (number == 1 and attempt["started_at"] != arm_started_at)
+                or attempt["started_at"] < arm_started_at
+                or attempt["started_at"] >= deadline_at
             ):
                 raise AdapterError(f"{arm} attempt identity is invalid")
         process_may_be_unbound = value["status"] == "launching" or (
@@ -880,6 +907,16 @@ def spawn_worker(
         stderr.close()
 
 
+def arm_deadline_expired(arm_state: dict[str, Any], now: float) -> bool:
+    deadline = arm_state["deadline_at"]
+    return deadline is not None and now >= float(deadline)
+
+
+def fail_arm_total_timeout(arm_state: dict[str, Any]) -> None:
+    arm_state["status"] = "failed"
+    arm_state["failure_classification"] = "arm_total_timeout"
+
+
 def launch_arm(
     state_path: Path,
     arm: str,
@@ -887,9 +924,14 @@ def launch_arm(
     restart_infrastructure: bool = False,
     launcher: Callable[[list[str], Path, Path], Any] = spawn_worker,
     identity_reader: Callable[[int, list[str]], dict[str, Any]] = process_identity,
+    terminator: Callable[[dict[str, Any], list[str]], None] | None = None,
+    now: float | None = None,
 ) -> dict[str, Any]:
     if arm not in ARMS:
         raise AdapterError("arm must be baseline or candidate")
+    supplied_now = now
+    now = time.time() if now is None else now
+    terminator = terminate_verified_process if terminator is None else terminator
     with locked_state(state_path) as state:
         verify_live_bindings(state)
         arm_state = state["arms"][arm]
@@ -897,6 +939,14 @@ def launch_arm(
             raise AdapterError("candidate cannot launch before baseline is sealed")
         if arm_state["status"] == "sealed":
             raise AdapterError("sealed arm cannot launch again")
+        if arm_deadline_expired(arm_state, now):
+            if arm_state["status"] in {"launching", "running"} and arm_state["attempts"]:
+                attempt = arm_state["attempts"][-1]
+                command = worker_command(state_path.resolve(), arm, attempt["attempt"])
+                if attempt["process"] is not None and same_process(attempt["process"], command):
+                    terminator(attempt["process"], command)
+            fail_arm_total_timeout(arm_state)
+            raise AdapterError("arm total timeout expired before launch")
         if arm_state["status"] in {"launching", "running"}:
             attempt = arm_state["attempts"][-1]
             command = worker_command(state_path.resolve(), arm, attempt["attempt"])
@@ -922,7 +972,10 @@ def launch_arm(
         attempt_root = arm_root / "controller" / f"attempt-{attempt_number}"
         attempt_root.mkdir(parents=True, mode=0o700)
         command = worker_command(state_path.resolve(), arm, attempt_number)
-        started_at = time.time()
+        started_at = now
+        if arm_state["arm_started_at"] is None:
+            arm_state["arm_started_at"] = started_at
+            arm_state["deadline_at"] = started_at + EXPECTED_POLICY["arm_total_seconds"]
         attempt = {
             "attempt": attempt_number,
             "started_at": started_at,
@@ -951,11 +1004,24 @@ def launch_arm(
             })
             raise
         attempt["process"] = evidence
+        after_launch = time.time() if supplied_now is None else now
+        if arm_deadline_expired(arm_state, after_launch):
+            terminator(evidence, command)
+            fail_arm_total_timeout(arm_state)
+            raise AdapterError("arm total timeout expired during launch")
         arm_state["status"] = "running"
         arm_state["last_poll_at"] = started_at
         arm_state["last_progress_at"] = started_at
         arm_state["progress_fingerprint"] = progress_fingerprint(runtime, arm)
-        return {"arm": arm, "status": "running", "reattached": False, "attempt": attempt_number, "pid": process.pid}
+        return {
+            "arm": arm,
+            "status": "running",
+            "reattached": False,
+            "attempt": attempt_number,
+            "pid": process.pid,
+            "arm_started_at": arm_state["arm_started_at"],
+            "deadline_at": arm_state["deadline_at"],
+        }
 
 
 def terminate_verified_process(evidence: dict[str, Any], command: list[str]) -> None:
@@ -1002,6 +1068,25 @@ def poll_arm(
         arm_state = state["arms"][arm]
         runtime = Path(state["binding"]["runtime"]["real_path"])
         response: dict[str, Any] = {"arm": arm, "status": arm_state["status"]}
+        timeout_eligible = arm_state["status"] in {
+            "launching", "running", "process_complete",
+        } or (
+            arm_state["status"] == "failed"
+            and arm_state["failure_classification"] == "infrastructure_failure_before_output"
+        )
+        if timeout_eligible and arm_deadline_expired(arm_state, now):
+            if arm_state["status"] == "running":
+                attempt = arm_state["attempts"][-1]
+                command = worker_command(state_path.resolve(), arm, attempt["attempt"])
+                if same_process(attempt["process"], command):
+                    terminator(attempt["process"], command)
+            fail_arm_total_timeout(arm_state)
+            response.update({
+                "status": "failed",
+                "failure_classification": "arm_total_timeout",
+                "restart_permitted": False,
+            })
+            return response
         if arm_state["status"] != "running":
             return response
         if now - float(arm_state["last_poll_at"]) < EXPECTED_POLICY["poll_interval_seconds"]:
@@ -1049,9 +1134,7 @@ def poll_arm(
         progress_path = control_root(runtime) / "arms" / arm / "controller" / "progress.json"
         progress = load_json(progress_path, "worker progress") if progress_path.exists() else None
         classification: str | None = None
-        if now - float(attempt["started_at"]) >= EXPECTED_POLICY["arm_total_seconds"]:
-            classification = "arm_total_timeout"
-        elif isinstance(progress, dict) and isinstance(progress.get("process_started_at"), (int, float)) and (
+        if isinstance(progress, dict) and isinstance(progress.get("process_started_at"), (int, float)) and (
             now - float(progress["process_started_at"]) >= EXPECTED_POLICY["process_limit_seconds"]
         ):
             classification = "process_timeout"
@@ -1105,6 +1188,12 @@ def wait_for_regular_input(
         if time.time() >= deadline:
             raise AdapterError("arm total timeout while waiting for evaluator evidence")
         time.sleep(EXPECTED_POLICY["poll_interval_seconds"])
+
+
+def require_arm_time_remaining(deadline: float, now: float | None = None) -> None:
+    now = time.time() if now is None else now
+    if now >= deadline:
+        raise AdapterError("arm total timeout")
 
 
 def extract_agent_response(trace: Path) -> str:
@@ -1177,6 +1266,7 @@ def validate_response(response_path: Path, schema_path: Path) -> Any:
 
 
 def run_comprehension(state: dict[str, Any], arm: str, attempt: int, deadline: float) -> None:
+    require_arm_time_remaining(deadline)
     runtime = Path(state["binding"]["runtime"]["real_path"])
     arm_root = control_root(runtime) / "arms" / arm
     root = arm_root / "comprehension" / f"attempt-{attempt}"
@@ -1235,14 +1325,18 @@ def run_behavior_lanes(state: dict[str, Any], arm: str, deadline: float) -> None
     arm_root = control_root(runtime) / "arms" / arm
     package = arm_root / "behavior-package"
     preflight = arm_root / "runner-preflight.json"
+    require_arm_time_remaining(deadline)
     record_progress(state, arm, "v11_runner_preflight", process_started_at=time.time())
     v11.preflight_runner(preflight)
+    require_arm_time_remaining(deadline)
     for scenario in SCENARIOS:
         stage = runtime / f"{scenario}-{arm}"
         record_progress(state, arm, f"{scenario}:prepare", process_started_at=None)
         v11.prepare_scenario(scenario, package, stage, preflight)
+        require_arm_time_remaining(deadline)
         record_progress(state, arm, f"{scenario}:pre-packet", process_started_at=time.time())
         v11.run_scenario(stage, "pre-packet")
+        require_arm_time_remaining(deadline)
         inbox = arm_root / "inbox" / scenario
         validation = wait_for_regular_input(
             state, arm, inbox / "pre-packet-validation.log",
@@ -1250,14 +1344,17 @@ def run_behavior_lanes(state: dict[str, Any], arm: str, deadline: float) -> None
         )
         v11.freeze_pre_packet(stage, validation)
         v11.stage_review_packet(stage)
+        require_arm_time_remaining(deadline)
         record_progress(state, arm, f"{scenario}:remediation", process_started_at=time.time())
         v11.run_scenario(stage, "remediation")
+        require_arm_time_remaining(deadline)
         record = wait_for_regular_input(
             state, arm, inbox / "record" / "run-record.json",
             f"{scenario}:awaiting_run_record", deadline,
         )
         output_freeze = v11.finalize_arm(stage, record)
         normalized = v11.normalize_run(output_freeze)
+        require_arm_time_remaining(deadline)
         normalized_path = arm_root / "behavior" / f"{scenario}.normalized.json"
         write_once_json(normalized_path, normalized)
         if v11.normalize_run(output_freeze) != load_json(normalized_path, "normalized behavior"):
@@ -1271,13 +1368,16 @@ def run_worker(state_path: Path, arm: str, attempt: int) -> int:
     if not arm_state or not arm_state["attempts"] or arm_state["attempts"][-1]["attempt"] != attempt:
         raise AdapterError("worker attempt is not registered by controller state")
     result_path = Path(arm_state["attempts"][-1]["result_path"])
-    started = float(arm_state["attempts"][-1]["started_at"])
-    deadline = started + EXPECTED_POLICY["arm_total_seconds"]
+    deadline = float(arm_state["deadline_at"])
     result: dict[str, Any]
     try:
+        require_arm_time_remaining(deadline)
         run_comprehension(state, arm, attempt, deadline)
+        require_arm_time_remaining(deadline)
         run_behavior_lanes(state, arm, deadline)
+        require_arm_time_remaining(deadline)
         record_progress(state, arm, "process_complete", process_started_at=None)
+        require_arm_time_remaining(deadline)
         result = {"schema_version": 1, "attempt": attempt, "exit_code": 0, "error_type": None, "error": None}
         write_once_json(result_path, result)
         return 0
@@ -1325,8 +1425,24 @@ def behavior_artifact(state: dict[str, Any], arm: str) -> dict[str, Any]:
     }
 
 
-def reconcile_process_complete(state_path: Path, state: dict[str, Any], arm: str) -> None:
+def reconcile_process_complete(
+    state_path: Path,
+    state: dict[str, Any],
+    arm: str,
+    *,
+    now: float | None = None,
+    terminator: Callable[[dict[str, Any], list[str]], None] = terminate_verified_process,
+) -> None:
     arm_state = state["arms"][arm]
+    now = time.time() if now is None else now
+    if arm_deadline_expired(arm_state, now):
+        if arm_state["status"] == "running" and arm_state["attempts"]:
+            attempt = arm_state["attempts"][-1]
+            command = worker_command(state_path.resolve(), arm, attempt["attempt"])
+            if same_process(attempt["process"], command):
+                terminator(attempt["process"], command)
+        fail_arm_total_timeout(arm_state)
+        raise AdapterError("arm total timeout prevents process reconciliation")
     if arm_state["status"] == "process_complete":
         return
     if arm_state["status"] != "running":
@@ -1341,15 +1457,17 @@ def reconcile_process_complete(state_path: Path, state: dict[str, Any], arm: str
     arm_state["status"] = "process_complete"
 
 
-def seal_arm(state_path: Path, arm: str) -> dict[str, Any]:
+def seal_arm(state_path: Path, arm: str, *, now: float | None = None) -> dict[str, Any]:
     if arm not in ARMS:
         raise AdapterError("arm must be baseline or candidate")
+    supplied_now = now
+    now = time.time() if now is None else now
     with locked_state(state_path) as state:
         verify_live_bindings(state)
         arm_state = state["arms"][arm]
         if arm_state["status"] == "sealed":
             return {"arm": arm, "status": "sealed", "seal_sha256": arm_state["seal_sha256"], "replayed": True}
-        reconcile_process_complete(state_path, state, arm)
+        reconcile_process_complete(state_path, state, arm, now=now)
         runtime = Path(state["binding"]["runtime"]["real_path"])
         arm_root = control_root(runtime) / "arms" / arm
         attempt = arm_state["attempts"][-1]["attempt"]
@@ -1387,6 +1505,8 @@ def seal_arm(state_path: Path, arm: str) -> dict[str, Any]:
             "schema_version": 1,
             "adapter_identifier": ADAPTER_IDENTIFIER,
             "arm": arm,
+            "arm_started_at": arm_state["arm_started_at"],
+            "deadline_at": arm_state["deadline_at"],
             "attempts": arm_state["attempts"],
             "restart_count": arm_state["restart_count"],
             "result": artifact_entry(Path(arm_state["attempts"][-1]["result_path"])),
@@ -1431,6 +1551,10 @@ def seal_arm(state_path: Path, arm: str) -> dict[str, Any]:
             "binding_sha256": state["binding_sha256"],
             "artifacts": artifact_map,
         }
+        final_now = time.time() if supplied_now is None else now
+        if arm_deadline_expired(arm_state, final_now):
+            fail_arm_total_timeout(arm_state)
+            raise AdapterError("arm total timeout prevents sealing")
         seal_path = artifacts_root / "arm-seal.json"
         write_once_json(seal_path, seal)
         arm_state["status"] = "sealed"

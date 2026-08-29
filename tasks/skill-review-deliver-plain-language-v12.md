@@ -20,13 +20,13 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Baseline package authority digest: `755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5`
 - V11 immutable content-manifest digest: `fc3cb2d9311a9f1def033f582c10a6a0af45fed9fc4cdcbda37dadcffef7b9b2`
 - Candidate package commit, tree, and manifest: pending approved candidate freeze
-- Adapter file SHA-256: `dfa1e22d068d966cc05c81bafacdb6de9e5a722214239c8eda4e4144ce7efaf4`
+- Adapter file SHA-256: `37d9cef4ea0377feab626929a4f33258f9c812453b5998c25fe6f2ffd112bdfc`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
 ## Public Controller Status
 
 - [x] Public adapter identifier and exact operation surface defined.
-- [x] Frozen Sol/xhigh process, polling, timeout, one-shot, restart, and reattachment policy defined.
+- [x] Frozen Sol/xhigh process, polling, cumulative arm-total timeout, one-shot, restart, and reattachment policy defined and enforced through sealing.
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.

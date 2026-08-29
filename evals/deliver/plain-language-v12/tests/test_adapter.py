@@ -138,7 +138,10 @@ class AdapterTests(unittest.TestCase):
         with mock.patch.object(adapter, "verify_live_bindings"):
             yield
 
-    def mark_process_complete(self, state_path: Path, arm: str) -> Path:
+    def mark_process_complete(
+        self, state_path: Path, arm: str, *, started_at: float | None = None,
+    ) -> Path:
+        started_at = adapter.time.time() if started_at is None else started_at
         state = adapter.load_state(state_path)
         arm_root = adapter.control_root(Path(state["binding"]["runtime"]["real_path"])) / "arms" / arm
         attempt_root = arm_root / "comprehension" / "attempt-1"
@@ -157,9 +160,11 @@ class AdapterTests(unittest.TestCase):
         }) + "\n", encoding="utf-8")
         state["arms"][arm].update({
             "status": "process_complete",
+            "arm_started_at": started_at,
+            "deadline_at": started_at + adapter.EXPECTED_POLICY["arm_total_seconds"],
             "attempts": [{
                 "attempt": 1,
-                "started_at": 1.0,
+                "started_at": started_at,
                 "process": {"pid": 999999, "ps_identity_sha256": "3" * 64, "command_sha256": "4" * 64},
                 "result_path": str(result),
                 "stdout_path": str(result.parent / "stdout.txt"),
@@ -168,6 +173,32 @@ class AdapterTests(unittest.TestCase):
         })
         adapter.atomic_json(state_path, state)
         return response
+
+    def fail_first_attempt_before_output(self, state_path: Path, *, started_at: float) -> None:
+        evidence = {
+            "pid": 43001,
+            "ps_identity_sha256": "7" * 64,
+            "command_sha256": "8" * 64,
+        }
+        with self.live_binding_patches():
+            adapter.launch_arm(
+                state_path,
+                "baseline",
+                now=started_at,
+                launcher=lambda _command, _stdout, _stderr: SimpleNamespace(pid=43001),
+                identity_reader=lambda _pid, _command: evidence,
+            )
+            state = adapter.load_state(state_path)
+            attempt = state["arms"]["baseline"]["attempts"][-1]
+            Path(attempt["result_path"]).write_text(json.dumps({
+                "schema_version": 1,
+                "attempt": 1,
+                "exit_code": 1,
+                "error_type": "OSError",
+                "error": "pre-output infrastructure",
+            }) + "\n", encoding="utf-8")
+            with mock.patch.object(adapter, "same_process", return_value=False):
+                adapter.poll_arm(state_path, "baseline", now=started_at + 15)
 
     def test_describe_reports_exact_public_interface_and_policy(self) -> None:
         description = adapter.describe()
@@ -192,6 +223,8 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(state["binding"]["arm_order"], ["baseline", "candidate"])
         self.assertEqual(state["binding"]["model"], "gpt-5.6-sol")
         self.assertNotEqual(state["run_id"], state["nonce"])
+        self.assertIsNone(state["arms"]["baseline"]["arm_started_at"])
+        self.assertIsNone(state["arms"]["baseline"]["deadline_at"])
         for arm in adapter.ARMS:
             manifest = state["binding"]["packages"][arm]["package_manifest"]
             self.assertTrue(manifest["files"])
@@ -273,6 +306,76 @@ class AdapterTests(unittest.TestCase):
                 with self.assertRaisesRegex(adapter.AdapterError, "reattachment rejected"):
                     adapter.launch_arm(state_path, "baseline")
 
+    def test_restart_preserves_the_first_launch_deadline(self) -> None:
+        _, state_path = self.initialize()
+        first_started_at = 1_000.0
+        self.fail_first_attempt_before_output(state_path, started_at=first_started_at)
+        deadline = first_started_at + adapter.EXPECTED_POLICY["arm_total_seconds"]
+        evidence = {
+            "pid": 43002,
+            "ps_identity_sha256": "9" * 64,
+            "command_sha256": "a" * 64,
+        }
+        with self.live_binding_patches():
+            adapter.launch_arm(
+                state_path,
+                "baseline",
+                now=2_000.0,
+                restart_infrastructure=True,
+                launcher=lambda _command, _stdout, _stderr: SimpleNamespace(pid=43002),
+                identity_reader=lambda _pid, _command: evidence,
+            )
+        arm_state = adapter.load_state(state_path)["arms"]["baseline"]
+        self.assertEqual(arm_state["arm_started_at"], first_started_at)
+        self.assertEqual(arm_state["deadline_at"], deadline)
+        self.assertEqual(arm_state["attempts"][1]["started_at"], 2_000.0)
+
+    def test_restart_after_arm_deadline_is_rejected(self) -> None:
+        _, state_path = self.initialize()
+        started_at = 1_000.0
+        self.fail_first_attempt_before_output(state_path, started_at=started_at)
+        deadline = started_at + adapter.EXPECTED_POLICY["arm_total_seconds"]
+        with self.live_binding_patches(), self.assertRaisesRegex(
+            adapter.AdapterError, "arm total timeout",
+        ):
+            adapter.launch_arm(
+                state_path, "baseline", now=deadline, restart_infrastructure=True,
+            )
+        arm_state = adapter.load_state(state_path)["arms"]["baseline"]
+        self.assertEqual(arm_state["status"], "failed")
+        self.assertEqual(arm_state["failure_classification"], "arm_total_timeout")
+        self.assertEqual(arm_state["restart_count"], 0)
+
+    def test_poll_attempt_two_uses_the_first_launch_deadline(self) -> None:
+        _, state_path = self.initialize()
+        started_at = 1_000.0
+        self.fail_first_attempt_before_output(state_path, started_at=started_at)
+        evidence = {
+            "pid": 43003,
+            "ps_identity_sha256": "b" * 64,
+            "command_sha256": "c" * 64,
+        }
+        terminated: list[bool] = []
+        with self.live_binding_patches():
+            adapter.launch_arm(
+                state_path,
+                "baseline",
+                now=2_000.0,
+                restart_infrastructure=True,
+                launcher=lambda _command, _stdout, _stderr: SimpleNamespace(pid=43003),
+                identity_reader=lambda _pid, _command: evidence,
+            )
+            with mock.patch.object(adapter, "same_process", return_value=True):
+                result = adapter.poll_arm(
+                    state_path,
+                    "baseline",
+                    now=started_at + adapter.EXPECTED_POLICY["arm_total_seconds"],
+                    terminator=lambda _evidence, _command: terminated.append(True),
+                )
+        self.assertEqual(result["failure_classification"], "arm_total_timeout")
+        self.assertFalse(result["restart_permitted"])
+        self.assertEqual(terminated, [True])
+
     def test_launch_failure_is_durable_and_restartable_only_once(self) -> None:
         _, state_path = self.initialize()
         with self.live_binding_patches():
@@ -301,10 +404,21 @@ class AdapterTests(unittest.TestCase):
         state = adapter.load_state(state_path)
         state["arms"]["baseline"].update({
             "status": "running",
+            "arm_started_at": 1.0,
+            "deadline_at": 1.0 + adapter.EXPECTED_POLICY["arm_total_seconds"],
             "attempts": [{"attempt": 1}],
         })
         adapter.atomic_json(state_path, state)
         with self.assertRaisesRegex(adapter.AdapterError, "attempt fields"):
+            adapter.load_state(state_path)
+
+    def test_state_rejects_malformed_arm_deadline(self) -> None:
+        _, state_path = self.initialize()
+        state = adapter.load_state(state_path)
+        state["arms"]["baseline"]["arm_started_at"] = 1.0
+        state["arms"]["baseline"]["deadline_at"] = 2.0
+        adapter.atomic_json(state_path, state)
+        with self.assertRaisesRegex(adapter.AdapterError, "deadline identity"):
             adapter.load_state(state_path)
 
     def test_behavior_lane_composes_v11_controls_in_order(self) -> None:
@@ -388,6 +502,37 @@ class AdapterTests(unittest.TestCase):
             self.assertEqual(timed_out["failure_classification"], "no_progress_timeout")
             self.assertEqual(terminated, [True])
 
+    def test_process_complete_reconciliation_rejects_expired_arm(self) -> None:
+        _, state_path = self.initialize()
+        started_at = 1_000.0
+        self.mark_process_complete(state_path, "baseline", started_at=started_at)
+        state = adapter.load_state(state_path)
+        state["arms"]["baseline"]["status"] = "running"
+        deadline = state["arms"]["baseline"]["deadline_at"]
+        with mock.patch.object(adapter, "same_process", return_value=False), self.assertRaisesRegex(
+            adapter.AdapterError, "arm total timeout",
+        ):
+            adapter.reconcile_process_complete(
+                state_path, state, "baseline", now=deadline,
+            )
+        self.assertEqual(state["arms"]["baseline"]["status"], "failed")
+        self.assertEqual(
+            state["arms"]["baseline"]["failure_classification"], "arm_total_timeout",
+        )
+
+    def test_seal_rejects_process_complete_arm_after_deadline(self) -> None:
+        _, state_path = self.initialize()
+        started_at = 1_000.0
+        self.mark_process_complete(state_path, "baseline", started_at=started_at)
+        deadline = started_at + adapter.EXPECTED_POLICY["arm_total_seconds"]
+        with self.live_binding_patches(), self.assertRaisesRegex(
+            adapter.AdapterError, "arm total timeout",
+        ):
+            adapter.seal_arm(state_path, "baseline", now=deadline)
+        arm_state = adapter.load_state(state_path)["arms"]["baseline"]
+        self.assertEqual(arm_state["status"], "failed")
+        self.assertEqual(arm_state["failure_classification"], "arm_total_timeout")
+
     def test_seal_uses_real_files_rejects_malformed_response_and_freezes_handoff(self) -> None:
         _, state_path = self.initialize()
         baseline_response = self.mark_process_complete(state_path, "baseline")
@@ -404,6 +549,13 @@ class AdapterTests(unittest.TestCase):
         with self.live_binding_patches(), mock.patch.object(adapter, "behavior_artifact", return_value=observed):
             baseline = adapter.seal_arm(state_path, "baseline")
         self.assertEqual(baseline["status"], "sealed")
+        baseline_state = adapter.load_state(state_path)["arms"]["baseline"]
+        process_evidence = adapter.load_json(
+            Path(baseline_state["artifacts"]["process_evidence"]["path"]),
+            "process evidence",
+        )
+        self.assertEqual(process_evidence["arm_started_at"], baseline_state["arm_started_at"])
+        self.assertEqual(process_evidence["deadline_at"], baseline_state["deadline_at"])
 
         candidate_response = self.mark_process_complete(state_path, "candidate")
         observed["arm"] = "candidate"
