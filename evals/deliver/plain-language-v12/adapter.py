@@ -33,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 14
-ORACLE_VERSION = "deliver-plain-language-v12.17"
+READINESS_SCHEMA_VERSION = 15
+ORACLE_VERSION = "deliver-plain-language-v12.18"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -147,6 +147,73 @@ def nonzero_hex(value: object, pattern: re.Pattern[str], width: int) -> bool:
 
 def lexical_word_count(value: str) -> int:
     return len(re.findall(r"\b\w+\b", value))
+
+
+def expected_response_schema(vocabulary: dict[str, Any], item_count: int) -> dict[str, Any]:
+    fields = (
+        "next_action",
+        "required_artifact",
+        "required_check",
+        "stop_condition",
+        "user_approval",
+    )
+    global_vocabulary = vocabulary.get("global_vocabulary")
+    if not isinstance(global_vocabulary, dict) or set(global_vocabulary) != set(fields):
+        raise AdapterError("public vocabulary fields are not exact")
+    codes: dict[str, list[str]] = {}
+    for field in fields:
+        entries = global_vocabulary[field]
+        if not isinstance(entries, list) or not entries:
+            raise AdapterError(f"public vocabulary has no {field} entries")
+        field_codes: list[str] = []
+        for entry in entries:
+            if (
+                not isinstance(entry, dict)
+                or set(entry) != {"code", "operational_meaning"}
+                or not isinstance(entry.get("code"), str)
+                or not entry["code"]
+                or not isinstance(entry.get("operational_meaning"), str)
+                or not entry["operational_meaning"].strip()
+            ):
+                raise AdapterError(f"public vocabulary {field} entry is malformed")
+            field_codes.append(entry["code"])
+        if len(field_codes) != len(set(field_codes)):
+            raise AdapterError(f"public vocabulary {field} codes are not unique")
+        codes[field] = field_codes
+    properties: dict[str, Any] = {
+        "case_code": {"type": "string", "pattern": r"^K-[A-F0-9]{8}$"},
+        "rationale": {"type": "string", "minLength": 1, "maxLength": 240},
+        "user_approval": {"type": "string", "enum": codes["user_approval"]},
+    }
+    for field in fields[:-1]:
+        properties[field] = {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": len(codes[field]),
+            "uniqueItems": True,
+            "items": {"type": "string", "enum": codes[field]},
+        }
+    required = (
+        "case_code",
+        "next_action",
+        "required_artifact",
+        "required_check",
+        "stop_condition",
+        "user_approval",
+        "rationale",
+    )
+    return {
+        "type": "array",
+        "minItems": item_count,
+        "maxItems": item_count,
+        "uniqueItems": True,
+        "items": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": list(required),
+            "properties": {field: properties[field] for field in required},
+        },
+    }
 
 
 def load_json(path: Path, label: str) -> Any:
@@ -555,6 +622,7 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     if (
         readiness.get("schema_version") != READINESS_SCHEMA_VERSION
         or readiness.get("oracle_version") != ORACLE_VERSION
+        or vocabulary.get("schema_version") != READINESS_SCHEMA_VERSION
         or vocabulary.get("oracle_version") != ORACLE_VERSION
     ):
         raise AdapterError("oracle readiness or vocabulary version differs from the frozen adapter")
@@ -684,8 +752,8 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     ) != lexical_word_count(packet.read_text(encoding="utf-8")):
         raise AdapterError("projected packet size differs from frozen readiness")
     response_schema = vocabulary.get("per_arm_response_schema")
-    if not isinstance(response_schema, dict):
-        raise AdapterError("public vocabulary has no response schema")
+    if response_schema != expected_response_schema(vocabulary, behavior_count):
+        raise AdapterError("public vocabulary response schema differs from the frozen contract")
     return readiness
 
 
@@ -1441,6 +1509,9 @@ def validate_response(response_path: Path, schema_path: Path) -> Any:
     vocabulary = load_json(schema_path, "public response schema")
     schema = vocabulary.get("per_arm_response_schema") if isinstance(vocabulary, dict) else None
     validate_schema(value, schema)
+    case_codes = [item["case_code"] for item in value]
+    if len(case_codes) != len(set(case_codes)):
+        raise AdapterError("comprehension response case codes are not unique")
     return value
 
 

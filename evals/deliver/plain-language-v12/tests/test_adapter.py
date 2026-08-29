@@ -54,29 +54,36 @@ class AdapterTests(unittest.TestCase):
         self.packet.write_text("answer-free projected packet\n", encoding="utf-8")
         self.schema = self.inputs / "schema.json"
         self.schema_document = {
-            "schema_version": 1,
+            "schema_version": adapter.READINESS_SCHEMA_VERSION,
             "oracle_version": adapter.ORACLE_VERSION,
-            "per_arm_response_schema": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 1,
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "required": ["workflow_record_code"],
-                    "properties": {
-                        "workflow_record_code": {"type": "string", "pattern": r"^R-[0-9]{4}$"}
-                    },
-                },
+            "global_vocabulary": {
+                "next_action": [
+                    {"code": "NX-000001", "operational_meaning": "Take the next action."}
+                ],
+                "required_artifact": [
+                    {"code": "AR-000001", "operational_meaning": "Preserve the artifact."}
+                ],
+                "required_check": [
+                    {"code": "CK-000001", "operational_meaning": "Run the required check."}
+                ],
+                "stop_condition": [
+                    {"code": "ST-000001", "operational_meaning": "Stop at the boundary."}
+                ],
+                "user_approval": [
+                    {"code": "AP-000001", "operational_meaning": "No new approval is needed."}
+                ],
             },
         }
-        self.schema.write_text(json.dumps(self.schema_document) + "\n", encoding="utf-8")
         self.labels = self.inputs / "labels.json"
         self.labels.write_text('{"opaque":"mapping"}\n', encoding="utf-8")
         self.readiness = self.inputs / "readiness.json"
         baseline_authority = json.loads(adapter.BASELINE_MANIFEST_PATH.read_text(encoding="utf-8"))
         inventory = json.loads(adapter.INVENTORY_PATH.read_text(encoding="utf-8"))
         behavior_ids = [item["behavior_id"] for item in inventory["behaviors"]]
+        self.schema_document["per_arm_response_schema"] = adapter.expected_response_schema(
+            self.schema_document, len(behavior_ids)
+        )
+        self.schema.write_text(json.dumps(self.schema_document) + "\n", encoding="utf-8")
         self.readiness_document = {
             "schema_version": adapter.READINESS_SCHEMA_VERSION,
             "oracle_version": adapter.ORACLE_VERSION,
@@ -191,7 +198,7 @@ class AdapterTests(unittest.TestCase):
         attempt_root = arm_root / "comprehension" / "attempt-1"
         attempt_root.mkdir(parents=True)
         response = attempt_root / "response.json"
-        response.write_text('[{"workflow_record_code":"R-0001"}]', encoding="utf-8")
+        response.write_text(json.dumps(self.valid_response()), encoding="utf-8")
         (attempt_root / "trace.jsonl").write_text('{"type":"turn.completed"}\n', encoding="utf-8")
         (attempt_root / "stderr.txt").write_text("", encoding="utf-8")
         (attempt_root / "metadata.json").write_text('{}\n', encoding="utf-8")
@@ -217,6 +224,20 @@ class AdapterTests(unittest.TestCase):
         })
         adapter.atomic_json(state_path, state)
         return response
+
+    def valid_response(self) -> list[dict[str, object]]:
+        return [
+            {
+                "case_code": f"K-{index:08X}",
+                "next_action": [],
+                "required_artifact": [],
+                "required_check": [],
+                "stop_condition": [],
+                "user_approval": "AP-000001",
+                "rationale": "Contract-grounded answer.",
+            }
+            for index in range(self.readiness_document["case_count"])
+        ]
 
     def fail_first_attempt_before_output(self, state_path: Path, *, started_at: float) -> None:
         evidence = {
@@ -751,7 +772,7 @@ class AdapterTests(unittest.TestCase):
         baseline_response.write_text("{}", encoding="utf-8")
         with self.live_binding_patches(), self.assertRaisesRegex(adapter.AdapterError, "type"):
             adapter.seal_arm(state_path, "baseline")
-        baseline_response.write_text('[{"workflow_record_code":"R-0001"}]', encoding="utf-8")
+        baseline_response.write_text(json.dumps(self.valid_response()), encoding="utf-8")
         observed = {
             "schema_version": 1,
             "adapter_identifier": adapter.ADAPTER_IDENTIFIER,
@@ -784,6 +805,28 @@ class AdapterTests(unittest.TestCase):
         sealed_trace.write_text("tampered\n", encoding="utf-8")
         with self.live_binding_patches(), self.assertRaisesRegex(adapter.AdapterError, "drifted"):
             adapter.freeze_handoff(state_path)
+
+    def test_exact_public_response_schema_rejects_generic_malformed_payloads(self) -> None:
+        response = self.inputs / "response.json"
+        valid = self.valid_response()
+        unknown = [dict(item) for item in valid]
+        unknown[0]["unknown"] = True
+        duplicate_code = [dict(item) for item in valid]
+        duplicate_code[1]["case_code"] = duplicate_code[0]["case_code"]
+        malformed = (
+            [],
+            [{}],
+            [{} for _ in range(len(valid) + 1)],
+            unknown,
+            duplicate_code,
+        )
+        for payload in malformed:
+            with self.subTest(kind=type(payload).__name__, size=len(payload)):
+                response.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+                with self.assertRaises(adapter.AdapterError):
+                    adapter.validate_response(response, self.schema)
+        response.write_text(json.dumps(valid) + "\n", encoding="utf-8")
+        self.assertEqual(adapter.validate_response(response, self.schema), valid)
 
 
 if __name__ == "__main__":
