@@ -33,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 18
-ORACLE_VERSION = "deliver-plain-language-v12.21"
+READINESS_SCHEMA_VERSION = 19
+ORACLE_VERSION = "deliver-plain-language-v12.22"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -89,6 +89,7 @@ REQUIRED_READINESS_PASS_FIELDS = (
     "author_validation_status",
     "independent_semantic_review_status",
     "hidden_material_noninterference_independent_review_status",
+    "judge_packet_structural_blinding_author_status",
     "case_grouping_independent_review_status",
     "zero_static_coverage_independent_review_status",
     "arm_projection_status",
@@ -142,10 +143,14 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "answer_free_selector_diagnostic_maximum_recovery_count",
     "hidden_material_noninterference_control_count", "runtime_positive_test_count",
     "runtime_negative_test_count", "fresh_judge_allocation_count",
+    "judge_packet_schema_control_count", "discarded_channel_reachability_control_count",
+    "clean_content_preservation_control_count", "rationale_discarded_before_judge_input",
+    "rationale_affects_deterministic_score", "rationale_affects_combined_verdict",
     "proportionality", "coverage_credit_policy", "execution_limits",
     "author_validation_status", "independent_semantic_review_status",
     "hidden_material_noninterference_author_status",
     "hidden_material_noninterference_independent_review_status",
+    "judge_packet_structural_blinding_author_status",
     "case_grouping_independent_review_status", "zero_static_coverage_independent_review_status",
     "arm_projection_status", "byte_identical_arm_packet_status",
     "public_adapter_deterministic_integration_status",
@@ -789,6 +794,19 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or readiness.get("deterministic_controls_are_judge_verdict_evidence") is not False
     ):
         raise AdapterError("oracle readiness overstates deterministic control evidence")
+    if (
+        readiness.get("judge_packet_structural_blinding_author_status") != "pass"
+        or type(readiness.get("judge_packet_schema_control_count")) is not int
+        or readiness.get("judge_packet_schema_control_count") <= 0
+        or type(readiness.get("discarded_channel_reachability_control_count")) is not int
+        or readiness.get("discarded_channel_reachability_control_count") <= 0
+        or type(readiness.get("clean_content_preservation_control_count")) is not int
+        or readiness.get("clean_content_preservation_control_count") <= 0
+        or readiness.get("rationale_discarded_before_judge_input") is not True
+        or readiness.get("rationale_affects_deterministic_score") is not False
+        or readiness.get("rationale_affects_combined_verdict") is not False
+    ):
+        raise AdapterError("oracle readiness structural judge blinding controls are not passed")
     require_regular_file(packet, "projected packet")
     require_regular_file(schema, "supplied public schema")
     expected_packet = readiness.get("private_projected_packet_sha256")

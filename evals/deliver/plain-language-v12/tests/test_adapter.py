@@ -137,6 +137,7 @@ class AdapterTests(unittest.TestCase):
             "author_validation_status": "pass",
             "independent_semantic_review_status": "pass",
             "hidden_material_noninterference_independent_review_status": "pass",
+            "judge_packet_structural_blinding_author_status": "pass",
             "case_grouping_independent_review_status": "pass",
             "zero_static_coverage_independent_review_status": "pass",
             "arm_projection_status": "pass",
@@ -149,6 +150,12 @@ class AdapterTests(unittest.TestCase):
             "live_model_execution_performed": False,
             "deterministic_controls_are_live_arm_execution": False,
             "deterministic_controls_are_judge_verdict_evidence": False,
+            "judge_packet_schema_control_count": 12,
+            "discarded_channel_reachability_control_count": 8,
+            "clean_content_preservation_control_count": 3,
+            "rationale_discarded_before_judge_input": True,
+            "rationale_affects_deterministic_score": False,
+            "rationale_affects_combined_verdict": False,
             "execution_limits": dict(adapter.READINESS_EXECUTION_LIMITS),
         }
         self.write_readiness()
@@ -310,6 +317,31 @@ class AdapterTests(unittest.TestCase):
                         mock.patch.object(adapter, "READINESS_PATH", self.readiness),
                         mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
                         self.assertRaisesRegex(adapter.AdapterError, "gate is not passed"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_requires_structural_judge_blinding_controls(self) -> None:
+        cases = (
+            ("judge_packet_schema_control_count", 0),
+            ("discarded_channel_reachability_control_count", 0),
+            ("clean_content_preservation_control_count", 0),
+            ("rationale_discarded_before_judge_input", False),
+            ("rationale_affects_deterministic_score", True),
+            ("rationale_affects_combined_verdict", True),
+        )
+        for field, value in cases:
+            with self.subTest(field=field):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "structural judge blinding"),
                     ):
                         adapter.validate_readiness(self.packet, self.schema)
                 finally:
