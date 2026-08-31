@@ -17,7 +17,6 @@ import stat
 import subprocess
 import sys
 import time
-import unicodedata
 import uuid
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -34,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 17
-ORACLE_VERSION = "deliver-plain-language-v12.20"
+READINESS_SCHEMA_VERSION = 18
+ORACLE_VERSION = "deliver-plain-language-v12.21"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -119,34 +118,58 @@ READINESS_EXECUTION_LIMITS = {
     ],
 }
 
+READINESS_ALLOWED_FIELDS = frozenset({
+    "schema_version", "oracle_version", "status", "model", "reasoning",
+    "public_adapter_identifier", "public_adapter_introducing_commit", "public_adapter_path",
+    "public_adapter_sha256", "public_execution_policy_path", "public_execution_policy_sha256",
+    "public_contract_inventory_sha256", "baseline_package_manifest_sha256",
+    "baseline_package_content_manifest_sha256", "baseline_commit",
+    "private_evaluator_source_commit", "private_evaluator_commit",
+    "independent_review_result_kind", "private_independent_reviewed_source_commit",
+    "private_independent_reviewed_final_commit", "trusted_host_isolation_result_kind",
+    "private_trusted_host_isolation_tested_source_commit",
+    "private_trusted_host_isolation_tested_final_commit",
+    "private_projected_packet_sha256", "per_arm_response_schema_sha256",
+    "projected_packet_bytes", "projected_packet_lexical_word_count",
+    "expected_per_arm_output_bytes", "context_margin_tokens",
+    "case_count", "single_behavior_case_count", "multi_behavior_case_count",
+    "previous_oracle_case_reuse_count", "behavior_id_count", "covered_behavior_ids",
+    "assertion_count", "hard_scored_field_instance_count", "clause_obligation_count",
+    "hidden_comprehension_behavior_count", "full_behavior_lane_gate_count",
+    "static_credit_behavior_count", "accepted_equivalent_value_count",
+    "noncanonical_response_mutation_count", "distinct_mutation_payload_count",
+    "canonical_invariance_control_count", "answer_free_selector_diagnostic_count",
+    "answer_free_selector_diagnostic_maximum_recovery_count",
+    "hidden_material_noninterference_control_count", "runtime_positive_test_count",
+    "runtime_negative_test_count", "fresh_judge_allocation_count",
+    "proportionality", "coverage_credit_policy", "execution_limits",
+    "author_validation_status", "independent_semantic_review_status",
+    "hidden_material_noninterference_author_status",
+    "hidden_material_noninterference_independent_review_status",
+    "case_grouping_independent_review_status", "zero_static_coverage_independent_review_status",
+    "arm_projection_status", "byte_identical_arm_packet_status",
+    "public_adapter_deterministic_integration_status",
+    "comparison_runtime_author_validation_status", "comparison_runtime_review_status",
+    "isolation_probe_status", "live_model_feasibility_status", "live_model_execution_performed",
+    "deterministic_controls_are_live_arm_execution",
+    "deterministic_controls_are_judge_verdict_evidence",
+})
+READINESS_NESTED_ALLOWED_FIELDS = {
+    "proportionality": frozenset({
+        "packet_byte_count", "packet_lexical_word_count", "expected_per_arm_output_byte_count",
+        "safe_grouping_review_status",
+    }),
+    "coverage_credit_policy": frozenset({
+        "hidden_deterministic_comprehension_assertions", "full_behavior_lane_gates",
+        "static_owner_or_route_proofs", "unchanged_owner_bytes_or_route_text_can_earn_credit",
+        "caller_authored_coverage_can_earn_credit", "independent_review_status",
+    }),
+    "execution_limits": frozenset(READINESS_EXECUTION_LIMITS),
+}
+
 
 class AdapterError(RuntimeError):
     """Raised when a public v12 controller invariant fails."""
-
-
-def normalized_metadata_key(value: object) -> str:
-    if not isinstance(value, str):
-        return ""
-    value = unicodedata.normalize("NFKC", value).casefold()
-    value = "".join(character for character in value if unicodedata.category(character) != "Cf")
-    return re.sub(r"[^a-z0-9]+", "_", value).strip("_")
-
-
-def misleading_integrity_claim_key_present(value: object) -> bool:
-    if isinstance(value, dict):
-        for key, child in value.items():
-            normalized = normalized_metadata_key(key)
-            if (
-                "signature" in normalized
-                or "attestation" in normalized
-                or ("proof" in normalized and normalized != "static_owner_or_route_proofs")
-            ):
-                return True
-            if misleading_integrity_claim_key_present(child):
-                return True
-    elif isinstance(value, list):
-        return any(misleading_integrity_claim_key_present(item) for item in value)
-    return False
 
 
 def canonical_json(value: object) -> bytes:
@@ -631,8 +654,13 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     inventory = load_json(INVENTORY_PATH, "public contract inventory")
     if not isinstance(readiness, dict) or not isinstance(vocabulary, dict):
         raise AdapterError("public readiness artifacts are malformed")
-    if misleading_integrity_claim_key_present(readiness):
-        raise AdapterError("oracle readiness contains a misleading integrity claim key")
+    unknown_fields = set(readiness) - READINESS_ALLOWED_FIELDS
+    if unknown_fields:
+        raise AdapterError("oracle readiness contains an unknown field")
+    for field, allowed in READINESS_NESTED_ALLOWED_FIELDS.items():
+        value = readiness.get(field)
+        if not isinstance(value, dict) or set(value) - allowed:
+            raise AdapterError(f"oracle readiness {field} contains an unknown field")
     behaviors = inventory.get("behaviors") if isinstance(inventory, dict) else None
     if (
         not isinstance(behaviors, list)

@@ -384,12 +384,13 @@ class AdapterTests(unittest.TestCase):
                     self.readiness_document[field] = original
                     self.write_readiness()
 
-    def test_readiness_rejects_misleading_integrity_claim_keys(self) -> None:
+    def test_readiness_rejects_every_unknown_field(self) -> None:
         cases = (
             {"reviewer_signature": "present"},
             {"independent_review_attestation_sha256": "a" * 64},
             {"independent_review_proof_sha256": "b" * 64},
             {"nested": {"ｐｒｏｏｆ－ｃｌａｉｍ": True}},
+            {"p r o o f - c l a i m": True},
         )
         for extra in cases:
             with self.subTest(extra=extra):
@@ -399,13 +400,26 @@ class AdapterTests(unittest.TestCase):
                     with (
                         mock.patch.object(adapter, "READINESS_PATH", self.readiness),
                         mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
-                        self.assertRaisesRegex(adapter.AdapterError, "misleading integrity claim"),
+                        self.assertRaisesRegex(adapter.AdapterError, "unknown field"),
                     ):
                         adapter.validate_readiness(self.packet, self.schema)
                 finally:
                     for key in extra:
                         self.readiness_document.pop(key)
                     self.write_readiness()
+
+        self.readiness_document["coverage_credit_policy"]["unexpected nested key"] = True
+        self.write_readiness()
+        try:
+            with (
+                mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                self.assertRaisesRegex(adapter.AdapterError, "unknown field"),
+            ):
+                adapter.validate_readiness(self.packet, self.schema)
+        finally:
+            self.readiness_document["coverage_credit_policy"].pop("unexpected nested key")
+            self.write_readiness()
 
     def test_readiness_binds_public_adapter_policy_and_nested_reviews(self) -> None:
         cases = (
