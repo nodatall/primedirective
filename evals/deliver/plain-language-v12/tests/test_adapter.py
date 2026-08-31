@@ -97,11 +97,13 @@ class AdapterTests(unittest.TestCase):
             "public_execution_policy_path": adapter.POLICY_RELATIVE_PATH,
             "public_execution_policy_sha256": adapter.sha256_file(adapter.POLICY_PATH),
             "private_evaluator_source_commit": "4" * 40,
-            "private_evaluator_commit": "4" * 40,
-            "private_independent_review_attested_source_commit": "4" * 40,
-            "private_trusted_host_isolation_attested_source_commit": "4" * 40,
-            "private_independent_review_attestation_sha256": "5" * 64,
-            "private_trusted_host_isolation_attestation_sha256": "6" * 64,
+            "private_evaluator_commit": "8" * 40,
+            "independent_review_result_kind": adapter.INDEPENDENT_RESULT_KIND,
+            "private_independent_reviewed_source_commit": "4" * 40,
+            "private_independent_reviewed_final_commit": "8" * 40,
+            "trusted_host_isolation_result_kind": adapter.ISOLATION_RESULT_KIND,
+            "private_trusted_host_isolation_tested_source_commit": "4" * 40,
+            "private_trusted_host_isolation_tested_final_commit": "8" * 40,
             "public_contract_inventory_sha256": adapter.sha256_file(adapter.INVENTORY_PATH),
             "baseline_package_manifest_sha256": adapter.sha256_file(adapter.BASELINE_MANIFEST_PATH),
             "baseline_package_content_manifest_sha256": baseline_authority["manifest_sha256"],
@@ -133,7 +135,7 @@ class AdapterTests(unittest.TestCase):
                 "independent_review_status": "pass",
             },
             "author_validation_status": "pass",
-            "independent_semantic_attestation_status": "pass",
+            "independent_semantic_review_status": "pass",
             "case_grouping_independent_review_status": "pass",
             "zero_static_coverage_independent_review_status": "pass",
             "arm_projection_status": "pass",
@@ -313,38 +315,57 @@ class AdapterTests(unittest.TestCase):
                     self.readiness_document[field] = original
                     self.write_readiness()
 
-    def test_readiness_requires_bound_review_and_isolation_attestations(self) -> None:
-        for field in adapter.REQUIRED_READINESS_ATTESTATION_DIGESTS:
+    def test_readiness_binds_observed_results_without_claiming_signatures(self) -> None:
+        cases = (
+            ("independent_review_result_kind", "reviewer_signature"),
+            ("trusted_host_isolation_result_kind", "probe_signature"),
+            ("private_independent_reviewed_source_commit", "8" * 40),
+            ("private_independent_reviewed_final_commit", "4" * 40),
+            ("private_trusted_host_isolation_tested_source_commit", "8" * 40),
+            ("private_trusted_host_isolation_tested_final_commit", "4" * 40),
+        )
+        for field, value in cases:
             with self.subTest(field=field):
                 original = self.readiness_document[field]
-                self.readiness_document[field] = "missing"
+                self.readiness_document[field] = value
                 self.write_readiness()
                 try:
                     with (
                         mock.patch.object(adapter, "READINESS_PATH", self.readiness),
                         mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
-                        self.assertRaisesRegex(adapter.AdapterError, "attestation binding"),
+                        self.assertRaisesRegex(adapter.AdapterError, "observed results do not bind"),
                     ):
                         adapter.validate_readiness(self.packet, self.schema)
                 finally:
                     self.readiness_document[field] = original
                     self.write_readiness()
 
-    def test_readiness_binds_attestations_to_the_evaluator_source_commit(self) -> None:
-        self.readiness_document["private_independent_review_attested_source_commit"] = "7" * 40
-        self.write_readiness()
-        with (
-            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
-            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
-            self.assertRaisesRegex(adapter.AdapterError, "do not bind"),
+        for field in (
+            "private_independent_reviewed_source_commit",
+            "private_independent_reviewed_final_commit",
+            "private_trusted_host_isolation_tested_source_commit",
+            "private_trusted_host_isolation_tested_final_commit",
         ):
-            adapter.validate_readiness(self.packet, self.schema)
+            for value in (None, "0" * 40, int("4" * 40)):
+                with self.subTest(field=field, malformed=type(value).__name__):
+                    original = self.readiness_document[field]
+                    self.readiness_document[field] = value
+                    self.write_readiness()
+                    try:
+                        with (
+                            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                            self.assertRaisesRegex(adapter.AdapterError, "private evaluator commit"),
+                        ):
+                            adapter.validate_readiness(self.packet, self.schema)
+                    finally:
+                        self.readiness_document[field] = original
+                        self.write_readiness()
 
     def test_readiness_rejects_placeholder_or_non_string_bindings(self) -> None:
         cases = (
             ("private_evaluator_commit", "0" * 40, "private evaluator commit"),
             ("private_evaluator_commit", int("4" * 40), "private evaluator commit"),
-            ("private_independent_review_attestation_sha256", "0" * 64, "attestation binding"),
         )
         for field, value, message in cases:
             with self.subTest(field=field, value_type=type(value).__name__):

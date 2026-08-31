@@ -33,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 15
-ORACLE_VERSION = "deliver-plain-language-v12.18"
+READINESS_SCHEMA_VERSION = 16
+ORACLE_VERSION = "deliver-plain-language-v12.19"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -87,7 +87,7 @@ EXPECTED_POLICY = {
 
 REQUIRED_READINESS_PASS_FIELDS = (
     "author_validation_status",
-    "independent_semantic_attestation_status",
+    "independent_semantic_review_status",
     "case_grouping_independent_review_status",
     "zero_static_coverage_independent_review_status",
     "arm_projection_status",
@@ -97,10 +97,8 @@ REQUIRED_READINESS_PASS_FIELDS = (
     "comparison_runtime_review_status",
     "isolation_probe_status",
 )
-REQUIRED_READINESS_ATTESTATION_DIGESTS = (
-    "private_independent_review_attestation_sha256",
-    "private_trusted_host_isolation_attestation_sha256",
-)
+INDEPENDENT_RESULT_KIND = "orchestrator_observed_agent_result_not_signature"
+ISOLATION_RESULT_KIND = "root_observed_probe_result_not_signature"
 READINESS_EXECUTION_LIMITS = {
     "context_window_tokens": EXPECTED_POLICY["context_window_tokens"],
     "max_input_tokens": EXPECTED_POLICY["max_input_tokens"],
@@ -636,30 +634,27 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
             "oracle readiness review, validation, or isolation gate is not passed: "
             + ", ".join(failed_gates)
         )
-    invalid_attestations = [
-        field
-        for field in REQUIRED_READINESS_ATTESTATION_DIGESTS
-        if not nonzero_hex(readiness.get(field), HEX64, 64)
-    ]
-    if invalid_attestations:
-        raise AdapterError(
-            "oracle readiness attestation binding is missing or malformed: "
-            + ", ".join(invalid_attestations)
-        )
     commit_fields = (
         "private_evaluator_source_commit",
         "private_evaluator_commit",
-        "private_independent_review_attested_source_commit",
-        "private_trusted_host_isolation_attested_source_commit",
+        "private_independent_reviewed_source_commit",
+        "private_independent_reviewed_final_commit",
+        "private_trusted_host_isolation_tested_source_commit",
+        "private_trusted_host_isolation_tested_final_commit",
     )
     if any(not nonzero_hex(readiness.get(field), HEX40, 40) for field in commit_fields):
         raise AdapterError("oracle readiness private evaluator commit is missing or malformed")
     source_commit = readiness["private_evaluator_source_commit"]
+    final_commit = readiness["private_evaluator_commit"]
     if (
-        readiness["private_independent_review_attested_source_commit"] != source_commit
-        or readiness["private_trusted_host_isolation_attested_source_commit"] != source_commit
+        readiness.get("independent_review_result_kind") != INDEPENDENT_RESULT_KIND
+        or readiness.get("trusted_host_isolation_result_kind") != ISOLATION_RESULT_KIND
+        or readiness["private_independent_reviewed_source_commit"] != source_commit
+        or readiness["private_independent_reviewed_final_commit"] != final_commit
+        or readiness["private_trusted_host_isolation_tested_source_commit"] != source_commit
+        or readiness["private_trusted_host_isolation_tested_final_commit"] != final_commit
     ):
-        raise AdapterError("oracle readiness attestations do not bind the evaluator source commit")
+        raise AdapterError("oracle readiness observed results do not bind the evaluator commits")
     if (
         readiness.get("live_model_feasibility_status") != "pending_official_execution"
         or readiness.get("live_model_execution_performed") is not False
