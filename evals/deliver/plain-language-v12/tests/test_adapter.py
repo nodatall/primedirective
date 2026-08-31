@@ -136,6 +136,7 @@ class AdapterTests(unittest.TestCase):
             },
             "author_validation_status": "pass",
             "independent_semantic_review_status": "pass",
+            "hidden_material_noninterference_independent_review_status": "pass",
             "case_grouping_independent_review_status": "pass",
             "zero_static_coverage_independent_review_status": "pass",
             "arm_projection_status": "pass",
@@ -381,6 +382,29 @@ class AdapterTests(unittest.TestCase):
                         adapter.validate_readiness(self.packet, self.schema)
                 finally:
                     self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_rejects_misleading_integrity_claim_keys(self) -> None:
+        cases = (
+            {"reviewer_signature": "present"},
+            {"independent_review_attestation_sha256": "a" * 64},
+            {"independent_review_proof_sha256": "b" * 64},
+            {"nested": {"ｐｒｏｏｆ－ｃｌａｉｍ": True}},
+        )
+        for extra in cases:
+            with self.subTest(extra=extra):
+                self.readiness_document.update(extra)
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "misleading integrity claim"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    for key in extra:
+                        self.readiness_document.pop(key)
                     self.write_readiness()
 
     def test_readiness_binds_public_adapter_policy_and_nested_reviews(self) -> None:

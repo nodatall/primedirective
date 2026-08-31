@@ -17,6 +17,7 @@ import stat
 import subprocess
 import sys
 import time
+import unicodedata
 import uuid
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -33,8 +34,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 16
-ORACLE_VERSION = "deliver-plain-language-v12.19"
+READINESS_SCHEMA_VERSION = 17
+ORACLE_VERSION = "deliver-plain-language-v12.20"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -88,6 +89,7 @@ EXPECTED_POLICY = {
 REQUIRED_READINESS_PASS_FIELDS = (
     "author_validation_status",
     "independent_semantic_review_status",
+    "hidden_material_noninterference_independent_review_status",
     "case_grouping_independent_review_status",
     "zero_static_coverage_independent_review_status",
     "arm_projection_status",
@@ -120,6 +122,31 @@ READINESS_EXECUTION_LIMITS = {
 
 class AdapterError(RuntimeError):
     """Raised when a public v12 controller invariant fails."""
+
+
+def normalized_metadata_key(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    value = unicodedata.normalize("NFKC", value).casefold()
+    value = "".join(character for character in value if unicodedata.category(character) != "Cf")
+    return re.sub(r"[^a-z0-9]+", "_", value).strip("_")
+
+
+def misleading_integrity_claim_key_present(value: object) -> bool:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            normalized = normalized_metadata_key(key)
+            if (
+                "signature" in normalized
+                or "attestation" in normalized
+                or ("proof" in normalized and normalized != "static_owner_or_route_proofs")
+            ):
+                return True
+            if misleading_integrity_claim_key_present(child):
+                return True
+    elif isinstance(value, list):
+        return any(misleading_integrity_claim_key_present(item) for item in value)
+    return False
 
 
 def canonical_json(value: object) -> bytes:
@@ -604,6 +631,8 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     inventory = load_json(INVENTORY_PATH, "public contract inventory")
     if not isinstance(readiness, dict) or not isinstance(vocabulary, dict):
         raise AdapterError("public readiness artifacts are malformed")
+    if misleading_integrity_claim_key_present(readiness):
+        raise AdapterError("oracle readiness contains a misleading integrity claim key")
     behaviors = inventory.get("behaviors") if isinstance(inventory, dict) else None
     if (
         not isinstance(behaviors, list)
