@@ -42,13 +42,13 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 3. Rewrite the full Deliver contract
 
-- [ ] Rewrite `skills/deliver/SKILL.md` as a short plain-language entry point that keeps the purpose, modes, artifacts, workflow order, approval boundaries, stop rules, and reference routing.
-- [ ] Rewrite the Deliver-owned plan, worker-packet, and rereview-scope references in plain language where they remain necessary; remove duplicate wording instead of moving the same repetition between files.
-- [ ] Keep all command names, paths, enum values, schema versions, modifiers, completion-stamp fields, and other machine-facing tokens unchanged. Wording-only edits may update validator mirrors, but must not change the underlying token or accepted behavior.
-- [ ] Follow the skill-creator metadata contract and read its `openai_yaml` reference before editing `skills/deliver/agents/openai.yaml`. Preserve invocation policy and unrelated fields; change only interface wording and required behavior-equivalent validator mirrors. Include the file in candidate and readability packages.
-- [ ] Using only the public contract inventory, map every baseline behavior ID to one clear candidate clause or an unchanged owner reference that Deliver routes to before the first affected decision. Reject the rewrite if any behavior is missing, duplicated with conflicting wording, or expanded beyond the baseline.
-- [ ] Treat shorter word count and fewer long sentences as useful measurements, not hard targets. Prefer the simplest correct wording over a forced line limit.
-- [ ] Run validation and independent forward checks using canaries that are not part of the official comparison. Do not expose official case prompts, hidden answers, judge feedback, or official results before candidate freeze.
+- [x] Rewrite `skills/deliver/SKILL.md` as a short plain-language entry point that keeps the purpose, modes, artifacts, workflow order, approval boundaries, stop rules, and reference routing.
+- [x] Rewrite the Deliver-owned plan, worker-packet, and rereview-scope references in plain language where they remain necessary; remove duplicate wording instead of moving the same repetition between files.
+- [x] Keep all command names, paths, enum values, schema versions, modifiers, completion-stamp fields, and other machine-facing tokens unchanged. Wording-only edits may update validator mirrors, but must not change the underlying token or accepted behavior.
+- [x] Follow the skill-creator metadata contract and read its `openai_yaml` reference before editing `skills/deliver/agents/openai.yaml`. Preserve invocation policy and unrelated fields; change only interface wording and required behavior-equivalent validator mirrors. Include the file in candidate and readability packages.
+- [x] Using only the public contract inventory, map every baseline behavior ID to one clear candidate clause or an unchanged owner reference that Deliver routes to before the first affected decision. Reject the rewrite if any behavior is missing, duplicated with conflicting wording, or expanded beyond the baseline.
+- [x] Treat shorter word count and fewer long sentences as useful measurements, not hard targets. Prefer the simplest correct wording over a forced line limit.
+- [x] Run validation and independent forward checks using canaries that are not part of the official comparison. Do not expose official case prompts, hidden answers, judge feedback, or official results before candidate freeze.
 - [ ] Pause for the user's wording review. After wording feedback changes the candidate, rerun the behavior map, validation, and disjoint canaries before freezing it.
 
 ### 4. Run the frozen comparison
@@ -67,4 +67,4 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [ ] Complete the public skill-review summary and completion stamp without copying hidden or answer-revealing material into it.
 - [ ] Run the full Deliver and evaluator test suites, skill-contract validation, quick skill validation, plugin installation, and diff checks.
 - [ ] Run a fresh full-branch review of that exact state. Rerun affected validation after every repair. If a repair changes the evaluated contract package or any evaluator input, control, or gate, invalidate the verdict and run a newly versioned complete comparison before closeout.
-- [ ] Archive this execution plan, commit only the intended rewrite, eval, validation, and closeout files, and complete the Deliver finalization gate.
+- [ ] Archive this execution plan and commit only the intended rewrite, eval, validation, and closeout files. Then complete the Deliver finalization gate outside the checklist.

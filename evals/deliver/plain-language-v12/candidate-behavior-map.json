@@ -1,0 +1,457 @@
+{
+  "schema_version": 1,
+  "inventory_id": "deliver-plain-language-v12-public-contract",
+  "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
+  "candidate_state": "working_tree_before_user_wording_review",
+  "behavior_count": 108,
+  "clause_count": 55,
+  "purpose": "Audit map from every public baseline behavior ID to one candidate clause or routed owner. This is metadata, not pass evidence.",
+  "mapping_rule": "Every behavior ID appears in exactly one clause entry. Deliver-owned clauses use a candidate heading plus anchor text. Shared owners are routed from skills/deliver/SKILL.md before the affected decision.",
+  "clauses": [
+    {
+      "clause_id": "commands.activation",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Commands And Modes",
+      "anchor": "Use Deliver for `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`",
+      "behavior_ids": ["DLV-ACT-001", "DLV-ACT-002"]
+    },
+    {
+      "clause_id": "commands.resume",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Commands And Modes",
+      "anchor": "An active Deliver workflow stays active until final handoff, cancellation, or an explicit workflow switch.",
+      "behavior_ids": ["DLV-ACT-003"]
+    },
+    {
+      "clause_id": "commands.document-routing",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Commands And Modes",
+      "anchor": "A document with `Deliver implementation instruction:` routes back to Deliver.",
+      "behavior_ids": ["DLV-ACT-004"]
+    },
+    {
+      "clause_id": "commands.draft-discussion",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Commands And Modes; Create Or Update The Plan",
+      "anchor": "For explicit draft discussion, update the same `tasks/execution-plan-<plan-key>.md` as the conversation changes.",
+      "behavior_ids": ["DLV-ACT-005", "DLV-MODE-004", "DLV-STOP-008"]
+    },
+    {
+      "clause_id": "workflow.order",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Deliver",
+      "anchor": "The normal order is: plan -> optional deep research -> optional Pro analysis -> refine",
+      "behavior_ids": ["DLV-MODE-001", "DLV-MODE-003"]
+    },
+    {
+      "clause_id": "commands.normal-and-fast",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Commands And Modes",
+      "anchor": "The modes are:",
+      "behavior_ids": ["DLV-MODE-002"]
+    },
+    {
+      "clause_id": "commands.fixed-plan-resume",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Commands And Modes",
+      "anchor": "For a fixed, approved execution plan or fixed remediation packet, resume at implementation without refining again.",
+      "behavior_ids": ["DLV-MODE-005", "DLV-REV-005"]
+    },
+    {
+      "clause_id": "commands.optional-gate-order",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Commands And Modes",
+      "anchor": "When both optional modifiers are present, finish and apply deep research before Pro analysis.",
+      "behavior_ids": ["DLV-MODE-006"]
+    },
+    {
+      "clause_id": "workflow.review-plan-routing",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Refine And Get Approval",
+      "anchor": "If the user asks for an adversarial plan review, route it through `$review-plan`.",
+      "behavior_ids": ["DLV-MODE-007"]
+    },
+    {
+      "clause_id": "workflow.branch",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Check The Repo And Branch",
+      "anchor": "Run `git status --short` before edits.",
+      "behavior_ids": ["DLV-BRANCH-001", "DLV-BRANCH-002", "DLV-BRANCH-003", "DLV-BRANCH-004"]
+    },
+    {
+      "clause_id": "owner.finalization.kickoff-baseline",
+      "path": "skills/shared/references/execution/finalization-gate.md",
+      "section": "Kickoff Baseline",
+      "anchor": "## Kickoff Baseline",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Check The Repo And Branch",
+      "behavior_ids": ["DLV-BRANCH-005"]
+    },
+    {
+      "clause_id": "workflow.files",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Files",
+      "anchor": "## Files",
+      "behavior_ids": ["DLV-PLAN-001"]
+    },
+    {
+      "clause_id": "workflow.plan-source",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Deliver; Check The Repo And Branch; Create Or Update The Plan",
+      "anchor": "Treat `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes as source material only.",
+      "behavior_ids": ["DLV-PLAN-002", "DLV-PLAN-003", "DLV-PLAN-004", "DLV-PLAN-010"]
+    },
+    {
+      "clause_id": "plan-format.draft",
+      "path": "skills/deliver/references/plan-format.md",
+      "section": "Draft Plan",
+      "anchor": "## Draft Plan",
+      "routed_from": "skills/deliver/SKILL.md#Load The Right References",
+      "behavior_ids": ["DLV-PLAN-005", "DLV-PLAN-006", "DLV-PLAN-007"]
+    },
+    {
+      "clause_id": "plan-format.refined",
+      "path": "skills/deliver/references/plan-format.md",
+      "section": "Refined Execution Plan",
+      "anchor": "## Refined Execution Plan",
+      "routed_from": "skills/deliver/SKILL.md#Load The Right References",
+      "behavior_ids": ["DLV-PLAN-008", "DLV-PLAN-009", "DLV-PLAN-011"]
+    },
+    {
+      "clause_id": "plan-format.frontend",
+      "path": "skills/deliver/references/plan-format.md",
+      "section": "Frontend Mockup",
+      "anchor": "## Frontend Mockup",
+      "routed_from": "skills/deliver/SKILL.md#Load The Right References",
+      "behavior_ids": ["DLV-PLAN-012", "DLV-PLAN-013"]
+    },
+    {
+      "clause_id": "owner.plan-to-goal.candidate-test",
+      "path": "skills/plan-to-goal/SKILL.md",
+      "section": "Goal Candidate Test",
+      "anchor": "## Goal Candidate Test",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Choose The Plan Type",
+      "behavior_ids": ["DLV-PLAN-014", "DLV-PLAN-015"]
+    },
+    {
+      "clause_id": "owner.plan-to-goal.artifact",
+      "path": "skills/plan-to-goal/SKILL.md",
+      "section": "Artifact",
+      "anchor": "## Artifact",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Choose The Plan Type",
+      "behavior_ids": ["DLV-PLAN-016"]
+    },
+    {
+      "clause_id": "owner.deep-research.process",
+      "path": "skills/shared/references/planning/deep-research.md",
+      "section": "Research process",
+      "anchor": "## Research process",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Optional Gates",
+      "behavior_ids": ["DLV-PLAN-017"]
+    },
+    {
+      "clause_id": "owner.deep-research.completion",
+      "path": "skills/shared/references/planning/deep-research.md",
+      "section": "Deep Research Completion Stamp",
+      "anchor": "## Deep Research Completion Stamp",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Optional Gates",
+      "behavior_ids": ["DLV-PLAN-018"]
+    },
+    {
+      "clause_id": "owner.pro.selection",
+      "path": "skills/shared/references/analysis/pro-browser-analysis.md",
+      "section": "Browser Driver; Pro Selection Gate",
+      "anchor": "## Pro Selection Gate",
+      "owner_status": "preexisting_shared_owner_changed_after_baseline",
+      "note": "The live shared owner was changed before this candidate rewrite; this candidate does not edit it.",
+      "routed_from": "skills/deliver/SKILL.md#Run Optional Gates",
+      "behavior_ids": ["DLV-PLAN-019"]
+    },
+    {
+      "clause_id": "owner.pro.consent",
+      "path": "skills/shared/references/analysis/pro-browser-analysis.md",
+      "section": "Consent Boundary; Context Selection",
+      "anchor": "## Consent Boundary",
+      "owner_status": "preexisting_shared_owner_changed_after_baseline",
+      "note": "The live shared owner was changed before this candidate rewrite; this candidate does not edit it.",
+      "routed_from": "skills/deliver/SKILL.md#Run Optional Gates",
+      "behavior_ids": ["DLV-PLAN-020"]
+    },
+    {
+      "clause_id": "owner.pro.synthesis",
+      "path": "skills/shared/references/analysis/pro-browser-analysis.md",
+      "section": "Post-Browser Synthesis Gate",
+      "anchor": "### Post-Browser Synthesis Gate",
+      "owner_status": "preexisting_shared_owner_changed_after_baseline",
+      "note": "The live shared owner was changed before this candidate rewrite; this candidate does not edit it.",
+      "routed_from": "skills/deliver/SKILL.md#Run Optional Gates",
+      "behavior_ids": ["DLV-PLAN-021"]
+    },
+    {
+      "clause_id": "workflow.refinement",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Refine And Get Approval",
+      "anchor": "Run at least one refinement round.",
+      "behavior_ids": ["DLV-PLAN-022", "DLV-PLAN-023", "DLV-STOP-001"]
+    },
+    {
+      "clause_id": "owner.plain-language",
+      "path": "skills/shared/references/plain-language.md",
+      "section": "Standard; Default Shape",
+      "anchor": "## Standard",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Load The Right References",
+      "behavior_ids": ["DLV-PLAN-024"]
+    },
+    {
+      "clause_id": "owner.reasoning-budget",
+      "path": "skills/shared/references/reasoning-budget.md",
+      "section": "Reasoning Budget Guidance",
+      "anchor": "# Reasoning Budget Guidance",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Load The Right References",
+      "behavior_ids": ["DLV-PLAN-025"]
+    },
+    {
+      "clause_id": "owner.architecture",
+      "path": "skills/shared/references/architecture/architecture-guidance.md",
+      "section": "Agent Behavior",
+      "anchor": "## Agent Behavior",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Load The Right References",
+      "behavior_ids": ["DLV-PLAN-026"]
+    },
+    {
+      "clause_id": "workflow.implementation",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Implement The Whole Plan",
+      "anchor": "### 6. Implement The Whole Plan",
+      "behavior_ids": ["DLV-IMPL-001", "DLV-IMPL-002", "DLV-IMPL-003"]
+    },
+    {
+      "clause_id": "worker-packet.template",
+      "path": "skills/deliver/references/worker-packet.md",
+      "section": "Deliver Worker Packet",
+      "anchor": "# Active Step Packet",
+      "routed_from": "skills/deliver/SKILL.md#Implement The Whole Plan",
+      "behavior_ids": ["DLV-IMPL-004", "DLV-IMPL-005"]
+    },
+    {
+      "clause_id": "workflow.implementation-continuation",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Implement The Whole Plan",
+      "anchor": "After each useful item:",
+      "behavior_ids": ["DLV-IMPL-006", "DLV-IMPL-007", "DLV-IMPL-008", "DLV-IMPL-009", "DLV-IMPL-010", "DLV-STOP-003"]
+    },
+    {
+      "clause_id": "owner.finding-disposition.test-value",
+      "path": "skills/shared/references/review/finding-disposition.md",
+      "section": "Deliver Test Value",
+      "anchor": "## Deliver Test Value",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Implement The Whole Plan",
+      "behavior_ids": ["DLV-TEST-001", "DLV-TEST-002", "DLV-TEST-003", "DLV-TEST-004", "DLV-TEST-005", "DLV-TEST-006", "DLV-TEST-007", "DLV-TEST-008"]
+    },
+    {
+      "clause_id": "workflow.verification",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Verify Each Change",
+      "anchor": "### 7. Verify Each Change",
+      "behavior_ids": ["DLV-VER-001", "DLV-VER-002", "DLV-VER-003", "DLV-VER-004", "DLV-VER-005"]
+    },
+    {
+      "clause_id": "owner.verification-pivot",
+      "path": "skills/shared/references/analysis/verification-pivot.md",
+      "section": "Output Contract; Skill Behavior",
+      "anchor": "## Output Contract",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Verify Each Change",
+      "behavior_ids": ["DLV-VER-006"]
+    },
+    {
+      "clause_id": "owner.review.initial",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Deliver final-review remediation rereviews",
+      "anchor": "## Deliver final-review remediation rereviews",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-001"]
+    },
+    {
+      "clause_id": "owner.review.profile",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Prompt profile selection",
+      "anchor": "## Prompt profile selection",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-002"]
+    },
+    {
+      "clause_id": "owner.review.priors",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Bounded adversarial priors; Final Review-Quality Check",
+      "anchor": "## Bounded adversarial priors",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-003"]
+    },
+    {
+      "clause_id": "owner.finding-disposition.shape",
+      "path": "skills/shared/references/review/finding-disposition.md",
+      "section": "Finding Shape; Dispositions",
+      "anchor": "## Finding Shape",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-004"]
+    },
+    {
+      "clause_id": "owner.review.remediation-rereviews",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Deliver final-review remediation rereviews",
+      "anchor": "## Deliver final-review remediation rereviews",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-006", "DLV-REV-007", "DLV-REV-008"]
+    },
+    {
+      "clause_id": "rereview-scope.record",
+      "path": "skills/deliver/references/rereview-scope-record.md",
+      "section": "Record Each Repair; Record The Contract Basis; Validate Before Rereview; Validate After Rereview",
+      "anchor": "## Record Each Repair",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-009", "DLV-REV-010", "DLV-REV-011"]
+    },
+    {
+      "clause_id": "owner.review.prompt-execution",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Prompt execution protocol (required)",
+      "anchor": "## Prompt execution protocol (required)",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-012", "DLV-REV-013"]
+    },
+    {
+      "clause_id": "workflow.final-review-log",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Run Final Review",
+      "anchor": "Write the log to `tasks/tmp/review-deliver-final-<plan-key>.md`",
+      "behavior_ids": ["DLV-REV-014"]
+    },
+    {
+      "clause_id": "owner.review.log",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Review log protocol (required)",
+      "anchor": "## Review log protocol (required)",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-015"]
+    },
+    {
+      "clause_id": "owner.finding-disposition.loop",
+      "path": "skills/shared/references/review/finding-disposition.md",
+      "section": "Loop Control",
+      "anchor": "## Loop Control",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-016", "DLV-STOP-009"]
+    },
+    {
+      "clause_id": "owner.review.frontend",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Prompt G",
+      "anchor": "### Prompt G",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-017"]
+    },
+    {
+      "clause_id": "owner.review.production",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Prompt H",
+      "anchor": "### Prompt H",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-018"]
+    },
+    {
+      "clause_id": "owner.review.final-audit",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Prompt I",
+      "anchor": "### Prompt I",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-019"]
+    },
+    {
+      "clause_id": "owner.review.backprop",
+      "path": "skills/shared/references/review/review-protocol.md",
+      "section": "Agent-Loop Backprop",
+      "anchor": "## Agent-Loop Backprop",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Run Final Review",
+      "behavior_ids": ["DLV-REV-020"]
+    },
+    {
+      "clause_id": "workflow.fast-stop",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Refine And Get Approval",
+      "anchor": "Still stop for:",
+      "behavior_ids": ["DLV-STOP-002"]
+    },
+    {
+      "clause_id": "workflow.final-review-stop",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Run Final Review",
+      "anchor": "Skip final review only when a real blocker prevents it.",
+      "behavior_ids": ["DLV-STOP-004"]
+    },
+    {
+      "clause_id": "workflow.deep-research-stop",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Run Optional Gates",
+      "anchor": "Keep repairing an incomplete pass.",
+      "behavior_ids": ["DLV-STOP-005"]
+    },
+    {
+      "clause_id": "workflow.pro-stop",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Run Optional Gates",
+      "anchor": "A degraded or incomplete pass is diagnostic only.",
+      "behavior_ids": ["DLV-STOP-006"]
+    },
+    {
+      "clause_id": "workflow.goal-stop",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Choose The Plan Type",
+      "anchor": "Stop after the goal plan and `Start Prompt`.",
+      "behavior_ids": ["DLV-STOP-007"]
+    },
+    {
+      "clause_id": "workflow.archive",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Archive And Finalize",
+      "anchor": "After final-review findings are dispositioned and required repairs are verified:",
+      "behavior_ids": ["DLV-ARCH-001", "DLV-ARCH-002", "DLV-ARCH-003", "DLV-ARCH-004", "DLV-ARCH-005"]
+    },
+    {
+      "clause_id": "owner.finalization.terminal",
+      "path": "skills/shared/references/execution/finalization-gate.md",
+      "section": "Before Terminal Handoff",
+      "anchor": "## Before Terminal Handoff",
+      "owner_status": "unchanged_routed_owner",
+      "routed_from": "skills/deliver/SKILL.md#Archive And Finalize",
+      "behavior_ids": ["DLV-FINAL-001", "DLV-FINAL-002", "DLV-FINAL-003", "DLV-FINAL-004", "DLV-FINAL-005", "DLV-FINAL-006"]
+    },
+    {
+      "clause_id": "handoff.final",
+      "path": "skills/deliver/SKILL.md",
+      "section": "Handoffs",
+      "anchor": "Write the final handoff only from evidence that passed finalization.",
+      "behavior_ids": ["DLV-FINAL-007"]
+    }
+  ]
+}

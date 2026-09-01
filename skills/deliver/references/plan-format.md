@@ -1,10 +1,10 @@
 # Deliver Plan Format
 
-Use this reference when drafting or refining a `$deliver` execution plan.
+Read this before drafting or refining a `$deliver` plan.
 
 ## Draft Plan
 
-For a draft plan, use this checklist shape from the start:
+Use this shape:
 
 ```md
 # <Plan Name>
@@ -32,26 +32,22 @@ Tell me what is wrong, missing, or out of order.
 - [ ] <Likely work item.>
 ```
 
-Draft plan rules:
+Keep the draft easy to change and fast to read:
 
-- Write for fast human reading.
-- Use short full sentences and concrete words.
-- Avoid implementation jargon unless it is the clearest word; define it in plain language when needed.
-- Use phases plus checkboxes from the start, even while the plan is still rough.
-- Keep draft checkboxes concrete enough to discuss, but do not pretend every implementation detail is final.
-- Do not add PRD, TDD, task-plan, status-log, audit-log, readiness, or topical section headers such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.
-- Update the doc after meaningful discussion changes the current plan, a decision is made, an option is rejected, or a blocker becomes clear.
-- Treat user removals as edits to the current plan, not as content to preserve. Delete removed items from the checklist and adjust the remaining items.
-- Do not turn removed scope into repeated `do not...` reminders. If a rejected or out-of-scope idea must be retained to avoid reintroducing it, keep one concise decision note or checkbox and phrase the active plan positively.
-- Keep the draft checkboxes focused only on what the user currently wants to do.
-- Write open questions as checkboxes, prefixed with `Open question:` when useful, so they are easy to resolve or remove during discussion.
-- Keep the draft instruction near the top until the user asks to refine the draft.
-- Do not refine, execute, or commit implementation work from the draft plan.
-- When refining, keep this same `tasks/execution-plan-<plan-key>.md` file, replace the draft instruction with the Deliver implementation instruction, and tighten the checklist before implementation can start.
+- Use short, concrete sentences. Define any necessary jargon.
+- Use phases and checkboxes from the start, but do not pretend every detail is settled.
+- Use `Open question:` checkboxes only when useful.
+- Keep only the work the user currently wants. Delete removed scope. If a rejected idea must remain to prevent its return, keep one short, positive decision note.
+- Avoid PRD, TDD, task-plan, status-log, audit-log, readiness, and essay headings such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.
+- Keep the exact draft instruction near the top.
+- Update the same `tasks/execution-plan-<plan-key>.md` when discussion changes the plan.
+- Do not refine, implement, or commit from the draft.
+
+When the user asks to refine it, keep the same file and replace the draft instruction with the exact implementation instruction below.
 
 ## Refined Execution Plan
 
-For a refined execution plan, prefer this shape:
+Use this shape:
 
 ```md
 # <Plan Name>
@@ -88,30 +84,33 @@ Decision notes:
 - [ ] <work item>
 ```
 
-Rules:
+Keep the refined plan executable and easy to review:
 
-- Use phases plus checkboxes.
-- Allow one level of checkboxes under a phase.
-- Avoid checkboxes inside checkboxes.
-- Add `Context`, phase `Goal`, or `Decision notes` only when they reduce confusion.
-- Keep `Context` short. Use it for current-state facts, constraints, and settled decisions, not plan justification.
-- Convert any supporting rationale into concrete decisions, constraints, or checks.
-- Omit plan-justifying prose. The plan should say what to do, what is true now, and what must be checked, not argue that the approach is good.
-- Do not put planning work inside a refined execution plan. The plan itself must already carry the chosen contract, shape, policy, acceptance criteria, or remaining explicit `Open question:` before implementation starts.
-- Avoid placeholder work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the requested deliverable is itself a planning artifact.
-- If a decision is unresolved and would change implementation, write it as an `Open question:` checkbox and stop for user review; otherwise record the settled decision in `Context` or `Decision notes` and make the checkbox implement that decision.
-- Open questions that would change implementation are implementation blockers, not normal backlog. The review handoff must list them under open questions and say they need to be resolved or explicitly deferred before implementation starts.
-- Add `Done when` only when the checkbox text is too vague to define completion.
-- Include the exact Deliver implementation instruction near the top of every normal execution plan.
-- Normal mode: ask for review with `Please review this before I start.` The user reviews the Markdown file directly; do not launch a review app or external viewer.
-- `--fast` mode: omit the initial review request lines and include `Fast mode note: Initial plan-review pause skipped by --fast; continue into implementation after refinement unless a fast-mode stop condition applies.`
+- Use phases and one checkbox level. Do not nest checkboxes.
+- Add `Context`, a phase `Goal`, or `Decision notes` only when it reduces confusion.
+- Keep `Context` to current facts, constraints, and settled decisions. Do not use it to justify the plan.
+- Turn useful rationale into a decision, constraint, or check. Remove plan-justifying prose.
+- Do not put planning work inside a refined execution plan. Record the chosen contract, shape, policy, acceptance criteria, and any remaining explicit `Open question:` before implementation.
+- Do not disguise missing decisions as work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the deliverable is itself a planning artifact.
+- If a decision would change implementation, write it as an `Open question:` checkbox and stop for review. Otherwise record the settled decision and make the checkbox implement it.
+- Implementation-changing open questions block implementation. List them in the review handoff and say they must be resolved or explicitly deferred.
+- Add `Done when` only when the checkbox is otherwise too vague.
+- Keep the exact `Deliver implementation instruction:` near the top.
 - Do not add `Status`, `Result`, or `Commit` lines by default.
-- Keep validation evidence and commit details in the final handoff or git history unless the evidence changes the plan.
+- Keep validation transcripts and commit details in the final handoff or git history unless they change later work.
 
-Frontend mockup rules:
+Normal mode uses the review request shown above. The user reviews the Markdown file directly; do not open a separate review app.
 
-- If the plan touches a frontend component, rendered content, layout, styling, or interaction flow, create a simple standalone HTML/CSS mockup at `tasks/ui-mockup-<plan-key>.html` before asking for plan approval.
-- Read `docs/DESIGN.md` first when it exists, and match the current product style as closely as a lightweight static mockup allows.
-- Link the mockup from the plan with `Visual mockup: [ui-mockup-<plan-key>.html](ui-mockup-<plan-key>.html)`.
-- Treat the mockup as visual intent only. Do not import it as production code, and do not let it replace browser verification after implementation.
-- If the mockup exposes an unresolved design/product decision, write that as an `Open question:` checkbox and stop before implementation.
+For `--fast`, remove the two review-request lines and add:
+
+`Fast mode note: Initial plan-review pause skipped by --fast; continue into implementation after refinement unless a fast-mode stop condition applies.`
+
+## Frontend Mockup
+
+For frontend components, rendered content, layout, styling, or interaction flows:
+
+- Read `docs/DESIGN.md` when it exists.
+- Before asking for approval, create `tasks/ui-mockup-<plan-key>.html` as a small standalone HTML/CSS mockup that matches the current product style. Use a small inline script only when an interaction state needs it.
+- Link it with `Visual mockup: [ui-mockup-<plan-key>.html](ui-mockup-<plan-key>.html)`.
+- Treat it as visual intent, not production code or a replacement for browser verification after implementation.
+- If it exposes an unresolved design or product decision, add an `Open question:` checkbox and stop before implementation.

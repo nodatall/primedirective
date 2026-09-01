@@ -1,8 +1,8 @@
 # Deliver Worker Packet
 
-Use this reference before assigning a non-trivial `$deliver` implementation item to a worker agent.
+Read this before assigning a non-trivial `$deliver` implementation item.
 
-Pass one bounded item with only the context needed to implement it correctly:
+Give the worker one bounded item and only the context needed for it:
 
 ```md
 # Active Step Packet
@@ -14,13 +14,13 @@ Goal:
 <one sentence from the plan when useful>
 
 Do:
-<the one checkbox/item this worker owns>
+<the one checkbox or item this worker owns>
 
 Done when:
-<include only when the checkbox text is not enough>
+<include only when the checkbox is not enough>
 
 Relevant context:
-- <only useful What We Know or Decision notes for this step>
+- <only facts or decision notes needed for this step>
 - <important constraints from the approved plan>
 
 Repo context:
@@ -35,7 +35,7 @@ Validation:
 
 Test value when this step adds or changes tests:
 - test_disposition: permanent | table_case | probe_only | no_test
-- Rationale: <why this is supported-path, material, unique, stable, and economical, or why durable coverage is not justified>
+- Rationale: <why durable coverage is justified, or why it is not>
 
 Rules:
 - Do not edit outside this step unless required and reported.
@@ -44,8 +44,12 @@ Rules:
 - Return changed files, validation run, result, and blockers.
 ```
 
-The orchestrator keeps ownership of the full plan, next-step selection, worker packet creation, worker integration, final validation judgment, checkbox updates, commits, and plan changes. It should not hand a worker the whole backlog or ask the worker to choose the next item.
+The orchestrator chooses the item, writes the packet, integrates the change, judges validation, updates the plan, commits, and changes scope when evidence requires it. The worker receives one item, not the backlog.
 
-For a test-changing step, the orchestrator must decide and include `test_disposition` plus its rationale before assigning permanent-test work. When evidence is insufficient to decide, assign only reproduction or repair, keep permanent-test work out of the packet, and decide test persistence after inspecting the evidence.
+When tests may change, the orchestrator decides `test_disposition` and writes its evidence-backed rationale before assigning permanent-test work. If the evidence is not yet enough, assign only reproduction or repair. Decide test persistence after inspecting the result.
 
-When a step repairs a parser or validator, put a focused check under `Validation` that exercises accepted-looking values against the downstream consumer grammar, not only the repaired guard. When a step repairs an approved cross-process lifecycle, include synchronous completion after intermediate readiness, concurrent waiters, the active owner or lock, failed or stale owner recovery, and default-versus-foreground behavior. Keep disposable or historical checks as probes rather than inventing a permanent harness, and do not expand the approved behavior contract merely to satisfy the checks.
+For a parser or validator repair, make `Validation` test accepted-looking values against the downstream consumer grammar, not only the repaired guard.
+
+For an approved cross-process lifecycle repair, make `Validation` cover synchronous completion after an intermediate readiness signal, concurrent waiters, the active owner or lock, failed or stale owner recovery, and default-versus-foreground behavior.
+
+Keep disposable or historical checks as `probe_only`. Do not invent a permanent harness or expand the approved behavior merely to satisfy a check.

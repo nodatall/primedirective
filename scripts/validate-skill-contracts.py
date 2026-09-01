@@ -613,108 +613,98 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     finalization_gate = (ROOT / "skills/shared/references/execution/finalization-gate.md").read_text()
     readme = (ROOT / "README.md").read_text()
     deliver_agent = (ROOT / "skills/deliver/agents/openai.yaml").read_text()
+    plan_format = (ROOT / "skills/deliver/references/plan-format.md").read_text()
 
     deliver_tokens = [
+        "The normal order is: plan -> optional deep research -> optional Pro analysis -> refine -> user review and approval -> implement -> validate -> final review -> archive -> commit -> finalize -> handoff.",
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
-        "`$deliver refine`, `$deliver plan`, `refine it`, `turn this into a deliver plan`, or equivalent keeps the same checklist file",
-        "When the user later says `implement`, `implement the doc`, `implement this plan`, `go ahead`, or equivalent",
-        "When a plan document contains the Deliver implementation instruction, that document is enough to route implementation back through this skill.",
         "plain-language deliver requests such as `deliver`, `refine it`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`",
-        "Later user messages such as `implement`, `implement deliver`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` are approval/resume signals",
+        "Later messages such as `implement`, `implement deliver`, `implement the doc`, `implement this plan`, `go ahead`, `start`, `continue`, `finish it`, `do it`, or `ship it` approve or resume the active plan",
+        "A document with `Deliver implementation instruction:` routes back to Deliver.",
+        "The user does not need `$deliver execute <plan-path>`.",
         "Deliver implementation instruction:",
-        "Include the exact Deliver implementation instruction near the top of every normal execution plan.",
         "Optional frontend mockup: `tasks/ui-mockup-<plan-key>.html`",
-        "Frontend plan mockup rules:",
-        "create a simple standalone HTML/CSS mockup at `tasks/ui-mockup-<plan-key>.html`",
-        "Link the mockup from the execution plan with a short `Visual mockup:` note",
-        "If `tasks/ui-mockup-<plan-key>.html` exists, move it to the same archive directory",
-        "Normal mode: ask the user to say `implement the doc` when it looks right, or tell you what is wrong, missing, or out of order.",
-        "Non-canonical plan-like files such as `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes are source material only for `$deliver`.",
-        "Do not continue into implementation with only a `tasks-plan`, spec, or notes file as the scope artifact.",
-        "do not treat the absence of a canonical execution plan as permission to skip final review, archive movement, or the finalization gate.",
-        "If the current turn starts from a generic approval or resume message while an active unarchived `$deliver` execution plan exists",
-        "After every useful commit or plan update, immediately re-open the execution plan",
-        "After the last checkbox is checked, implementation is still not terminal.",
+        "Treat `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes as source material only.",
+        "Never implement from a tasks-plan, spec, or notes file.",
+        "After every useful commit or plan update, reopen the whole plan and start the next unchecked item.",
+        "After the final checkbox, continue directly through final review, authorized repairs, archive, closeout commit, and finalization.",
         "review-deliver-final-<plan-key>.md",
-        "Skipping final review is allowed only when a real blocker prevents it",
-        "Commit the archive move and any final review, checklist, cleanup, implementation, or validation edits before the final handoff.",
-        "Run the finalization gate before the final handoff.",
-        "If any unchecked in-scope checkbox remains, continue execution instead of handing off",
+        "Skip final review only when a real blocker prevents it.",
+        "Commit the archive move and every final-review, checklist, cleanup, implementation, or validation edit before handoff.",
+        "Run the `$deliver` readable-plan path in `skills/shared/references/execution/finalization-gate.md` immediately before the final handoff.",
+        "Continue when any in-scope item remains unless a real blocker prevents it.",
         "Use a fresh reviewer subagent by default when subagents are available.",
-        "Assign one worker agent by default when worker agents are available.",
-        "Do not mention whether a subagent was or was not used in the user-facing review request",
-        "Do not mention whether worker agents were or were not used",
+        "assign one worker by default when workers are available",
+        "Do not mention whether reviewers or workers were used unless it creates a real blocker or residual risk.",
         "Supported modifiers:",
         "`--deep-research`",
         "`--pro-analysis`",
         "`--fast`",
-        "Fast mode skips only the initial user plan-review pause after refinement; it does not skip the written plan, research, Pro analysis, refinement, validation, final review, archive, commit, or finalization.",
-        "$deliver --fast` creates or resumes the same readable execution plan, runs the same research/Pro/refinement gates, treats the refined plan as approved scope, and continues directly to step 7 without the initial user plan-review pause.",
-        "Stop for user review of the Markdown plan file unless `--fast` is present.",
+        "`--fast` skips only the first plan-review pause. It does not skip any other part of this order.",
+        "**Fast:** `$deliver --fast` follows the same path, treats the refined plan as approved scope, and starts implementation without the first plan-review pause.",
         "Do not launch a review app or external viewer.",
-        "Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review the Markdown file.",
-        "`--fast` mode must still stop for destructive or data-loss actions",
-        "When `--deep-research` is present, compose `skills/shared/references/planning/deep-research.md` after the readable execution plan exists and before any Pro analysis or refinement.",
+        "Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review it directly.",
+        "Still stop for:",
+        "With `--deep-research`, use `skills/shared/references/planning/deep-research.md`.",
         "tasks/tmp/research-plan-<plan-key>.md",
         "Deep Research Summary",
-        "Hard-stop before Pro analysis or refinement if the Deep Research Completion Stamp is incomplete or `evidence_bar_met: yes` is missing.",
-        "When `--pro-analysis` is present, compose `skills/shared/references/analysis/pro-browser-analysis.md` after the readable execution plan exists and before the refinement loop.",
+        "Do not continue to Pro analysis, refinement, review, or implementation until the memo has its exact Deep Research Completion Stamp",
+        "With `--pro-analysis`, use `skills/shared/references/analysis/pro-browser-analysis.md`.",
         "tasks/tmp/pro-analysis-<plan-key>.md",
         "Pro Findings Summary",
-        "Hard-stop before refinement if the Pro synthesis gate is incomplete.",
+        "Do not refine, review, or implement until the required browser evidence and synthesis fields are complete",
     ]
     for token in deliver_tokens:
         if token not in deliver:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
     deliver_draft_tokens = [
-        "$deliver` creates or resumes a readable execution plan at `tasks/execution-plan-<plan-key>.md`",
-        "$deliver discuss` is a legacy alias for the draft-update behavior. Do not prefer it or introduce it as a separate workflow.",
-        "Do not use this step for bare `$deliver`, `$deliver --deep-research`, `$deliver --pro-analysis`, `$deliver --fast`, `$deliver plan`, `$deliver refine`, `deliver this`, or equivalent requests",
-        "Draft instruction:",
-        "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
-        "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
-        "The draft plan is for discussion. Keep it as plain as possible",
-        "Please review this before I refine it.",
-        "Use phases plus checkboxes from the start, even while the plan is still rough.",
-        "Keep draft checkboxes concrete enough to discuss, but do not pretend every implementation detail is final.",
-        "Do not add PRD, TDD, task-plan, status-log, audit-log, readiness, or topical section headers such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.",
-        "Treat user removals as edits to the current plan, not as content to preserve.",
-        "Do not turn removed scope into repeated `do not...` reminders.",
-        "Do not carry rejected or removed scope into execution-plan work items.",
-        "Write open questions as checkboxes, prefixed with `Open question:` when useful, so they are easy to resolve or remove during discussion.",
-        "Do not refine, execute, or commit implementation work from the draft plan.",
-        "If the user asks to refine the draft into a deliver plan, keep the same `tasks/execution-plan-<plan-key>.md`, replace the draft instruction with the Deliver implementation instruction, and continue with step 4.25 when `--deep-research` is present, step 4.5 when `--pro-analysis` is present, or step 5 otherwise.",
-        "In-place refinement only prepares the execution plan; implementation still requires a separate approval such as `implement the doc` unless the current refinement request includes `--fast`.",
+        "Use this only when the user explicitly asks to discuss or keep updating a draft.",
+        "`$deliver discuss` is a legacy alias for this behavior; do not prefer it or present it as a separate workflow.",
+        "For explicit draft discussion, update the same `tasks/execution-plan-<plan-key>.md` as the conversation changes.",
+        "If only `tasks/planning-discussion-<plan-key>.md` exists, import its current in-scope content first.",
+        "Do not refine, implement, or commit from the draft.",
+        "When the user asks to refine it, keep the same file and replace the draft instruction with the exact Deliver implementation instruction.",
+        "A draft that was just refined still needs this separate approval unless the request includes `--fast`.",
     ]
     for token in deliver_draft_tokens:
         if token not in deliver:
             fail(errors, "PD-DELIVER-DRAFT-MODE", f"skills/deliver/SKILL.md missing draft-mode token: {token}")
 
+    plan_format_draft_tokens = [
+        "Draft instruction:",
+        "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
+        "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
+        "Please review this before I refine it.",
+        "Use phases and checkboxes from the start, but do not pretend every detail is settled.",
+        "Keep only the work the user currently wants. Delete removed scope.",
+        "Use `Open question:` checkboxes only when useful.",
+        "Avoid PRD, TDD, task-plan, status-log, audit-log, readiness, and essay headings",
+        "Do not refine, implement, or commit from the draft.",
+    ]
+    for token in plan_format_draft_tokens:
+        if token not in plan_format:
+            fail(errors, "PD-DELIVER-DRAFT-MODE", f"skills/deliver/references/plan-format.md missing draft-mode token: {token}")
+
     deliver_refined_tokens = [
-        "Do not put planning work inside a refined execution plan.",
-        "The plan itself must already carry the chosen contract, shape, policy, acceptance criteria, or remaining explicit `Open question:` before implementation starts.",
-        "Avoid placeholder work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the requested deliverable is itself a planning artifact.",
-        "If a decision is unresolved and would change implementation, write it as an `Open question:` checkbox and stop for user review; otherwise record the settled decision in `Context` or `Decision notes` and make the checkbox implement that decision.",
-        "Open questions that would change implementation are implementation blockers, not normal backlog.",
-        "The review handoff must list them under open questions and say they need to be resolved or explicitly deferred before implementation starts.",
-        "if any implementation-changing `Open question:` checkboxes remain, list them as open questions and say they must be resolved or explicitly deferred before implementation starts",
-        "if any implementation-changing `Open question:` checkboxes remain, stop and list them instead of starting implementation",
-        "`--fast` mode must still stop for destructive or data-loss actions, missing credentials/env/service access, material scope ambiguity, billing/security/schema/API/product decisions, unresolved implementation-changing `Open question:` checkboxes",
-        "The reviewer must reject refined plans that still contain meta-planning placeholders",
+        "For normal planning, create or reuse the canonical execution plan and include `Deliver implementation instruction:` near the top.",
+        "Keep the main plan high-level and readable.",
+        "unresolved implementation-changing `Open question:` checkboxes",
+        "At the normal plan-review gate, link the plan, say whether refinement finished, list unresolved implementation-changing `Open question:` items",
+        "Stop and list any implementation-changing `Open question:` instead of starting work.",
     ]
     for token in deliver_refined_tokens:
         if token not in deliver:
             fail(errors, "PD-DELIVER-REFINED-PLAN", f"skills/deliver/SKILL.md missing refined-plan token: {token}")
 
-    plan_format = (ROOT / "skills/deliver/references/plan-format.md").read_text()
     plan_format_tokens = [
         "Do not put planning work inside a refined execution plan.",
-        "The plan itself must already carry the chosen contract, shape, policy, acceptance criteria, or remaining explicit `Open question:` before implementation starts.",
-        "Avoid placeholder work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...` unless the requested deliverable is itself a planning artifact.",
-        "If a decision is unresolved and would change implementation, write it as an `Open question:` checkbox and stop for user review; otherwise record the settled decision in `Context` or `Decision notes` and make the checkbox implement that decision.",
-        "Open questions that would change implementation are implementation blockers, not normal backlog.",
-        "The review handoff must list them under open questions and say they need to be resolved or explicitly deferred before implementation starts.",
+        "Record the chosen contract, shape, policy, acceptance criteria, and any remaining explicit `Open question:` before implementation.",
+        "Do not disguise missing decisions as work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...`",
+        "If a decision would change implementation, write it as an `Open question:` checkbox and stop for review.",
+        "Implementation-changing open questions block implementation.",
+        "say they must be resolved or explicitly deferred.",
+        "When asked to implement this doc, load the `$deliver` skill, use this file as the approved execution plan, scan every checkbox, and continue through final review, archive movement, commit, and finalization before the final handoff.",
     ]
     for token in plan_format_tokens:
         if token not in plan_format:
@@ -722,14 +712,13 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     deliver_goal_tokens = [
         "skills/plan-to-goal/SKILL.md",
-        "Durable goal plan: `tasks/goal-plan-<plan-key>.md`",
-        "## Goal Plan Delegation",
-        "slow, paid, approval-gated, nightly, or externally scheduled run",
-        "$plan-to-goal` owns the `tasks/goal-plan-<plan-key>.md` format",
-        "embedded `Start Prompt`",
-        "goal-plan draft and `Start Prompt` are produced",
-        "Do not execute a goal plan as a normal `$deliver` checklist.",
-        "if `$deliver` chose a goal plan, say that it is a goal plan",
+        "Goal plan: `tasks/goal-plan-<plan-key>.md`",
+        "slow, paid, approval-gated, nightly, externally scheduled",
+        "Goal mode creates `tasks/goal-plan-<plan-key>.md`",
+        "absolute-path `/goal` `Start Prompt`",
+        "Stop after the goal plan and `Start Prompt`.",
+        "Do not execute it as a normal Deliver checklist.",
+        "If Deliver chose a goal plan, say so.",
     ]
     for token in deliver_goal_tokens:
         if token not in deliver:
@@ -898,9 +887,11 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-README-GOAL-PLAN", f"README.md missing deliver goal-plan token: {token}")
 
     deliver_agent_tokens = [
-        "wait for approval before execution unless I include --fast",
-        "--fast skips only the initial plan-review pause",
-        "validation, final review, archive, commit, and finalization",
+        "Use $deliver",
+        "run --deep-research and --pro-analysis when requested",
+        "wait for my approval unless I use --fast",
+        "implement, validate, review, archive, commit, and finalize the approved work",
+        "use $deliver discuss only when I explicitly want a draft checklist to stay current during discussion",
     ]
     for token in deliver_agent_tokens:
         if token not in deliver_agent:
@@ -1025,8 +1016,8 @@ def validate_review_plan_contract(errors: list[str]) -> None:
 
     deliver_tokens = [
         "skills/review-plan/SKILL.md",
-        "route that request through `$review-plan`",
-        "Remove `tasks/tmp/review-plan-<plan-key>.md` when it records a completed `$review-plan` pass with no unresolved risk",
+        "route it through `$review-plan`",
+        "Remove `tasks/tmp/review-plan-<plan-key>.md` after a completed `$review-plan` with no unresolved risk",
     ]
     for token in deliver_tokens:
         if token not in deliver:
@@ -1234,34 +1225,27 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
     deliver_tokens = [
         disposition_path,
         protocol_path,
-        "before step 7 when implementation may add or change tests",
+        "before implementation may add or change tests",
         "Deliver-only `test_disposition` and final-review `rereview_scope`",
-        "without copying their rubrics or applying them to other review workflows",
-        "already-approved Deliver execution plan",
-        "approved fixed remediation packet",
-        "import the packet as execution tracking without changing its approved scope",
-        "do not rerun plan refinement",
-        "begin or resume implementation at step 7",
-        "does not weaken the initial refinement",
-        "Before keeping any new or changed test as permanent coverage",
-        "without an established permanent test path",
+        "Do not copy their rubrics here or apply them to other review workflows.",
+        "For a fixed, approved execution plan or fixed remediation packet, resume at implementation without refining again.",
+        "Packet approval authorizes only its fixed repairs.",
+        "Return to refinement only after a material plan change or when implementation evidence exposes a blocking contradiction.",
+        "Before keeping a new or changed test as permanent coverage",
+        "without a permanent-test path uses `probe_only`",
         "do not invent a permanent test harness",
         "one initial fresh full-branch review",
-        "do not add another full review only as closeout ceremony",
+        "Do not add a second full review as ceremony.",
         "fail-closed attestation",
-        "exact unchanged base commit/tree/diff",
-        "Missing, malformed, mismatched, or drifted evidence preserves the ordinary mandatory fresh full review",
-        "For every fixed-packet repair, create its schema-v3 action record before the first post-repair review",
-        "ordinary post-repair full review may also satisfy the grouped repair round",
-        "covers every action and meets the validator-derived widest scope",
-        "pre-repair imported review cannot close the repairs",
+        "unchanged base commit/tree/diff",
+        "Otherwise run the normal fresh full review.",
+        "For fixed-packet repairs, record every action before the first post-repair review.",
         rereview_reference_path,
         "review-deliver-final-<plan-key>.rereview.json",
-        "validate_rereview_scope.py <record> --phase plan",
-        "validate_rereview_scope.py <record> --phase complete",
-        "Do not copy the validator into the target repo or target diff",
-        "validator-derived action scope and grouped widest scope are authoritative",
-        "accepted-looking values against the downstream consumer grammar",
+        "Run its plan-phase check before rereview and its complete-phase check after recording the rounds.",
+        "Do not copy its validator into the target repo or target diff.",
+        "The validator-derived action scope and grouped widest scope are authoritative.",
+        "test accepted-looking inputs against the downstream consumer grammar",
         "synchronous completion after any intermediate readiness signal",
         "concurrent waiters",
         "failed or stale owner recovery",
@@ -1274,14 +1258,15 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
     worker_packet_tokens = [
         "Test value when this step adds or changes tests:",
         "test_disposition: permanent | table_case | probe_only | no_test",
-        "the orchestrator must decide and include `test_disposition` plus its rationale before assigning permanent-test work",
+        "the orchestrator decides `test_disposition` and writes its evidence-backed rationale before assigning permanent-test work",
         "assign only reproduction or repair",
-        "keep permanent-test work out of the packet",
+        "Decide test persistence after inspecting the result.",
         "accepted-looking values against the downstream consumer grammar",
-        "synchronous completion after intermediate readiness",
+        "synchronous completion after an intermediate readiness signal",
         "concurrent waiters",
         "failed or stale owner recovery",
-        "Keep disposable or historical checks as probes rather than inventing a permanent harness",
+        "Keep disposable or historical checks as `probe_only`.",
+        "Do not invent a permanent harness",
     ]
     for token in worker_packet_tokens:
         if token not in worker_packet:
@@ -1290,13 +1275,13 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
     rereview_reference_tokens = [
         "review-deliver-final-<plan-key>.rereview.json",
         "`schema_version: 3`",
-        "Schema v2 records and records that mix the retired and current risk-flag keys fail closed",
+        "Schema v2 and records that mix current and retired risk-flag names fail closed.",
         "all nine Boolean `risk_flags`",
         "`approved_contract_basis` with exactly `effect` and `source`",
         "`none`, `restore`, `change`, or `uncertain`",
-        "non-empty evidence or approval citation",
-        "structural support required for a restoration",
-        "repairs imported from a fixed remediation packet",
+        "must cite non-empty evidence or user approval",
+        "`restore`: the repair returns behavior to a cited approved contract.",
+        "For a fixed remediation packet, record every repair",
         "before the first post-repair review",
         "architecture_or_trust_boundary",
         "cross_process_or_async_completion",
@@ -1304,24 +1289,22 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
         "user_visible_output_or_diagnostics",
         "fallible_output_after_irreversible_mutation",
         "pre-repair defect boundary changed or protected",
-        "not merely from the repaired control flow",
-        "even when the repair moves validation or output before mutation",
-        "Mere mutation plus unchanged reporting does not require the flag when their ordering and failure boundary are unchanged",
+        "not only from the repaired code path",
+        "Mutation plus reporting does not require it when their order and failure boundary did not change.",
         "changes_approved_public_contract",
         "broad_security_or_data_integrity",
         "isolation_unproven",
         "new_material_finding",
         "--phase plan",
         "--phase complete",
-        "widest scope derived for its listed actions",
-        "ordinary mandatory full-branch review performed after fixed-packet repairs",
+        "widest scope derived for its actions",
+        "A normal full-branch review run after fixed-packet repairs",
         "covers every action",
         "--ordinary-post-repair-full-round <round-id>",
-        "valid only during complete phase",
-        "must cover every recorded action",
-        "qualifying attested review imported as the initial round happened before repair",
-        "execute this bundled validator in place",
-        "Do not copy the validator into the target repository",
+        "Use it only in the complete phase",
+        "A qualifying packet review happened before the repairs, so it cannot close them.",
+        "Run its validator in place.",
+        "Do not copy the validator into the target repo",
     ]
     for token in rereview_reference_tokens:
         if token not in rereview_reference:
@@ -1468,7 +1451,7 @@ def validate_architecture_guidance(errors: list[str]) -> None:
 
     consumer_checks = [
         ("skills/bootstrap-repo-rules/SKILL.md", bootstrap, "suggest or invoke `$create-architecture`"),
-        ("skills/deliver/SKILL.md", deliver, "For boundary-affecting implementation work"),
+        ("skills/deliver/SKILL.md", deliver, "before planning or implementing boundary-affecting work"),
         ("skills/review-chain/SKILL.md", review_chain, "forbidden dependency edges"),
         ("skills/repo-sweep/SKILL.md", repo_sweep, "label those findings as inferred rather than contract drift"),
     ]
