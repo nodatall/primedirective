@@ -99,6 +99,7 @@
       "path": "skills/deliver/SKILL.md",
       "section": "Deliver; Check The Repo And Branch; Create Or Update The Plan",
       "anchor": "Treat `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes as source material only.",
+      "note": "The user removed the standalone retired-stack sentence during wording review. The candidate still requires one canonical execution plan, treats legacy plan material as source only, and forbids implementation from tasks-plan, spec, or notes files; the broader no-sidecar rule is now implied rather than stated separately.",
       "behavior_ids": ["DLV-PLAN-002", "DLV-PLAN-003", "DLV-PLAN-004", "DLV-PLAN-010"]
     },
     {

@@ -9,8 +9,6 @@ Use one readable Markdown plan to guide work from planning through final handoff
 
 The normal order is: plan -> optional deep research -> optional Pro analysis -> refine -> user review and approval -> implement -> validate -> final review -> archive -> commit -> finalize -> handoff. `--fast` skips only the first plan-review pause. It does not skip any other part of this order.
 
-New Deliver work does not use the retired PRD, TDD, or full tasks-plan stack.
-
 ## Load The Right References
 
 Always load:
