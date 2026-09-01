@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: pending approved wording commit and extracted package
-- Evaluator version: `v12`
+- Evaluator version: `deliver-plain-language-v12.22`
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -20,7 +20,10 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Baseline package authority digest: `755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5`
 - V11 immutable content-manifest digest: `fc3cb2d9311a9f1def033f582c10a6a0af45fed9fc4cdcbda37dadcffef7b9b2`
 - Candidate package commit, tree, and manifest: pending approved candidate freeze
-- Adapter file SHA-256: `37d9cef4ea0377feab626929a4f33258f9c812453b5998c25fe6f2ffd112bdfc`
+- Evaluator source commit: `428062db0ebbe21b51b007919d7ad78751b7e8ad`
+- Evaluator final commit: `287eb9aaee880587fa97c5faad8a94cf76bee758`
+- Adapter file SHA-256: `4ae37cc8357a4eb559c22ef256537ca650b720c93193d975783429d92a1934f2`
+- Ready-state SHA-256: `337e3571790c31b2f6a0e4376cd266bd15b38428564906da086fddeb68b2d2cb`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
 ## Public Controller Status
@@ -30,7 +33,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.
-- [ ] Private evaluator readiness reaches its frozen ready state.
+- [x] Private evaluator readiness reaches its frozen ready state.
 - [ ] Approved candidate package is committed, extracted, and bound.
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.
