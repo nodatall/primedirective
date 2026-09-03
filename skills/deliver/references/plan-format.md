@@ -2,49 +2,6 @@
 
 Read this before drafting or refining a `$deliver` plan.
 
-## Draft Plan
-
-Use this shape:
-
-```md
-# <Plan Name>
-
-This is a draft Deliver plan.
-It is not approved for implementation yet.
-
-Draft instruction:
-When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.
-When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.
-
-Please review this before I refine it.
-Tell me what is wrong, missing, or out of order.
-
-## Steps
-
-### 1. <Plain-language phase>
-
-- [ ] <Likely work item, phrased positively.>
-- [ ] <Another current plan item.>
-- [ ] Open question: <Question, risk, or missing fact, only when useful.>
-
-### 2. <Next phase>
-
-- [ ] <Likely work item.>
-```
-
-Keep the draft easy to change and fast to read:
-
-- Use short, concrete sentences. Define any necessary jargon.
-- Use phases and checkboxes from the start, but do not pretend every detail is settled.
-- Use `Open question:` checkboxes only when useful.
-- Keep only the work the user currently wants. Delete removed scope. If a rejected idea must remain to prevent its return, keep one short, positive decision note.
-- Avoid PRD, TDD, task-plan, status-log, audit-log, readiness, and essay headings such as `The Problem`, `Current Best Plan`, `Decisions So Far`, or `Still Unclear`.
-- Keep the exact draft instruction near the top.
-- Update the same `tasks/execution-plan-<plan-key>.md` when discussion changes the plan.
-- Do not refine, implement, or commit from the draft.
-
-When the user asks to refine it, keep the same file and replace the draft instruction with the exact implementation instruction below.
-
 ## Refined Execution Plan
 
 Use this shape:
@@ -87,6 +44,7 @@ Decision notes:
 Keep the refined plan executable and easy to review:
 
 - Use phases and one checkbox level. Do not nest checkboxes.
+- Keep only the work the user currently wants. Delete removed scope. If a rejected idea must remain to prevent its return, keep one short, positive decision note.
 - Add `Context`, a phase `Goal`, or `Decision notes` only when it reduces confusion.
 - Keep `Context` to current facts, constraints, and settled decisions. Do not use it to justify the plan.
 - Turn useful rationale into a decision, constraint, or check. Remove plan-justifying prose.

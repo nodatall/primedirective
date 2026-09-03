@@ -1,4 +1,4 @@
 interface:
   display_name: "Deliver"
   short_description: "Plan and finish work from one clear file"
-  default_prompt: "Use $deliver to make one readable plan, run --deep-research and --pro-analysis when requested, wait for my approval unless I use --fast, then implement, validate, review, archive, commit, and finalize the approved work; use $deliver discuss only when I explicitly want a draft checklist to stay current during discussion."
+  default_prompt: "Use $deliver to make one readable plan, run --deep-research and --pro-analysis when requested, wait for my approval unless I use --fast, then implement, validate, review, archive, commit, and finalize the approved work."

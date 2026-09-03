@@ -658,34 +658,6 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         if token not in deliver:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
-    deliver_draft_tokens = [
-        "Use this only when the user explicitly asks to discuss or keep updating a draft.",
-        "`$deliver discuss` is a legacy alias for this behavior; do not prefer it or present it as a separate workflow.",
-        "For explicit draft discussion, update the same `tasks/execution-plan-<plan-key>.md` as the conversation changes.",
-        "If only `tasks/planning-discussion-<plan-key>.md` exists, import its current in-scope content first.",
-        "Do not refine, implement, or commit from the draft.",
-        "When the user asks to refine it, keep the same file and replace the draft instruction with the exact Deliver implementation instruction.",
-        "A draft that was just refined still needs this separate approval unless the request includes `--fast`.",
-    ]
-    for token in deliver_draft_tokens:
-        if token not in deliver:
-            fail(errors, "PD-DELIVER-DRAFT-MODE", f"skills/deliver/SKILL.md missing draft-mode token: {token}")
-
-    plan_format_draft_tokens = [
-        "Draft instruction:",
-        "When asked to keep discussing or update this doc, load the `$deliver` skill and update this file as the current draft plan.",
-        "When asked to refine this, turn this into a deliver plan, or make the plan, load the `$deliver` skill, keep this same checklist file, replace this instruction with the Deliver implementation instruction, refine the plan, and ask for review before implementation.",
-        "Please review this before I refine it.",
-        "Use phases and checkboxes from the start, but do not pretend every detail is settled.",
-        "Keep only the work the user currently wants. Delete removed scope.",
-        "Use `Open question:` checkboxes only when useful.",
-        "Avoid PRD, TDD, task-plan, status-log, audit-log, readiness, and essay headings",
-        "Do not refine, implement, or commit from the draft.",
-    ]
-    for token in plan_format_draft_tokens:
-        if token not in plan_format:
-            fail(errors, "PD-DELIVER-DRAFT-MODE", f"skills/deliver/references/plan-format.md missing draft-mode token: {token}")
-
     deliver_refined_tokens = [
         "For normal planning, create or reuse the canonical execution plan and include `Deliver implementation instruction:` near the top.",
         "Keep the main plan high-level and readable.",
@@ -699,6 +671,7 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
 
     plan_format_tokens = [
         "Do not put planning work inside a refined execution plan.",
+        "Keep only the work the user currently wants. Delete removed scope.",
         "Record the chosen contract, shape, policy, acceptance criteria, and any remaining explicit `Open question:` before implementation.",
         "Do not disguise missing decisions as work items such as `Define...`, `Decide...`, `Determine...`, `Plan...`, `Figure out...`, or `Clarify...`",
         "If a decision would change implementation, write it as an `Open question:` checkbox and stop for review.",
@@ -871,12 +844,10 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "runs web-backed deep research when requested",
         "asks the user to review the Markdown plan file unless `--fast` is present",
         "For frontend-facing plans, it creates a simple linked HTML mockup before approval",
-        "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
-        "Use bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.",
+        "Use bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.",
         "`--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately",
         "`--deep-research`: run web-backed operator/current-practice research after the readable execution plan exists",
         "`--deep-research --pro-analysis`: run deep research first, apply adopted findings to the execution plan, then run ChatGPT Pro against the researched plan before refinement.",
-        "Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it.",
         "`plan-to-goal` | Use `$plan-to-goal [plan-key=<plan-key>]`",
         "tasks/goal-plan-<plan-key>.md",
         "$deliver --pro-analysis",
@@ -891,7 +862,6 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "run --deep-research and --pro-analysis when requested",
         "wait for my approval unless I use --fast",
         "implement, validate, review, archive, commit, and finalize the approved work",
-        "use $deliver discuss only when I explicitly want a draft checklist to stay current during discussion",
     ]
     for token in deliver_agent_tokens:
         if token not in deliver_agent:

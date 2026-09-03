@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Plan and complete repo work from one readable Markdown execution plan. Supports normal review, draft discussion, `--deep-research`, `--pro-analysis`, and `--fast`; fast skips only the first plan-review pause.
+description: Plan and complete repo work from one readable Markdown execution plan. Supports normal review, `--deep-research`, `--pro-analysis`, and `--fast`; fast skips only the first plan-review pause.
 ---
 
 # Deliver
@@ -34,7 +34,7 @@ The shared references own their detailed rules. Apply their Deliver-only `test_d
 
 ## Commands And Modes
 
-Use Deliver for `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`, and plain-language deliver requests such as `deliver`, `refine it`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
+Use Deliver for `$deliver`, `$deliver refine`, `$deliver plan`, and plain-language deliver requests such as `deliver`, `refine it`, `implement deliver`, `deliver this`, `start deliver`, or `continue deliver`.
 
 Supported modifiers:
 
@@ -46,7 +46,6 @@ The modes are:
 
 - **Normal:** `$deliver`, `$deliver refine`, `$deliver plan`, or an equivalent request creates or reuses `tasks/execution-plan-<plan-key>.md`. Run requested research, Pro analysis, and refinement in the same command. Then ask the user to review the Markdown plan before implementation.
 - **Fast:** `$deliver --fast` follows the same path, treats the refined plan as approved scope, and starts implementation without the first plan-review pause.
-- **Draft discussion:** Use this only when the user explicitly asks to discuss or keep updating a draft. `$deliver discuss` is a legacy alias for this behavior; do not prefer it or present it as a separate workflow.
 
 `$deliver --deep-research` and `$deliver --pro-analysis` use the normal mode with their named gate. Their modifiers may be combined with each other and with `--fast`.
 
@@ -101,8 +100,6 @@ Goal mode creates `tasks/goal-plan-<plan-key>.md` with `Goal`, `Done When`, `Not
 
 Follow `skills/deliver/references/plan-format.md`.
 
-For explicit draft discussion, update the same `tasks/execution-plan-<plan-key>.md` as the conversation changes. If only `tasks/planning-discussion-<plan-key>.md` exists, import its current in-scope content first. Stop after each useful draft update with a short link to the file. Do not refine, implement, or commit from the draft. When the user asks to refine it, keep the same file and replace the draft instruction with the exact Deliver implementation instruction.
-
 For normal planning, create or reuse the canonical execution plan and include `Deliver implementation instruction:` near the top. Treat `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes as source material only. Preserve their concrete in-scope items unless they are duplicates, contradictions, or user-approved removals. Never implement from a tasks-plan, spec, or notes file. A named existing plan such as `tasks/execution-plan-startup-fixes.md` follows the same rule.
 
 Keep the main plan high-level and readable. Detailed files, commands, tests, done conditions, and worker context belong in the active-step packet when that item starts.
@@ -121,7 +118,7 @@ Run at least one refinement round. Use a fresh reviewer subagent by default when
 
 When a round finds a material issue or changes the plan, edit only the plan and run a full post-edit round. Do not create a separate refinement artifact. Stop when a round finds no material backlog issue or after 8 rounds. At the limit, show the exact unresolved blocker and do not implement.
 
-Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review it directly. Ask them to say `implement the doc` when it is right or explain what is wrong, missing, or out of order. Do not launch a review app or external viewer. A draft that was just refined still needs this separate approval unless the request includes `--fast`.
+Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review it directly. Ask them to say `implement the doc` when it is right or explain what is wrong, missing, or out of order. Do not launch a review app or external viewer.
 
 If the user asks for an adversarial plan review, route it through `$review-plan`. It may improve only the plan and must return here without starting implementation.
 

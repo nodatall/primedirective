@@ -78,9 +78,7 @@ Once the user says `implement`, the orchestrator works through the checklist. It
 
 When every checkbox is done, `$deliver` runs final review. That review is also handled through focused subagents: each reviewer gets a targeted review job, reports back, and the orchestrator records the findings. The workflow fixes what should be fixed, validates again, commits the review work, archives the plan artifacts, and performs the finalization checks before handoff.
 
-Use bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, replace any draft instruction with the Deliver implementation instruction, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.
-
-Use `$deliver discuss` only when you want a draft checklist to stay current while you talk through it. `discuss` is a legacy alias for creating or updating the same draft checklist plan. Do not treat it as a separate workflow.
+Use bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.
 
 ### `$clarifier`
 

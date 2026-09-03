@@ -1,18 +1,22 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "inventory_id": "deliver-plain-language-v12-public-contract",
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_state": "working_tree_before_user_wording_review",
-  "behavior_count": 108,
-  "clause_count": 55,
-  "purpose": "Audit map from every public baseline behavior ID to one candidate clause or routed owner. This is metadata, not pass evidence.",
-  "mapping_rule": "Every behavior ID appears in exactly one clause entry. Deliver-owned clauses use a candidate heading plus anchor text. Shared owners are routed from skills/deliver/SKILL.md before the affected decision.",
+  "baseline_behavior_count": 108,
+  "retained_behavior_count": 103,
+  "intentionally_removed_behavior_count": 5,
+  "intentionally_removed_behavior_ids": ["DLV-ACT-005", "DLV-MODE-004", "DLV-PLAN-005", "DLV-PLAN-006", "DLV-STOP-008"],
+  "intentional_change_note": "During wording review, the user explicitly removed the draft-discussion mode and its legacy $deliver discuss alias. These five draft-only baseline behaviors are intentionally absent from the candidate.",
+  "clause_count": 53,
+  "purpose": "Audit map from every retained public baseline behavior ID to one candidate clause or routed owner, while recording user-approved removals. This is metadata, not pass evidence.",
+  "mapping_rule": "Every retained behavior ID appears in exactly one clause entry. Intentionally removed IDs appear only in intentionally_removed_behavior_ids. Deliver-owned clauses use a candidate heading plus anchor text. Shared owners are routed from skills/deliver/SKILL.md before the affected decision.",
   "clauses": [
     {
       "clause_id": "commands.activation",
       "path": "skills/deliver/SKILL.md",
       "section": "Commands And Modes",
-      "anchor": "Use Deliver for `$deliver`, `$deliver refine`, `$deliver plan`, legacy `$deliver discuss`",
+      "anchor": "Use Deliver for `$deliver`, `$deliver refine`, `$deliver plan`, and plain-language deliver requests",
       "behavior_ids": ["DLV-ACT-001", "DLV-ACT-002"]
     },
     {
@@ -28,13 +32,6 @@
       "section": "Commands And Modes",
       "anchor": "A document with `Deliver implementation instruction:` routes back to Deliver.",
       "behavior_ids": ["DLV-ACT-004"]
-    },
-    {
-      "clause_id": "commands.draft-discussion",
-      "path": "skills/deliver/SKILL.md",
-      "section": "Commands And Modes; Create Or Update The Plan",
-      "anchor": "For explicit draft discussion, update the same `tasks/execution-plan-<plan-key>.md` as the conversation changes.",
-      "behavior_ids": ["DLV-ACT-005", "DLV-MODE-004", "DLV-STOP-008"]
     },
     {
       "clause_id": "workflow.order",
@@ -103,20 +100,12 @@
       "behavior_ids": ["DLV-PLAN-002", "DLV-PLAN-003", "DLV-PLAN-004", "DLV-PLAN-010"]
     },
     {
-      "clause_id": "plan-format.draft",
-      "path": "skills/deliver/references/plan-format.md",
-      "section": "Draft Plan",
-      "anchor": "## Draft Plan",
-      "routed_from": "skills/deliver/SKILL.md#Load The Right References",
-      "behavior_ids": ["DLV-PLAN-005", "DLV-PLAN-006", "DLV-PLAN-007"]
-    },
-    {
       "clause_id": "plan-format.refined",
       "path": "skills/deliver/references/plan-format.md",
       "section": "Refined Execution Plan",
       "anchor": "## Refined Execution Plan",
       "routed_from": "skills/deliver/SKILL.md#Load The Right References",
-      "behavior_ids": ["DLV-PLAN-008", "DLV-PLAN-009", "DLV-PLAN-011"]
+      "behavior_ids": ["DLV-PLAN-007", "DLV-PLAN-008", "DLV-PLAN-009", "DLV-PLAN-011"]
     },
     {
       "clause_id": "plan-format.frontend",

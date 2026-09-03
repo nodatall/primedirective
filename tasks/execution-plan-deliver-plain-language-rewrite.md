@@ -1,6 +1,6 @@
 # Rewrite Deliver In Plain Language
 
-Goal: Make the Deliver skill much easier for people and agents to understand without weakening or changing its behavior.
+Goal: Make the Deliver skill much easier for people and agents to understand while preserving its behavior except for removals the user explicitly approves during wording review.
 
 Please review this before I start.
 Tell me what is wrong, missing, or out of order.
@@ -11,7 +11,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 ## Context
 
 - Exact baseline: the Deliver contract package at commit `021ac29`.
-- This is a wording and structure rewrite. It must not add, remove, or weaken behavior.
+- This is a wording and structure rewrite. Preserve existing behavior except for the user-approved removal of draft-discussion mode and its legacy `$deliver discuss` alias.
 - The rewrite may shorten `skills/deliver/SKILL.md` by removing repetition and moving conditional detail into the Deliver references that already own it.
 - The existing v11 result remains preserved. The new comparison uses fresh baseline and candidate runs; it does not reuse v11 outputs.
 - Use fresh `gpt-5.6-sol` agents at `xhigh` reasoning for refinement, both eval arms, and all judges.
@@ -46,10 +46,15 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Rewrite the Deliver-owned plan, worker-packet, and rereview-scope references in plain language where they remain necessary; remove duplicate wording instead of moving the same repetition between files.
 - [x] Keep all command names, paths, enum values, schema versions, modifiers, completion-stamp fields, and other machine-facing tokens unchanged. Wording-only edits may update validator mirrors, but must not change the underlying token or accepted behavior.
 - [x] Follow the skill-creator metadata contract and read its `openai_yaml` reference before editing `skills/deliver/agents/openai.yaml`. Preserve invocation policy and unrelated fields; change only interface wording and required behavior-equivalent validator mirrors. Include the file in candidate and readability packages.
-- [x] Using only the public contract inventory, map every baseline behavior ID to one clear candidate clause or an unchanged owner reference that Deliver routes to before the first affected decision. Reject the rewrite if any behavior is missing, duplicated with conflicting wording, or expanded beyond the baseline.
+- [x] Using only the public contract inventory, map every retained baseline behavior ID to one clear candidate clause or an unchanged owner reference that Deliver routes to before the first affected decision. Record user-approved removals separately. Reject any other missing, duplicated, conflicting, or expanded behavior.
 - [x] Treat shorter word count and fewer long sentences as useful measurements, not hard targets. Prefer the simplest correct wording over a forced line limit.
 - [x] Run validation and independent forward checks using canaries that are not part of the official comparison. Do not expose official case prompts, hidden answers, judge feedback, or official results before candidate freeze.
 - [ ] Pause for the user's wording review. After wording feedback changes the candidate, rerun the behavior map, validation, and disjoint canaries before freezing it.
+
+### 3.5. Re-freeze the comparison for the approved removal
+
+- [ ] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. Treat the five public draft-only behavior IDs recorded in the candidate behavior map as an approved removal, require their absence, and preserve hard non-regression for every retained behavior.
+- [ ] Repeat independent evaluator review and trusted-host isolation before running either official arm. Do not reuse the frozen v12.22 result as the final comparison.
 
 ### 4. Run the frozen comparison
 

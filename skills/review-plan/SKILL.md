@@ -108,7 +108,6 @@ Inspect `git status --short` before editing:
    - If the user is approving proposed fixes from a prior `--approval-gate` run, load the existing review log first, verify it targets the same execution plan, verify the current plan has not materially changed since the proposals, then apply still-valid proposed fixes or rerun the review against the current plan.
 3. Confirm the plan is a Deliver execution plan.
    - It should carry the Deliver implementation instruction or clearly be the active readable `$deliver` execution plan.
-   - If it is a draft discussion plan, stop and ask the user to refine it through `$deliver` first.
    - If it is a legacy PRD/TDD/tasks-plan artifact or a goal plan, stop and route to the owning skill instead of converting it here.
 4. Set the effective max round count to `8`.
 5. For each round from 1 through 8:
