@@ -25,7 +25,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - User-approved removed public behaviors: 5
 - Invalidated evaluator: `deliver-plain-language-v12.23`; rejected because its combine step accepted unbound lane-verdict objects.
 - Invalidated evaluator: `deliver-plain-language-v12.24`; rejected because caller-provided roots and pass booleans could authenticate themselves and aggregation could downgrade regression to neutral.
-- Evaluator source and author-ready commits: `58eb3175d3c1c5265ec1fe80caecbc49049e3556` and `d4ece62f4e0f5839d39f2fc9785f303e6c66a815`
+- Evaluator source and author-ready commits: `5788e647ba87258b791eb3768c4db86a2b0413f0` and `9f17b8da909eaa63afa9bfc1ed14689b7b30cfc4`
 - Public adapter SHA-256: `6adf7820863ade48987f5d07ca23b2d98761236127b4e18e479418992d77f1af`; author-ready state is bound in the public readiness file
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
