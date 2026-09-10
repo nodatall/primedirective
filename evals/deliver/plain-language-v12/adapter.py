@@ -33,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 20
-ORACLE_VERSION = "deliver-plain-language-v12.23"
+READINESS_SCHEMA_VERSION = 21
+ORACLE_VERSION = "deliver-plain-language-v12.24"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -99,6 +99,8 @@ REQUIRED_READINESS_PASS_FIELDS = (
     "public_adapter_deterministic_integration_status",
     "comparison_runtime_author_validation_status",
     "comparison_runtime_review_status",
+    "durable_comparison_lifecycle_author_status",
+    "durable_comparison_lifecycle_independent_review_status",
     "isolation_probe_status",
 )
 INDEPENDENT_RESULT_KIND = "orchestrator_observed_agent_result_not_signature"
@@ -150,6 +152,9 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "answer_free_selector_diagnostic_maximum_recovery_count",
     "hidden_material_noninterference_control_count", "runtime_positive_test_count",
     "runtime_negative_test_count", "fresh_judge_allocation_count",
+    "durable_lifecycle_positive_control_count",
+    "lifecycle_order_tamper_negative_control_count",
+    "unbound_verdict_shape_negative_control_count",
     "judge_packet_schema_control_count", "discarded_channel_reachability_control_count",
     "clean_content_preservation_control_count", "rationale_discarded_before_judge_input",
     "rationale_affects_deterministic_score", "rationale_affects_combined_verdict",
@@ -162,6 +167,8 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "arm_projection_status", "byte_identical_arm_packet_status",
     "public_adapter_deterministic_integration_status",
     "comparison_runtime_author_validation_status", "comparison_runtime_review_status",
+    "durable_comparison_lifecycle_author_status",
+    "durable_comparison_lifecycle_independent_review_status",
     "isolation_probe_status", "live_model_feasibility_status", "live_model_execution_performed",
     "deterministic_controls_are_live_arm_execution",
     "deterministic_controls_are_judge_verdict_evidence",
@@ -665,7 +672,8 @@ def validate_candidate_behavior_map(inventory: dict[str, Any]) -> tuple[list[str
     removed = mapping.get("intentionally_removed_behavior_ids") if isinstance(mapping, dict) else None
     clauses = mapping.get("clauses") if isinstance(mapping, dict) else None
     if (
-        mapping.get("schema_version") != 3
+        mapping.get("schema_version") != 4
+        or mapping.get("oracle_version") != ORACLE_VERSION
         or mapping.get("inventory_id") != inventory.get("inventory_id")
         or mapping.get("baseline_commit") != inventory.get("baseline_commit")
         or mapping.get("candidate_state") != "approved_candidate_commit"
@@ -864,6 +872,15 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or readiness.get("deterministic_controls_are_judge_verdict_evidence") is not False
     ):
         raise AdapterError("oracle readiness overstates deterministic control evidence")
+    if (
+        type(readiness.get("durable_lifecycle_positive_control_count")) is not int
+        or readiness.get("durable_lifecycle_positive_control_count") < 1
+        or type(readiness.get("lifecycle_order_tamper_negative_control_count")) is not int
+        or readiness.get("lifecycle_order_tamper_negative_control_count") < 1
+        or type(readiness.get("unbound_verdict_shape_negative_control_count")) is not int
+        or readiness.get("unbound_verdict_shape_negative_control_count") != 1
+    ):
+        raise AdapterError("oracle readiness durable comparison lifecycle controls are incomplete")
     if (
         readiness.get("judge_packet_structural_blinding_author_status") != "pass"
         or type(readiness.get("judge_packet_schema_control_count")) is not int

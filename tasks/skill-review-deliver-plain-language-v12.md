@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
-- Evaluator version: `deliver-plain-language-v12.23`
+- Evaluator version: `deliver-plain-language-v12.24`
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -23,10 +23,9 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Candidate package authority digest: `c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae`
 - Retained public behaviors: 103
 - User-approved removed public behaviors: 5
-- Evaluator source commit: `7290bc03e17bd3160bc2ceb981c3e808f60263b9`
-- Evaluator author-ready commit: `2c2b347b081232a93e24dd6a85a30c4a596ff6da`
-- Public adapter SHA-256: `8c81b54bbc94a3d5c746a82f981885a9538aa66a1e1786bca97ac195639be85b`
-- Author-ready state SHA-256: `0f3569beb63645b658cb2d27bbb3d8fe1c7c249229be373cb5cf1f8a2ea6e49c`
+- Invalidated evaluator: `deliver-plain-language-v12.23`; rejected because its combine step accepted unbound lane-verdict objects.
+- Evaluator source and author-ready commits: pending v12.24 author freeze
+- Public adapter and author-ready-state SHA-256: pending v12.24 author freeze
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
 ## Public Controller Status
@@ -36,7 +35,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.
-- [x] Private evaluator reaches its author-ready state; independent review and trusted-host isolation remain pending.
+- [ ] Private evaluator reaches its author-ready state with a write-once, fully bound comparison lifecycle; independent review and trusted-host isolation remain pending.
 - [x] Approved candidate package is committed and bound to its exact public manifest.
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.

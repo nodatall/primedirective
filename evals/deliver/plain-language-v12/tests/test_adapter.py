@@ -173,11 +173,16 @@ class AdapterTests(unittest.TestCase):
             "public_adapter_deterministic_integration_status": "pass",
             "comparison_runtime_author_validation_status": "pass",
             "comparison_runtime_review_status": "pass",
+            "durable_comparison_lifecycle_author_status": "pass",
+            "durable_comparison_lifecycle_independent_review_status": "pass",
             "isolation_probe_status": "pass",
             "live_model_feasibility_status": "pending_official_execution",
             "live_model_execution_performed": False,
             "deterministic_controls_are_live_arm_execution": False,
             "deterministic_controls_are_judge_verdict_evidence": False,
+            "durable_lifecycle_positive_control_count": 1,
+            "lifecycle_order_tamper_negative_control_count": 12,
+            "unbound_verdict_shape_negative_control_count": 1,
             "judge_packet_schema_control_count": 12,
             "discarded_channel_reachability_control_count": 8,
             "clean_content_preservation_control_count": 3,
@@ -383,6 +388,29 @@ class AdapterTests(unittest.TestCase):
                         mock.patch.object(adapter, "READINESS_PATH", self.readiness),
                         mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
                         self.assertRaisesRegex(adapter.AdapterError, "structural judge blinding"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_requires_durable_bound_comparison_lifecycle_controls(self) -> None:
+        cases = (
+            ("durable_lifecycle_positive_control_count", 0),
+            ("lifecycle_order_tamper_negative_control_count", 0),
+            ("unbound_verdict_shape_negative_control_count", 0),
+            ("unbound_verdict_shape_negative_control_count", 2),
+        )
+        for field, value in cases:
+            with self.subTest(field=field, value=value):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "durable comparison lifecycle"),
                     ):
                         adapter.validate_readiness(self.packet, self.schema)
                 finally:
