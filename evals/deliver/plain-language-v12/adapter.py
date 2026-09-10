@@ -33,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 22
-ORACLE_VERSION = "deliver-plain-language-v12.25"
+READINESS_SCHEMA_VERSION = 23
+ORACLE_VERSION = "deliver-plain-language-v12.26"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -105,6 +105,8 @@ REQUIRED_READINESS_PASS_FIELDS = (
     "durable_comparison_lifecycle_independent_review_status",
     "trusted_root_author_status",
     "trusted_root_independent_review_status",
+    "sealed_artifact_derivation_author_status",
+    "sealed_artifact_derivation_independent_review_status",
     "isolation_probe_status",
 )
 INDEPENDENT_RESULT_KIND = "orchestrator_observed_agent_result_not_signature"
@@ -164,6 +166,9 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "trusted_root_positive_control_count", "trusted_root_negative_control_count",
     "gate_recomputation_negative_control_count", "lane_schema_negative_control_count",
     "comparability_negative_control_count", "aggregation_negative_control_count",
+    "sealed_artifact_packet_positive_control_count",
+    "caller_payload_rejection_negative_control_count",
+    "artifact_transitive_binding_negative_control_count",
     "judge_packet_schema_control_count", "discarded_channel_reachability_control_count",
     "clean_content_preservation_control_count", "rationale_discarded_before_judge_input",
     "rationale_affects_deterministic_score", "rationale_affects_combined_verdict",
@@ -179,6 +184,8 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "durable_comparison_lifecycle_author_status",
     "durable_comparison_lifecycle_independent_review_status",
     "trusted_root_author_status", "trusted_root_independent_review_status",
+    "sealed_artifact_derivation_author_status",
+    "sealed_artifact_derivation_independent_review_status",
     "isolation_probe_status", "live_model_feasibility_status", "live_model_execution_performed",
     "deterministic_controls_are_live_arm_execution",
     "deterministic_controls_are_judge_verdict_evidence",
@@ -682,7 +689,7 @@ def validate_candidate_behavior_map(inventory: dict[str, Any]) -> tuple[list[str
     removed = mapping.get("intentionally_removed_behavior_ids") if isinstance(mapping, dict) else None
     clauses = mapping.get("clauses") if isinstance(mapping, dict) else None
     if (
-        mapping.get("schema_version") != 5
+        mapping.get("schema_version") != 6
         or mapping.get("oracle_version") != ORACLE_VERSION
         or mapping.get("inventory_id") != inventory.get("inventory_id")
         or mapping.get("baseline_commit") != inventory.get("baseline_commit")
@@ -923,6 +930,9 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         "trusted_root_positive_control_count", "trusted_root_negative_control_count",
         "gate_recomputation_negative_control_count", "lane_schema_negative_control_count",
         "comparability_negative_control_count", "aggregation_negative_control_count",
+        "sealed_artifact_packet_positive_control_count",
+        "caller_payload_rejection_negative_control_count",
+        "artifact_transitive_binding_negative_control_count",
     ):
         if type(readiness.get(field)) is not int or readiness[field] < 1:
             raise AdapterError("oracle readiness trusted-root and recomputation controls are incomplete")

@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
-- Evaluator version: `deliver-plain-language-v12.25`
+- Evaluator version: `deliver-plain-language-v12.26`
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -25,8 +25,9 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - User-approved removed public behaviors: 5
 - Invalidated evaluator: `deliver-plain-language-v12.23`; rejected because its combine step accepted unbound lane-verdict objects.
 - Invalidated evaluator: `deliver-plain-language-v12.24`; rejected because caller-provided roots and pass booleans could authenticate themselves and aggregation could downgrade regression to neutral.
-- Evaluator source and author-ready commits: `b474f327dc00e7f910e81ea07a9ddc21205c2b59` and `de93eaf4f8defdcf69035ddbecccedd117febc2b`
-- Public adapter SHA-256: `6adf7820863ade48987f5d07ca23b2d98761236127b4e18e479418992d77f1af`; author-ready state is bound in the public readiness file
+- Invalidated evaluator: `deliver-plain-language-v12.25`; rejected because packet freezing accepted caller-authored lane payloads and attached verified provenance without deriving those bytes from sealed-arm artifacts.
+- Evaluator source and author-ready commits: pending v12.26 author freeze
+- Public adapter and author-ready-state SHA-256: pending v12.26 author freeze
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
@@ -37,7 +38,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.
-- [x] Private evaluator reaches its author-ready state with verified trust roots, recomputed hard gates, exact lane schemas, and a write-once comparison lifecycle; independent review and trusted-host isolation remain pending.
+- [ ] Private evaluator reaches its author-ready state with sealed-artifact-derived packets, verified trust roots, recomputed hard gates, exact lane schemas, and a write-once comparison lifecycle; independent review and trusted-host isolation remain pending.
 - [x] Approved candidate package is committed and bound to its exact public manifest.
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.

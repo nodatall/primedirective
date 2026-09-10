@@ -1,6 +1,6 @@
 {
-  "schema_version": 5,
-  "oracle_version": "deliver-plain-language-v12.25",
+  "schema_version": 6,
+  "oracle_version": "deliver-plain-language-v12.26",
   "inventory_id": "deliver-plain-language-v12-public-contract",
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_state": "approved_candidate_commit",
