@@ -49,7 +49,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 - [x] Using only the public contract inventory, map every retained baseline behavior ID to one clear candidate clause or an unchanged owner reference that Deliver routes to before the first affected decision. Record user-approved removals separately. Reject any other missing, duplicated, conflicting, or expanded behavior.
 - [x] Treat shorter word count and fewer long sentences as useful measurements, not hard targets. Prefer the simplest correct wording over a forced line limit.
 - [x] Run validation and independent forward checks using canaries that are not part of the official comparison. Do not expose official case prompts, hidden answers, judge feedback, or official results before candidate freeze.
-- [ ] Pause for the user's wording review. After wording feedback changes the candidate, rerun the behavior map, validation, and disjoint canaries before freezing it.
+- [x] Pause for the user's wording review. The user approved the wording on 2026-09-10 after removing draft-discussion mode and its legacy alias. The updated behavior map, validation, and disjoint canary all passed before candidate freeze at `23b3d4e`.
 
 ### 3.5. Re-freeze the comparison for the approved removal
 
