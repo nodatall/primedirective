@@ -24,16 +24,21 @@ class AdapterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.scratch = Path(tempfile.mkdtemp(prefix="deliver-v12-adapter-tests-", dir="/private/tmp"))
-        cls.authority = adapter.BASELINE_MANIFEST_PATH
-        manifest = json.loads(cls.authority.read_text(encoding="utf-8"))
+        cls.baseline_authority = adapter.BASELINE_MANIFEST_PATH
+        cls.candidate_authority = adapter.CANDIDATE_MANIFEST_PATH
         cls.packages: list[Path] = []
-        for label in ("baseline", "candidate"):
+        for label, authority in (
+            ("baseline", cls.baseline_authority),
+            ("candidate", cls.candidate_authority),
+        ):
+            manifest = json.loads(authority.read_text(encoding="utf-8"))
+            source_commit = adapter.source_commit_from_manifest(manifest)
             root = cls.scratch / label
             for entry in manifest["files"]:
                 path = root / entry["path"]
                 path.parent.mkdir(parents=True, exist_ok=True)
                 result = subprocess.run(
-                    ["git", "show", f"{manifest['baseline_commit']}:{entry['path']}"],
+                    ["git", "show", f"{source_commit}:{entry['path']}"],
                     cwd=REPO_ROOT, check=True, capture_output=True,
                 )
                 path.write_bytes(result.stdout)
@@ -78,10 +83,17 @@ class AdapterTests(unittest.TestCase):
         self.labels.write_text('{"opaque":"mapping"}\n', encoding="utf-8")
         self.readiness = self.inputs / "readiness.json"
         baseline_authority = json.loads(adapter.BASELINE_MANIFEST_PATH.read_text(encoding="utf-8"))
+        candidate_authority = json.loads(
+            adapter.CANDIDATE_MANIFEST_PATH.read_text(encoding="utf-8")
+        )
         inventory = json.loads(adapter.INVENTORY_PATH.read_text(encoding="utf-8"))
         behavior_ids = [item["behavior_id"] for item in inventory["behaviors"]]
+        retained_behavior_ids, removed_behavior_ids = adapter.validate_candidate_behavior_map(
+            inventory
+        )
+        case_count = len(retained_behavior_ids) + len(removed_behavior_ids)
         self.schema_document["per_arm_response_schema"] = adapter.expected_response_schema(
-            self.schema_document, len(behavior_ids)
+            self.schema_document, case_count
         )
         self.schema.write_text(json.dumps(self.schema_document) + "\n", encoding="utf-8")
         self.readiness_document = {
@@ -108,26 +120,42 @@ class AdapterTests(unittest.TestCase):
             "baseline_package_manifest_sha256": adapter.sha256_file(adapter.BASELINE_MANIFEST_PATH),
             "baseline_package_content_manifest_sha256": baseline_authority["manifest_sha256"],
             "baseline_commit": baseline_authority["baseline_commit"],
+            "candidate_package_manifest_sha256": adapter.sha256_file(
+                adapter.CANDIDATE_MANIFEST_PATH
+            ),
+            "candidate_package_content_manifest_sha256": candidate_authority[
+                "manifest_sha256"
+            ],
+            "candidate_behavior_map_sha256": adapter.sha256_file(
+                adapter.CANDIDATE_BEHAVIOR_MAP_PATH
+            ),
+            "candidate_commit": candidate_authority["candidate_commit"],
             "private_projected_packet_sha256": adapter.sha256_file(self.packet),
             "per_arm_response_schema_sha256": adapter.sha256_file(self.schema),
             "projected_packet_bytes": self.packet.stat().st_size,
             "projected_packet_lexical_word_count": adapter.lexical_word_count(
                 self.packet.read_text(encoding="utf-8")
             ),
-            "case_count": len(behavior_ids),
-            "single_behavior_case_count": len(behavior_ids),
+            "case_count": case_count,
+            "single_behavior_case_count": case_count,
             "multi_behavior_case_count": 0,
             "previous_oracle_case_reuse_count": 0,
-            "behavior_id_count": len(behavior_ids),
-            "covered_behavior_ids": behavior_ids,
-            "assertion_count": len(behavior_ids),
-            "hard_scored_field_instance_count": len(behavior_ids) * 5,
-            "hidden_comprehension_behavior_count": len(behavior_ids),
+            "previous_oracle_case_digest_overlap_count": 0,
+            "baseline_behavior_id_count": len(behavior_ids),
+            "behavior_id_count": len(retained_behavior_ids),
+            "covered_behavior_ids": retained_behavior_ids,
+            "approved_removal_behavior_count": len(removed_behavior_ids),
+            "approved_removed_behavior_ids": removed_behavior_ids,
+            "removal_absence_assertion_count": len(removed_behavior_ids),
+            "removal_absence_static_control_count": 4,
+            "assertion_count": case_count,
+            "hard_scored_field_instance_count": case_count * 5,
+            "hidden_comprehension_behavior_count": len(retained_behavior_ids),
             "full_behavior_lane_gate_count": 0,
             "static_credit_behavior_count": 0,
             "proportionality": {"safe_grouping_review_status": "pass"},
             "coverage_credit_policy": {
-                "hidden_deterministic_comprehension_assertions": len(behavior_ids),
+                "hidden_deterministic_comprehension_assertions": case_count,
                 "full_behavior_lane_gates": 0,
                 "static_owner_or_route_proofs": 0,
                 "unchanged_owner_bytes_or_route_text_can_earn_credit": False,
@@ -187,8 +215,8 @@ class AdapterTests(unittest.TestCase):
         ):
             result = adapter.initialize_runtime(
                 Path("/private/tmp"), self.packet, self.schema,
-                self.packages[0], self.packages[1], self.authority, self.labels,
-                self.authority,
+                self.packages[0], self.packages[1], self.candidate_authority, self.labels,
+                self.baseline_authority,
             )
         runtime = Path(result["runtime_root"])
         self.runtimes.append(runtime)
@@ -289,6 +317,19 @@ class AdapterTests(unittest.TestCase):
         manifest = adapter.verify_v11_files()
         self.assertEqual(manifest["baseline_commit"], "021ac29eab5b28afc2222e16944c540dfd8362e9")
         self.assertEqual(len(manifest["files"]), 41)
+
+    def test_candidate_map_binds_exact_approved_removal(self) -> None:
+        inventory = json.loads(adapter.INVENTORY_PATH.read_text(encoding="utf-8"))
+        retained, removed = adapter.validate_candidate_behavior_map(inventory)
+        self.assertEqual(len(retained), 103)
+        self.assertEqual(
+            removed,
+            [
+                "DLV-ACT-005", "DLV-MODE-004", "DLV-PLAN-005", "DLV-PLAN-006",
+                "DLV-STOP-008",
+            ],
+        )
+        self.assertFalse(set(retained) & set(removed))
 
     def test_initialize_creates_identity_and_binds_exact_packages(self) -> None:
         result, state_path = self.initialize()
@@ -458,6 +499,9 @@ class AdapterTests(unittest.TestCase):
             ("public_adapter_identifier", "wrong", "public controller"),
             ("public_adapter_sha256", "0" * 64, "public controller"),
             ("public_execution_policy_sha256", "0" * 64, "public controller"),
+            ("candidate_behavior_map_sha256", "0" * 64, "candidate"),
+            ("candidate_package_manifest_sha256", "0" * 64, "candidate"),
+            ("candidate_commit", "0" * 40, "candidate"),
         )
         for field, value, message in cases:
             with self.subTest(field=field):
@@ -499,6 +543,9 @@ class AdapterTests(unittest.TestCase):
     def test_readiness_top_level_coverage_counts_match_direct_policy(self) -> None:
         cases = (
             ("hidden_comprehension_behavior_count", 0),
+            ("approved_removal_behavior_count", 0),
+            ("removal_absence_assertion_count", 0),
+            ("removal_absence_static_control_count", 0),
             ("full_behavior_lane_gate_count", 108),
             ("static_credit_behavior_count", 108),
             ("static_credit_behavior_count", False),
@@ -522,10 +569,13 @@ class AdapterTests(unittest.TestCase):
     def test_readiness_rejects_coordinated_counts_that_do_not_match_inventory(self) -> None:
         fields = (
             "behavior_id_count",
+            "baseline_behavior_id_count",
             "case_count",
             "single_behavior_case_count",
             "assertion_count",
             "hidden_comprehension_behavior_count",
+            "approved_removal_behavior_count",
+            "removal_absence_assertion_count",
         )
         for field in fields:
             self.readiness_document[field] = 1

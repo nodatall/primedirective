@@ -1,8 +1,10 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "inventory_id": "deliver-plain-language-v12-public-contract",
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
-  "candidate_state": "working_tree_before_user_wording_review",
+  "candidate_state": "approved_candidate_commit",
+  "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
+  "user_wording_approval_status": "approved",
   "baseline_behavior_count": 108,
   "retained_behavior_count": 103,
   "intentionally_removed_behavior_count": 5,

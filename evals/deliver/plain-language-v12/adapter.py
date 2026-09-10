@@ -33,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 19
-ORACLE_VERSION = "deliver-plain-language-v12.22"
+READINESS_SCHEMA_VERSION = 20
+ORACLE_VERSION = "deliver-plain-language-v12.23"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -43,7 +43,9 @@ POLICY_PATH = V12_ROOT / "execution-policy.json"
 READINESS_PATH = V12_ROOT / "oracle-readiness.json"
 VOCABULARY_PATH = V12_ROOT / "comprehension-vocabulary.json"
 BASELINE_MANIFEST_PATH = V12_ROOT / "baseline-package-manifest.json"
+CANDIDATE_MANIFEST_PATH = V12_ROOT / "candidate-package-manifest.json"
 INVENTORY_PATH = V12_ROOT / "public-contract-inventory.json"
+CANDIDATE_BEHAVIOR_MAP_PATH = V12_ROOT / "candidate-behavior-map.json"
 V11_MANIFEST_PATH = V12_ROOT / "v11-file-manifest.json"
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
@@ -125,6 +127,8 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "public_adapter_sha256", "public_execution_policy_path", "public_execution_policy_sha256",
     "public_contract_inventory_sha256", "baseline_package_manifest_sha256",
     "baseline_package_content_manifest_sha256", "baseline_commit",
+    "candidate_package_manifest_sha256", "candidate_package_content_manifest_sha256",
+    "candidate_behavior_map_sha256", "candidate_commit",
     "private_evaluator_source_commit", "private_evaluator_commit",
     "independent_review_result_kind", "private_independent_reviewed_source_commit",
     "private_independent_reviewed_final_commit", "trusted_host_isolation_result_kind",
@@ -134,7 +138,10 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "projected_packet_bytes", "projected_packet_lexical_word_count",
     "expected_per_arm_output_bytes", "context_margin_tokens",
     "case_count", "single_behavior_case_count", "multi_behavior_case_count",
-    "previous_oracle_case_reuse_count", "behavior_id_count", "covered_behavior_ids",
+    "previous_oracle_case_reuse_count", "previous_oracle_case_digest_overlap_count",
+    "baseline_behavior_id_count", "behavior_id_count", "covered_behavior_ids",
+    "approved_removal_behavior_count", "approved_removed_behavior_ids",
+    "removal_absence_assertion_count", "removal_absence_static_control_count",
     "assertion_count", "hard_scored_field_instance_count", "clause_obligation_count",
     "hidden_comprehension_behavior_count", "full_behavior_lane_gate_count",
     "static_credit_behavior_count", "accepted_equivalent_value_count",
@@ -652,10 +659,52 @@ def scoped_package_manifest(full: dict[str, Any], scope: str, paths: list[str]) 
     return document
 
 
+def validate_candidate_behavior_map(inventory: dict[str, Any]) -> tuple[list[str], list[str]]:
+    mapping = load_json(CANDIDATE_BEHAVIOR_MAP_PATH, "candidate behavior map")
+    all_behavior_ids = [item["behavior_id"] for item in inventory["behaviors"]]
+    removed = mapping.get("intentionally_removed_behavior_ids") if isinstance(mapping, dict) else None
+    clauses = mapping.get("clauses") if isinstance(mapping, dict) else None
+    if (
+        mapping.get("schema_version") != 3
+        or mapping.get("inventory_id") != inventory.get("inventory_id")
+        or mapping.get("baseline_commit") != inventory.get("baseline_commit")
+        or mapping.get("candidate_state") != "approved_candidate_commit"
+        or mapping.get("candidate_commit")
+        != "23b3d4e38b30f882c4a6f20f293b73f701138e3b"
+        or mapping.get("user_wording_approval_status") != "approved"
+        or mapping.get("baseline_behavior_count") != len(all_behavior_ids)
+        or not isinstance(removed, list)
+        or removed != [
+            "DLV-ACT-005", "DLV-MODE-004", "DLV-PLAN-005", "DLV-PLAN-006",
+            "DLV-STOP-008",
+        ]
+        or mapping.get("intentionally_removed_behavior_count") != len(removed)
+        or not isinstance(clauses, list)
+        or mapping.get("clause_count") != len(clauses)
+    ):
+        raise AdapterError("candidate behavior map does not bind the approved removal")
+    mapped: list[str] = []
+    for clause in clauses:
+        behavior_ids = clause.get("behavior_ids") if isinstance(clause, dict) else None
+        if not isinstance(behavior_ids, list) or any(not isinstance(item, str) for item in behavior_ids):
+            raise AdapterError("candidate behavior map clauses are malformed")
+        mapped.extend(behavior_ids)
+    retained = [item for item in all_behavior_ids if item not in set(removed)]
+    if (
+        len(mapped) != len(set(mapped))
+        or set(mapped) != set(retained)
+        or any(item in set(removed) for item in mapped)
+        or mapping.get("retained_behavior_count") != len(retained)
+    ):
+        raise AdapterError("candidate behavior map retained coverage is not exact")
+    return retained, removed
+
+
 def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     readiness = load_json(READINESS_PATH, "oracle readiness")
     vocabulary = load_json(VOCABULARY_PATH, "public response schema")
     baseline_manifest = load_json(BASELINE_MANIFEST_PATH, "baseline package manifest")
+    candidate_manifest = load_json(CANDIDATE_MANIFEST_PATH, "candidate package manifest")
     inventory = load_json(INVENTORY_PATH, "public contract inventory")
     if not isinstance(readiness, dict) or not isinstance(vocabulary, dict):
         raise AdapterError("public readiness artifacts are malformed")
@@ -679,6 +728,7 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or len(expected_behavior_ids) != len(set(expected_behavior_ids))
     ):
         raise AdapterError("public contract inventory behavior IDs are malformed")
+    retained_behavior_ids, removed_behavior_ids = validate_candidate_behavior_map(inventory)
     if (
         readiness.get("schema_version") != READINESS_SCHEMA_VERSION
         or readiness.get("oracle_version") != ORACLE_VERSION
@@ -732,9 +782,15 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         "baseline_package_manifest_sha256": sha256_file(BASELINE_MANIFEST_PATH),
         "baseline_package_content_manifest_sha256": baseline_manifest.get("manifest_sha256"),
         "baseline_commit": baseline_manifest.get("baseline_commit"),
+        "candidate_package_manifest_sha256": sha256_file(CANDIDATE_MANIFEST_PATH),
+        "candidate_package_content_manifest_sha256": candidate_manifest.get("manifest_sha256"),
+        "candidate_behavior_map_sha256": sha256_file(CANDIDATE_BEHAVIOR_MAP_PATH),
+        "candidate_commit": candidate_manifest.get("candidate_commit"),
     }
     if any(readiness.get(key) != value for key, value in public_bindings.items()):
-        raise AdapterError("oracle readiness differs from frozen public controller, inventory, or baseline")
+        raise AdapterError(
+            "oracle readiness differs from frozen public controller, inventory, baseline, or candidate"
+        )
     if not nonzero_hex(readiness.get("public_adapter_introducing_commit"), HEX40, 40):
         raise AdapterError("oracle readiness public adapter commit is missing or malformed")
     if readiness.get("model") != EXPECTED_POLICY["model"] or readiness.get("reasoning") != EXPECTED_POLICY["reasoning"]:
@@ -756,31 +812,45 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or coverage.get("independent_review_status") != "pass"
     ):
         raise AdapterError("oracle readiness nested independent review gate is not passed")
-    behavior_count = len(expected_behavior_ids)
+    baseline_behavior_count = len(expected_behavior_ids)
+    behavior_count = len(retained_behavior_ids)
+    removal_count = len(removed_behavior_ids)
+    case_count = behavior_count + removal_count
     if (
-        type(readiness.get("behavior_id_count")) is not int
+        type(readiness.get("baseline_behavior_id_count")) is not int
+        or readiness.get("baseline_behavior_id_count") != baseline_behavior_count
+        or type(readiness.get("behavior_id_count")) is not int
         or readiness.get("behavior_id_count") != behavior_count
-        or readiness.get("covered_behavior_ids") != expected_behavior_ids
+        or readiness.get("covered_behavior_ids") != retained_behavior_ids
+        or type(readiness.get("approved_removal_behavior_count")) is not int
+        or readiness.get("approved_removal_behavior_count") != removal_count
+        or readiness.get("approved_removed_behavior_ids") != removed_behavior_ids
         or type(readiness.get("case_count")) is not int
-        or readiness.get("case_count") != behavior_count
+        or readiness.get("case_count") != case_count
         or type(readiness.get("single_behavior_case_count")) is not int
-        or readiness.get("single_behavior_case_count") != behavior_count
+        or readiness.get("single_behavior_case_count") != case_count
         or type(readiness.get("multi_behavior_case_count")) is not int
         or readiness.get("multi_behavior_case_count") != 0
         or type(readiness.get("assertion_count")) is not int
-        or readiness.get("assertion_count") != behavior_count
+        or readiness.get("assertion_count") != case_count
         or type(readiness.get("hard_scored_field_instance_count")) is not int
-        or readiness.get("hard_scored_field_instance_count") != behavior_count * 5
+        or readiness.get("hard_scored_field_instance_count") != case_count * 5
         or type(readiness.get("previous_oracle_case_reuse_count")) is not int
         or readiness.get("previous_oracle_case_reuse_count") != 0
+        or type(readiness.get("previous_oracle_case_digest_overlap_count")) is not int
+        or readiness.get("previous_oracle_case_digest_overlap_count") != 0
         or type(readiness.get("hidden_comprehension_behavior_count")) is not int
         or readiness.get("hidden_comprehension_behavior_count") != behavior_count
+        or type(readiness.get("removal_absence_assertion_count")) is not int
+        or readiness.get("removal_absence_assertion_count") != removal_count
+        or type(readiness.get("removal_absence_static_control_count")) is not int
+        or readiness.get("removal_absence_static_control_count") <= 0
         or type(readiness.get("full_behavior_lane_gate_count")) is not int
         or readiness.get("full_behavior_lane_gate_count") != 0
         or type(readiness.get("static_credit_behavior_count")) is not int
         or readiness.get("static_credit_behavior_count") != 0
         or type(coverage.get("hidden_deterministic_comprehension_assertions")) is not int
-        or coverage.get("hidden_deterministic_comprehension_assertions") != behavior_count
+        or coverage.get("hidden_deterministic_comprehension_assertions") != case_count
         or type(coverage.get("full_behavior_lane_gates")) is not int
         or coverage.get("full_behavior_lane_gates") != 0
         or type(coverage.get("static_owner_or_route_proofs")) is not int
@@ -822,7 +892,7 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     ) != lexical_word_count(packet.read_text(encoding="utf-8")):
         raise AdapterError("projected packet size differs from frozen readiness")
     response_schema = vocabulary.get("per_arm_response_schema")
-    if response_schema != expected_response_schema(vocabulary, behavior_count):
+    if response_schema != expected_response_schema(vocabulary, case_count):
         raise AdapterError("public vocabulary response schema differs from the frozen contract")
     return readiness
 
@@ -883,6 +953,12 @@ def initialize_runtime(
         raise AdapterError("v11 composition requires the safe parent /private/tmp")
     require_regular_file(run_label_map, "run label map")
     baseline, baseline_source = verify_package(baseline_package, baseline_manifest, "baseline")
+    require_regular_file(candidate_manifest, "candidate package authority")
+    if (
+        sha256_file(candidate_manifest) != readiness["candidate_package_manifest_sha256"]
+        or candidate_manifest.read_bytes() != CANDIDATE_MANIFEST_PATH.read_bytes()
+    ):
+        raise AdapterError("candidate package authority differs from frozen public manifest")
     candidate, candidate_source = verify_package(candidate_package, candidate_manifest, "candidate")
     run_id = uuid.uuid4().hex
     nonce = secrets.token_hex(32)
@@ -1983,6 +2059,8 @@ def describe() -> dict[str, Any]:
             "readiness": str(READINESS_PATH),
             "response_schema": str(VOCABULARY_PATH),
             "baseline_manifest": str(BASELINE_MANIFEST_PATH),
+            "candidate_manifest": str(CANDIDATE_MANIFEST_PATH),
+            "candidate_behavior_map": str(CANDIDATE_BEHAVIOR_MAP_PATH),
             "public_inventory": str(INVENTORY_PATH),
             "v11_file_manifest": str(V11_MANIFEST_PATH),
         },
@@ -2001,7 +2079,7 @@ def parser() -> argparse.ArgumentParser:
     initialize.add_argument("--baseline-package", type=Path, required=True)
     initialize.add_argument("--baseline-manifest", type=Path, default=BASELINE_MANIFEST_PATH)
     initialize.add_argument("--candidate-package", type=Path, required=True)
-    initialize.add_argument("--candidate-manifest", type=Path, required=True)
+    initialize.add_argument("--candidate-manifest", type=Path, default=CANDIDATE_MANIFEST_PATH)
     initialize.add_argument("--run-label-map", type=Path, required=True)
     for name in ("launch-arm", "poll-arm", "seal-arm"):
         command = commands.add_parser(name)

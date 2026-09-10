@@ -4,8 +4,8 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
-- Candidate: pending approved wording commit and extracted package
-- Evaluator version: `deliver-plain-language-v12.22`
+- Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
+- Evaluator version: `deliver-plain-language-v12.23`
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -19,11 +19,12 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Baseline package source commit: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Baseline package authority digest: `755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5`
 - V11 immutable content-manifest digest: `fc3cb2d9311a9f1def033f582c10a6a0af45fed9fc4cdcbda37dadcffef7b9b2`
-- Candidate package commit, tree, and manifest: pending approved candidate freeze
-- Evaluator source commit: `428062db0ebbe21b51b007919d7ad78751b7e8ad`
-- Evaluator final commit: `287eb9aaee880587fa97c5faad8a94cf76bee758`
-- Adapter file SHA-256: `4ae37cc8357a4eb559c22ef256537ca650b720c93193d975783429d92a1934f2`
-- Ready-state SHA-256: `337e3571790c31b2f6a0e4376cd266bd15b38428564906da086fddeb68b2d2cb`
+- Candidate package commit: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
+- Candidate package authority digest: `c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae`
+- Retained public behaviors: 103
+- User-approved removed public behaviors: 5
+- Evaluator source and final commits: pending v12.23 author freeze
+- Adapter and author-ready-state SHA-256: pending v12.23 author freeze
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
 ## Public Controller Status
@@ -33,8 +34,8 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.
-- [x] Private evaluator readiness reaches its frozen ready state.
-- [ ] Approved candidate package is committed, extracted, and bound.
+- [ ] Private evaluator reaches its author-ready state; independent review and trusted-host isolation remain pending.
+- [x] Approved candidate package is committed and bound to its exact public manifest.
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.
 - [ ] Combined v12 verdict and user wording approval are recorded.
@@ -55,7 +56,7 @@ skill_review_complete: no
 skill_name: deliver
 state_doc: tasks/skill-review-deliver-plain-language-v12.md
 baseline_ref: 021ac29eab5b28afc2222e16944c540dfd8362e9
-candidate_ref: pending
+candidate_ref: 23b3d4e38b30f882c4a6f20f293b73f701138e3b
 scenario: deliver-plain-language-v12
 baseline_run_complete: no
 candidate_run_complete: no
@@ -65,4 +66,4 @@ judge_blinded: no
 verdict: inconclusive
 artifact_evidence_preserved: no
 ready_for_merge_review: no
-stop_reason: missing_candidate
+stop_reason: missing_judge

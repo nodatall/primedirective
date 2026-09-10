@@ -1,6 +1,6 @@
 {
-  "schema_version": 19,
-  "oracle_version": "deliver-plain-language-v12.22",
+  "schema_version": 20,
+  "oracle_version": "deliver-plain-language-v12.23",
   "description": "Public no-choice structured comprehension vocabulary and response schema.",
   "set_semantics": "All four array fields are unordered unique atomic sets. Empty sets are allowed only when the case requires no atom in that field.",
   "global_vocabulary": {
@@ -148,6 +148,10 @@
       {
         "code": "NX-F707BF",
         "operational_meaning": "Retain the currently checked-out non-base revision line."
+      },
+      {
+        "code": "NX-22CF3A",
+        "operational_meaning": "Do not enter or preserve retired draft-discussion behavior; continue through a currently supported planning or execution route."
       }
     ],
     "required_artifact": [
@@ -194,6 +198,10 @@
       {
         "code": "AR-FAA5BC",
         "operational_meaning": "Persist the lightweight standalone visual-intent prototype."
+      },
+      {
+        "code": "AR-4D330C",
+        "operational_meaning": "Create no draft-only plan artifact or notice; use the normal canonical execution-plan artifact when the supported workflow calls for one."
       }
     ],
     "required_check": [
@@ -384,6 +392,10 @@
       {
         "code": "CK-EF7D1E",
         "operational_meaning": "Keep lasting coverage only when it is supported, material, unique, deterministic, stable, and economical."
+      },
+      {
+        "code": "CK-4F2A81",
+        "operational_meaning": "Confirm the retired draft-discussion mode, legacy discuss alias, draft-only plan shape, and draft-only stop boundary are absent."
       }
     ],
     "stop_condition": [
@@ -454,6 +466,10 @@
       {
         "code": "ST-FED3A4",
         "operational_meaning": "Do not put an adaptive-goal document through ordinary Deliver closeout without explicit conversion."
+      },
+      {
+        "code": "ST-6AB2E0",
+        "operational_meaning": "Do not stop at the retired draft-discussion boundary; stop only at a current normal blocker or approval boundary."
       }
     ],
     "user_approval": [
@@ -508,7 +524,7 @@
         "next_action": {
           "type": "array",
           "minItems": 0,
-          "maxItems": 36,
+          "maxItems": 37,
           "uniqueItems": true,
           "items": {
             "type": "string",
@@ -548,14 +564,15 @@
               "NX-DD12A4",
               "NX-E76EBC",
               "NX-EAB2DC",
-              "NX-F707BF"
+              "NX-F707BF",
+              "NX-22CF3A"
             ]
           }
         },
         "required_artifact": {
           "type": "array",
           "minItems": 0,
-          "maxItems": 11,
+          "maxItems": 12,
           "uniqueItems": true,
           "items": {
             "type": "string",
@@ -570,14 +587,15 @@
               "AR-AB9809",
               "AR-B2CC8C",
               "AR-F9CD19",
-              "AR-FAA5BC"
+              "AR-FAA5BC",
+              "AR-4D330C"
             ]
           }
         },
         "required_check": {
           "type": "array",
           "minItems": 0,
-          "maxItems": 47,
+          "maxItems": 48,
           "uniqueItems": true,
           "items": {
             "type": "string",
@@ -628,14 +646,15 @@
               "CK-DB8B28",
               "CK-DBBC1C",
               "CK-EA003A",
-              "CK-EF7D1E"
+              "CK-EF7D1E",
+              "CK-4F2A81"
             ]
           }
         },
         "stop_condition": {
           "type": "array",
           "minItems": 0,
-          "maxItems": 17,
+          "maxItems": 18,
           "uniqueItems": true,
           "items": {
             "type": "string",
@@ -656,7 +675,8 @@
               "ST-C891DE",
               "ST-CD3C1D",
               "ST-F4A943",
-              "ST-FED3A4"
+              "ST-FED3A4",
+              "ST-6AB2E0"
             ]
           }
         },
