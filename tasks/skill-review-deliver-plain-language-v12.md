@@ -25,8 +25,8 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - User-approved removed public behaviors: 5
 - Invalidated evaluator: `deliver-plain-language-v12.23`; rejected because its combine step accepted unbound lane-verdict objects.
 - Invalidated evaluator: `deliver-plain-language-v12.24`; rejected because caller-provided roots and pass booleans could authenticate themselves and aggregation could downgrade regression to neutral.
-- Evaluator source and author-ready commits: pending v12.25 author freeze
-- Public adapter and author-ready-state SHA-256: pending v12.25 author freeze
+- Evaluator source and author-ready commits: `58eb3175d3c1c5265ec1fe80caecbc49049e3556` and `d4ece62f4e0f5839d39f2fc9785f303e6c66a815`
+- Public adapter SHA-256: `6adf7820863ade48987f5d07ca23b2d98761236127b4e18e479418992d77f1af`; author-ready state is bound in the public readiness file
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
@@ -37,7 +37,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.
-- [ ] Private evaluator reaches its author-ready state with verified trust roots, recomputed hard gates, exact lane schemas, and a write-once comparison lifecycle; independent review and trusted-host isolation remain pending.
+- [x] Private evaluator reaches its author-ready state with verified trust roots, recomputed hard gates, exact lane schemas, and a write-once comparison lifecycle; independent review and trusted-host isolation remain pending.
 - [x] Approved candidate package is committed and bound to its exact public manifest.
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.
@@ -48,7 +48,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Evaluator, integrity, comparability, or ambiguous failure: `inconclusive`; stop without tuning or replaying v12.
 - Candidate terminal or deterministic non-regression failure: `candidate_regression`; preserve evidence and stop.
 - Correctness passes but the required benefit gates do not: `candidate_neutral` or `inconclusive`, as established by the frozen combined gate; do not merge from v12.
-- All deterministic gates pass, both required clarity judges return `candidate_better`, the behavior judge returns `candidate_better` or `candidate_neutral`, and the user approves the wording: `candidate_better`; proceed to normal merge review.
+- All deterministic gates pass, both required clarity judges prefer the candidate slot, the behavior judge is neutral or prefers the candidate slot, and the committed wording approval remains valid: `candidate_better`; proceed to normal merge review.
 - Only one infrastructure restart is permitted, and only before any output. A semantic retry is never permitted.
 
 This public state contains no comprehension prompts, expected answers, option mappings, scoring guidance, identity mapping, or judge rubric.
