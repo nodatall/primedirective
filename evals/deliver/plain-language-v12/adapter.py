@@ -33,8 +33,8 @@ from evals.deliver import harness as v11  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 21
-ORACLE_VERSION = "deliver-plain-language-v12.24"
+READINESS_SCHEMA_VERSION = 22
+ORACLE_VERSION = "deliver-plain-language-v12.25"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -46,6 +46,8 @@ BASELINE_MANIFEST_PATH = V12_ROOT / "baseline-package-manifest.json"
 CANDIDATE_MANIFEST_PATH = V12_ROOT / "candidate-package-manifest.json"
 INVENTORY_PATH = V12_ROOT / "public-contract-inventory.json"
 CANDIDATE_BEHAVIOR_MAP_PATH = V12_ROOT / "candidate-behavior-map.json"
+WORDING_APPROVAL_RELATIVE_PATH = "evals/deliver/plain-language-v12/wording-approval.json"
+WORDING_APPROVAL_PATH = V12_ROOT / "wording-approval.json"
 V11_MANIFEST_PATH = V12_ROOT / "v11-file-manifest.json"
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
@@ -101,6 +103,8 @@ REQUIRED_READINESS_PASS_FIELDS = (
     "comparison_runtime_review_status",
     "durable_comparison_lifecycle_author_status",
     "durable_comparison_lifecycle_independent_review_status",
+    "trusted_root_author_status",
+    "trusted_root_independent_review_status",
     "isolation_probe_status",
 )
 INDEPENDENT_RESULT_KIND = "orchestrator_observed_agent_result_not_signature"
@@ -131,6 +135,8 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "baseline_package_content_manifest_sha256", "baseline_commit",
     "candidate_package_manifest_sha256", "candidate_package_content_manifest_sha256",
     "candidate_behavior_map_sha256", "candidate_commit",
+    "wording_approval_record_path", "wording_approval_record_sha256",
+    "wording_approval_record_commit", "wording_approval_candidate_commit",
     "private_evaluator_source_commit", "private_evaluator_commit",
     "independent_review_result_kind", "private_independent_reviewed_source_commit",
     "private_independent_reviewed_final_commit", "trusted_host_isolation_result_kind",
@@ -155,6 +161,9 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "durable_lifecycle_positive_control_count",
     "lifecycle_order_tamper_negative_control_count",
     "unbound_verdict_shape_negative_control_count",
+    "trusted_root_positive_control_count", "trusted_root_negative_control_count",
+    "gate_recomputation_negative_control_count", "lane_schema_negative_control_count",
+    "comparability_negative_control_count", "aggregation_negative_control_count",
     "judge_packet_schema_control_count", "discarded_channel_reachability_control_count",
     "clean_content_preservation_control_count", "rationale_discarded_before_judge_input",
     "rationale_affects_deterministic_score", "rationale_affects_combined_verdict",
@@ -169,6 +178,7 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "comparison_runtime_author_validation_status", "comparison_runtime_review_status",
     "durable_comparison_lifecycle_author_status",
     "durable_comparison_lifecycle_independent_review_status",
+    "trusted_root_author_status", "trusted_root_independent_review_status",
     "isolation_probe_status", "live_model_feasibility_status", "live_model_execution_performed",
     "deterministic_controls_are_live_arm_execution",
     "deterministic_controls_are_judge_verdict_evidence",
@@ -672,7 +682,7 @@ def validate_candidate_behavior_map(inventory: dict[str, Any]) -> tuple[list[str
     removed = mapping.get("intentionally_removed_behavior_ids") if isinstance(mapping, dict) else None
     clauses = mapping.get("clauses") if isinstance(mapping, dict) else None
     if (
-        mapping.get("schema_version") != 4
+        mapping.get("schema_version") != 5
         or mapping.get("oracle_version") != ORACLE_VERSION
         or mapping.get("inventory_id") != inventory.get("inventory_id")
         or mapping.get("baseline_commit") != inventory.get("baseline_commit")
@@ -713,6 +723,7 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     vocabulary = load_json(VOCABULARY_PATH, "public response schema")
     baseline_manifest = load_json(BASELINE_MANIFEST_PATH, "baseline package manifest")
     candidate_manifest = load_json(CANDIDATE_MANIFEST_PATH, "candidate package manifest")
+    approval = load_json(WORDING_APPROVAL_PATH, "wording approval record")
     inventory = load_json(INVENTORY_PATH, "public contract inventory")
     if not isinstance(readiness, dict) or not isinstance(vocabulary, dict):
         raise AdapterError("public readiness artifacts are malformed")
@@ -799,6 +810,33 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         raise AdapterError(
             "oracle readiness differs from frozen public controller, inventory, baseline, or candidate"
         )
+    if (
+        not isinstance(approval, dict)
+        or set(approval) != {
+            "schema_version", "approval_record_id", "candidate_commit", "approval_status",
+            "approved_removed_behavior_ids", "scope",
+        }
+        or approval["schema_version"] != 1
+        or approval["candidate_commit"] != candidate_manifest.get("candidate_commit")
+        or approval["approval_status"] != "approved"
+        or approval["approved_removed_behavior_ids"] != removed_behavior_ids
+        or readiness.get("wording_approval_record_path") != WORDING_APPROVAL_RELATIVE_PATH
+        or readiness.get("wording_approval_record_sha256") != sha256_file(WORDING_APPROVAL_PATH)
+        or readiness.get("wording_approval_candidate_commit") != approval["candidate_commit"]
+        or not nonzero_hex(readiness.get("wording_approval_record_commit"), HEX40, 40)
+    ):
+        raise AdapterError("wording approval record is not exactly bound")
+    approval_commit = readiness["wording_approval_record_commit"]
+    if (
+        bytes(git(["cat-file", "blob", f"{approval_commit}:{WORDING_APPROVAL_RELATIVE_PATH}"], binary=True))
+        != WORDING_APPROVAL_PATH.read_bytes()
+        or subprocess.run(
+            ["git", "merge-base", "--is-ancestor", approval_commit, "HEAD"],
+            cwd=REPO_ROOT, check=False, capture_output=True,
+        ).returncode
+        != 0
+    ):
+        raise AdapterError("wording approval record is not committed in public ancestry")
     if not nonzero_hex(readiness.get("public_adapter_introducing_commit"), HEX40, 40):
         raise AdapterError("oracle readiness public adapter commit is missing or malformed")
     if readiness.get("model") != EXPECTED_POLICY["model"] or readiness.get("reasoning") != EXPECTED_POLICY["reasoning"]:
@@ -881,6 +919,13 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or readiness.get("unbound_verdict_shape_negative_control_count") != 1
     ):
         raise AdapterError("oracle readiness durable comparison lifecycle controls are incomplete")
+    for field in (
+        "trusted_root_positive_control_count", "trusted_root_negative_control_count",
+        "gate_recomputation_negative_control_count", "lane_schema_negative_control_count",
+        "comparability_negative_control_count", "aggregation_negative_control_count",
+    ):
+        if type(readiness.get(field)) is not int or readiness[field] < 1:
+            raise AdapterError("oracle readiness trusted-root and recomputation controls are incomplete")
     if (
         readiness.get("judge_packet_structural_blinding_author_status") != "pass"
         or type(readiness.get("judge_packet_schema_control_count")) is not int
@@ -1045,6 +1090,8 @@ def initialize_runtime(
             "schema_sha256": sha256_file(inputs / "response-schema.json"),
             "execution_policy_sha256": sha256_file(POLICY_PATH),
             "run_label_map_sha256": sha256_file(inputs / "run-label-map"),
+            "public_readiness_sha256": sha256_file(READINESS_PATH),
+            "wording_approval_sha256": sha256_file(WORDING_APPROVAL_PATH),
             "v11_file_manifest_sha256": v11_manifest["manifest_sha256"],
             "model": policy["model"],
             "reasoning": policy["reasoning"],
@@ -1206,6 +1253,10 @@ def verify_live_bindings(state: dict[str, Any]) -> None:
     policy = load_policy()
     if sha256_file(POLICY_PATH) != state["binding"]["execution_policy_sha256"]:
         raise AdapterError("execution policy digest drifted")
+    if sha256_file(READINESS_PATH) != state["binding"].get("public_readiness_sha256"):
+        raise AdapterError("public readiness digest drifted")
+    if sha256_file(WORDING_APPROVAL_PATH) != state["binding"].get("wording_approval_sha256"):
+        raise AdapterError("wording approval digest drifted")
     if policy["model"] != state["binding"]["model"] or policy["reasoning"] != state["binding"]["reasoning"]:
         raise AdapterError("model or reasoning binding drifted")
     v11_manifest = verify_v11_files()

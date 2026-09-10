@@ -130,6 +130,10 @@ class AdapterTests(unittest.TestCase):
                 adapter.CANDIDATE_BEHAVIOR_MAP_PATH
             ),
             "candidate_commit": candidate_authority["candidate_commit"],
+            "wording_approval_record_path": adapter.WORDING_APPROVAL_RELATIVE_PATH,
+            "wording_approval_record_sha256": adapter.sha256_file(adapter.WORDING_APPROVAL_PATH),
+            "wording_approval_record_commit": "9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5",
+            "wording_approval_candidate_commit": candidate_authority["candidate_commit"],
             "private_projected_packet_sha256": adapter.sha256_file(self.packet),
             "per_arm_response_schema_sha256": adapter.sha256_file(self.schema),
             "projected_packet_bytes": self.packet.stat().st_size,
@@ -175,6 +179,8 @@ class AdapterTests(unittest.TestCase):
             "comparison_runtime_review_status": "pass",
             "durable_comparison_lifecycle_author_status": "pass",
             "durable_comparison_lifecycle_independent_review_status": "pass",
+            "trusted_root_author_status": "pass",
+            "trusted_root_independent_review_status": "pass",
             "isolation_probe_status": "pass",
             "live_model_feasibility_status": "pending_official_execution",
             "live_model_execution_performed": False,
@@ -183,6 +189,12 @@ class AdapterTests(unittest.TestCase):
             "durable_lifecycle_positive_control_count": 1,
             "lifecycle_order_tamper_negative_control_count": 12,
             "unbound_verdict_shape_negative_control_count": 1,
+            "trusted_root_positive_control_count": 1,
+            "trusted_root_negative_control_count": 12,
+            "gate_recomputation_negative_control_count": 2,
+            "lane_schema_negative_control_count": 6,
+            "comparability_negative_control_count": 5,
+            "aggregation_negative_control_count": 3,
             "judge_packet_schema_control_count": 12,
             "discarded_channel_reachability_control_count": 8,
             "clean_content_preservation_control_count": 3,
@@ -344,6 +356,14 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(state["binding"]["arm_order"], ["baseline", "candidate"])
         self.assertEqual(state["binding"]["model"], "gpt-5.6-sol")
         self.assertNotEqual(state["run_id"], state["nonce"])
+        self.assertEqual(
+            state["binding"]["wording_approval_sha256"],
+            adapter.sha256_file(adapter.WORDING_APPROVAL_PATH),
+        )
+        self.assertEqual(
+            state["binding"]["public_readiness_sha256"],
+            adapter.sha256_file(self.readiness),
+        )
         self.assertIsNone(state["arms"]["baseline"]["arm_started_at"])
         self.assertIsNone(state["arms"]["baseline"]["deadline_at"])
         for arm in adapter.ARMS:
@@ -411,6 +431,48 @@ class AdapterTests(unittest.TestCase):
                         mock.patch.object(adapter, "READINESS_PATH", self.readiness),
                         mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
                         self.assertRaisesRegex(adapter.AdapterError, "durable comparison lifecycle"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_requires_trusted_root_and_recomputation_controls(self) -> None:
+        for field in (
+            "trusted_root_positive_control_count", "trusted_root_negative_control_count",
+            "gate_recomputation_negative_control_count", "lane_schema_negative_control_count",
+            "comparability_negative_control_count", "aggregation_negative_control_count",
+        ):
+            with self.subTest(field=field):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = 0
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "trusted-root and recomputation"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_binds_committed_wording_approval_record(self) -> None:
+        for field, value in (
+            ("wording_approval_record_sha256", "0" * 64),
+            ("wording_approval_candidate_commit", "0" * 40),
+            ("wording_approval_record_commit", "0" * 40),
+        ):
+            with self.subTest(field=field):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "wording approval"),
                     ):
                         adapter.validate_readiness(self.packet, self.schema)
                 finally:
