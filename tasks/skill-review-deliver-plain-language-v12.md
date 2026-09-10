@@ -24,8 +24,10 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Retained public behaviors: 103
 - User-approved removed public behaviors: 5
 - Invalidated evaluator: `deliver-plain-language-v12.23`; rejected because its combine step accepted unbound lane-verdict objects.
-- Evaluator source and author-ready commits: pending v12.24 author freeze
-- Public adapter and author-ready-state SHA-256: pending v12.24 author freeze
+- Evaluator source commit: `9b9585270a841f58ab3ae63f8f8bff83b634d2cc`
+- Evaluator author-ready commit: `19a9e5bc0e831306df695b30040126fc32b9d74e`
+- Public adapter SHA-256: `71f08dec27782f4e80f50aa8f20ae99dc6b25c85c4b0a7ec211b98497ef46477`
+- Author-ready state SHA-256: `0203708d57a6280a356fcfe71e21b1a35e64066fc04ba9529645ca41aae48583`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
 ## Public Controller Status
@@ -35,7 +37,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.
-- [ ] Private evaluator reaches its author-ready state with a write-once, fully bound comparison lifecycle; independent review and trusted-host isolation remain pending.
+- [x] Private evaluator reaches its author-ready state with a write-once, fully bound comparison lifecycle; independent review and trusted-host isolation remain pending.
 - [x] Approved candidate package is committed and bound to its exact public manifest.
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.
