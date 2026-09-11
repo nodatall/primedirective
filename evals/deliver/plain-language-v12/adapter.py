@@ -198,6 +198,7 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "readiness_predecessor_sha256", "independent_review_record_path",
     "independent_review_record_sha256", "trusted_host_isolation_receipt_path",
     "trusted_host_isolation_receipt_sha256",
+    "executed_control_counts",
 })
 READINESS_NESTED_ALLOWED_FIELDS = {
     "proportionality": frozenset({
@@ -210,6 +211,16 @@ READINESS_NESTED_ALLOWED_FIELDS = {
         "caller_authored_coverage_can_earn_credit", "independent_review_status",
     }),
     "execution_limits": frozenset(READINESS_EXECUTION_LIMITS),
+    "executed_control_counts": frozenset({
+        "aggregation_negative", "aggregation_positive", "artifact_transitive_binding",
+        "caller_payload_rejection", "canonical_invariance", "clean_content_preservation",
+        "comparability_negative", "discarded_channel_reachability",
+        "durable_lifecycle_positive", "gate_recomputation_negative",
+        "hidden_material_noninterference", "judge_packet_schema",
+        "lifecycle_order_tamper", "response_schema", "scorer_mutation",
+        "sealed_artifact_positive", "trusted_root_negative", "trusted_root_positive",
+        "unbound_verdict_shape",
+    }),
 }
 
 
@@ -751,9 +762,8 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     inventory = load_json(INVENTORY_PATH, "public contract inventory")
     if not isinstance(readiness, dict) or not isinstance(vocabulary, dict):
         raise AdapterError("public readiness artifacts are malformed")
-    unknown_fields = set(readiness) - READINESS_ALLOWED_FIELDS
-    if unknown_fields:
-        raise AdapterError("oracle readiness contains an unknown field")
+    if set(readiness) != READINESS_ALLOWED_FIELDS:
+        raise AdapterError("oracle readiness fields are not exact (missing or unknown field)")
     for field, allowed in READINESS_NESTED_ALLOWED_FIELDS.items():
         value = readiness.get(field)
         if not isinstance(value, dict) or set(value) - allowed:
@@ -972,6 +982,37 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or readiness.get("rationale_affects_combined_verdict") is not False
     ):
         raise AdapterError("oracle readiness structural judge blinding controls are not passed")
+    executed_counts = readiness.get("executed_control_counts")
+    counter_sources = {
+        "noncanonical_response_mutation_count": "scorer_mutation",
+        "distinct_mutation_payload_count": "scorer_mutation",
+        "canonical_invariance_control_count": "canonical_invariance",
+        "hidden_material_noninterference_control_count": "hidden_material_noninterference",
+        "judge_packet_schema_control_count": "judge_packet_schema",
+        "discarded_channel_reachability_control_count": "discarded_channel_reachability",
+        "clean_content_preservation_control_count": "clean_content_preservation",
+        "durable_lifecycle_positive_control_count": "durable_lifecycle_positive",
+        "lifecycle_order_tamper_negative_control_count": "lifecycle_order_tamper",
+        "unbound_verdict_shape_negative_control_count": "unbound_verdict_shape",
+        "trusted_root_positive_control_count": "trusted_root_positive",
+        "trusted_root_negative_control_count": "trusted_root_negative",
+        "gate_recomputation_negative_control_count": "gate_recomputation_negative",
+        "lane_schema_negative_control_count": "artifact_transitive_binding",
+        "comparability_negative_control_count": "comparability_negative",
+        "aggregation_negative_control_count": "aggregation_negative",
+        "sealed_artifact_packet_positive_control_count": "sealed_artifact_positive",
+        "caller_payload_rejection_negative_control_count": "caller_payload_rejection",
+        "artifact_transitive_binding_negative_control_count": "artifact_transitive_binding",
+    }
+    if (
+        not isinstance(executed_counts, dict)
+        or any(type(value) is not int or value < 0 for value in executed_counts.values())
+        or sum(executed_counts.values())
+        != readiness.get("runtime_positive_test_count", -1)
+        + readiness.get("runtime_negative_test_count", -1)
+        or any(readiness.get(field) != executed_counts[source] for field, source in counter_sources.items())
+    ):
+        raise AdapterError("oracle readiness control counts are not derived from executed named controls")
     require_regular_file(packet, "projected packet")
     require_regular_file(schema, "supplied public schema")
     expected_packet = readiness.get("private_projected_packet_sha256")

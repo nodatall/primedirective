@@ -157,6 +157,15 @@ class AdapterTests(unittest.TestCase):
             "hidden_comprehension_behavior_count": len(retained_behavior_ids),
             "full_behavior_lane_gate_count": 0,
             "static_credit_behavior_count": 0,
+            "clause_obligation_count": case_count * 5,
+            "accepted_equivalent_value_count": 0,
+            "noncanonical_response_mutation_count": 108,
+            "distinct_mutation_payload_count": 108,
+            "canonical_invariance_control_count": 3,
+            "answer_free_selector_diagnostic_count": 0,
+            "answer_free_selector_diagnostic_maximum_recovery_count": 0,
+            "hidden_material_noninterference_author_status": "pass",
+            "hidden_material_noninterference_control_count": 8,
             "proportionality": {"safe_grouping_review_status": "pass"},
             "coverage_credit_policy": {
                 "hidden_deterministic_comprehension_assertions": case_count,
@@ -188,6 +197,11 @@ class AdapterTests(unittest.TestCase):
             "live_model_execution_performed": False,
             "deterministic_controls_are_live_arm_execution": False,
             "deterministic_controls_are_judge_verdict_evidence": False,
+            "runtime_positive_test_count": 22,
+            "runtime_negative_test_count": 164,
+            "fresh_judge_allocation_count": 3,
+            "expected_per_arm_output_bytes": 1,
+            "context_margin_tokens": 1,
             "frozen_public_file_digests": {adapter.ADAPTER_RELATIVE_PATH: "a" * 64},
             "frozen_public_file_commits": {adapter.ADAPTER_RELATIVE_PATH: "b" * 40},
             "immutable_readiness_sha256": "c" * 64,
@@ -198,24 +212,45 @@ class AdapterTests(unittest.TestCase):
             "trusted_host_isolation_receipt_path": adapter.readiness_transition.ISOLATION_RELATIVE_PATH,
             "trusted_host_isolation_receipt_sha256": "1" * 64,
             "durable_lifecycle_positive_control_count": 1,
-            "lifecycle_order_tamper_negative_control_count": 12,
+            "lifecycle_order_tamper_negative_control_count": 22,
             "unbound_verdict_shape_negative_control_count": 1,
             "trusted_root_positive_control_count": 1,
-            "trusted_root_negative_control_count": 12,
+            "trusted_root_negative_control_count": 8,
             "gate_recomputation_negative_control_count": 2,
-            "lane_schema_negative_control_count": 6,
+            "lane_schema_negative_control_count": 11,
             "comparability_negative_control_count": 5,
-            "aggregation_negative_control_count": 3,
+            "aggregation_negative_control_count": 2,
             "sealed_artifact_packet_positive_control_count": 1,
-            "caller_payload_rejection_negative_control_count": 7,
-            "artifact_transitive_binding_negative_control_count": 6,
-            "judge_packet_schema_control_count": 12,
-            "discarded_channel_reachability_control_count": 8,
-            "clean_content_preservation_control_count": 3,
+            "caller_payload_rejection_negative_control_count": 1,
+            "artifact_transitive_binding_negative_control_count": 11,
+            "judge_packet_schema_control_count": 3,
+            "discarded_channel_reachability_control_count": 2,
+            "clean_content_preservation_control_count": 2,
             "rationale_discarded_before_judge_input": True,
             "rationale_affects_deterministic_score": False,
             "rationale_affects_combined_verdict": False,
             "execution_limits": dict(adapter.READINESS_EXECUTION_LIMITS),
+            "executed_control_counts": {
+                "aggregation_negative": 2,
+                "aggregation_positive": 1,
+                "artifact_transitive_binding": 11,
+                "caller_payload_rejection": 1,
+                "canonical_invariance": 3,
+                "clean_content_preservation": 2,
+                "comparability_negative": 5,
+                "discarded_channel_reachability": 2,
+                "durable_lifecycle_positive": 1,
+                "gate_recomputation_negative": 2,
+                "hidden_material_noninterference": 8,
+                "judge_packet_schema": 3,
+                "lifecycle_order_tamper": 22,
+                "response_schema": 4,
+                "scorer_mutation": 108,
+                "sealed_artifact_positive": 1,
+                "trusted_root_negative": 8,
+                "trusted_root_positive": 1,
+                "unbound_verdict_shape": 1,
+            },
         }
         self.write_readiness()
         self.lifecycle_patcher = mock.patch.object(
@@ -438,6 +473,16 @@ class AdapterTests(unittest.TestCase):
                 finally:
                     self.readiness_document[field] = original
                     self.write_readiness()
+
+    def test_readiness_rejects_declared_count_not_derived_from_named_controls(self) -> None:
+        self.readiness_document["clean_content_preservation_control_count"] += 1
+        self.write_readiness()
+        with (
+            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+            self.assertRaisesRegex(adapter.AdapterError, "executed named controls"),
+        ):
+            adapter.validate_readiness(self.packet, self.schema)
 
     def test_readiness_requires_durable_bound_comparison_lifecycle_controls(self) -> None:
         cases = (
