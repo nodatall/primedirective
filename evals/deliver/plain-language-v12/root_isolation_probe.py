@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Host-dependent isolation probes for Deliver oracle v12.32.
+"""Host-dependent isolation probes for Deliver oracle v12.33.
 
 This module is only invoked by the frozen ``run-root-isolation`` readiness
 operation. It emits machine evidence; it never writes readiness state.
@@ -21,13 +21,16 @@ from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.32"
+ORACLE_VERSION = "deliver-plain-language-v12.33"
 SCHEMA_VERSION = 1
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
-OUTER_PROBE_ID = "deliver-v12.32-outer-sandbox-v1"
-PREFLIGHT_PROBE_ID = "deliver-v12.32-real-preflight-v1"
+OUTER_PROBE_ID = "deliver-v12.33-outer-sandbox-v1"
+PREFLIGHT_PROBE_ID = "deliver-v12.33-real-preflight-v1"
 TRANSITION_RELATIVE_PATH = "evals/deliver/plain-language-v12/readiness_transition.py"
 PROBE_RELATIVE_PATH = "evals/deliver/plain-language-v12/root_isolation_probe.py"
+PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/private_runtime_launcher.py"
+)
 HARNESS_RELATIVE_PATH = "evals/deliver/harness.py"
 CASE_BUNDLE_VALIDATOR_RELATIVE_PATH = (
     "evals/deliver/plain-language-v12/case_bundle_validator.py"
@@ -44,6 +47,7 @@ DEPENDENCY_MANIFEST_RELATIVE_PATH = (
 DEPENDENCY_ROLES = {
     TRANSITION_RELATIVE_PATH: "readiness_transition_entrypoint",
     PROBE_RELATIVE_PATH: "root_isolation_probe_entrypoint",
+    PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH: "private_runtime_git_object_launcher",
     HARNESS_RELATIVE_PATH: "dynamic_deliver_harness_import",
     CASE_BUNDLE_VALIDATOR_RELATIVE_PATH: "private_bundle_integrity_validator",
     STANDALONE_BUNDLE_VALIDATOR_RELATIVE_PATH: "standalone_bundle_validator_executable",
@@ -60,6 +64,7 @@ DEPENDENCY_ROLES = {
 PYTHON_SOURCE_DEPENDENCIES = frozenset({
     TRANSITION_RELATIVE_PATH,
     PROBE_RELATIVE_PATH,
+    PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH,
     HARNESS_RELATIVE_PATH,
     CASE_BUNDLE_VALIDATOR_RELATIVE_PATH,
 })
@@ -79,6 +84,12 @@ CLOSURE_POLICY = {
     "execution_source": "verified_git_blobs_in_sealed_staging",
     "python_isolated_mode_required": True,
     "caller_pythonpath_allowed": False,
+    "private_runtime_launch": {
+        "launcher": PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH,
+        "source": "exact_private_final_git_blobs",
+        "private_worktree_must_include_no_untracked_files": True,
+        "private_head_must_equal_final": True,
+    },
 }
 OUTER_CLAIMS = (
     "stage_read_allowed",
@@ -216,7 +227,7 @@ def _load_harness(closure_root: Path) -> Any:
     path = closure_root / HARNESS_RELATIVE_PATH
     if path.is_symlink() or not path.is_file():
         raise ProbeError("frozen Deliver harness is unavailable")
-    spec = importlib.util.spec_from_file_location("deliver_v1232_host_harness", path)
+    spec = importlib.util.spec_from_file_location("deliver_v1233_host_harness", path)
     if spec is None or spec.loader is None:
         raise ProbeError("frozen Deliver harness cannot be loaded")
     module = importlib.util.module_from_spec(spec)
@@ -243,11 +254,11 @@ def _outer_sandbox(
         raise ProbeError("private evaluator sentinel is unavailable")
     evaluator_before = sha256_bytes(evaluator_target.read_bytes())
     created: list[Path] = []
-    payload = ("deliver-v12.32-root-probe-" + challenge + "\n").encode("ascii")
+    payload = ("deliver-v12.33-root-probe-" + challenge + "\n").encode("ascii")
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1232-isolation-", dir="/private/tmp"
+        prefix="deliver-v1233-isolation-", dir="/private/tmp"
     ) as root_text, tempfile.TemporaryDirectory(
-        prefix="deliver-v1232-other-temp-", dir="/private/tmp"
+        prefix="deliver-v1233-other-temp-", dir="/private/tmp"
     ) as other_text:
         root = Path(root_text)
         other_root = Path(other_text)
@@ -261,8 +272,8 @@ def _outer_sandbox(
         other_target = other_root / "sentinel.txt"
         _regular_sentinel(sibling_target, payload)
         other_digest = _regular_sentinel(other_target, payload)
-        home_target = Path(f"/Users/fromdarkness/.deliver-v1232-home-{challenge[:16]}")
-        volume_target = Path(f"/Volumes/Code/.deliver-v1232-volume-{challenge[:16]}")
+        home_target = Path(f"/Users/fromdarkness/.deliver-v1233-home-{challenge[:16]}")
+        volume_target = Path(f"/Volumes/Code/.deliver-v1233-volume-{challenge[:16]}")
         try:
             for target in (home_target, volume_target):
                 _regular_sentinel(target, payload)
@@ -275,7 +286,7 @@ import sys
 
 stage, sibling, evaluator, other_temp, home, volume = map(Path, sys.argv[1:7])
 claims = {}
-claims["stage_read_allowed"] = stage.read_bytes().startswith(b"deliver-v12.32-root-probe-")
+claims["stage_read_allowed"] = stage.read_bytes().startswith(b"deliver-v12.33-root-probe-")
 (stage.parent / "stage-output.txt").write_bytes(b"stage-write-ok\n")
 claims["stage_write_allowed"] = (stage.parent / "stage-output.txt").read_bytes() == b"stage-write-ok\n"
 for label, path in (
@@ -358,7 +369,7 @@ def _real_preflight(
 ) -> dict[str, Any]:
     harness = _load_harness(closure_root)
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1232-preflight-evidence-", dir="/private/tmp"
+        prefix="deliver-v1233-preflight-evidence-", dir="/private/tmp"
     ) as root_text:
         output = Path(root_text) / "runner-preflight.json"
         try:

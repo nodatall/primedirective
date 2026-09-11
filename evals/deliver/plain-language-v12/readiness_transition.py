@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Version-pinned, auditable readiness transitions for Deliver oracle v12.32."""
+"""Version-pinned, auditable readiness transitions for Deliver oracle v12.33."""
 
 from __future__ import annotations
 
@@ -19,13 +19,19 @@ from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.32"
-SCHEMA_VERSION = 29
+ORACLE_VERSION = "deliver-plain-language-v12.33"
+SCHEMA_VERSION = 30
 READINESS_RELATIVE_PATH = "evals/deliver/plain-language-v12/oracle-readiness.json"
 REVIEW_RELATIVE_PATH = "evals/deliver/plain-language-v12/independent-review-record.json"
 ISOLATION_RELATIVE_PATH = "evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json"
 PROBE_RELATIVE_PATH = "evals/deliver/plain-language-v12/root_isolation_probe.py"
 TRANSITION_RELATIVE_PATH = "evals/deliver/plain-language-v12/readiness_transition.py"
+PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/private_runtime_launcher.py"
+)
+PRIVATE_RUNTIME_CLOSURE_MANIFEST_RELATIVE_PATH = (
+    "private-oracle/private-runtime-closure.json"
+)
 HARNESS_RELATIVE_PATH = "evals/deliver/harness.py"
 CASE_BUNDLE_VALIDATOR_RELATIVE_PATH = (
     "evals/deliver/plain-language-v12/case_bundle_validator.py"
@@ -42,6 +48,7 @@ DEPENDENCY_MANIFEST_RELATIVE_PATH = (
 DEPENDENCY_ROLES = {
     TRANSITION_RELATIVE_PATH: "readiness_transition_entrypoint",
     PROBE_RELATIVE_PATH: "root_isolation_probe_entrypoint",
+    PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH: "private_runtime_git_object_launcher",
     HARNESS_RELATIVE_PATH: "dynamic_deliver_harness_import",
     CASE_BUNDLE_VALIDATOR_RELATIVE_PATH: "private_bundle_integrity_validator",
     STANDALONE_BUNDLE_VALIDATOR_RELATIVE_PATH: "standalone_bundle_validator_executable",
@@ -58,6 +65,7 @@ DEPENDENCY_ROLES = {
 PYTHON_SOURCE_DEPENDENCIES = frozenset({
     TRANSITION_RELATIVE_PATH,
     PROBE_RELATIVE_PATH,
+    PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH,
     HARNESS_RELATIVE_PATH,
     CASE_BUNDLE_VALIDATOR_RELATIVE_PATH,
 })
@@ -71,7 +79,7 @@ DEPENDENCY_OBSERVED_ROLES = {
 }
 PUBLIC_REPOSITORY = Path("/Volumes/Code/primedirective")
 PRIVATE_EVALUATOR_REPOSITORY = Path(
-    "/private/tmp/deliver-plain-language-v132-evaluator/repo"
+    "/private/tmp/deliver-plain-language-v133-evaluator/repo"
 )
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -82,8 +90,8 @@ NETWORK_POLICY = (
     "denial are not claimed; parent network credentials, inherited environment, and "
     "hidden evaluator data remain unavailable to the arm"
 )
-OUTER_PROBE_ID = "deliver-v12.32-outer-sandbox-v1"
-PREFLIGHT_PROBE_ID = "deliver-v12.32-real-preflight-v1"
+OUTER_PROBE_ID = "deliver-v12.33-outer-sandbox-v1"
+PREFLIGHT_PROBE_ID = "deliver-v12.33-real-preflight-v1"
 OUTER_CLAIMS = frozenset({
     "stage_read_allowed",
     "stage_write_allowed",
@@ -331,17 +339,21 @@ def _validate_dependency_source_closure(entries: list[dict[str, str]], blobs: di
         _stdlib_only_imports(blobs[relative_path], relative_path)
     probe_source = blobs[PROBE_RELATIVE_PATH].decode("utf-8")
     transition_source = blobs[TRANSITION_RELATIVE_PATH].decode("utf-8")
+    launcher_source = blobs[PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH].decode("utf-8")
     harness_source = blobs[HARNESS_RELATIVE_PATH].decode("utf-8")
     bundle_validator_source = blobs[CASE_BUNDLE_VALIDATOR_RELATIVE_PATH].decode("utf-8")
     if (
         probe_source.count("spec_from_file_location(") != 1
-        or transition_source.count("spec_from_file_location(") != 3
+        or transition_source.count("spec_from_file_location(") != 4
         or "HARNESS_RELATIVE_PATH" not in probe_source
         or "CASE_BUNDLE_VALIDATOR_RELATIVE_PATH" not in transition_source
         or "--closure-root" not in probe_source
         or "--dependency-manifest-sha256" not in probe_source
         or "-I" not in transition_source
         or "PROBE_ENVIRONMENT" not in transition_source
+        or "str(python), \"-I\", \"-B\", \"-c\"" not in launcher_source
+        or "--untracked-files=all" not in launcher_source
+        or "PRIVATE_RUNTIME_ROLES" not in launcher_source
         or "subprocess" not in harness_source
         or "validate_bundle(" not in bundle_validator_source
     ):
@@ -496,6 +508,12 @@ def root_isolation_contract() -> dict[str, Any]:
             "execution_source": "verified_git_blobs_in_sealed_staging",
             "python_isolated_mode_required": True,
             "caller_pythonpath_allowed": False,
+            "private_runtime_launch": {
+                "launcher": PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH,
+                "source": "exact_private_final_git_blobs",
+                "private_worktree_must_include_no_untracked_files": True,
+                "private_head_must_equal_final": True,
+            },
         },
         "private_evaluator_repository": str(PRIVATE_EVALUATOR_REPOSITORY),
         "probe_ids": [OUTER_PROBE_ID, PREFLIGHT_PROBE_ID],
@@ -514,7 +532,7 @@ def root_isolation_contract() -> dict[str, Any]:
 
 def _validate_common(document: dict[str, Any]) -> None:
     if document.get("schema_version") != SCHEMA_VERSION or document.get("oracle_version") != ORACLE_VERSION:
-        raise ReadinessTransitionError("readiness version is not v12.32")
+        raise ReadinessTransitionError("readiness version is not v12.33")
     if document.get("status") not in {"author_ready", "independent_review_pass", "ready"}:
         raise ReadinessTransitionError("readiness status is invalid")
     if document.get("immutable_readiness_sha256") != immutable_digest(document):
@@ -522,6 +540,20 @@ def _validate_common(document: dict[str, Any]) -> None:
     for field in ("private_evaluator_source_commit", "private_evaluator_commit"):
         if not HEX40.fullmatch(str(document.get(field))):
             raise ReadinessTransitionError(f"{field} is malformed")
+    if (
+        document.get("private_runtime_launcher_path")
+        != PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH
+        or document.get("private_runtime_launcher_sha256")
+        != document.get("frozen_public_file_digests", {}).get(
+            PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH
+        )
+        or document.get("private_runtime_closure_manifest_path")
+        != PRIVATE_RUNTIME_CLOSURE_MANIFEST_RELATIVE_PATH
+        or not HEX64.fullmatch(
+            str(document.get("private_runtime_closure_manifest_sha256"))
+        )
+    ):
+        raise ReadinessTransitionError("private runtime launch binding is malformed")
     if document.get("root_isolation_contract") != root_isolation_contract():
         raise ReadinessTransitionError("root isolation contract is not exact")
     if (
@@ -533,6 +565,8 @@ def _validate_common(document: dict[str, Any]) -> None:
         or not HEX40.fullmatch(
             str(document.get("independent_case_bundle_source_commit"))
         )
+        or document.get("independent_case_bundle_controller_commit")
+        != "5bdd3d012e9a85da91747b975971f25c3c5bfe55"
         or not HEX40.fullmatch(str(document.get("independent_case_bundle_source_tree")))
         or not HEX64.fullmatch(
             str(document.get("independent_case_bundle_manifest_sha256"))
@@ -589,9 +623,21 @@ def _validate_common(document: dict[str, Any]) -> None:
 
 def _load_case_bundle_validator() -> Any:
     path = _require_regular_checkout_file(PUBLIC_REPOSITORY, CASE_BUNDLE_VALIDATOR_RELATIVE_PATH)
-    spec = importlib.util.spec_from_file_location("deliver_v1232_case_bundle_validator", path)
+    spec = importlib.util.spec_from_file_location("deliver_v1233_case_bundle_validator", path)
     if spec is None or spec.loader is None:
         raise ReadinessTransitionError("case bundle validator cannot be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_private_runtime_launcher() -> Any:
+    path = _require_regular_checkout_file(
+        PUBLIC_REPOSITORY, PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH
+    )
+    spec = importlib.util.spec_from_file_location("deliver_v1233_private_runtime_launcher", path)
+    if spec is None or spec.loader is None:
+        raise ReadinessTransitionError("private runtime launcher cannot be loaded")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -615,8 +661,18 @@ def _verify_private_evaluator(document: dict[str, Any]) -> None:
     )
     if ancestor.returncode:
         raise ReadinessTransitionError("private evaluator source is not an ancestor of final")
-    if str(git(repo, ["status", "--porcelain=v1", "--untracked-files=no"])).strip():
-        raise ReadinessTransitionError("private evaluator tracked state is not clean")
+    if str(git(repo, ["status", "--porcelain=v1", "--untracked-files=all"])).strip():
+        raise ReadinessTransitionError(
+            "private evaluator state is not completely clean, including untracked files"
+        )
+    try:
+        launcher = _load_private_runtime_launcher()
+        launcher.require_clean_exact_private_final(repo, final)
+        launcher.validate_manifest(
+            repo, final, document["private_runtime_closure_manifest_sha256"]
+        )
+    except Exception as exc:
+        raise ReadinessTransitionError("private runtime closure is not authentic") from exc
     manifest_path = "private-oracle/source-provenance-manifest.json"
     manifest = load_json_bytes(_blob(repo, final, manifest_path), "private source provenance")
     expected_fields = {
@@ -655,7 +711,7 @@ def _verify_private_evaluator(document: dict[str, Any]) -> None:
     try:
         recomputed = _load_case_bundle_validator().validate_bundle(
             PUBLIC_REPOSITORY,
-            document["public_adapter_introducing_commit"],
+            document["independent_case_bundle_controller_commit"],
             repo,
             document["independent_case_bundle_source_commit"],
             repo / "private-oracle",
@@ -671,9 +727,15 @@ def _verify_private_evaluator(document: dict[str, Any]) -> None:
         or recomputed.get("bundle_manifest_sha256")
         != document["independent_case_bundle_manifest_sha256"]
         or recomputed.get("controller_commit")
-        != document["public_adapter_introducing_commit"]
+        != document["independent_case_bundle_controller_commit"]
         or recomputed.get("public_file_sha256", {}).get(BUNDLE_INTERFACE_RELATIVE_PATH)
-        != document["independent_case_bundle_interface_sha256"]
+        != sha256_bytes(
+            _blob(
+                PUBLIC_REPOSITORY,
+                document["independent_case_bundle_controller_commit"],
+                BUNDLE_INTERFACE_RELATIVE_PATH,
+            )
+        )
     ):
         raise ReadinessTransitionError(
             "standalone, integrated, and readiness bundle bindings do not reconcile"
@@ -740,11 +802,28 @@ def verify_controller_frozen(repo: Path, ref: str = "HEAD") -> dict[str, Any]:
     )
     public_paths = interface.get("public_binding_paths")
     expected_paths = sorted((*DEPENDENCY_ROLES, DEPENDENCY_MANIFEST_RELATIVE_PATH))
+    carry = interface.get("carried_bundle_binding")
     if (
-        interface.get("oracle_version") != ORACLE_VERSION
+        interface.get("schema_version") != 2
+        or interface.get("oracle_version") != ORACLE_VERSION
+        or interface.get("bundle_oracle_version")
+        != "deliver-plain-language-v12.32"
         or interface.get("integrated_validator_path")
         != CASE_BUNDLE_VALIDATOR_RELATIVE_PATH
         or public_paths != expected_paths
+        or not isinstance(carry, dict)
+        or carry.get("bundle_controller_commit")
+        != "5bdd3d012e9a85da91747b975971f25c3c5bfe55"
+        or carry.get("bundle_source_commit")
+        != "ab2ce57b733c3f04629121cdf3e6dce845431240"
+        or carry.get("bundle_source_tree")
+        != "8b3f4c18655ee77f6d3f09f52ce125abc0457509"
+        or carry.get("bundle_manifest_sha256")
+        != "97f43a97aa462c1be94ef679a008fff7271f2467e4b1b7f1b4a76f009c7b9956"
+        or carry.get("manifest_payload_sha256")
+        != "8297e7e0a5aefa08a545eeeb97d456702aea4973b821ecba424f4a9ef58db47d"
+        or carry.get("official_arm_execution_performed") is not False
+        or carry.get("official_judge_execution_performed") is not False
     ):
         raise ReadinessTransitionError("controller bundle interface public closure is not exact")
     dependency_binding(repo, controller)
@@ -1360,7 +1439,7 @@ def run_root_isolation(repo: Path) -> None:
     python = Path(python_identity["path"])
     challenge = secrets.token_hex(32)
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1232-frozen-closure-", dir="/private/tmp"
+        prefix="deliver-v1233-frozen-closure-", dir="/private/tmp"
     ) as closure_text:
         closure_root = Path(closure_text)
         staged_dependency_observations = _stage_dependency_closure(

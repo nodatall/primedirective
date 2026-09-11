@@ -37,8 +37,8 @@ import readiness_transition  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 29
-ORACLE_VERSION = "deliver-plain-language-v12.32"
+READINESS_SCHEMA_VERSION = 30
+ORACLE_VERSION = "deliver-plain-language-v12.33"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -158,6 +158,9 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "independent_case_bundle_validation_sha256",
     "independent_case_bundle_complete_import_status",
     "private_evaluator_source_commit", "private_evaluator_commit",
+    "private_runtime_launcher_path", "private_runtime_launcher_sha256",
+    "private_runtime_closure_manifest_path", "private_runtime_closure_manifest_sha256",
+    "independent_case_bundle_controller_commit",
     "independent_review_result_kind", "private_independent_reviewed_source_commit",
     "private_independent_reviewed_final_commit", "trusted_host_isolation_result_kind",
     "private_trusted_host_isolation_tested_source_commit",
@@ -881,6 +884,13 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         "candidate_commit": candidate_manifest.get("candidate_commit"),
         "independent_case_bundle_interface_path": BUNDLE_INTERFACE_RELATIVE_PATH,
         "independent_case_bundle_interface_sha256": sha256_file(BUNDLE_INTERFACE_PATH),
+        "private_runtime_launcher_path": (
+            readiness_transition.PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH
+        ),
+        "private_runtime_launcher_sha256": sha256_file(
+            readiness_transition.PUBLIC_REPOSITORY
+            / readiness_transition.PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH
+        ),
     }
     if any(readiness.get(key) != value for key, value in public_bindings.items()):
         raise AdapterError(
@@ -916,7 +926,14 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
     if not nonzero_hex(readiness.get("public_adapter_introducing_commit"), HEX40, 40):
         raise AdapterError("oracle readiness public adapter commit is missing or malformed")
     if (
-        not nonzero_hex(readiness.get("independent_case_bundle_source_commit"), HEX40, 40)
+        readiness.get("independent_case_bundle_controller_commit")
+        != "5bdd3d012e9a85da91747b975971f25c3c5bfe55"
+        or readiness.get("private_runtime_closure_manifest_path")
+        != readiness_transition.PRIVATE_RUNTIME_CLOSURE_MANIFEST_RELATIVE_PATH
+        or not nonzero_hex(
+            readiness.get("private_runtime_closure_manifest_sha256"), HEX64, 64
+        )
+        or not nonzero_hex(readiness.get("independent_case_bundle_source_commit"), HEX40, 40)
         or not nonzero_hex(readiness.get("independent_case_bundle_source_tree"), HEX40, 40)
         or not nonzero_hex(readiness.get("independent_case_bundle_manifest_sha256"), HEX64, 64)
         or not nonzero_hex(readiness.get("independent_case_bundle_validation_sha256"), HEX64, 64)

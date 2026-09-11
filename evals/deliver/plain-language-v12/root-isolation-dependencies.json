@@ -11,6 +11,12 @@
     },
     "execution_source": "verified_git_blobs_in_sealed_staging",
     "normal_imports": "stdlib_only_ast_validated",
+    "private_runtime_launch": {
+      "launcher": "evals/deliver/plain-language-v12/private_runtime_launcher.py",
+      "private_head_must_equal_final": true,
+      "private_worktree_must_include_no_untracked_files": true,
+      "source": "exact_private_final_git_blobs"
+    },
     "python_isolated_mode_required": true,
     "repo_local_data_inputs": [
       "evals/deliver/plain-language-v12/adapter.py",
@@ -39,7 +45,7 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/adapter.py",
       "role": "public_adapter_binding_data",
-      "sha256": "eb7950fe1d577d9f3e40773555eaf5b219dab055f88f8ab46c70765a0638e6e9"
+      "sha256": "018386fef4a5340658701ae8bda8b9702c899982f32d271b4df34e5573660f40"
     },
     {
       "git_mode": "100644",
@@ -51,7 +57,7 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/candidate-behavior-map.json",
       "role": "candidate_behavior_binding_data",
-      "sha256": "035c9a8e7292e529d68bcd714914dfeed9b3434606e4fcd1c1ddec4a9a8472f9"
+      "sha256": "deb8bdab7d64836a6f9745d0bc428992ef7e3bb495d38437f92909abc9f87f12"
     },
     {
       "git_mode": "100644",
@@ -63,13 +69,13 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/case_bundle_validator.py",
       "role": "private_bundle_integrity_validator",
-      "sha256": "8a3582d2274a6ffa75c563aed3fd0f58cfbb6383b557a9fabefb6db19570192b"
+      "sha256": "461d0c2db4e3d0742aeea2b6e099df8a687dfe35c949ae69caabe30d8cec4be1"
     },
     {
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
       "role": "response_schema_binding_data",
-      "sha256": "59e23f99042c9613cde7c27fff74dfc8e8288e9741afe2fdd4c438a6393067ab"
+      "sha256": "4d96d1d38b808f50649636ad731bbb5d5bf73575b9b78896e2f2411f162db95e"
     },
     {
       "git_mode": "100644",
@@ -81,7 +87,13 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/independent-case-bundle-interface.json",
       "role": "independent_bundle_interface_data",
-      "sha256": "70b264c74d2d1c7563482181eb2a1584f12b91c087c403fa884138e078c26116"
+      "sha256": "914ba6116b400d9e6c8d83b5f6062fbaddecf0f38ce6322ffae43bda841211de"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/private_runtime_launcher.py",
+      "role": "private_runtime_git_object_launcher",
+      "sha256": "961e0b22dae416ea200bb6b33de48ea380b25e30be94e1ae0897110c1579e5be"
     },
     {
       "git_mode": "100644",
@@ -93,13 +105,13 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/readiness_transition.py",
       "role": "readiness_transition_entrypoint",
-      "sha256": "d1ccabf01cfbc5d4bc26613e22e17d262854d2710eb25b800e1b6fcfe8026b09"
+      "sha256": "c1ddc51490157fcca451a48b475ef986aa4c2f49deccc4da18c0c67bc2afcc94"
     },
     {
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/root_isolation_probe.py",
       "role": "root_isolation_probe_entrypoint",
-      "sha256": "888a01568251ec535fdca04d917f48a125e6e6fd2bd072e253e532f95e8b40ce"
+      "sha256": "2d8d78ba9098ea0001030256328620db1f663a4c86216fc2b53fe12331fb85f7"
     },
     {
       "git_mode": "100644",
@@ -114,10 +126,10 @@
       "sha256": "49708aaab9e4881044878da7e37805e60c71bfb6c1e85f5e8c2d7085eb405d7a"
     }
   ],
-  "entries_sha256": "668364aa2894f9add380a2cac931a197ea3882181666d1b9e4d9c76388149da5",
-  "entry_count": 14,
+  "entries_sha256": "3800e1cacf4e24d1b7c2137f72abc52761535c6259a076a6a79cdc6d565f9795",
+  "entry_count": 15,
   "manifest_kind": "root_isolation_repo_local_execution_and_data_dependency_closure",
-  "manifest_sha256": "9b0d74e4773cd4a25deab346961f47285eed464bad7b983da647e740d821af31",
-  "oracle_version": "deliver-plain-language-v12.32",
+  "manifest_sha256": "f1842579668c5347a148726c53893f5029de4100868a3d4ee2d4b2e18b29adca",
+  "oracle_version": "deliver-plain-language-v12.33",
   "schema_version": 1
 }

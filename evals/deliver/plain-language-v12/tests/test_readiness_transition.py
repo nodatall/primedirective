@@ -15,7 +15,7 @@ import importlib.util
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "readiness_transition.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v1232_readiness_transition", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1233_readiness_transition", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 transition = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(transition)
@@ -23,7 +23,7 @@ SPEC.loader.exec_module(transition)
 
 class ReadinessTransitionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1232-readiness-", dir="/private/tmp"))
+        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1233-readiness-", dir="/private/tmp"))
         self.addCleanup(shutil.rmtree, self.repo)
         self.public_patch = mock.patch.object(transition, "PUBLIC_REPOSITORY", self.repo)
         self.private_patch = mock.patch.object(
@@ -80,12 +80,19 @@ class ReadinessTransitionTests(unittest.TestCase):
             "status": "author_ready",
             "private_evaluator_source_commit": "1" * 40,
             "private_evaluator_commit": "2" * 40,
+            "private_runtime_launcher_path": transition.PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH,
+            "private_runtime_launcher_sha256": transition.sha256_bytes(
+                (self.repo / transition.PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH).read_bytes()
+            ),
+            "private_runtime_closure_manifest_path": transition.PRIVATE_RUNTIME_CLOSURE_MANIFEST_RELATIVE_PATH,
+            "private_runtime_closure_manifest_sha256": "4" * 64,
             "public_adapter_introducing_commit": self.controller_commit,
             "independent_case_bundle_interface_path": transition.BUNDLE_INTERFACE_RELATIVE_PATH,
             "independent_case_bundle_interface_sha256": transition.sha256_bytes(
                 (self.repo / transition.BUNDLE_INTERFACE_RELATIVE_PATH).read_bytes()
             ),
             "independent_case_bundle_source_commit": "5" * 40,
+            "independent_case_bundle_controller_commit": "5bdd3d012e9a85da91747b975971f25c3c5bfe55",
             "independent_case_bundle_source_tree": "6" * 40,
             "independent_case_bundle_manifest_sha256": "7" * 64,
             "independent_case_bundle_validation_sha256": "8" * 64,
@@ -134,7 +141,7 @@ class ReadinessTransitionTests(unittest.TestCase):
             "oracle_version": transition.ORACLE_VERSION,
             "record_kind": "independent_review",
             "result": "pass",
-            "reviewer_allocation_id": "fresh-reviewer-allocation-v1232",
+            "reviewer_allocation_id": "fresh-reviewer-allocation-v1233",
             "reviewer_nonce": "3" * 64,
             "private_evaluator_source_commit": self.document["private_evaluator_source_commit"],
             "private_evaluator_final_commit": self.document["private_evaluator_commit"],

@@ -1,6 +1,7 @@
 {
-  "schema_version": 1,
-  "oracle_version": "deliver-plain-language-v12.32",
+  "schema_version": 2,
+  "oracle_version": "deliver-plain-language-v12.33",
+  "bundle_oracle_version": "deliver-plain-language-v12.32",
   "bundle_manifest_schema_version": 2,
   "bundle_subdirectory": "private-oracle",
   "required_files": [
@@ -42,6 +43,7 @@
     "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
     "evals/deliver/plain-language-v12/execution-policy.json",
     "evals/deliver/plain-language-v12/independent-case-bundle-interface.json",
+    "evals/deliver/plain-language-v12/private_runtime_launcher.py",
     "evals/deliver/plain-language-v12/public-contract-inventory.json",
     "evals/deliver/plain-language-v12/readiness_transition.py",
     "evals/deliver/plain-language-v12/root-isolation-dependencies.json",
@@ -78,6 +80,16 @@
     "exact_byte_freshness_basis": "v1232_specific_namespace",
     "semantic_nonreuse_against_v12_22_status": "unavailable_lost_authenticated_case_bytes",
     "semantic_nonreuse_claimed": false
+  },
+  "carried_bundle_binding": {
+    "bundle_controller_commit": "5bdd3d012e9a85da91747b975971f25c3c5bfe55",
+    "bundle_source_commit": "ab2ce57b733c3f04629121cdf3e6dce845431240",
+    "bundle_source_tree": "8b3f4c18655ee77f6d3f09f52ce125abc0457509",
+    "bundle_manifest_sha256": "97f43a97aa462c1be94ef679a008fff7271f2467e4b1b7f1b4a76f009c7b9956",
+    "manifest_payload_sha256": "8297e7e0a5aefa08a545eeeb97d456702aea4973b821ecba424f4a9ef58db47d",
+    "official_arm_execution_performed": false,
+    "official_judge_execution_performed": false,
+    "preservation_reason": "The hidden case semantics, answers, and allocated-not-run judge lanes are unchanged; v12.33 changes only the pre-import runtime trust boundary."
   },
   "import_policy": {
     "all_required_source_files_must_be_committed": true,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a v12.32 independent case bundle before and after private import."""
+"""Validate the carried v12.32 case bundle from its exact frozen controller."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from typing import Any
 
 
 ORACLE_VERSION = "deliver-plain-language-v12.32"
+BUNDLE_CONTROLLER_COMMIT = "5bdd3d012e9a85da91747b975971f25c3c5bfe55"
 INTERFACE_RELATIVE_PATH = (
     "evals/deliver/plain-language-v12/independent-case-bundle-interface.json"
 )
@@ -221,9 +222,6 @@ def public_digests(public_repo: Path, controller: str, interface: dict[str, Any]
     result: dict[str, str] = {}
     for relative_path in interface["public_binding_paths"]:
         source = blob(public_repo, controller, relative_path)
-        live = require_regular(public_repo, relative_path)
-        if live.read_bytes() != source:
-            raise BundleValidationError(f"public controller file drifted: {relative_path}")
         result[relative_path] = sha256_bytes(source)
     return result
 
@@ -299,6 +297,8 @@ def validate_bundle(
     public_repo = public_repo.resolve(strict=True)
     bundle_repo = bundle_repo.resolve(strict=True)
     controller = commit(public_repo, controller_ref)
+    if controller != BUNDLE_CONTROLLER_COMMIT:
+        raise BundleValidationError("carried bundle controller is not the exact v12.32 freeze")
     bundle_source = commit(bundle_repo, bundle_source_ref)
     interface, _ = load_interface(public_repo, controller)
     expected_public_digests = public_digests(public_repo, controller, interface)
@@ -340,7 +340,24 @@ def validate_bundle(
             if path.read_bytes() != source_files[name] or file_mode(path) != source_modes[name]:
                 raise BundleValidationError(f"integrated bundle file drifted: {name}")
     with tempfile.TemporaryDirectory(prefix="deliver-v1232-bundle-", dir="/private/tmp") as temporary:
-        stage = Path(temporary)
+        stage = Path(temporary) / "bundle"
+        public_snapshot = Path(temporary) / "public-controller"
+        stage.mkdir()
+        clone = subprocess.run(
+            [
+                "/usr/bin/git", "clone", "--quiet", "--no-hardlinks", "--no-checkout",
+                str(public_repo), str(public_snapshot),
+            ],
+            check=False, capture_output=True, text=True,
+        )
+        if clone.returncode:
+            raise BundleValidationError("frozen public controller snapshot failed")
+        checkout = subprocess.run(
+            ["/usr/bin/git", "checkout", "--quiet", "--detach", controller],
+            cwd=public_snapshot, check=False, capture_output=True, text=True,
+        )
+        if checkout.returncode:
+            raise BundleValidationError("frozen public controller checkout failed")
         for name in required:
             target = stage / name
             target.write_bytes(source_files[name])
@@ -348,7 +365,7 @@ def validate_bundle(
         command = [
             "/usr/bin/env", "-i", "PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
             "NODE_OPTIONS=--no-addons", "node", str(stage / "validate-v132.mjs"),
-            "--public-repo", str(public_repo), "--controller-commit", controller,
+            "--public-repo", str(public_snapshot), "--controller-commit", controller,
             "--bundle-repo", str(bundle_repo), "--bundle-source-commit", bundle_source,
             "--bundle-root", str(stage),
         ]

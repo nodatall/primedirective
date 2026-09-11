@@ -110,6 +110,13 @@ class AdapterTests(unittest.TestCase):
             "public_execution_policy_sha256": adapter.sha256_file(adapter.POLICY_PATH),
             "private_evaluator_source_commit": "4" * 40,
             "private_evaluator_commit": "8" * 40,
+            "private_runtime_launcher_path": adapter.readiness_transition.PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH,
+            "private_runtime_launcher_sha256": adapter.sha256_file(
+                adapter.readiness_transition.PUBLIC_REPOSITORY
+                / adapter.readiness_transition.PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH
+            ),
+            "private_runtime_closure_manifest_path": adapter.readiness_transition.PRIVATE_RUNTIME_CLOSURE_MANIFEST_RELATIVE_PATH,
+            "private_runtime_closure_manifest_sha256": "9" * 64,
             "independent_review_result_kind": adapter.INDEPENDENT_RESULT_KIND,
             "private_independent_reviewed_source_commit": "4" * 40,
             "private_independent_reviewed_final_commit": "8" * 40,
@@ -139,6 +146,7 @@ class AdapterTests(unittest.TestCase):
                 adapter.BUNDLE_INTERFACE_PATH
             ),
             "independent_case_bundle_source_commit": "5" * 40,
+            "independent_case_bundle_controller_commit": "5bdd3d012e9a85da91747b975971f25c3c5bfe55",
             "independent_case_bundle_source_tree": "6" * 40,
             "independent_case_bundle_manifest_sha256": "7" * 64,
             "independent_case_bundle_validation_sha256": "8" * 64,

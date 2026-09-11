@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 MODULE_PATH = Path(__file__).resolve().parents[1] / "case_bundle_validator.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v1232_case_bundle_validator", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1233_case_bundle_validator", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 validator = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(validator)
@@ -20,6 +20,8 @@ SPEC.loader.exec_module(validator)
 
 class CaseBundleValidatorTests(unittest.TestCase):
     def setUp(self) -> None:
+        original_controller = validator.BUNDLE_CONTROLLER_COMMIT
+        self.addCleanup(setattr, validator, "BUNDLE_CONTROLLER_COMMIT", original_controller)
         base = Path(tempfile.mkdtemp(prefix="deliver-v1232-bundle-test-", dir="/private/tmp"))
         self.addCleanup(shutil.rmtree, base)
         self.public = base / "public"
@@ -30,16 +32,24 @@ class CaseBundleValidatorTests(unittest.TestCase):
         self.integrated.mkdir()
         self._init(self.public)
         self._init(self.bundle)
-        interface = json.loads(
-            (ROOT / validator.INTERFACE_RELATIVE_PATH).read_text(encoding="utf-8")
-        )
+        interface = json.loads(subprocess.run(
+            ["git", "show", f"{validator.BUNDLE_CONTROLLER_COMMIT}:{validator.INTERFACE_RELATIVE_PATH}"],
+            cwd=ROOT, check=True, capture_output=True, text=True,
+        ).stdout)
         for relative in interface["public_binding_paths"]:
             target = self.public / relative
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes((ROOT / relative).read_bytes())
-            target.chmod((ROOT / relative).stat().st_mode & 0o777)
+            target.write_bytes(subprocess.run(
+                ["git", "show", f"{validator.BUNDLE_CONTROLLER_COMMIT}:{relative}"],
+                cwd=ROOT, check=True, capture_output=True,
+            ).stdout)
+            target.chmod(0o755 if subprocess.run(
+                ["git", "ls-tree", validator.BUNDLE_CONTROLLER_COMMIT, "--", relative],
+                cwd=ROOT, check=True, capture_output=True, text=True,
+            ).stdout.startswith("100755") else 0o644)
         self._commit(self.public, "controller")
         self.controller = self._git(self.public, "rev-parse", "HEAD")
+        validator.BUNDLE_CONTROLLER_COMMIT = self.controller
         self.controller_tree = self._git(self.public, "rev-parse", "HEAD^{tree}")
         self.interface = interface
         self._build_bundle()
@@ -159,11 +169,13 @@ class CaseBundleValidatorTests(unittest.TestCase):
         with self.assertRaisesRegex(validator.BundleValidationError, "every imported file"):
             validator.validate_bundle(self.public, self.controller, self.bundle, "HEAD")
 
-    def test_public_controller_byte_drift_is_rejected(self) -> None:
+    def test_carried_bundle_uses_frozen_controller_not_descendant_live_bytes(self) -> None:
         relative = self.interface["public_binding_paths"][0]
         (self.public / relative).write_bytes(b"drift\n")
-        with self.assertRaisesRegex(validator.BundleValidationError, "public controller file drifted"):
-            validator.validate_bundle(self.public, self.controller, self.bundle, self.bundle_source)
+        result = validator.validate_bundle(
+            self.public, self.controller, self.bundle, self.bundle_source
+        )
+        self.assertEqual(result["controller_commit"], self.controller)
 
 
 if __name__ == "__main__":
