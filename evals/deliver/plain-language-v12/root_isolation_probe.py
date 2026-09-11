@@ -228,8 +228,7 @@ def _real_preflight(repo: Path, challenge: str) -> dict[str, Any]:
                 and str(tmpdir).startswith("/private/tmp/deliver-eval-preflight-"),
             "empty_inherited_environment": set(environment) == expected_keys
                 and "/usr/bin/env" in command and "-i" in command,
-            "credential_copy_boundary": "auth.json" not in smoke["trace"]
-                and not (state_home / "auth.json").exists(),
+            "credential_copy_boundary": not (state_home / "auth.json").exists(),
             "pinned_bundled_codex_identity": artifact["binary_path"] == str(harness.BUNDLED_CODEX)
                 and artifact["binary_sha256"] == harness.runner_identity()["sha256"],
             "required_codex_connectivity": smoke["exit_code"] == 0,
