@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
-- Evaluator version: `deliver-plain-language-v12.31`
+- Evaluator version: `deliver-plain-language-v12.32` (controller frozen; independent bundle pending)
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -31,12 +31,9 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.28`; rejected because its recursive value denylist treated authenticated contract prose as control metadata and rejected legitimate package content.
 - Invalidated evaluator: `deliver-plain-language-v12.29`; rejected because its root-isolation wrapper accepted self-asserted pass environment variables and falsely claimed a network boundary that the host does not provide.
 - Invalidated evaluator: `deliver-plain-language-v12.30`; rejected because its frozen root-isolation closure omitted the dynamically imported Deliver harness, allowing a descendant harness replacement to fabricate a passing probe.
-- V12.31 preserves the opaque readability content plane and evaluator-owned packet derivation. Its root command verifies a complete explicit local execution closure, including the transition helper, probe, dependency manifest, and Deliver harness, before and after sealed staging. The policy requires Codex connectivity and makes no network-isolation claim.
-- V12.31 uses an independently authored no-context case bundle with a version-specific namespace. Exact case reuse is absent against authenticated v12.23-v12.30 case sets; semantic nonreuse against v12.22 is unavailable because those authenticated case bytes were lost, so no semantic nonreuse claim is made.
-- Evaluator source and final commits: `703fa74ad18eb852e6cc82fe3e0dd4d9551f3b5b` and `cf7267deb8f69b7a8411d8643e3b937f9a69830c`
-- Public controller commit: `4d60e7e7fa6d9f7ba208434a5aa233354770ffbf`
-- Public author-ready commit: `3bd095616629174fa58aa264d02d05ed2bfb7176`
-- Author-ready-state SHA-256: `2df285c80face7652e8b94a042834922fef0d705af901409ea4f72ccb7417775`
+- Invalidated evaluator: `deliver-plain-language-v12.31`; rejected because one independently authored bundle file was replaced during import while the original manifest remained, so standalone and integrated bindings could not both be true.
+- V12.32 Phase A freezes the public schema and complete eight-file independent-bundle interface before hidden case authoring. The controller binds every public code/data input used by the readiness, isolation, and bundle-validation paths. Imported bundle files, including the manifest, must remain byte-identical; no build step may rewrite them.
+- V12.32 hidden case authoring, private evaluator source/final commits, author readiness, independent review, trusted-host isolation, official arms, and judge runs are all pending.
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
@@ -47,35 +44,24 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [x] Exact package, Git source, runtime filesystem, packet, schema, evaluator, and policy binding implemented.
 - [x] Unchanged v11 preparation, runner, pre-packet freeze, packet staging, finalization, and normalization controls composed.
 - [x] Canonical per-arm artifact sealing and deterministic write-once handoff implemented.
-- [x] Private evaluator reaches its author-ready state with sealed-artifact-derived packets, verified trust roots, recomputed hard gates, exact lane schemas, and a write-once comparison lifecycle; independent review and trusted-host isolation remain pending.
+- [ ] Import and validate a fresh independent v12.32 bundle, then freeze the private evaluator and author-ready state.
 - [x] Approved candidate package is committed and bound to its exact public manifest.
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.
 - [ ] Combined v12 verdict and user wording approval are recorded.
 
-## Readiness Transitions
+## Controller Freeze
 
-The committed readiness state advances only in this order: `author_ready` ->
-`independent_review_pass` -> `ready`. The transition helper verifies immutable
-evaluator identities, exact frozen public file bytes and last-touch commits,
-the predecessor commit and digest, and the stage-specific record before it
-prepares the next state. The root-isolation operation accepts no caller receipt
-or pass flags. It verifies the committed review predecessor and frozen roots,
-runs the exact host probes with a scrubbed inherited environment, and writes the
-two allowlisted ready-transition files only after both probes pass. Each
-prepared transition must be committed as exactly the two allowlisted files
-before the matching verify command succeeds.
+Phase A ends at `controller_frozen_awaiting_independent_bundle`. This state is
+not `author_ready` and cannot initialize an official run. The next author phase
+must import all eight source files byte-for-byte from one committed independent
+bundle, reconcile standalone and integrated validation against this exact
+controller, and only then create the private source/final and `author_ready`
+state. The later readiness order remains `author_ready` ->
+`independent_review_pass` -> `ready`.
 
 ```bash
-python3 evals/deliver/plain-language-v12/readiness_transition.py verify-author-ready --repo . --ref HEAD
-python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-independent-review --repo . --record /absolute/path/to/v12.31-independent-review-record.json
-git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/independent-review-record.json
-git commit -m "Record Deliver evaluator v12.31 independent review"
-python3 evals/deliver/plain-language-v12/readiness_transition.py verify-independent-review --repo . --ref HEAD
-python3 evals/deliver/plain-language-v12/readiness_transition.py run-root-isolation --repo .
-git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json
-git commit -m "Mark Deliver evaluator v12.31 ready"
-python3 evals/deliver/plain-language-v12/readiness_transition.py verify-ready --repo . --ref HEAD
+python3 evals/deliver/plain-language-v12/readiness_transition.py verify-controller-frozen --repo . --ref HEAD
 ```
 
 ## Frozen Verdict Transitions

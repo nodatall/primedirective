@@ -2,6 +2,9 @@
   "closure_policy": {
     "caller_pythonpath_allowed": false,
     "dynamic_imports": {
+      "evals/deliver/plain-language-v12/readiness_transition.py": [
+        "evals/deliver/plain-language-v12/case_bundle_validator.py"
+      ],
       "evals/deliver/plain-language-v12/root_isolation_probe.py": [
         "evals/deliver/harness.py"
       ]
@@ -9,8 +12,20 @@
     "execution_source": "verified_git_blobs_in_sealed_staging",
     "normal_imports": "stdlib_only_ast_validated",
     "python_isolated_mode_required": true,
-    "repo_local_data_inputs": [],
-    "repo_local_subprocess_entrypoints": [],
+    "repo_local_data_inputs": [
+      "evals/deliver/plain-language-v12/adapter.py",
+      "evals/deliver/plain-language-v12/baseline-package-manifest.json",
+      "evals/deliver/plain-language-v12/candidate-behavior-map.json",
+      "evals/deliver/plain-language-v12/candidate-package-manifest.json",
+      "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
+      "evals/deliver/plain-language-v12/execution-policy.json",
+      "evals/deliver/plain-language-v12/independent-case-bundle-interface.json",
+      "evals/deliver/plain-language-v12/public-contract-inventory.json",
+      "evals/deliver/plain-language-v12/wording-approval.json"
+    ],
+    "repo_local_subprocess_entrypoints": [
+      "evals/deliver/plain-language-v12/standalone_case_bundle_validator.mjs"
+    ],
     "unlisted_repo_local_resolution_allowed": false
   },
   "entries": [
@@ -22,21 +37,87 @@
     },
     {
       "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/adapter.py",
+      "role": "public_adapter_binding_data",
+      "sha256": "eb7950fe1d577d9f3e40773555eaf5b219dab055f88f8ab46c70765a0638e6e9"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/baseline-package-manifest.json",
+      "role": "baseline_package_binding_data",
+      "sha256": "6e367564333f4ab208405ba1105cc791e00a84c04a5e77ec6867aebbab33b450"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/candidate-behavior-map.json",
+      "role": "candidate_behavior_binding_data",
+      "sha256": "035c9a8e7292e529d68bcd714914dfeed9b3434606e4fcd1c1ddec4a9a8472f9"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/candidate-package-manifest.json",
+      "role": "candidate_package_binding_data",
+      "sha256": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/case_bundle_validator.py",
+      "role": "private_bundle_integrity_validator",
+      "sha256": "8a3582d2274a6ffa75c563aed3fd0f58cfbb6383b557a9fabefb6db19570192b"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
+      "role": "response_schema_binding_data",
+      "sha256": "59e23f99042c9613cde7c27fff74dfc8e8288e9741afe2fdd4c438a6393067ab"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/execution-policy.json",
+      "role": "execution_policy_binding_data",
+      "sha256": "9566fae22001ca38fe90372eafcfc244e4e6d25274ff9ef46968d7c0724224af"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/independent-case-bundle-interface.json",
+      "role": "independent_bundle_interface_data",
+      "sha256": "70b264c74d2d1c7563482181eb2a1584f12b91c087c403fa884138e078c26116"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/public-contract-inventory.json",
+      "role": "public_inventory_binding_data",
+      "sha256": "1d7abc4af460b7c0864b625fb14b139afde8a022c47c185c974bad5dbbcf0715"
+    },
+    {
+      "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/readiness_transition.py",
       "role": "readiness_transition_entrypoint",
-      "sha256": "d4caaba8e18a925c81982a9d019f2907af0578c551f2a1e42227ee697293f7d2"
+      "sha256": "d1ccabf01cfbc5d4bc26613e22e17d262854d2710eb25b800e1b6fcfe8026b09"
     },
     {
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/root_isolation_probe.py",
       "role": "root_isolation_probe_entrypoint",
-      "sha256": "340daf70e5fae04eed80db004d33ceb2a50f342333b6043db103ee7481fe1d8b"
+      "sha256": "888a01568251ec535fdca04d917f48a125e6e6fd2bd072e253e532f95e8b40ce"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/standalone_case_bundle_validator.mjs",
+      "role": "standalone_bundle_validator_executable",
+      "sha256": "d9cc0c8012ea78bcdd71dca86c05f56b453eb6b61cbad64668ca5f23aef6a23a"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/wording-approval.json",
+      "role": "wording_approval_binding_data",
+      "sha256": "49708aaab9e4881044878da7e37805e60c71bfb6c1e85f5e8c2d7085eb405d7a"
     }
   ],
-  "entries_sha256": "b1e856eedafac2b4780df259d66455471b958128063132b87765759b20aa144b",
-  "entry_count": 3,
+  "entries_sha256": "668364aa2894f9add380a2cac931a197ea3882181666d1b9e4d9c76388149da5",
+  "entry_count": 14,
   "manifest_kind": "root_isolation_repo_local_execution_and_data_dependency_closure",
-  "manifest_sha256": "8c85aeb09b4cb4209391ee157d3ba5135ae183131a7c075e114d11ecd5f3d0dc",
-  "oracle_version": "deliver-plain-language-v12.31",
+  "manifest_sha256": "9b0d74e4773cd4a25deab346961f47285eed464bad7b983da647e740d821af31",
+  "oracle_version": "deliver-plain-language-v12.32",
   "schema_version": 1
 }

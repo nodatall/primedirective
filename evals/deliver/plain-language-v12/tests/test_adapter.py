@@ -134,6 +134,15 @@ class AdapterTests(unittest.TestCase):
             "wording_approval_record_sha256": adapter.sha256_file(adapter.WORDING_APPROVAL_PATH),
             "wording_approval_record_commit": "9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5",
             "wording_approval_candidate_commit": candidate_authority["candidate_commit"],
+            "independent_case_bundle_interface_path": adapter.BUNDLE_INTERFACE_RELATIVE_PATH,
+            "independent_case_bundle_interface_sha256": adapter.sha256_file(
+                adapter.BUNDLE_INTERFACE_PATH
+            ),
+            "independent_case_bundle_source_commit": "5" * 40,
+            "independent_case_bundle_source_tree": "6" * 40,
+            "independent_case_bundle_manifest_sha256": "7" * 64,
+            "independent_case_bundle_validation_sha256": "8" * 64,
+            "independent_case_bundle_complete_import_status": "pass",
             "private_projected_packet_sha256": adapter.sha256_file(self.packet),
             "per_arm_response_schema_sha256": adapter.sha256_file(self.schema),
             "projected_packet_bytes": self.packet.stat().st_size,
@@ -151,7 +160,7 @@ class AdapterTests(unittest.TestCase):
             ],
             "authenticated_prior_case_reuse_count": 0,
             "authenticated_prior_case_digest_overlap_count": 0,
-            "case_freshness_basis": "prevented_by_v1231_specific_namespace",
+            "case_freshness_basis": "prevented_by_v1232_specific_namespace",
             "case_author_process": "fresh_no_context_sol_xhigh_from_public_inventory_only",
             "semantic_nonreuse_against_v12_22_status": (
                 "unavailable_lost_authenticated_case_bytes"
@@ -747,6 +756,31 @@ class AdapterTests(unittest.TestCase):
             self.assertRaisesRegex(adapter.AdapterError, "nested independent review"),
         ):
             adapter.validate_readiness(self.packet, self.schema)
+
+    def test_readiness_requires_complete_independent_bundle_binding(self) -> None:
+        cases = (
+            ("independent_case_bundle_interface_sha256", "0" * 64),
+            ("independent_case_bundle_source_commit", "0" * 40),
+            ("independent_case_bundle_source_tree", "0" * 40),
+            ("independent_case_bundle_manifest_sha256", "0" * 64),
+            ("independent_case_bundle_validation_sha256", "0" * 64),
+            ("independent_case_bundle_complete_import_status", "pending"),
+        )
+        for field, value in cases:
+            with self.subTest(field=field):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaises(adapter.AdapterError),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
 
     def test_readiness_execution_limits_require_exact_integers(self) -> None:
         self.readiness_document["execution_limits"]["semantic_attempts"] = True

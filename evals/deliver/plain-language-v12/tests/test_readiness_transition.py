@@ -15,7 +15,7 @@ import importlib.util
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "readiness_transition.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v1231_readiness_transition", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1232_readiness_transition", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 transition = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(transition)
@@ -23,7 +23,7 @@ SPEC.loader.exec_module(transition)
 
 class ReadinessTransitionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1231-readiness-", dir="/private/tmp"))
+        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1232-readiness-", dir="/private/tmp"))
         self.addCleanup(shutil.rmtree, self.repo)
         self.public_patch = mock.patch.object(transition, "PUBLIC_REPOSITORY", self.repo)
         self.private_patch = mock.patch.object(
@@ -81,6 +81,15 @@ class ReadinessTransitionTests(unittest.TestCase):
             "private_evaluator_source_commit": "1" * 40,
             "private_evaluator_commit": "2" * 40,
             "public_adapter_introducing_commit": self.controller_commit,
+            "independent_case_bundle_interface_path": transition.BUNDLE_INTERFACE_RELATIVE_PATH,
+            "independent_case_bundle_interface_sha256": transition.sha256_bytes(
+                (self.repo / transition.BUNDLE_INTERFACE_RELATIVE_PATH).read_bytes()
+            ),
+            "independent_case_bundle_source_commit": "5" * 40,
+            "independent_case_bundle_source_tree": "6" * 40,
+            "independent_case_bundle_manifest_sha256": "7" * 64,
+            "independent_case_bundle_validation_sha256": "8" * 64,
+            "independent_case_bundle_complete_import_status": "pass",
             "frozen_public_file_digests": {
                 path: transition.sha256_bytes((self.repo / path).read_bytes()) for path in frozen
             },
@@ -125,7 +134,7 @@ class ReadinessTransitionTests(unittest.TestCase):
             "oracle_version": transition.ORACLE_VERSION,
             "record_kind": "independent_review",
             "result": "pass",
-            "reviewer_allocation_id": "fresh-reviewer-allocation-v1231",
+            "reviewer_allocation_id": "fresh-reviewer-allocation-v1232",
             "reviewer_nonce": "3" * 64,
             "private_evaluator_source_commit": self.document["private_evaluator_source_commit"],
             "private_evaluator_final_commit": self.document["private_evaluator_commit"],
@@ -231,6 +240,65 @@ class ReadinessTransitionTests(unittest.TestCase):
             json.loads((self.repo / transition.ISOLATION_RELATIVE_PATH).read_text())["network_policy"],
             transition.NETWORK_POLICY,
         )
+
+    def test_controller_frozen_scaffold_is_exact_and_non_ready(self) -> None:
+        scaffold = {
+            "schema_version": transition.SCHEMA_VERSION,
+            "oracle_version": transition.ORACLE_VERSION,
+            "status": "controller_frozen_awaiting_independent_bundle",
+            "public_adapter_identifier": "deliver_plain_language_v12",
+            "independent_case_bundle_interface_path": transition.BUNDLE_INTERFACE_RELATIVE_PATH,
+            "independent_case_bundle_interface_sha256": transition.sha256_bytes(
+                (self.repo / transition.BUNDLE_INTERFACE_RELATIVE_PATH).read_bytes()
+            ),
+            "hidden_case_authoring_performed": False,
+            "private_evaluator_freeze_performed": False,
+            "independent_review_performed": False,
+            "trusted_host_isolation_performed": False,
+            "official_arm_execution_performed": False,
+            "official_judge_execution_performed": False,
+        }
+        self.write_json(transition.READINESS_RELATIVE_PATH, scaffold)
+        self.git("add", transition.READINESS_RELATIVE_PATH)
+        self.git("commit", "-q", "-m", "controller frozen")
+        result = transition.verify_controller_frozen(self.repo)
+        self.assertEqual(result["status"], scaffold["status"])
+        self.assertEqual(
+            set(result["public_file_sha256"]),
+            set(transition.DEPENDENCY_OBSERVED_ROLES),
+        )
+        with self.assertRaises(transition.ReadinessTransitionError):
+            transition.verify_author_ready(self.repo)
+
+    def test_controller_frozen_scaffold_rejects_claims_or_unknown_fields(self) -> None:
+        base = {
+            "schema_version": transition.SCHEMA_VERSION,
+            "oracle_version": transition.ORACLE_VERSION,
+            "status": "controller_frozen_awaiting_independent_bundle",
+            "public_adapter_identifier": "deliver_plain_language_v12",
+            "independent_case_bundle_interface_path": transition.BUNDLE_INTERFACE_RELATIVE_PATH,
+            "independent_case_bundle_interface_sha256": transition.sha256_bytes(
+                (self.repo / transition.BUNDLE_INTERFACE_RELATIVE_PATH).read_bytes()
+            ),
+            "hidden_case_authoring_performed": False,
+            "private_evaluator_freeze_performed": False,
+            "independent_review_performed": False,
+            "trusted_host_isolation_performed": False,
+            "official_arm_execution_performed": False,
+            "official_judge_execution_performed": False,
+        }
+        for field, value in (
+            ("hidden_case_authoring_performed", True),
+            ("private_evaluator_freeze_performed", True),
+            ("unexpected", False),
+        ):
+            candidate = dict(base)
+            candidate[field] = value
+            self.write_json(transition.READINESS_RELATIVE_PATH, candidate)
+            self.git("add", transition.READINESS_RELATIVE_PATH)
+            self.git("commit", "-q", "-m", f"invalid scaffold {field}")
+            with self.assertRaises(transition.ReadinessTransitionError):
+                transition.verify_controller_frozen(self.repo)
 
     def test_ready_cannot_skip_independent_review(self) -> None:
         with self.assertRaises(transition.ReadinessTransitionError):

@@ -37,8 +37,8 @@ import readiness_transition  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 28
-ORACLE_VERSION = "deliver-plain-language-v12.31"
+READINESS_SCHEMA_VERSION = 29
+ORACLE_VERSION = "deliver-plain-language-v12.32"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -50,6 +50,10 @@ BASELINE_MANIFEST_PATH = V12_ROOT / "baseline-package-manifest.json"
 CANDIDATE_MANIFEST_PATH = V12_ROOT / "candidate-package-manifest.json"
 INVENTORY_PATH = V12_ROOT / "public-contract-inventory.json"
 CANDIDATE_BEHAVIOR_MAP_PATH = V12_ROOT / "candidate-behavior-map.json"
+BUNDLE_INTERFACE_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/independent-case-bundle-interface.json"
+)
+BUNDLE_INTERFACE_PATH = V12_ROOT / "independent-case-bundle-interface.json"
 WORDING_APPROVAL_RELATIVE_PATH = "evals/deliver/plain-language-v12/wording-approval.json"
 WORDING_APPROVAL_PATH = V12_ROOT / "wording-approval.json"
 V11_MANIFEST_PATH = V12_ROOT / "v11-file-manifest.json"
@@ -147,6 +151,12 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "candidate_behavior_map_sha256", "candidate_commit",
     "wording_approval_record_path", "wording_approval_record_sha256",
     "wording_approval_record_commit", "wording_approval_candidate_commit",
+    "independent_case_bundle_interface_path",
+    "independent_case_bundle_interface_sha256",
+    "independent_case_bundle_source_commit", "independent_case_bundle_source_tree",
+    "independent_case_bundle_manifest_sha256",
+    "independent_case_bundle_validation_sha256",
+    "independent_case_bundle_complete_import_status",
     "private_evaluator_source_commit", "private_evaluator_commit",
     "independent_review_result_kind", "private_independent_reviewed_source_commit",
     "private_independent_reviewed_final_commit", "trusted_host_isolation_result_kind",
@@ -869,6 +879,8 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         "candidate_package_content_manifest_sha256": candidate_manifest.get("manifest_sha256"),
         "candidate_behavior_map_sha256": sha256_file(CANDIDATE_BEHAVIOR_MAP_PATH),
         "candidate_commit": candidate_manifest.get("candidate_commit"),
+        "independent_case_bundle_interface_path": BUNDLE_INTERFACE_RELATIVE_PATH,
+        "independent_case_bundle_interface_sha256": sha256_file(BUNDLE_INTERFACE_PATH),
     }
     if any(readiness.get(key) != value for key, value in public_bindings.items()):
         raise AdapterError(
@@ -903,6 +915,14 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         raise AdapterError("wording approval record is not committed in public ancestry")
     if not nonzero_hex(readiness.get("public_adapter_introducing_commit"), HEX40, 40):
         raise AdapterError("oracle readiness public adapter commit is missing or malformed")
+    if (
+        not nonzero_hex(readiness.get("independent_case_bundle_source_commit"), HEX40, 40)
+        or not nonzero_hex(readiness.get("independent_case_bundle_source_tree"), HEX40, 40)
+        or not nonzero_hex(readiness.get("independent_case_bundle_manifest_sha256"), HEX64, 64)
+        or not nonzero_hex(readiness.get("independent_case_bundle_validation_sha256"), HEX64, 64)
+        or readiness.get("independent_case_bundle_complete_import_status") != "pass"
+    ):
+        raise AdapterError("independent case bundle binding is missing or malformed")
     if readiness.get("model") != EXPECTED_POLICY["model"] or readiness.get("reasoning") != EXPECTED_POLICY["reasoning"]:
         raise AdapterError("oracle readiness model or reasoning differs from policy")
     limits = readiness.get("execution_limits")
@@ -957,7 +977,7 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or type(readiness.get("authenticated_prior_case_digest_overlap_count")) is not int
         or readiness.get("authenticated_prior_case_digest_overlap_count") != 0
         or readiness.get("case_freshness_basis")
-        != "prevented_by_v1231_specific_namespace"
+        != "prevented_by_v1232_specific_namespace"
         or readiness.get("case_author_process")
         != "fresh_no_context_sol_xhigh_from_public_inventory_only"
         or readiness.get("semantic_nonreuse_against_v12_22_status")

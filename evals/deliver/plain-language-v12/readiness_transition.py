@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Version-pinned, auditable readiness transitions for Deliver oracle v12.31."""
+"""Version-pinned, auditable readiness transitions for Deliver oracle v12.32."""
 
 from __future__ import annotations
 
 import argparse
 import ast
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -18,14 +19,23 @@ from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.31"
-SCHEMA_VERSION = 28
+ORACLE_VERSION = "deliver-plain-language-v12.32"
+SCHEMA_VERSION = 29
 READINESS_RELATIVE_PATH = "evals/deliver/plain-language-v12/oracle-readiness.json"
 REVIEW_RELATIVE_PATH = "evals/deliver/plain-language-v12/independent-review-record.json"
 ISOLATION_RELATIVE_PATH = "evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json"
 PROBE_RELATIVE_PATH = "evals/deliver/plain-language-v12/root_isolation_probe.py"
 TRANSITION_RELATIVE_PATH = "evals/deliver/plain-language-v12/readiness_transition.py"
 HARNESS_RELATIVE_PATH = "evals/deliver/harness.py"
+CASE_BUNDLE_VALIDATOR_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/case_bundle_validator.py"
+)
+BUNDLE_INTERFACE_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/independent-case-bundle-interface.json"
+)
+STANDALONE_BUNDLE_VALIDATOR_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/standalone_case_bundle_validator.mjs"
+)
 DEPENDENCY_MANIFEST_RELATIVE_PATH = (
     "evals/deliver/plain-language-v12/root-isolation-dependencies.json"
 )
@@ -33,14 +43,35 @@ DEPENDENCY_ROLES = {
     TRANSITION_RELATIVE_PATH: "readiness_transition_entrypoint",
     PROBE_RELATIVE_PATH: "root_isolation_probe_entrypoint",
     HARNESS_RELATIVE_PATH: "dynamic_deliver_harness_import",
+    CASE_BUNDLE_VALIDATOR_RELATIVE_PATH: "private_bundle_integrity_validator",
+    STANDALONE_BUNDLE_VALIDATOR_RELATIVE_PATH: "standalone_bundle_validator_executable",
+    BUNDLE_INTERFACE_RELATIVE_PATH: "independent_bundle_interface_data",
+    "evals/deliver/plain-language-v12/adapter.py": "public_adapter_binding_data",
+    "evals/deliver/plain-language-v12/baseline-package-manifest.json": "baseline_package_binding_data",
+    "evals/deliver/plain-language-v12/candidate-behavior-map.json": "candidate_behavior_binding_data",
+    "evals/deliver/plain-language-v12/candidate-package-manifest.json": "candidate_package_binding_data",
+    "evals/deliver/plain-language-v12/comprehension-vocabulary.json": "response_schema_binding_data",
+    "evals/deliver/plain-language-v12/execution-policy.json": "execution_policy_binding_data",
+    "evals/deliver/plain-language-v12/public-contract-inventory.json": "public_inventory_binding_data",
+    "evals/deliver/plain-language-v12/wording-approval.json": "wording_approval_binding_data",
 }
+PYTHON_SOURCE_DEPENDENCIES = frozenset({
+    TRANSITION_RELATIVE_PATH,
+    PROBE_RELATIVE_PATH,
+    HARNESS_RELATIVE_PATH,
+    CASE_BUNDLE_VALIDATOR_RELATIVE_PATH,
+})
+REPO_LOCAL_DATA_INPUTS = tuple(sorted(
+    set(DEPENDENCY_ROLES) - PYTHON_SOURCE_DEPENDENCIES
+    - {STANDALONE_BUNDLE_VALIDATOR_RELATIVE_PATH}
+))
 DEPENDENCY_OBSERVED_ROLES = {
     **DEPENDENCY_ROLES,
     DEPENDENCY_MANIFEST_RELATIVE_PATH: "dependency_manifest_root",
 }
 PUBLIC_REPOSITORY = Path("/Volumes/Code/primedirective")
 PRIVATE_EVALUATOR_REPOSITORY = Path(
-    "/private/tmp/deliver-plain-language-v131-evaluator.JKNpUB/repo"
+    "/private/tmp/deliver-plain-language-v132-evaluator/repo"
 )
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -51,8 +82,8 @@ NETWORK_POLICY = (
     "denial are not claimed; parent network credentials, inherited environment, and "
     "hidden evaluator data remain unavailable to the arm"
 )
-OUTER_PROBE_ID = "deliver-v12.31-outer-sandbox-v1"
-PREFLIGHT_PROBE_ID = "deliver-v12.31-real-preflight-v1"
+OUTER_PROBE_ID = "deliver-v12.32-outer-sandbox-v1"
+PREFLIGHT_PROBE_ID = "deliver-v12.32-real-preflight-v1"
 OUTER_CLAIMS = frozenset({
     "stage_read_allowed",
     "stage_write_allowed",
@@ -296,19 +327,23 @@ def _stdlib_only_imports(source: bytes, label: str) -> None:
 def _validate_dependency_source_closure(entries: list[dict[str, str]], blobs: dict[str, bytes]) -> None:
     if [entry["path"] for entry in entries] != sorted(DEPENDENCY_ROLES):
         raise ReadinessTransitionError("dependency manifest entry set is not exact")
-    for relative_path in sorted(DEPENDENCY_ROLES):
+    for relative_path in sorted(PYTHON_SOURCE_DEPENDENCIES):
         _stdlib_only_imports(blobs[relative_path], relative_path)
     probe_source = blobs[PROBE_RELATIVE_PATH].decode("utf-8")
     transition_source = blobs[TRANSITION_RELATIVE_PATH].decode("utf-8")
     harness_source = blobs[HARNESS_RELATIVE_PATH].decode("utf-8")
+    bundle_validator_source = blobs[CASE_BUNDLE_VALIDATOR_RELATIVE_PATH].decode("utf-8")
     if (
         probe_source.count("spec_from_file_location(") != 1
+        or transition_source.count("spec_from_file_location(") != 3
         or "HARNESS_RELATIVE_PATH" not in probe_source
+        or "CASE_BUNDLE_VALIDATOR_RELATIVE_PATH" not in transition_source
         or "--closure-root" not in probe_source
         or "--dependency-manifest-sha256" not in probe_source
         or "-I" not in transition_source
         or "PROBE_ENVIRONMENT" not in transition_source
         or "subprocess" not in harness_source
+        or "validate_bundle(" not in bundle_validator_source
     ):
         raise ReadinessTransitionError("dependency execution closure source audit failed")
 
@@ -451,9 +486,12 @@ def root_isolation_contract() -> dict[str, Any]:
             "normal_imports": "stdlib_only_ast_validated",
             "dynamic_imports": {
                 PROBE_RELATIVE_PATH: [HARNESS_RELATIVE_PATH],
+                TRANSITION_RELATIVE_PATH: [CASE_BUNDLE_VALIDATOR_RELATIVE_PATH],
             },
-            "repo_local_subprocess_entrypoints": [],
-            "repo_local_data_inputs": [],
+            "repo_local_subprocess_entrypoints": [
+                STANDALONE_BUNDLE_VALIDATOR_RELATIVE_PATH,
+            ],
+            "repo_local_data_inputs": list(REPO_LOCAL_DATA_INPUTS),
             "unlisted_repo_local_resolution_allowed": False,
             "execution_source": "verified_git_blobs_in_sealed_staging",
             "python_isolated_mode_required": True,
@@ -476,7 +514,7 @@ def root_isolation_contract() -> dict[str, Any]:
 
 def _validate_common(document: dict[str, Any]) -> None:
     if document.get("schema_version") != SCHEMA_VERSION or document.get("oracle_version") != ORACLE_VERSION:
-        raise ReadinessTransitionError("readiness version is not v12.31")
+        raise ReadinessTransitionError("readiness version is not v12.32")
     if document.get("status") not in {"author_ready", "independent_review_pass", "ready"}:
         raise ReadinessTransitionError("readiness status is invalid")
     if document.get("immutable_readiness_sha256") != immutable_digest(document):
@@ -486,6 +524,25 @@ def _validate_common(document: dict[str, Any]) -> None:
             raise ReadinessTransitionError(f"{field} is malformed")
     if document.get("root_isolation_contract") != root_isolation_contract():
         raise ReadinessTransitionError("root isolation contract is not exact")
+    if (
+        document.get("independent_case_bundle_interface_path")
+        != BUNDLE_INTERFACE_RELATIVE_PATH
+        or not HEX64.fullmatch(
+            str(document.get("independent_case_bundle_interface_sha256"))
+        )
+        or not HEX40.fullmatch(
+            str(document.get("independent_case_bundle_source_commit"))
+        )
+        or not HEX40.fullmatch(str(document.get("independent_case_bundle_source_tree")))
+        or not HEX64.fullmatch(
+            str(document.get("independent_case_bundle_manifest_sha256"))
+        )
+        or not HEX64.fullmatch(
+            str(document.get("independent_case_bundle_validation_sha256"))
+        )
+        or document.get("independent_case_bundle_complete_import_status") != "pass"
+    ):
+        raise ReadinessTransitionError("independent case bundle binding is malformed")
     frozen_digests = document.get("frozen_public_file_digests")
     frozen_commits = document.get("frozen_public_file_commits")
     if (
@@ -500,6 +557,11 @@ def _validate_common(document: dict[str, Any]) -> None:
     required_frozen_paths = set(DEPENDENCY_ROLES) | {DEPENDENCY_MANIFEST_RELATIVE_PATH}
     if not required_frozen_paths.issubset(frozen_digests):
         raise ReadinessTransitionError("root isolation dependency closure is not fully frozen")
+    if (
+        frozen_digests.get(BUNDLE_INTERFACE_RELATIVE_PATH)
+        != document.get("independent_case_bundle_interface_sha256")
+    ):
+        raise ReadinessTransitionError("independent case bundle interface is not frozen")
     for path, digest in frozen_digests.items():
         if (
             not isinstance(path, str)
@@ -523,6 +585,16 @@ def _validate_common(document: dict[str, Any]) -> None:
         or not isinstance(binding.get("entries"), list)
     ):
         raise ReadinessTransitionError("root isolation dependency binding is malformed")
+
+
+def _load_case_bundle_validator() -> Any:
+    path = _require_regular_checkout_file(PUBLIC_REPOSITORY, CASE_BUNDLE_VALIDATOR_RELATIVE_PATH)
+    spec = importlib.util.spec_from_file_location("deliver_v1232_case_bundle_validator", path)
+    if spec is None or spec.loader is None:
+        raise ReadinessTransitionError("case bundle validator cannot be loaded")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _verify_private_evaluator(document: dict[str, Any]) -> None:
@@ -575,6 +647,37 @@ def _verify_private_evaluator(document: dict[str, Any]) -> None:
             or sha256_bytes(_blob(repo, final, entry["path"])) != entry["sha256"]
         ):
             raise ReadinessTransitionError("private reviewed source bytes drifted")
+    validation_path = "private-oracle/bundle-validation.json"
+    validation_raw = _blob(repo, final, validation_path)
+    if sha256_bytes(validation_raw) != document["independent_case_bundle_validation_sha256"]:
+        raise ReadinessTransitionError("private bundle validation artifact digest drifted")
+    validation = load_json_bytes(validation_raw, "private bundle validation")
+    try:
+        recomputed = _load_case_bundle_validator().validate_bundle(
+            PUBLIC_REPOSITORY,
+            document["public_adapter_introducing_commit"],
+            repo,
+            document["independent_case_bundle_source_commit"],
+            repo / "private-oracle",
+        )
+    except Exception as exc:
+        raise ReadinessTransitionError("independent case bundle validation failed") from exc
+    if (
+        validation != recomputed
+        or recomputed.get("bundle_source_commit")
+        != document["independent_case_bundle_source_commit"]
+        or recomputed.get("bundle_source_tree")
+        != document["independent_case_bundle_source_tree"]
+        or recomputed.get("bundle_manifest_sha256")
+        != document["independent_case_bundle_manifest_sha256"]
+        or recomputed.get("controller_commit")
+        != document["public_adapter_introducing_commit"]
+        or recomputed.get("public_file_sha256", {}).get(BUNDLE_INTERFACE_RELATIVE_PATH)
+        != document["independent_case_bundle_interface_sha256"]
+    ):
+        raise ReadinessTransitionError(
+            "standalone, integrated, and readiness bundle bindings do not reconcile"
+        )
 
 
 def _validate_frozen_files(repo: Path, ref: str, document: dict[str, Any]) -> None:
@@ -604,6 +707,65 @@ def _validate_frozen_files(repo: Path, ref: str, document: dict[str, Any]) -> No
 def _readiness_at(repo: Path, commit: str) -> tuple[dict[str, Any], bytes]:
     raw = _blob(repo, commit, READINESS_RELATIVE_PATH)
     return load_json_bytes(raw, "committed readiness"), raw
+
+
+def verify_controller_frozen(repo: Path, ref: str = "HEAD") -> dict[str, Any]:
+    """Verify the Phase-A controller without claiming evaluator readiness."""
+    controller = _commit(repo, ref)
+    if _last_touch(repo, controller, READINESS_RELATIVE_PATH) != controller:
+        raise ReadinessTransitionError(
+            "controller-frozen scaffold must be committed with the controller"
+        )
+    document, raw = _readiness_at(repo, controller)
+    expected = {
+        "schema_version": SCHEMA_VERSION,
+        "oracle_version": ORACLE_VERSION,
+        "status": "controller_frozen_awaiting_independent_bundle",
+        "public_adapter_identifier": "deliver_plain_language_v12",
+        "independent_case_bundle_interface_path": BUNDLE_INTERFACE_RELATIVE_PATH,
+        "independent_case_bundle_interface_sha256": sha256_bytes(
+            _blob(repo, controller, BUNDLE_INTERFACE_RELATIVE_PATH)
+        ),
+        "hidden_case_authoring_performed": False,
+        "private_evaluator_freeze_performed": False,
+        "independent_review_performed": False,
+        "trusted_host_isolation_performed": False,
+        "official_arm_execution_performed": False,
+        "official_judge_execution_performed": False,
+    }
+    if document != expected or raw != canonical_file_bytes(expected):
+        raise ReadinessTransitionError("controller-frozen scaffold is not exact")
+    interface = load_json_bytes(
+        _blob(repo, controller, BUNDLE_INTERFACE_RELATIVE_PATH), "bundle interface"
+    )
+    public_paths = interface.get("public_binding_paths")
+    expected_paths = sorted((*DEPENDENCY_ROLES, DEPENDENCY_MANIFEST_RELATIVE_PATH))
+    if (
+        interface.get("oracle_version") != ORACLE_VERSION
+        or interface.get("integrated_validator_path")
+        != CASE_BUNDLE_VALIDATOR_RELATIVE_PATH
+        or public_paths != expected_paths
+    ):
+        raise ReadinessTransitionError("controller bundle interface public closure is not exact")
+    dependency_binding(repo, controller)
+    digests: dict[str, str] = {}
+    for relative_path in public_paths:
+        source = _blob(repo, controller, relative_path)
+        live = _require_regular_checkout_file(repo, relative_path)
+        mode, _ = _ls_tree_entry(repo, controller, relative_path)
+        if live.read_bytes() != source or _file_mode(live) != mode:
+            raise ReadinessTransitionError(
+                f"controller public binding drifted: {relative_path}"
+            )
+        digests[relative_path] = sha256_bytes(source)
+    return {
+        "status": document["status"],
+        "commit": controller,
+        "tree": _tree(repo, controller),
+        "sha256": sha256_bytes(raw),
+        "interface_sha256": document["independent_case_bundle_interface_sha256"],
+        "public_file_sha256": digests,
+    }
 
 
 def _record_at(repo: Path, commit: str, relative_path: str, label: str) -> tuple[dict[str, Any], bytes]:
@@ -1198,7 +1360,7 @@ def run_root_isolation(repo: Path) -> None:
     python = Path(python_identity["path"])
     challenge = secrets.token_hex(32)
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1231-frozen-closure-", dir="/private/tmp"
+        prefix="deliver-v1232-frozen-closure-", dir="/private/tmp"
     ) as closure_text:
         closure_root = Path(closure_text)
         staged_dependency_observations = _stage_dependency_closure(
@@ -1285,7 +1447,10 @@ def run_root_isolation(repo: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    for command in ("verify-author-ready", "verify-independent-review", "verify-ready"):
+    for command in (
+        "verify-controller-frozen", "verify-author-ready",
+        "verify-independent-review", "verify-ready",
+    ):
         child = subparsers.add_parser(command)
         child.add_argument("--repo", type=Path, default=Path.cwd())
         child.add_argument("--ref", default="HEAD")
@@ -1296,7 +1461,9 @@ def main() -> int:
     ready.add_argument("--repo", type=Path, default=Path.cwd())
     args = parser.parse_args()
     repo = args.repo.resolve()
-    if args.command == "verify-author-ready":
+    if args.command == "verify-controller-frozen":
+        result = verify_controller_frozen(repo, args.ref)
+    elif args.command == "verify-author-ready":
         result = verify_author_ready(repo, args.ref)
     elif args.command == "verify-independent-review":
         result = verify_independent_review_pass(repo, args.ref)

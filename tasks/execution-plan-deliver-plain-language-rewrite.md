@@ -53,7 +53,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 3.5. Re-freeze the comparison for the approved removal
 
-- [x] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. V12.31 is author-ready with the five public draft-only behavior IDs treated as approved removals and hard non-regression preserved for every retained behavior. Its independently authored, no-context case bundle has a v12.31-specific namespace and no exact case reuse against authenticated v12.23-v12.30 case sets; semantic nonreuse against v12.22 is unavailable because the authenticated v12.22 case bytes were lost, so no such claim is made. Independent review and trusted-host isolation remain pending.
+- [ ] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. V12.31 was invalidated because its independent bundle was not imported byte-exact. V12.32 Phase A freezes the version-correct public schema, controller metadata, complete bundle interface, and transitive isolation dependency closure before a new no-context case author starts. Hidden case authoring and all private freeze/readiness work remain pending.
 - [ ] Repeat independent evaluator review and trusted-host isolation before running either official arm. Do not reuse the frozen v12.22 result as the final comparison.
 
 ### 4. Run the frozen comparison

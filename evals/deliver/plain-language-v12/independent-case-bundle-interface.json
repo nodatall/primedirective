@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "oracle_version": "deliver-plain-language-v12.32",
+  "bundle_manifest_schema_version": 2,
+  "bundle_subdirectory": "private-oracle",
+  "required_files": [
+    "author-v132.mjs",
+    "bundle-manifest.json",
+    "cases.json",
+    "expected-answers.json",
+    "judge-allocation-manifest.json",
+    "projected-arm-packet.json",
+    "response-schema.json",
+    "validate-v132.mjs"
+  ],
+  "manifest_declared_imported_files": [
+    "author-v132.mjs",
+    "cases.json",
+    "expected-answers.json",
+    "judge-allocation-manifest.json",
+    "projected-arm-packet.json",
+    "response-schema.json",
+    "validate-v132.mjs"
+  ],
+  "required_file_modes": {
+    "author-v132.mjs": "100755",
+    "bundle-manifest.json": "100644",
+    "cases.json": "100644",
+    "expected-answers.json": "100644",
+    "judge-allocation-manifest.json": "100644",
+    "projected-arm-packet.json": "100644",
+    "response-schema.json": "100644",
+    "validate-v132.mjs": "100755"
+  },
+  "public_binding_paths": [
+    "evals/deliver/harness.py",
+    "evals/deliver/plain-language-v12/adapter.py",
+    "evals/deliver/plain-language-v12/baseline-package-manifest.json",
+    "evals/deliver/plain-language-v12/candidate-behavior-map.json",
+    "evals/deliver/plain-language-v12/candidate-package-manifest.json",
+    "evals/deliver/plain-language-v12/case_bundle_validator.py",
+    "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
+    "evals/deliver/plain-language-v12/execution-policy.json",
+    "evals/deliver/plain-language-v12/independent-case-bundle-interface.json",
+    "evals/deliver/plain-language-v12/public-contract-inventory.json",
+    "evals/deliver/plain-language-v12/readiness_transition.py",
+    "evals/deliver/plain-language-v12/root-isolation-dependencies.json",
+    "evals/deliver/plain-language-v12/root_isolation_probe.py",
+    "evals/deliver/plain-language-v12/standalone_case_bundle_validator.mjs",
+    "evals/deliver/plain-language-v12/wording-approval.json"
+  ],
+  "response_schema_binding": {
+    "bundle_file": "response-schema.json",
+    "public_source": "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
+    "required_relation": "byte_identical"
+  },
+  "standalone_validator_binding": {
+    "bundle_file": "validate-v132.mjs",
+    "public_source": "evals/deliver/plain-language-v12/standalone_case_bundle_validator.mjs",
+    "required_relation": "byte_identical"
+  },
+  "expected_counts": {
+    "public_behavior_count": 108,
+    "retained_case_count": 103,
+    "removal_absence_case_count": 5,
+    "total_case_count": 108,
+    "expected_answer_count": 108,
+    "judge_lane_count": 3
+  },
+  "expected_model": "gpt-5.6-sol",
+  "expected_reasoning": "xhigh",
+  "expected_allocation_status": "allocated_not_run",
+  "namespace_pattern": "^v1232-[0-9a-f]{20}$",
+  "freshness_contract": {
+    "author_context": "fresh_no_context_sol_xhigh_from_public_inventory_only",
+    "candidate_contract_wording_available": false,
+    "prior_hidden_case_access": false,
+    "exact_byte_freshness_basis": "v1232_specific_namespace",
+    "semantic_nonreuse_against_v12_22_status": "unavailable_lost_authenticated_case_bytes",
+    "semantic_nonreuse_claimed": false
+  },
+  "import_policy": {
+    "all_required_source_files_must_be_committed": true,
+    "all_manifest_declared_files_must_import_byte_exact": true,
+    "bundle_manifest_must_import_byte_exact": true,
+    "post_import_rewrite_allowed": false,
+    "derived_files_may_not_collide_with_required_files": true,
+    "standalone_and_integrated_validation_must_reconcile": true
+  },
+  "standalone_validator_output_fields": [
+    "bundle_manifest_sha256",
+    "bundle_source_commit",
+    "bundle_source_tree",
+    "controller_commit",
+    "controller_tree",
+    "imported_file_sha256",
+    "manifest_payload_sha256",
+    "oracle_version",
+    "public_file_sha256",
+    "schema_version",
+    "status"
+  ],
+  "integrated_validator_path": "evals/deliver/plain-language-v12/case_bundle_validator.py"
+}
