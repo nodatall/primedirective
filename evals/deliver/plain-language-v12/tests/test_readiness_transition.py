@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import importlib.util
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "readiness_transition.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v127_readiness_transition", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1230_readiness_transition", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 transition = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(transition)
@@ -20,15 +23,28 @@ SPEC.loader.exec_module(transition)
 
 class ReadinessTransitionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v127-readiness-", dir="/private/tmp"))
+        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1230-readiness-", dir="/private/tmp"))
+        self.addCleanup(shutil.rmtree, self.repo)
+        self.public_patch = mock.patch.object(transition, "PUBLIC_REPOSITORY", self.repo)
+        self.private_patch = mock.patch.object(
+            transition, "PRIVATE_EVALUATOR_REPOSITORY", self.repo / "private-evaluator"
+        )
+        self.public_patch.start()
+        self.private_patch.start()
+        self.addCleanup(self.public_patch.stop)
+        self.addCleanup(self.private_patch.stop)
         self.git("init", "-q")
         self.git("config", "user.email", "evaluator-test@example.invalid")
         self.git("config", "user.name", "Evaluator Test")
         self.frozen_path = "evals/deliver/plain-language-v12/adapter.py"
-        frozen = self.repo / self.frozen_path
-        frozen.parent.mkdir(parents=True)
-        frozen.write_text("frozen controller\n", encoding="utf-8")
-        self.git("add", self.frozen_path)
+        for relative, content in (
+            (self.frozen_path, b"frozen controller\n"),
+            (transition.PROBE_RELATIVE_PATH, b"frozen root probe\n"),
+        ):
+            path = self.repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content)
+        self.git("add", self.frozen_path, transition.PROBE_RELATIVE_PATH)
         self.git("commit", "-q", "-m", "controller")
         self.controller_commit = self.git("rev-parse", "HEAD")
         self.document = self.author_document()
@@ -36,9 +52,6 @@ class ReadinessTransitionTests(unittest.TestCase):
         self.git("add", transition.READINESS_RELATIVE_PATH)
         self.git("commit", "-q", "-m", "author ready")
         self.author_commit = self.git("rev-parse", "HEAD")
-
-    def tearDown(self) -> None:
-        shutil.rmtree(self.repo)
 
     def git(self, *arguments: str) -> str:
         return subprocess.run(
@@ -52,6 +65,7 @@ class ReadinessTransitionTests(unittest.TestCase):
         return path
 
     def author_document(self) -> dict[str, object]:
+        frozen = (self.frozen_path, transition.PROBE_RELATIVE_PATH)
         document: dict[str, object] = {
             "schema_version": transition.SCHEMA_VERSION,
             "oracle_version": transition.ORACLE_VERSION,
@@ -60,11 +74,10 @@ class ReadinessTransitionTests(unittest.TestCase):
             "private_evaluator_commit": "2" * 40,
             "public_adapter_introducing_commit": self.controller_commit,
             "frozen_public_file_digests": {
-                self.frozen_path: transition.sha256_bytes(
-                    (self.repo / self.frozen_path).read_bytes()
-                ),
+                path: transition.sha256_bytes((self.repo / path).read_bytes()) for path in frozen
             },
-            "frozen_public_file_commits": {self.frozen_path: self.controller_commit},
+            "frozen_public_file_commits": {path: self.controller_commit for path in frozen},
+            "root_isolation_contract": transition.root_isolation_contract(),
             "readiness_predecessor_commit": "pending_transition",
             "readiness_predecessor_sha256": "pending_transition",
             "independent_review_record_path": transition.REVIEW_RELATIVE_PATH,
@@ -101,7 +114,7 @@ class ReadinessTransitionTests(unittest.TestCase):
             "oracle_version": transition.ORACLE_VERSION,
             "record_kind": "independent_review",
             "result": "pass",
-            "reviewer_allocation_id": "fresh-reviewer-allocation-v127",
+            "reviewer_allocation_id": "fresh-reviewer-allocation-v1230",
             "reviewer_nonce": "3" * 64,
             "private_evaluator_source_commit": self.document["private_evaluator_source_commit"],
             "private_evaluator_final_commit": self.document["private_evaluator_commit"],
@@ -124,31 +137,47 @@ class ReadinessTransitionTests(unittest.TestCase):
         self.git("commit", "-q", "-m", "independent review pass")
         return transition.verify_independent_review_pass(self.repo)
 
-    def isolation_receipt(self, **updates: object) -> dict[str, object]:
-        review = transition.verify_independent_review_pass(self.repo)
-        receipt: dict[str, object] = {
+    def probe_evidence(self, operation: str, challenge: str) -> dict[str, object]:
+        probe_id, claims = transition.PROBE_SPECS[operation]
+        common: dict[str, object] = {
             "schema_version": 1,
             "oracle_version": transition.ORACLE_VERSION,
-            "record_kind": "trusted_host_isolation",
+            "probe_id": probe_id,
+            "challenge": challenge,
             "result": "pass",
-            "root_observed": True,
-            "isolation_nonce": "4" * 64,
-            "private_evaluator_source_commit": self.document["private_evaluator_source_commit"],
-            "private_evaluator_final_commit": self.document["private_evaluator_commit"],
-            "public_controller_commit": self.controller_commit,
-            "predecessor_readiness_commit": review["commit"],
-            "predecessor_readiness_sha256": review["sha256"],
-            "independent_review_record_sha256": review["review_record_sha256"],
-            "independent_review_transition_commit": review["commit"],
-            "immutable_readiness_sha256": self.document["immutable_readiness_sha256"],
-            "checks": {name: "pass" for name in transition.ISOLATION_CHECKS},
+            "claims": {name: True for name in claims},
         }
-        receipt.update(updates)
-        return receipt
+        if operation == "outer-sandbox":
+            common["sandbox_profile_sha256"] = "4" * 64
+        else:
+            common.update({
+                "bundled_codex_identity": {
+                    "path": "/Applications/ChatGPT.app/Contents/Resources/codex",
+                    "version": "codex-test",
+                    "sha256": "5" * 64,
+                },
+                "runner_trace_sha256": "6" * 64,
+                "runner_profile_sha256": "7" * 64,
+            })
+        return common
+
+    def fake_probe(self, command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
+        operation = command[3]
+        challenge = command[-1]
+        evidence = self.probe_evidence(operation, challenge)
+        return subprocess.CompletedProcess(
+            command, 0, (transition.canonical_json(evidence) + b"\n").decode(), ""
+        )
+
+    def run_root(self, side_effect=None) -> None:
+        with mock.patch.object(transition, "_verify_private_evaluator") as private_check, mock.patch.object(
+            transition, "_execute_probe_command", side_effect=side_effect or self.fake_probe,
+        ):
+            transition.run_root_isolation(self.repo)
+            self.assertEqual(private_check.call_count, 2)
 
     def prepare_ready(self) -> dict[str, str]:
-        receipt_path = self.write_json("isolation-input.json", self.isolation_receipt())
-        transition.prepare_ready(self.repo, receipt_path)
+        self.run_root()
         self.git("add", transition.READINESS_RELATIVE_PATH, transition.ISOLATION_RELATIVE_PATH)
         self.git("commit", "-q", "-m", "ready")
         return transition.verify_ready(self.repo)
@@ -158,63 +187,107 @@ class ReadinessTransitionTests(unittest.TestCase):
         (self.repo / "unrelated-author.txt").write_text("later author work\n", encoding="utf-8")
         self.git("add", "unrelated-author.txt")
         self.git("commit", "-q", "-m", "unrelated author descendant")
-        self.assertEqual(transition.verify_author_ready(self.repo)["commit"], self.author_commit)
-        self.assertEqual(self.prepare_review()["status"], "independent_review_pass")
+        self.prepare_review()
         (self.repo / "unrelated-review.txt").write_text("later review work\n", encoding="utf-8")
         self.git("add", "unrelated-review.txt")
         self.git("commit", "-q", "-m", "unrelated review descendant")
-        self.assertEqual(
-            transition.verify_independent_review_pass(self.repo)["status"],
-            "independent_review_pass",
-        )
         ready = self.prepare_ready()
         self.assertEqual(ready["status"], "ready")
-        unrelated = self.repo / "unrelated.txt"
-        unrelated.write_text("later work\n", encoding="utf-8")
-        self.git("add", "unrelated.txt")
-        self.git("commit", "-q", "-m", "unrelated descendant")
-        self.assertEqual(transition.verify_ready(self.repo)["commit"], ready["commit"])
+        self.assertEqual(
+            json.loads((self.repo / transition.ISOLATION_RELATIVE_PATH).read_text())["network_policy"],
+            transition.NETWORK_POLICY,
+        )
 
     def test_ready_cannot_skip_independent_review(self) -> None:
-        receipt = self.write_json("isolation-input.json", {"invalid": True})
         with self.assertRaises(transition.ReadinessTransitionError):
-            transition.prepare_ready(self.repo, receipt)
+            self.run_root()
 
     def test_forged_reviewer_record_is_rejected(self) -> None:
-        record = self.review_record(private_evaluator_final_commit="9" * 40)
-        path = self.write_json("review-input.json", record)
+        path = self.write_json(
+            "review-input.json", self.review_record(private_evaluator_final_commit="9" * 40)
+        )
         with self.assertRaises(transition.ReadinessTransitionError):
             transition.prepare_independent_review(self.repo, path)
 
-    def test_review_transition_rejects_extra_changed_file(self) -> None:
-        record_path = self.write_json("review-input.json", self.review_record())
-        transition.prepare_independent_review(self.repo, record_path)
-        (self.repo / "unexpected.txt").write_text("not allowlisted\n", encoding="utf-8")
-        self.git("add", transition.READINESS_RELATIVE_PATH, transition.REVIEW_RELATIVE_PATH, "unexpected.txt")
-        self.git("commit", "-q", "-m", "invalid review transition")
-        with self.assertRaises(transition.ReadinessTransitionError):
-            transition.verify_independent_review_pass(self.repo)
+    def test_caller_receipt_and_pass_flags_are_not_cli_inputs(self) -> None:
+        for forbidden in ("--receipt", "--network-boundary-pass", "--checks"):
+            with mock.patch.object(
+                sys,
+                "argv",
+                [str(MODULE_PATH), "run-root-isolation", "--repo", str(self.repo), forbidden, "x"],
+            ), self.assertRaises(SystemExit):
+                transition.main()
 
-    def test_review_transition_rejects_immutable_field_change(self) -> None:
-        record_path = self.write_json("review-input.json", self.review_record())
-        transition.prepare_independent_review(self.repo, record_path)
-        document = json.loads((self.repo / transition.READINESS_RELATIVE_PATH).read_text())
-        document["private_evaluator_commit"] = "9" * 40
-        document["immutable_readiness_sha256"] = transition.immutable_digest(document)
-        self.write_json(transition.READINESS_RELATIVE_PATH, document)
-        self.git("add", transition.READINESS_RELATIVE_PATH, transition.REVIEW_RELATIVE_PATH)
-        self.git("commit", "-q", "-m", "invalid immutable mutation")
-        with self.assertRaises(transition.ReadinessTransitionError):
-            transition.verify_independent_review_pass(self.repo)
-
-    def test_forged_isolation_receipt_is_rejected(self) -> None:
+    def test_caller_environment_pass_flags_do_not_enter_receipt(self) -> None:
         self.prepare_review()
-        receipt = self.isolation_receipt(root_observed=False)
-        path = self.write_json("isolation-input.json", receipt)
-        with self.assertRaises(transition.ReadinessTransitionError):
-            transition.prepare_ready(self.repo, path)
+        with mock.patch.dict(os.environ, {"NETWORK_BOUNDARY": "pass", "ROOT_OBSERVED": "true"}):
+            self.run_root()
+        receipt = (self.repo / transition.ISOLATION_RELATIVE_PATH).read_text()
+        self.assertNotIn("NETWORK_BOUNDARY", receipt)
+        self.assertNotIn("ROOT_OBSERVED", receipt)
+        self.assertNotIn("network_boundary", receipt)
 
-    def test_ready_rejects_rollback_or_overwrite(self) -> None:
+    def test_failed_or_skipped_probe_cannot_create_transition_files(self) -> None:
+        self.prepare_review()
+        def failed(command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(command, 2, "", "probe skipped\n")
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root(failed)
+        self.assertFalse((self.repo / transition.ISOLATION_RELATIVE_PATH).exists())
+        self.assertEqual(
+            json.loads((self.repo / transition.READINESS_RELATIVE_PATH).read_text())["status"],
+            "independent_review_pass",
+        )
+
+    def test_mocked_success_without_required_evidence_is_rejected(self) -> None:
+        self.prepare_review()
+        def empty(command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(command, 0, '{"result":"pass"}\n', "")
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root(empty)
+
+    def test_probe_test_identity_and_output_format_drift_are_rejected(self) -> None:
+        self.prepare_review()
+        def drift(command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
+            evidence = self.probe_evidence(command[3], command[-1])
+            evidence["probe_id"] = "wrong-test-identity"
+            return subprocess.CompletedProcess(command, 0, json.dumps(evidence) + "\n", "")
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root(drift)
+
+    def test_missing_single_observed_claim_is_rejected(self) -> None:
+        self.prepare_review()
+        def missing(command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
+            evidence = self.probe_evidence(command[3], command[-1])
+            evidence["claims"].pop(next(iter(evidence["claims"])))
+            return subprocess.CompletedProcess(
+                command, 0, (transition.canonical_json(evidence) + b"\n").decode(), ""
+            )
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root(missing)
+
+    def test_frozen_probe_source_drift_is_rejected(self) -> None:
+        self.prepare_review()
+        path = self.repo / transition.PROBE_RELATIVE_PATH
+        path.write_text("tampered probe\n", encoding="utf-8")
+        self.git("add", transition.PROBE_RELATIVE_PATH)
+        self.git("commit", "-q", "-m", "touch frozen probe")
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root()
+
+    def test_dirty_tracked_state_is_rejected_before_probe(self) -> None:
+        self.prepare_review()
+        (self.repo / self.frozen_path).write_text("dirty\n", encoding="utf-8")
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root()
+
+    def test_receipt_is_write_once(self) -> None:
+        self.prepare_review()
+        self.run_root()
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root()
+
+    def test_ready_rejects_rollback_or_receipt_overwrite(self) -> None:
         self.prepare_review()
         self.prepare_ready()
         document = copy.deepcopy(self.document)
@@ -224,19 +297,28 @@ class ReadinessTransitionTests(unittest.TestCase):
         with self.assertRaises(transition.ReadinessTransitionError):
             transition.verify_ready(self.repo)
 
-    def test_ready_rejects_frozen_file_touch_even_if_bytes_are_restored(self) -> None:
+    def test_ready_rejects_tampered_probe_evidence(self) -> None:
         self.prepare_review()
         self.prepare_ready()
-        path = self.repo / self.frozen_path
-        original = path.read_bytes()
-        path.write_bytes(original + b"temporary change\n")
-        self.git("add", self.frozen_path)
-        self.git("commit", "-q", "-m", "touch frozen file")
-        path.write_bytes(original)
-        self.git("add", self.frozen_path)
-        self.git("commit", "-q", "-m", "restore frozen bytes")
+        receipt = json.loads((self.repo / transition.ISOLATION_RELATIVE_PATH).read_text())
+        receipt["probes"][0]["evidence"]["claims"]["stage_read_allowed"] = False
+        self.write_json(transition.ISOLATION_RELATIVE_PATH, receipt)
+        self.git("add", transition.ISOLATION_RELATIVE_PATH)
+        self.git("commit", "-q", "-m", "tamper receipt")
         with self.assertRaises(transition.ReadinessTransitionError):
             transition.verify_ready(self.repo)
+
+    def test_review_transition_rejects_immutable_contract_change(self) -> None:
+        record_path = self.write_json("review-input.json", self.review_record())
+        transition.prepare_independent_review(self.repo, record_path)
+        document = json.loads((self.repo / transition.READINESS_RELATIVE_PATH).read_text())
+        document["root_isolation_contract"]["network_policy"] = "network isolation passes"
+        document["immutable_readiness_sha256"] = transition.immutable_digest(document)
+        self.write_json(transition.READINESS_RELATIVE_PATH, document)
+        self.git("add", transition.READINESS_RELATIVE_PATH, transition.REVIEW_RELATIVE_PATH)
+        self.git("commit", "-q", "-m", "mutate contract")
+        with self.assertRaises(transition.ReadinessTransitionError):
+            transition.verify_independent_review_pass(self.repo)
 
 
 if __name__ == "__main__":

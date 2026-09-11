@@ -1,6 +1,6 @@
 {
-  "schema_version": 26,
-  "oracle_version": "deliver-plain-language-v12.29",
+  "schema_version": 27,
+  "oracle_version": "deliver-plain-language-v12.30",
   "description": "Public no-choice structured comprehension vocabulary and response schema.",
   "set_semantics": "All four array fields are unordered unique atomic sets. Empty sets are allowed only when the case requires no atom in that field.",
   "global_vocabulary": {
