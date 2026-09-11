@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 MODULE_PATH = Path(__file__).resolve().parents[1] / "case_bundle_validator.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v1233_case_bundle_validator", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1234_case_bundle_validator", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 validator = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(validator)

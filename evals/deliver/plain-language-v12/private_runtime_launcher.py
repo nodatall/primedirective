@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.33"
+ORACLE_VERSION = "deliver-plain-language-v12.34"
 READINESS_RELATIVE_PATH = "evals/deliver/plain-language-v12/oracle-readiness.json"
 CLOSURE_MANIFEST_RELATIVE_PATH = "private-oracle/private-runtime-closure.json"
 RUNTIME_ENTRYPOINT = "private-oracle/comparison_runtime.py"
@@ -293,7 +293,7 @@ def launch(
     if not python.is_file() or not os.access(python, os.X_OK):
         raise PrivateRuntimeLaunchError("isolated Python executable is unavailable")
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1233-private-runtime-", dir="/private/tmp"
+        prefix="deliver-v1234-private-runtime-", dir="/private/tmp"
     ) as temporary:
         stage = Path(temporary)
         observations = stage_closure(

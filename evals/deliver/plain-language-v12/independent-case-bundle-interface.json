@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "oracle_version": "deliver-plain-language-v12.33",
+  "oracle_version": "deliver-plain-language-v12.34",
   "bundle_oracle_version": "deliver-plain-language-v12.32",
   "bundle_manifest_schema_version": 2,
   "bundle_subdirectory": "private-oracle",
@@ -89,7 +89,7 @@
     "manifest_payload_sha256": "8297e7e0a5aefa08a545eeeb97d456702aea4973b821ecba424f4a9ef58db47d",
     "official_arm_execution_performed": false,
     "official_judge_execution_performed": false,
-    "preservation_reason": "The hidden case semantics, answers, and allocated-not-run judge lanes are unchanged; v12.33 changes only the pre-import runtime trust boundary."
+    "preservation_reason": "The hidden case semantics, answers, and allocated-not-run judge lanes are unchanged; v12.34 only corrects the staged root probe launch to suppress bytecode writes."
   },
   "import_policy": {
     "all_required_source_files_must_be_committed": true,

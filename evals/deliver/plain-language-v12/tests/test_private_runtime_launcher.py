@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "private_runtime_launcher.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v1233_private_runtime_launcher", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1234_private_runtime_launcher", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 launcher = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(launcher)
@@ -19,7 +19,7 @@ SPEC.loader.exec_module(launcher)
 
 class PrivateRuntimeLauncherTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.base = Path(tempfile.mkdtemp(prefix="deliver-v1233-launcher-", dir="/private/tmp"))
+        self.base = Path(tempfile.mkdtemp(prefix="deliver-v1234-launcher-", dir="/private/tmp"))
         self.addCleanup(shutil.rmtree, self.base)
         self.private = self.base / "private"
         self.public = self.base / "public"
@@ -183,7 +183,7 @@ class PrivateRuntimeLauncherTests(unittest.TestCase):
         )
         for kind in ("missing", "extra", "mode", "bytes"):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory(
-                prefix="deliver-v1233-stage-", dir="/private/tmp"
+                prefix="deliver-v1234-stage-", dir="/private/tmp"
             ) as temporary:
                 stage = Path(temporary)
                 launcher.stage_closure(self.private, self.final, manifest, raw, stage)

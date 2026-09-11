@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Version-pinned, auditable readiness transitions for Deliver oracle v12.33."""
+"""Version-pinned, auditable readiness transitions for Deliver oracle v12.34."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.33"
+ORACLE_VERSION = "deliver-plain-language-v12.34"
 SCHEMA_VERSION = 30
 READINESS_RELATIVE_PATH = "evals/deliver/plain-language-v12/oracle-readiness.json"
 REVIEW_RELATIVE_PATH = "evals/deliver/plain-language-v12/independent-review-record.json"
@@ -79,7 +79,7 @@ DEPENDENCY_OBSERVED_ROLES = {
 }
 PUBLIC_REPOSITORY = Path("/Volumes/Code/primedirective")
 PRIVATE_EVALUATOR_REPOSITORY = Path(
-    "/private/tmp/deliver-plain-language-v133-evaluator/repo"
+    "/private/tmp/deliver-plain-language-v134-evaluator/repo"
 )
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -90,8 +90,8 @@ NETWORK_POLICY = (
     "denial are not claimed; parent network credentials, inherited environment, and "
     "hidden evaluator data remain unavailable to the arm"
 )
-OUTER_PROBE_ID = "deliver-v12.33-outer-sandbox-v1"
-PREFLIGHT_PROBE_ID = "deliver-v12.33-real-preflight-v1"
+OUTER_PROBE_ID = "deliver-v12.34-outer-sandbox-v1"
+PREFLIGHT_PROBE_ID = "deliver-v12.34-real-preflight-v1"
 OUTER_CLAIMS = frozenset({
     "stage_read_allowed",
     "stage_write_allowed",
@@ -532,7 +532,7 @@ def root_isolation_contract() -> dict[str, Any]:
 
 def _validate_common(document: dict[str, Any]) -> None:
     if document.get("schema_version") != SCHEMA_VERSION or document.get("oracle_version") != ORACLE_VERSION:
-        raise ReadinessTransitionError("readiness version is not v12.33")
+        raise ReadinessTransitionError("readiness version is not v12.34")
     if document.get("status") not in {"author_ready", "independent_review_pass", "ready"}:
         raise ReadinessTransitionError("readiness status is invalid")
     if document.get("immutable_readiness_sha256") != immutable_digest(document):
@@ -623,7 +623,7 @@ def _validate_common(document: dict[str, Any]) -> None:
 
 def _load_case_bundle_validator() -> Any:
     path = _require_regular_checkout_file(PUBLIC_REPOSITORY, CASE_BUNDLE_VALIDATOR_RELATIVE_PATH)
-    spec = importlib.util.spec_from_file_location("deliver_v1233_case_bundle_validator", path)
+    spec = importlib.util.spec_from_file_location("deliver_v1234_case_bundle_validator", path)
     if spec is None or spec.loader is None:
         raise ReadinessTransitionError("case bundle validator cannot be loaded")
     module = importlib.util.module_from_spec(spec)
@@ -635,7 +635,7 @@ def _load_private_runtime_launcher() -> Any:
     path = _require_regular_checkout_file(
         PUBLIC_REPOSITORY, PRIVATE_RUNTIME_LAUNCHER_RELATIVE_PATH
     )
-    spec = importlib.util.spec_from_file_location("deliver_v1233_private_runtime_launcher", path)
+    spec = importlib.util.spec_from_file_location("deliver_v1234_private_runtime_launcher", path)
     if spec is None or spec.loader is None:
         raise ReadinessTransitionError("private runtime launcher cannot be loaded")
     module = importlib.util.module_from_spec(spec)
@@ -1270,7 +1270,7 @@ def _probe_command(
     if operation not in PROBE_SPECS:
         raise ReadinessTransitionError("root probe operation is unknown")
     return [
-        str(python), "-I", str(closure_root / PROBE_RELATIVE_PATH), operation,
+        str(python), "-I", "-B", str(closure_root / PROBE_RELATIVE_PATH), operation,
         "--repo", str(repo),
         "--closure-root", str(closure_root),
         "--dependency-manifest-sha256", dependency_manifest_sha256,
@@ -1281,7 +1281,9 @@ def _probe_command(
 
 def _probe_command_identity(command: list[str]) -> str:
     logical = list(command)
-    logical[2] = f"<sealed-dependency-closure>/{PROBE_RELATIVE_PATH}"
+    if logical[1:3] != ["-I", "-B"]:
+        raise ReadinessTransitionError("root probe command lacks isolated no-bytecode mode")
+    logical[3] = f"<sealed-dependency-closure>/{PROBE_RELATIVE_PATH}"
     try:
         logical[logical.index("--closure-root") + 1] = "<sealed-dependency-closure>"
     except (ValueError, IndexError) as exc:
@@ -1439,7 +1441,7 @@ def run_root_isolation(repo: Path) -> None:
     python = Path(python_identity["path"])
     challenge = secrets.token_hex(32)
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1233-frozen-closure-", dir="/private/tmp"
+        prefix="deliver-v1234-frozen-closure-", dir="/private/tmp"
     ) as closure_text:
         closure_root = Path(closure_text)
         staged_dependency_observations = _stage_dependency_closure(

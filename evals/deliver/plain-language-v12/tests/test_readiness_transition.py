@@ -15,7 +15,7 @@ import importlib.util
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "readiness_transition.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v1233_readiness_transition", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1234_readiness_transition", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 transition = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(transition)
@@ -23,7 +23,7 @@ SPEC.loader.exec_module(transition)
 
 class ReadinessTransitionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1233-readiness-", dir="/private/tmp"))
+        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1234-readiness-", dir="/private/tmp"))
         self.addCleanup(shutil.rmtree, self.repo)
         self.public_patch = mock.patch.object(transition, "PUBLIC_REPOSITORY", self.repo)
         self.private_patch = mock.patch.object(
@@ -141,7 +141,7 @@ class ReadinessTransitionTests(unittest.TestCase):
             "oracle_version": transition.ORACLE_VERSION,
             "record_kind": "independent_review",
             "result": "pass",
-            "reviewer_allocation_id": "fresh-reviewer-allocation-v1233",
+            "reviewer_allocation_id": "fresh-reviewer-allocation-v1234",
             "reviewer_nonce": "3" * 64,
             "private_evaluator_source_commit": self.document["private_evaluator_source_commit"],
             "private_evaluator_final_commit": self.document["private_evaluator_commit"],
@@ -194,7 +194,7 @@ class ReadinessTransitionTests(unittest.TestCase):
         return common
 
     def fake_probe(self, command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
-        operation = command[3]
+        operation = next(item for item in command if item in transition.PROBE_SPECS)
         challenge = command[-1]
         evidence = self.probe_evidence(operation, challenge)
         closure_root = Path(command[command.index("--closure-root") + 1])
@@ -358,7 +358,8 @@ class ReadinessTransitionTests(unittest.TestCase):
     def test_probe_test_identity_and_output_format_drift_are_rejected(self) -> None:
         self.prepare_review()
         def drift(command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
-            evidence = self.probe_evidence(command[3], command[-1])
+            operation = next(item for item in command if item in transition.PROBE_SPECS)
+            evidence = self.probe_evidence(operation, command[-1])
             evidence["probe_id"] = "wrong-test-identity"
             return subprocess.CompletedProcess(command, 0, json.dumps(evidence) + "\n", "")
         with self.assertRaises(transition.ReadinessTransitionError):
@@ -367,7 +368,8 @@ class ReadinessTransitionTests(unittest.TestCase):
     def test_missing_single_observed_claim_is_rejected(self) -> None:
         self.prepare_review()
         def missing(command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
-            evidence = self.probe_evidence(command[3], command[-1])
+            operation = next(item for item in command if item in transition.PROBE_SPECS)
+            evidence = self.probe_evidence(operation, command[-1])
             evidence["claims"].pop(next(iter(evidence["claims"])))
             return subprocess.CompletedProcess(
                 command, 0, (transition.canonical_json(evidence) + b"\n").decode(), ""
@@ -448,6 +450,55 @@ class ReadinessTransitionTests(unittest.TestCase):
         ):
             transition.run_root_isolation(self.repo)
         execute.assert_not_called()
+
+    def test_sequential_probe_processes_preserve_exact_staged_closure(self) -> None:
+        self.prepare_review()
+        operations: list[str] = []
+
+        def execute(
+            command: list[str], repo: Path,
+        ) -> subprocess.CompletedProcess[str]:
+            closure_root = Path(command[command.index("--closure-root") + 1])
+            probe_path = str(closure_root / transition.PROBE_RELATIVE_PATH)
+            probe_index = command.index(probe_path)
+            operation = command[probe_index + 1]
+            operations.append(operation)
+            script = r'''from pathlib import Path
+import importlib.util
+import sys
+
+probe_path = Path(sys.argv[1])
+closure_root = Path(sys.argv[2])
+manifest_sha256 = sys.argv[3]
+spec = importlib.util.spec_from_file_location("staged_root_isolation_probe", probe_path)
+assert spec is not None and spec.loader is not None
+probe = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(probe)
+probe._validate_staged_closure(closure_root, manifest_sha256)
+probe._load_harness(closure_root)
+'''
+            result = subprocess.run(
+                [
+                    *command[:probe_index], "-c", script, probe_path,
+                    str(closure_root),
+                    command[command.index("--dependency-manifest-sha256") + 1],
+                ],
+                cwd=repo,
+                env=transition.PROBE_ENVIRONMENT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                self.fail(result.stderr or "staged probe prelude failed")
+            return self.fake_probe(command, repo)
+
+        self.run_root(execute)
+        self.assertEqual(operations, list(transition.PROBE_SPECS))
+        self.assertEqual(
+            json.loads((self.repo / transition.READINESS_RELATIVE_PATH).read_text())["status"],
+            "ready",
+        )
 
     def test_dependency_pre_post_drift_is_rejected(self) -> None:
         self.prepare_review()

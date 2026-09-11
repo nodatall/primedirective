@@ -45,7 +45,7 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/adapter.py",
       "role": "public_adapter_binding_data",
-      "sha256": "018386fef4a5340658701ae8bda8b9702c899982f32d271b4df34e5573660f40"
+      "sha256": "d6a4ce79e972a95e40ceb0b9618fd2fd8be8607d265df5ebad9a482e831547be"
     },
     {
       "git_mode": "100644",
@@ -57,7 +57,7 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/candidate-behavior-map.json",
       "role": "candidate_behavior_binding_data",
-      "sha256": "deb8bdab7d64836a6f9745d0bc428992ef7e3bb495d38437f92909abc9f87f12"
+      "sha256": "0874b939ed157842eeb0c8a55704489a1bcd6d2e4aefdad08a2219f7e51e748c"
     },
     {
       "git_mode": "100644",
@@ -75,7 +75,7 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
       "role": "response_schema_binding_data",
-      "sha256": "4d96d1d38b808f50649636ad731bbb5d5bf73575b9b78896e2f2411f162db95e"
+      "sha256": "3096e0dcb11519bfa51e2498927e91c907ea97e4c81247e97e160d5b29fb5eb5"
     },
     {
       "git_mode": "100644",
@@ -87,13 +87,13 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/independent-case-bundle-interface.json",
       "role": "independent_bundle_interface_data",
-      "sha256": "914ba6116b400d9e6c8d83b5f6062fbaddecf0f38ce6322ffae43bda841211de"
+      "sha256": "c4d8a591656bd6e957272471f5c4954fd3710d3c967c078294a3c1bfd3c09e19"
     },
     {
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/private_runtime_launcher.py",
       "role": "private_runtime_git_object_launcher",
-      "sha256": "961e0b22dae416ea200bb6b33de48ea380b25e30be94e1ae0897110c1579e5be"
+      "sha256": "24484e1e00dd814bcacc6a980e752f8fef7a9997905bf0e73083e4a1fa7b1c84"
     },
     {
       "git_mode": "100644",
@@ -105,13 +105,13 @@
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/readiness_transition.py",
       "role": "readiness_transition_entrypoint",
-      "sha256": "c1ddc51490157fcca451a48b475ef986aa4c2f49deccc4da18c0c67bc2afcc94"
+      "sha256": "e3ac668ae931f5d40bfe28f818b4791615e05545a252e55ed3ef2629d6915f08"
     },
     {
       "git_mode": "100644",
       "path": "evals/deliver/plain-language-v12/root_isolation_probe.py",
       "role": "root_isolation_probe_entrypoint",
-      "sha256": "2d8d78ba9098ea0001030256328620db1f663a4c86216fc2b53fe12331fb85f7"
+      "sha256": "ef00d6c2a877f22d52be5f7af033adb2f9f697064d4a28080fab32d3901a8817"
     },
     {
       "git_mode": "100644",
@@ -126,10 +126,10 @@
       "sha256": "49708aaab9e4881044878da7e37805e60c71bfb6c1e85f5e8c2d7085eb405d7a"
     }
   ],
-  "entries_sha256": "3800e1cacf4e24d1b7c2137f72abc52761535c6259a076a6a79cdc6d565f9795",
+  "entries_sha256": "04f6084e256f9832c09abba78cfe8b713bada4dd892601bf0ddda18e3ec3ad3b",
   "entry_count": 15,
   "manifest_kind": "root_isolation_repo_local_execution_and_data_dependency_closure",
-  "manifest_sha256": "f1842579668c5347a148726c53893f5029de4100868a3d4ee2d4b2e18b29adca",
-  "oracle_version": "deliver-plain-language-v12.33",
+  "manifest_sha256": "a5ad77b8d4302fbd71d838ef5f03647e9e11f6df8b86a8204e0f5dc5e6c4b4be",
+  "oracle_version": "deliver-plain-language-v12.34",
   "schema_version": 1
 }
