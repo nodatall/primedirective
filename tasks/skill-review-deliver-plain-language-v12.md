@@ -30,10 +30,10 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.27`; rejected because a nested comprehension payload field exposed literal arm identity while its published blinding control inspected only the outer provenance field.
 - Invalidated evaluator: `deliver-plain-language-v12.28`; rejected because its recursive value denylist treated authenticated contract prose as control metadata and rejected legitimate package content.
 - V12.29 separates authenticated opaque readability content from closed-schema machine metadata, preserves exact package bytes, and recursively rejects identity-bearing control metadata without scanning or rewriting contract bodies.
-- Evaluator source and author-ready commits: pending corrected v12.29 author freeze
-- Public controller commit: pending corrected v12.29 controller freeze
-- Public author-ready commit: pending corrected v12.29 author freeze
-- Author-ready-state SHA-256: pending corrected v12.29 author freeze
+- Evaluator source and author-ready commits: `0c33fe180f78cc36f53013b124233001534b6b77` and `8dddfca35e53231a32aff4cc86d4147d5e68b4be`
+- Public controller commit: `95f7dc37af820d67df78b97060571a81b24f481d`
+- Public author-ready commit: `543284d8e03e28707ad2984f329b1f02c904ad37`
+- Author-ready-state SHA-256: `092ea4048af3882cb930edf9f1eac9a9ef6ffada444eba90d576ad465e3aa396`
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
