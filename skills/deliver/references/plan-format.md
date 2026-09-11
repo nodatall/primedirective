@@ -4,6 +4,8 @@ Read this before drafting or refining a `$deliver` plan.
 
 ## Refined Execution Plan
 
+Apply `skills/shared/references/plain-language.md`, the same writing rules used by `$plain-language`, to the entire plan. The Plain-Language Review below is required before the plan is ready for approval or `--fast` implementation.
+
 Use this shape:
 
 ```md
@@ -62,6 +64,19 @@ Normal mode uses the review request shown above. The user reviews the Markdown f
 For `--fast`, remove the two review-request lines and add:
 
 `Fast mode note: Initial plan-review pause skipped by --fast; continue into implementation after refinement unless a fast-mode stop condition applies.`
+
+## Plain-Language Review
+
+Read the whole plan from the user's perspective before passing refinement:
+
+- The goal and steps must explain what will change, what each step accomplishes, and how success will be checked without requiring the user to decode implementation terminology. Apply the shared plain-language rules to headings, context, decision notes, and checkboxes alike.
+- Give each checkbox one understandable outcome. Split items that bundle separate outcomes; avoid replacing a dense paragraph with a long list of unexplained technical labels.
+- Keep scope, settled decisions, exact limits, acceptance criteria, stop conditions, and implementation-changing `Open question:` items visible in plain words. Simplifying must not delete, weaken, or postpone them.
+- Keep file-by-file instructions, commands, algorithms, and detailed test cases out of the main review path unless the user needs them to make a decision. Preserve already-settled technical detail in existing linked supporting material or a clearly labeled technical appendix after the steps, then carry it into the active-step packet when implementation starts. The main plan must remain understandable without opening that detail.
+- Keep each requirement in one place; use short references where later steps depend on it. Supporting detail should add implementation mechanics, not repeat the main plan.
+- Flag unexplained necessary terms, paragraphs that mix many decisions, and steps whose purpose is unclear as material readability issues. Rewrite the affected text and reread the whole plan. Cosmetic preferences alone do not require another round.
+
+Do not add a readability report, score, or completion stamp to the plan. The revised plan itself must pass this review.
 
 ## Frontend Mockup
 

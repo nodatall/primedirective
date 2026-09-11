@@ -98,11 +98,11 @@ Goal mode creates `tasks/goal-plan-<plan-key>.md` with `Goal`, `Done When`, `Not
 
 ### 3. Create Or Update The Plan
 
-Follow `skills/deliver/references/plan-format.md`.
+Follow `skills/deliver/references/plan-format.md`, including its Plain-Language Review, when drafting or updating the plan.
 
 For normal planning, create or reuse the canonical execution plan and include `Deliver implementation instruction:` near the top. Treat `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes as source material only. Preserve their concrete in-scope items unless they are duplicates, contradictions, or user-approved removals. Never implement from a tasks-plan, spec, or notes file. A named existing plan such as `tasks/execution-plan-startup-fixes.md` follows the same rule.
 
-Keep the main plan high-level and readable. Detailed files, commands, tests, done conditions, and worker context belong in the active-step packet when that item starts.
+Keep the main plan high-level and readable. Keep decisions and success criteria the user needs to approve visible, and place implementation detail as directed by the plan format.
 
 ### 4. Run Optional Gates
 
@@ -116,7 +116,9 @@ With `--pro-analysis`, use `skills/shared/references/analysis/pro-browser-analys
 
 Run at least one refinement round. Use a fresh reviewer subagent by default when subagents are available. The reviewer checks missing scope, vague items, order, duplicates, oversized work, hidden dependencies, contradictions, unclear next steps, and meta-planning placeholders. Keep the plan in dependency order without turning it into a per-file script.
 
-When a round finds a material issue or changes the plan, edit only the plan and run a full post-edit round. Do not create a separate refinement artifact. Stop when a round finds no material backlog issue or after 8 rounds. At the limit, show the exact unresolved blocker and do not implement.
+Every refinement round must apply the Plain-Language Review in `skills/deliver/references/plan-format.md` to the whole plan, including additions from research or other reviews. Difficulty understanding the plan is a material issue. Fix it and rereview before requesting approval or starting `--fast` implementation; a short chat summary does not substitute for a readable plan.
+
+When a round finds a material issue or changes the plan, edit only the plan and run a full post-edit round. Do not create a separate refinement artifact. Stop when a round finds no material scope, execution, or readability issue or after 8 rounds. At the limit, show the exact unresolved blocker and do not implement.
 
 Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review it directly. Ask them to say `implement the doc` when it is right or explain what is wrong, missing, or out of order. Do not launch a review app or external viewer.
 

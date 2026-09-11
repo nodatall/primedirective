@@ -661,6 +661,10 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver_refined_tokens = [
         "For normal planning, create or reuse the canonical execution plan and include `Deliver implementation instruction:` near the top.",
         "Keep the main plan high-level and readable.",
+        "Every refinement round must apply the Plain-Language Review in `skills/deliver/references/plan-format.md` to the whole plan",
+        "Difficulty understanding the plan is a material issue.",
+        "Fix it and rereview before requesting approval or starting `--fast` implementation",
+        "no material scope, execution, or readability issue",
         "unresolved implementation-changing `Open question:` checkboxes",
         "At the normal plan-review gate, link the plan, say whether refinement finished, list unresolved implementation-changing `Open question:` items",
         "Stop and list any implementation-changing `Open question:` instead of starting work.",
@@ -670,6 +674,12 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-REFINED-PLAN", f"skills/deliver/SKILL.md missing refined-plan token: {token}")
 
     plan_format_tokens = [
+        "Apply `skills/shared/references/plain-language.md`, the same writing rules used by `$plain-language`, to the entire plan.",
+        "## Plain-Language Review",
+        "Give each checkbox one understandable outcome.",
+        "Keep scope, settled decisions, exact limits, acceptance criteria, stop conditions, and implementation-changing `Open question:` items visible in plain words.",
+        "Simplifying must not delete, weaken, or postpone them.",
+        "Keep each requirement in one place; use short references where later steps depend on it.",
         "Do not put planning work inside a refined execution plan.",
         "Keep only the work the user currently wants. Delete removed scope.",
         "Record the chosen contract, shape, policy, acceptance criteria, and any remaining explicit `Open question:` before implementation.",
@@ -895,6 +905,9 @@ def validate_review_plan_contract(errors: list[str]) -> None:
 
     skill_tokens = [
         "name: review-plan",
+        "skills/deliver/references/plan-format.md",
+        "Failure of Deliver's Plain-Language Review is also `material`",
+        "to the whole plan in every round, including after technical findings are applied.",
         "Supports `--approval-gate`",
         "tasks/execution-plan-<plan-key>.md",
         "tasks/tmp/review-plan-<plan-key>.md",

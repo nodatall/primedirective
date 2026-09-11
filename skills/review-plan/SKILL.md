@@ -52,6 +52,7 @@ Fixed stop rule:
 Load these files before running:
 
 - `skills/deliver/SKILL.md`
+- `skills/deliver/references/plan-format.md`
 - `skills/plan-refine/SKILL.md`
 - `skills/first-principles-mode/SKILL.md`
 - `skills/first-principles-mode/references/analysis-rubric.md`
@@ -140,7 +141,8 @@ Inspect `git status --short` before editing:
 7. Classify severity locally:
    - `blocker` prevents honest implementation from starting.
    - `material` changes scope, sequencing, technical direction, verification, rollout, safety, acceptance criteria, or implementer clarity.
-   - `minor` is wording, formatting, local clarity, or polish that does not change execution risk.
+   - Failure of Deliver's Plain-Language Review is also `material`: the user cannot readily understand the goal, step outcomes, constraints, or decisions. Apply that review from `skills/deliver/references/plan-format.md` to the whole plan in every round, including after technical findings are applied.
+   - `minor` is wording, formatting, or polish that does not affect user understanding or execution risk.
 8. In default mode, apply only safe plan-only fixes.
    - Safe fixes may clarify ambiguous checkboxes, split oversized steps, restore omitted source scope, reorder dependency flow, add missing verification obligations, add missing rollout or rollback notes, remove contradictions, or tighten acceptance criteria.
    - Safe fixes must stay inside `tasks/execution-plan-<plan-key>.md` and must not invent exact APIs, schemas, routes, helper names, tests, migrations, file paths, or implementation details unless already supported by the plan or repo evidence.
