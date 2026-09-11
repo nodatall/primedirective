@@ -53,7 +53,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 3.5. Re-freeze the comparison for the approved removal
 
-- [ ] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. Treat the five public draft-only behavior IDs recorded in the candidate behavior map as an approved removal, require their absence, and preserve hard non-regression for every retained behavior.
+- [x] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. V12.30 is author-ready with the five public draft-only behavior IDs treated as approved removals and hard non-regression preserved for every retained behavior; independent review and trusted-host isolation remain pending.
 - [ ] Repeat independent evaluator review and trusted-host isolation before running either official arm. Do not reuse the frozen v12.22 result as the final comparison.
 
 ### 4. Run the frozen comparison
