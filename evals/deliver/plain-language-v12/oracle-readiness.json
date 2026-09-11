@@ -4,7 +4,7 @@
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
   "public_adapter_identifier": "deliver_plain_language_v12",
-  "public_adapter_introducing_commit": "cc4d07cb81652af01a139eaf967ba0570928988a",
+  "public_adapter_introducing_commit": "2d154a023e3d4630c974cd364d7e8d75e92bcc7a",
   "public_adapter_path": "evals/deliver/plain-language-v12/adapter.py",
   "public_adapter_sha256": "49f8f68f5097e7e80f48527d1a741996b0910864685a026f5dcee29d6ea7811a",
   "public_execution_policy_path": "evals/deliver/plain-language-v12/execution-policy.json",
@@ -19,8 +19,8 @@
   "baseline_package_content_manifest_sha256": "755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5",
   "candidate_package_manifest_sha256": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9",
   "candidate_package_content_manifest_sha256": "c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae",
-  "private_evaluator_source_commit": "8f1d1d9b348c21c5d1d7886288cbf69a0efd6ba9",
-  "private_evaluator_commit": "8ab22aa706b38a8e20729a9ffff55d924b24da7a",
+  "private_evaluator_source_commit": "f7c6a222e4e0ac18bf910308d50934c9c6decb3c",
+  "private_evaluator_commit": "b4de0359cb5c9676054e37215e2336f961806a56",
   "frozen_public_file_digests": {
     "evals/deliver/plain-language-v12/adapter.py": "49f8f68f5097e7e80f48527d1a741996b0910864685a026f5dcee29d6ea7811a",
     "evals/deliver/plain-language-v12/readiness_transition.py": "e6c9fcca281b1851d5321c4a69f0f3f6a572616288997aa6c47ec3433f90c334",
@@ -359,5 +359,5 @@
       "evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json"
     ]
   },
-  "immutable_readiness_sha256": "d165171ffa5e529c6d12daf42e4fded190ce27344a0928fd20401145bb3f67b1"
+  "immutable_readiness_sha256": "8f0cc4772dcaa4566022e2e3715a2c0f2a92ecb6a34bcbb1aae17646ad025a5e"
 }
