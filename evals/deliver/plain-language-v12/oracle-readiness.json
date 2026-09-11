@@ -4,7 +4,7 @@
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
   "public_adapter_identifier": "deliver_plain_language_v12",
-  "public_adapter_introducing_commit": "5eaf0d1f9ae823a888ee0a7ed5a52fd5d869b47a",
+  "public_adapter_introducing_commit": "95f7dc37af820d67df78b97060571a81b24f481d",
   "public_adapter_path": "evals/deliver/plain-language-v12/adapter.py",
   "public_adapter_sha256": "779c80dc38c0bff0a438121f0a0f4dae30c9098ec732b7df38a79331789e6f0e",
   "public_execution_policy_path": "evals/deliver/plain-language-v12/execution-policy.json",
@@ -19,8 +19,8 @@
   "baseline_package_content_manifest_sha256": "755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5",
   "candidate_package_manifest_sha256": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9",
   "candidate_package_content_manifest_sha256": "c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae",
-  "private_evaluator_source_commit": "6d14a71c5b5db3bdf73ecd2617f51de4938f4c02",
-  "private_evaluator_commit": "6c10cd1ae1e8cde29d5301663f0c5d2821d599c1",
+  "private_evaluator_source_commit": "0c33fe180f78cc36f53013b124233001534b6b77",
+  "private_evaluator_commit": "8dddfca35e53231a32aff4cc86d4147d5e68b4be",
   "frozen_public_file_digests": {
     "evals/deliver/plain-language-v12/adapter.py": "779c80dc38c0bff0a438121f0a0f4dae30c9098ec732b7df38a79331789e6f0e",
     "evals/deliver/plain-language-v12/readiness_transition.py": "aa4826ae928032b9eca7d7ee404da6e0e024b20d49f0f9dcd01cb642fd1fc7b1",
@@ -205,7 +205,7 @@
   "content_control_plane_separation_independent_review_status": "pending_independent_review",
   "judge_packet_schema_control_count": 3,
   "judge_identity_blinding_control_count": 14,
-  "machine_metadata_blinding_control_count": 8,
+  "machine_metadata_blinding_control_count": 9,
   "readability_opaque_content_preservation_control_count": 2,
   "readability_content_substring_scan_enabled": false,
   "readability_content_redaction_enabled": false,
@@ -219,7 +219,7 @@
   "rationale_affects_deterministic_score": false,
   "rationale_affects_combined_verdict": false,
   "runtime_positive_test_count": 27,
-  "runtime_negative_test_count": 188,
+  "runtime_negative_test_count": 189,
   "executed_control_counts": {
     "aggregation_negative": 2,
     "aggregation_positive": 1,
@@ -235,7 +235,7 @@
     "judge_identity_blinding": 14,
     "judge_packet_schema": 3,
     "lifecycle_order_tamper": 27,
-    "machine_metadata_blinding": 8,
+    "machine_metadata_blinding": 9,
     "readability_opaque_content": 2,
     "response_schema": 4,
     "scorer_mutation": 108,
@@ -315,5 +315,5 @@
   "status": "author_ready",
   "per_arm_response_schema_sha256": "1195f5eb82f60c224920b8e88002b90def2da43960662599834006995711a1c8",
   "private_projected_packet_sha256": "d724e666e31b742a472a37abf130fc21081a726e6ff5abdee165b9927bffaca2",
-  "immutable_readiness_sha256": "fdbfa3781c26876f51758d19abed4bd12b13e23f2e7f6eea6e874cd798f2480c"
+  "immutable_readiness_sha256": "d068ea5527764308c5f89509f0a2f302aa51a2cf9bcf5844818144d48c11125c"
 }
