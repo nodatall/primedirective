@@ -53,7 +53,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 3.5. Re-freeze the comparison for the approved removal
 
-- [ ] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. V12.31 was invalidated because its independent bundle was not imported byte-exact. V12.32 Phase A freezes the version-correct public schema, controller metadata, complete bundle interface, and transitive isolation dependency closure before a new no-context case author starts. Hidden case authoring and all private freeze/readiness work remain pending.
+- [x] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. V12.32 imported its independently authored eight-file bundle byte-for-byte, froze the private source and final evaluator commits, and committed the public `author_ready` state. Independent review and trusted-host isolation remain pending.
 - [ ] Repeat independent evaluator review and trusted-host isolation before running either official arm. Do not reuse the frozen v12.22 result as the final comparison.
 
 ### 4. Run the frozen comparison
