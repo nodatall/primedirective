@@ -4,7 +4,7 @@
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
   "public_adapter_identifier": "deliver_plain_language_v12",
-  "public_adapter_introducing_commit": "29c4d66d716d6c54863c3174d54e3f10b557533b",
+  "public_adapter_introducing_commit": "62023a709fdbce80a524daaedde69c83075883ce",
   "public_adapter_path": "evals/deliver/plain-language-v12/adapter.py",
   "public_adapter_sha256": "f0975dd89924cd7d0ae9df1afc540ea072fd2afcc798bd050cc3d30f2e8fde59",
   "public_execution_policy_path": "evals/deliver/plain-language-v12/execution-policy.json",
@@ -19,8 +19,8 @@
   "baseline_package_content_manifest_sha256": "755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5",
   "candidate_package_manifest_sha256": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9",
   "candidate_package_content_manifest_sha256": "c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae",
-  "private_evaluator_source_commit": "a23b04cf299fc098c8e3b64e0e2cecc4a24cc586",
-  "private_evaluator_commit": "62fa640d4cd2334aa6018e098c5fcb387f5a447a",
+  "private_evaluator_source_commit": "ca74bcffe1d6bfddd7233132af91ea7614ad9c1d",
+  "private_evaluator_commit": "024542b8aef4e52ed2cf47b55a5c5b632febc6f7",
   "frozen_public_file_digests": {
     "evals/deliver/plain-language-v12/adapter.py": "f0975dd89924cd7d0ae9df1afc540ea072fd2afcc798bd050cc3d30f2e8fde59",
     "evals/deliver/plain-language-v12/readiness_transition.py": "bd0511db89356fc529d19491d977bcd2a19cc25686987c15827359c9e8133cbe",
@@ -299,5 +299,5 @@
   "status": "author_ready",
   "per_arm_response_schema_sha256": "c2f91e1f4d3d279acdab8ad3a19cef27151c6a3675c46c378fa21b3689a8f4ea",
   "private_projected_packet_sha256": "7c2e9d4357ba66b748b083444dc7a2b09e8beabbbab09269aac8be060007bf3e",
-  "immutable_readiness_sha256": "bac8ca7a4df63e16ef424fec722a6b4ec0b8ae739787e4c040814de839a7176d"
+  "immutable_readiness_sha256": "cf427053a312e1f0c6a8d37ce558a002299d67f9b2bf705b1392b061f2d231ba"
 }
