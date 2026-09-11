@@ -153,7 +153,18 @@ class ReadinessTransitionTests(unittest.TestCase):
 
     def test_full_committed_monotonic_lifecycle_and_unrelated_descendant(self) -> None:
         self.assertEqual(transition.verify_author_ready(self.repo)["status"], "author_ready")
+        (self.repo / "unrelated-author.txt").write_text("later author work\n", encoding="utf-8")
+        self.git("add", "unrelated-author.txt")
+        self.git("commit", "-q", "-m", "unrelated author descendant")
+        self.assertEqual(transition.verify_author_ready(self.repo)["commit"], self.author_commit)
         self.assertEqual(self.prepare_review()["status"], "independent_review_pass")
+        (self.repo / "unrelated-review.txt").write_text("later review work\n", encoding="utf-8")
+        self.git("add", "unrelated-review.txt")
+        self.git("commit", "-q", "-m", "unrelated review descendant")
+        self.assertEqual(
+            transition.verify_independent_review_pass(self.repo)["status"],
+            "independent_review_pass",
+        )
         ready = self.prepare_ready()
         self.assertEqual(ready["status"], "ready")
         unrelated = self.repo / "unrelated.txt"

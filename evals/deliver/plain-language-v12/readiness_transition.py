@@ -139,6 +139,15 @@ def _parent(repo: Path, commit: str) -> str:
     return _commit(repo, f"{commit}^")
 
 
+def _previous_readiness_commit(repo: Path, commit: str) -> str:
+    values = str(git(
+        repo, ["log", "-2", "--format=%H", commit, "--", READINESS_RELATIVE_PATH]
+    )).splitlines()
+    if len(values) != 2 or not HEX40.fullmatch(values[1]):
+        raise ReadinessTransitionError("readiness predecessor commit is unavailable")
+    return values[1]
+
+
 def immutable_projection(document: dict[str, Any]) -> dict[str, Any]:
     projection: dict[str, Any] = {}
     for key, value in document.items():
@@ -336,12 +345,13 @@ def _validate_isolation_receipt(
 
 
 def verify_author_ready(repo: Path, ref: str = "HEAD") -> dict[str, str]:
-    commit = _commit(repo, ref)
+    head = _commit(repo, ref)
+    commit = _last_touch(repo, head, READINESS_RELATIVE_PATH)
     document, raw = _readiness_at(repo, commit)
     _validate_author_document(document)
-    if _last_touch(repo, commit, READINESS_RELATIVE_PATH) != commit:
-        raise ReadinessTransitionError("author readiness must be introduced by its own current commit")
-    _validate_frozen_files(repo, commit, document)
+    if _parent(repo, commit) != document.get("public_adapter_introducing_commit"):
+        raise ReadinessTransitionError("author readiness is not anchored directly to the frozen controller")
+    _validate_frozen_files(repo, head, document)
     return {"status": "author_ready", "commit": commit, "sha256": sha256_bytes(raw)}
 
 
@@ -350,9 +360,11 @@ def _verify_review_at(repo: Path, commit: str) -> tuple[dict[str, Any], dict[str
     _validate_common(document)
     if document["status"] != "independent_review_pass":
         raise ReadinessTransitionError("expected independent_review_pass state")
-    predecessor = _parent(repo, commit)
+    predecessor = _previous_readiness_commit(repo, commit)
     before, before_raw = _readiness_at(repo, predecessor)
     _validate_author_document(before)
+    if _parent(repo, predecessor) != before.get("public_adapter_introducing_commit"):
+        raise ReadinessTransitionError("author readiness predecessor is not controller-anchored")
     _same_immutable(before, document)
     _require_passed_review(document)
     if document.get("isolation_probe_status") != "pending_trusted_host_isolation":
@@ -383,7 +395,13 @@ def _verify_review_at(repo: Path, commit: str) -> tuple[dict[str, Any], dict[str
 
 
 def verify_independent_review_pass(repo: Path, ref: str = "HEAD") -> dict[str, str]:
-    return _verify_review_at(repo, _commit(repo, ref))[1]
+    head = _commit(repo, ref)
+    commit = _last_touch(repo, head, READINESS_RELATIVE_PATH)
+    document, result = _verify_review_at(repo, commit)
+    _validate_frozen_files(repo, head, document)
+    if _last_touch(repo, head, REVIEW_RELATIVE_PATH) != commit:
+        raise ReadinessTransitionError("independent review record was overwritten")
+    return result
 
 
 def verify_ready(repo: Path, ref: str = "HEAD") -> dict[str, str]:
@@ -393,7 +411,7 @@ def verify_ready(repo: Path, ref: str = "HEAD") -> dict[str, str]:
     _validate_common(document)
     if document["status"] != "ready":
         raise ReadinessTransitionError("oracle readiness is not in ready state")
-    predecessor = _parent(repo, readiness_commit)
+    predecessor = _previous_readiness_commit(repo, readiness_commit)
     review_document, review_result = _verify_review_at(repo, predecessor)
     _same_immutable(review_document, document)
     _require_passed_review(document)
@@ -420,6 +438,10 @@ def verify_ready(repo: Path, ref: str = "HEAD") -> dict[str, str]:
     ):
         raise ReadinessTransitionError("ready isolation fields are not exactly bound")
     _validate_frozen_files(repo, head, document)
+    if _last_touch(repo, head, REVIEW_RELATIVE_PATH) != predecessor:
+        raise ReadinessTransitionError("independent review record was overwritten")
+    if _last_touch(repo, head, ISOLATION_RELATIVE_PATH) != readiness_commit:
+        raise ReadinessTransitionError("isolation receipt was overwritten")
     return {
         "status": "ready", "commit": readiness_commit, "sha256": sha256_bytes(raw),
         "independent_review_commit": predecessor,
