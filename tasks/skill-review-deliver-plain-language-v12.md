@@ -29,10 +29,10 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.26`; rejected because its author-ready bytes could not make the required committed review and isolation transitions, and several control counts were declarations rather than executed named-control totals.
 - Invalidated evaluator: `deliver-plain-language-v12.27`; rejected because a nested comprehension payload field exposed literal arm identity while its published blinding control inspected only the outer provenance field.
 - V12.28 constructs exact lane-specific judge projections at the private boundary, keeps scores, roots, seals, and identity maps private, and recursively rejects identity-bearing keys and string values before freezing any judge packet.
-- Evaluator source and author-ready commits: `d980404f0d86eea71f4b1f9028d1cf1f61210955` and `5d67b7de0fd0410662968a6f00b8cd208497cbb7`
-- Public controller commit: `26f686c161da7899eb25932ffd0b6e9a05c2c488`
-- Public author-ready commit: `8285ca2124d13a90d8d818852f234d6f5af79cc8`
-- Author-ready-state SHA-256: `2615a0ddf4a9d9fc32a584d9323e820c1024d1e94a0aca7c9be70e5c8eb82edf`
+- Evaluator source and author-ready commits: pending corrected v12.28 freeze; the initial author freeze was superseded before review because its own guidance validation did not pass.
+- Public controller commit: pending corrected v12.28 freeze.
+- Public author-ready commit: pending corrected v12.28 freeze.
+- Author-ready-state SHA-256: pending corrected v12.28 freeze.
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
