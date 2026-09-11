@@ -53,7 +53,7 @@ When asked to implement this doc, load the `$deliver` skill, use this file as th
 
 ### 3.5. Re-freeze the comparison for the approved removal
 
-- [x] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. V12.32 imported its independently authored eight-file bundle byte-for-byte, froze the private source and final evaluator commits, and committed the public `author_ready` state. Independent review and trusted-host isolation remain pending.
+- [x] After wording approval, create a new evaluator version with fresh hidden cases and fresh judges. V12.33 carries the independently authored v12.32 eight-file bundle byte-for-byte because the version change only repairs the pre-import private-runtime trust boundary; its three fresh allocations remain unrun. V12.33 freezes a Git-object-staged isolated launcher, the private source and final evaluator commits, and the public `author_ready` state. Independent review and trusted-host isolation remain pending.
 - [ ] Repeat independent evaluator review and trusted-host isolation before running either official arm. Do not reuse the frozen v12.22 result as the final comparison.
 
 ### 4. Run the frozen comparison
