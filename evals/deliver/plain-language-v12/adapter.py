@@ -37,8 +37,8 @@ import readiness_transition  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 27
-ORACLE_VERSION = "deliver-plain-language-v12.30"
+READINESS_SCHEMA_VERSION = 28
+ORACLE_VERSION = "deliver-plain-language-v12.31"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -156,7 +156,10 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "projected_packet_bytes", "projected_packet_lexical_word_count",
     "expected_per_arm_output_bytes", "context_margin_tokens",
     "case_count", "single_behavior_case_count", "multi_behavior_case_count",
-    "previous_oracle_case_reuse_count", "previous_oracle_case_digest_overlap_count",
+    "authenticated_prior_case_versions", "authenticated_prior_case_reuse_count",
+    "authenticated_prior_case_digest_overlap_count", "case_freshness_basis",
+    "case_author_process", "semantic_nonreuse_against_v12_22_status",
+    "semantic_nonreuse_claimed",
     "baseline_behavior_id_count", "behavior_id_count", "covered_behavior_ids",
     "approved_removal_behavior_count", "approved_removed_behavior_ids",
     "removal_absence_assertion_count", "removal_absence_static_control_count",
@@ -212,7 +215,7 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "readiness_predecessor_sha256", "independent_review_record_path",
     "independent_review_record_sha256", "trusted_host_isolation_receipt_path",
     "trusted_host_isolation_receipt_sha256",
-    "executed_control_counts",
+    "root_isolation_dependency_binding", "executed_control_counts",
 })
 READINESS_NESTED_ALLOWED_FIELDS = {
     "proportionality": frozenset({
@@ -235,6 +238,10 @@ READINESS_NESTED_ALLOWED_FIELDS = {
         "lifecycle_order_tamper", "response_schema", "scorer_mutation",
         "sealed_artifact_positive", "trusted_root_negative", "trusted_root_positive",
         "unbound_verdict_shape",
+    }),
+    "root_isolation_dependency_binding": frozenset({
+        "manifest_path", "manifest_sha256", "entries_sha256", "controller_commit",
+        "controller_tree", "entries",
     }),
 }
 
@@ -936,10 +943,24 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or readiness.get("assertion_count") != case_count
         or type(readiness.get("hard_scored_field_instance_count")) is not int
         or readiness.get("hard_scored_field_instance_count") != case_count * 5
-        or type(readiness.get("previous_oracle_case_reuse_count")) is not int
-        or readiness.get("previous_oracle_case_reuse_count") != 0
-        or type(readiness.get("previous_oracle_case_digest_overlap_count")) is not int
-        or readiness.get("previous_oracle_case_digest_overlap_count") != 0
+        or readiness.get("authenticated_prior_case_versions")
+        != [
+            "deliver-plain-language-v12.23", "deliver-plain-language-v12.24",
+            "deliver-plain-language-v12.25", "deliver-plain-language-v12.26",
+            "deliver-plain-language-v12.27", "deliver-plain-language-v12.28",
+            "deliver-plain-language-v12.29", "deliver-plain-language-v12.30",
+        ]
+        or type(readiness.get("authenticated_prior_case_reuse_count")) is not int
+        or readiness.get("authenticated_prior_case_reuse_count") != 0
+        or type(readiness.get("authenticated_prior_case_digest_overlap_count")) is not int
+        or readiness.get("authenticated_prior_case_digest_overlap_count") != 0
+        or readiness.get("case_freshness_basis")
+        != "prevented_by_v1231_specific_namespace"
+        or readiness.get("case_author_process")
+        != "fresh_no_context_sol_xhigh_from_public_inventory_only"
+        or readiness.get("semantic_nonreuse_against_v12_22_status")
+        != "unavailable_lost_authenticated_case_bytes"
+        or readiness.get("semantic_nonreuse_claimed") is not False
         or type(readiness.get("hidden_comprehension_behavior_count")) is not int
         or readiness.get("hidden_comprehension_behavior_count") != behavior_count
         or type(readiness.get("removal_absence_assertion_count")) is not int

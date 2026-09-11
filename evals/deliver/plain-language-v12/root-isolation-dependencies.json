@@ -1,0 +1,42 @@
+{
+  "closure_policy": {
+    "caller_pythonpath_allowed": false,
+    "dynamic_imports": {
+      "evals/deliver/plain-language-v12/root_isolation_probe.py": [
+        "evals/deliver/harness.py"
+      ]
+    },
+    "execution_source": "verified_git_blobs_in_sealed_staging",
+    "normal_imports": "stdlib_only_ast_validated",
+    "python_isolated_mode_required": true,
+    "repo_local_data_inputs": [],
+    "repo_local_subprocess_entrypoints": [],
+    "unlisted_repo_local_resolution_allowed": false
+  },
+  "entries": [
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/harness.py",
+      "role": "dynamic_deliver_harness_import",
+      "sha256": "0969dff5a248902365dd52b763d705d5e371defa950ce544fe155e3867614dc3"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/readiness_transition.py",
+      "role": "readiness_transition_entrypoint",
+      "sha256": "d4caaba8e18a925c81982a9d019f2907af0578c551f2a1e42227ee697293f7d2"
+    },
+    {
+      "git_mode": "100644",
+      "path": "evals/deliver/plain-language-v12/root_isolation_probe.py",
+      "role": "root_isolation_probe_entrypoint",
+      "sha256": "340daf70e5fae04eed80db004d33ceb2a50f342333b6043db103ee7481fe1d8b"
+    }
+  ],
+  "entries_sha256": "b1e856eedafac2b4780df259d66455471b958128063132b87765759b20aa144b",
+  "entry_count": 3,
+  "manifest_kind": "root_isolation_repo_local_execution_and_data_dependency_closure",
+  "manifest_sha256": "8c85aeb09b4cb4209391ee157d3ba5135ae183131a7c075e114d11ecd5f3d0dc",
+  "oracle_version": "deliver-plain-language-v12.31",
+  "schema_version": 1
+}

@@ -143,8 +143,20 @@ class AdapterTests(unittest.TestCase):
             "case_count": case_count,
             "single_behavior_case_count": case_count,
             "multi_behavior_case_count": 0,
-            "previous_oracle_case_reuse_count": 0,
-            "previous_oracle_case_digest_overlap_count": 0,
+            "authenticated_prior_case_versions": [
+                "deliver-plain-language-v12.23", "deliver-plain-language-v12.24",
+                "deliver-plain-language-v12.25", "deliver-plain-language-v12.26",
+                "deliver-plain-language-v12.27", "deliver-plain-language-v12.28",
+                "deliver-plain-language-v12.29", "deliver-plain-language-v12.30",
+            ],
+            "authenticated_prior_case_reuse_count": 0,
+            "authenticated_prior_case_digest_overlap_count": 0,
+            "case_freshness_basis": "prevented_by_v1231_specific_namespace",
+            "case_author_process": "fresh_no_context_sol_xhigh_from_public_inventory_only",
+            "semantic_nonreuse_against_v12_22_status": (
+                "unavailable_lost_authenticated_case_bytes"
+            ),
+            "semantic_nonreuse_claimed": False,
             "baseline_behavior_id_count": len(behavior_ids),
             "behavior_id_count": len(retained_behavior_ids),
             "covered_behavior_ids": retained_behavior_ids,
@@ -215,6 +227,14 @@ class AdapterTests(unittest.TestCase):
             "independent_review_record_sha256": "f" * 64,
             "trusted_host_isolation_receipt_path": adapter.readiness_transition.ISOLATION_RELATIVE_PATH,
             "trusted_host_isolation_receipt_sha256": "1" * 64,
+            "root_isolation_dependency_binding": {
+                "manifest_path": adapter.readiness_transition.DEPENDENCY_MANIFEST_RELATIVE_PATH,
+                "manifest_sha256": "2" * 64,
+                "entries_sha256": "3" * 64,
+                "controller_commit": "3" * 40,
+                "controller_tree": "4" * 40,
+                "entries": [],
+            },
             "durable_lifecycle_positive_control_count": 1,
             "lifecycle_order_tamper_negative_control_count": 27,
             "unbound_verdict_shape_negative_control_count": 1,
@@ -748,6 +768,29 @@ class AdapterTests(unittest.TestCase):
         )
         for field, value in cases:
             with self.subTest(field=field, value=value):
+                original = self.readiness_document[field]
+                self.readiness_document[field] = value
+                self.write_readiness()
+                try:
+                    with (
+                        mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+                        mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+                        self.assertRaisesRegex(adapter.AdapterError, "direct hidden coverage"),
+                    ):
+                        adapter.validate_readiness(self.packet, self.schema)
+                finally:
+                    self.readiness_document[field] = original
+                    self.write_readiness()
+
+    def test_readiness_states_honest_v122_freshness_boundary(self) -> None:
+        cases = (
+            ("semantic_nonreuse_claimed", True),
+            ("semantic_nonreuse_against_v12_22_status", "pass"),
+            ("case_freshness_basis", "semantic_comparison"),
+            ("authenticated_prior_case_reuse_count", 1),
+        )
+        for field, value in cases:
+            with self.subTest(field=field):
                 original = self.readiness_document[field]
                 self.readiness_document[field] = value
                 self.write_readiness()

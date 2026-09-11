@@ -15,7 +15,7 @@ import importlib.util
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "readiness_transition.py"
-SPEC = importlib.util.spec_from_file_location("deliver_v1230_readiness_transition", MODULE_PATH)
+SPEC = importlib.util.spec_from_file_location("deliver_v1231_readiness_transition", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 transition = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(transition)
@@ -23,7 +23,7 @@ SPEC.loader.exec_module(transition)
 
 class ReadinessTransitionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1230-readiness-", dir="/private/tmp"))
+        self.repo = Path(tempfile.mkdtemp(prefix="deliver-v1231-readiness-", dir="/private/tmp"))
         self.addCleanup(shutil.rmtree, self.repo)
         self.public_patch = mock.patch.object(transition, "PUBLIC_REPOSITORY", self.repo)
         self.private_patch = mock.patch.object(
@@ -37,14 +37,22 @@ class ReadinessTransitionTests(unittest.TestCase):
         self.git("config", "user.email", "evaluator-test@example.invalid")
         self.git("config", "user.name", "Evaluator Test")
         self.frozen_path = "evals/deliver/plain-language-v12/adapter.py"
+        source_root = MODULE_PATH.parents[3]
         for relative, content in (
             (self.frozen_path, b"frozen controller\n"),
-            (transition.PROBE_RELATIVE_PATH, b"frozen root probe\n"),
+            *(
+                (relative, (source_root / relative).read_bytes())
+                for relative in transition.DEPENDENCY_ROLES
+            ),
         ):
             path = self.repo / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
-        self.git("add", self.frozen_path, transition.PROBE_RELATIVE_PATH)
+        self.write_json(
+            transition.DEPENDENCY_MANIFEST_RELATIVE_PATH,
+            transition.build_dependency_manifest(self.repo),
+        )
+        self.git("add", self.frozen_path, *transition.DEPENDENCY_OBSERVED_ROLES)
         self.git("commit", "-q", "-m", "controller")
         self.controller_commit = self.git("rev-parse", "HEAD")
         self.document = self.author_document()
@@ -65,7 +73,7 @@ class ReadinessTransitionTests(unittest.TestCase):
         return path
 
     def author_document(self) -> dict[str, object]:
-        frozen = (self.frozen_path, transition.PROBE_RELATIVE_PATH)
+        frozen = (self.frozen_path, *transition.DEPENDENCY_OBSERVED_ROLES)
         document: dict[str, object] = {
             "schema_version": transition.SCHEMA_VERSION,
             "oracle_version": transition.ORACLE_VERSION,
@@ -78,6 +86,9 @@ class ReadinessTransitionTests(unittest.TestCase):
             },
             "frozen_public_file_commits": {path: self.controller_commit for path in frozen},
             "root_isolation_contract": transition.root_isolation_contract(),
+            "root_isolation_dependency_binding": transition.dependency_binding(
+                self.repo, self.controller_commit
+            ),
             "readiness_predecessor_commit": "pending_transition",
             "readiness_predecessor_sha256": "pending_transition",
             "independent_review_record_path": transition.REVIEW_RELATIVE_PATH,
@@ -114,7 +125,7 @@ class ReadinessTransitionTests(unittest.TestCase):
             "oracle_version": transition.ORACLE_VERSION,
             "record_kind": "independent_review",
             "result": "pass",
-            "reviewer_allocation_id": "fresh-reviewer-allocation-v1230",
+            "reviewer_allocation_id": "fresh-reviewer-allocation-v1231",
             "reviewer_nonce": "3" * 64,
             "private_evaluator_source_commit": self.document["private_evaluator_source_commit"],
             "private_evaluator_final_commit": self.document["private_evaluator_commit"],
@@ -159,12 +170,25 @@ class ReadinessTransitionTests(unittest.TestCase):
                 "runner_trace_sha256": "6" * 64,
                 "runner_profile_sha256": "7" * 64,
             })
+        common["dependency_manifest_sha256"] = self.document[
+            "root_isolation_dependency_binding"
+        ]["manifest_sha256"]
+        closure_root = Path(".")
+        common["staged_dependency_observations_sha256"] = "8" * 64
         return common
 
     def fake_probe(self, command: list[str], _repo: Path) -> subprocess.CompletedProcess[str]:
         operation = command[3]
         challenge = command[-1]
         evidence = self.probe_evidence(operation, challenge)
+        closure_root = Path(command[command.index("--closure-root") + 1])
+        staged = transition._stage_dependency_closure_observations(closure_root)
+        evidence["staged_dependency_observations_sha256"] = transition.sha256_bytes(
+            transition.canonical_json(staged)
+        )
+        evidence["dependency_manifest_sha256"] = command[
+            command.index("--dependency-manifest-sha256") + 1
+        ]
         return subprocess.CompletedProcess(
             command, 0, (transition.canonical_json(evidence) + b"\n").decode(), ""
         )
@@ -175,6 +199,16 @@ class ReadinessTransitionTests(unittest.TestCase):
         ):
             transition.run_root_isolation(self.repo)
             self.assertEqual(private_check.call_count, 2)
+
+    def dependency_manifest_inputs(self) -> tuple[dict[str, bytes], dict[str, str]]:
+        blobs = {
+            path: (self.repo / path).read_bytes() for path in transition.DEPENDENCY_ROLES
+        }
+        modes = {
+            path: transition._file_mode(self.repo / path)
+            for path in transition.DEPENDENCY_ROLES
+        }
+        return blobs, modes
 
     def prepare_ready(self) -> dict[str, str]:
         self.run_root()
@@ -274,6 +308,109 @@ class ReadinessTransitionTests(unittest.TestCase):
         self.git("commit", "-q", "-m", "touch frozen probe")
         with self.assertRaises(transition.ReadinessTransitionError):
             self.run_root()
+
+    def test_descendant_harness_replacement_cannot_emit_forged_pass(self) -> None:
+        self.prepare_review()
+        harness = self.repo / transition.HARNESS_RELATIVE_PATH
+        harness.write_text("def preflight_runner(*args): return None\n", encoding="utf-8")
+        self.git("add", transition.HARNESS_RELATIVE_PATH)
+        self.git("commit", "-q", "-m", "replace frozen harness")
+        with mock.patch.object(transition, "_verify_private_evaluator"), mock.patch.object(
+            transition, "_execute_probe_command"
+        ) as execute, self.assertRaises(transition.ReadinessTransitionError):
+            transition.run_root_isolation(self.repo)
+            execute.assert_not_called()
+
+    def test_touch_and_restore_dependency_history_is_rejected(self) -> None:
+        self.prepare_review()
+        harness = self.repo / transition.HARNESS_RELATIVE_PATH
+        original = harness.read_bytes()
+        harness.write_bytes(original + b"\n# touched\n")
+        self.git("add", transition.HARNESS_RELATIVE_PATH)
+        self.git("commit", "-q", "-m", "touch harness")
+        harness.write_bytes(original)
+        self.git("add", transition.HARNESS_RELATIVE_PATH)
+        self.git("commit", "-q", "-m", "restore harness")
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root()
+
+    def test_dependency_manifest_omission_and_extra_are_rejected(self) -> None:
+        blobs, modes = self.dependency_manifest_inputs()
+        manifest = transition.build_dependency_manifest(self.repo)
+        for replacement in (
+            manifest["entries"][:-1],
+            [*manifest["entries"], {
+                "path": "evals/deliver/forged.py", "role": "forged",
+                "sha256": "9" * 64, "git_mode": "100644",
+            }],
+        ):
+            candidate = copy.deepcopy(manifest)
+            candidate["entries"] = replacement
+            candidate["entry_count"] = len(replacement)
+            candidate["entries_sha256"] = transition.sha256_bytes(
+                transition.canonical_json(replacement)
+            )
+            candidate["manifest_sha256"] = transition.sha256_bytes(
+                transition.canonical_json(transition._manifest_payload(candidate))
+            )
+            with self.assertRaises(transition.ReadinessTransitionError):
+                transition._validate_dependency_manifest_document(candidate, blobs, modes)
+
+    def test_dependency_symlink_is_rejected(self) -> None:
+        harness = self.repo / transition.HARNESS_RELATIVE_PATH
+        harness.unlink()
+        harness.symlink_to(self.repo / transition.PROBE_RELATIVE_PATH)
+        with self.assertRaises(transition.ReadinessTransitionError):
+            transition._dependency_observations(self.repo, self.controller_commit)
+
+    def test_pythonpath_shadowing_is_rejected_before_probe(self) -> None:
+        self.prepare_review()
+        shadowed = {**transition.PROBE_ENVIRONMENT, "PYTHONPATH": "/private/tmp/shadow"}
+        with mock.patch.object(transition, "PROBE_ENVIRONMENT", shadowed), mock.patch.object(
+            transition, "_verify_private_evaluator"
+        ), mock.patch.object(transition, "_execute_probe_command") as execute, self.assertRaises(
+            transition.ReadinessTransitionError
+        ):
+            transition.run_root_isolation(self.repo)
+        execute.assert_not_called()
+
+    def test_dependency_pre_post_drift_is_rejected(self) -> None:
+        self.prepare_review()
+        calls = 0
+
+        def drift(command: list[str], repo: Path) -> subprocess.CompletedProcess[str]:
+            nonlocal calls
+            result = self.fake_probe(command, repo)
+            calls += 1
+            if calls == 1:
+                harness = self.repo / transition.HARNESS_RELATIVE_PATH
+                harness.write_bytes(harness.read_bytes() + b"\n# drift during probes\n")
+            return result
+
+        with self.assertRaises(transition.ReadinessTransitionError):
+            self.run_root(drift)
+        self.assertFalse((self.repo / transition.ISOLATION_RELATIVE_PATH).exists())
+
+    def test_staged_extra_file_and_symlink_are_rejected(self) -> None:
+        observations = self.document["root_isolation_dependency_binding"]["entries"]
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as temporary:
+            root = Path(temporary)
+            transition._stage_dependency_closure(
+                self.repo, self.controller_commit, root, observations
+            )
+            (root / "unexpected.py").write_text("pass\n", encoding="utf-8")
+            with self.assertRaises(transition.ReadinessTransitionError):
+                transition._stage_dependency_closure_observations(root)
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as temporary:
+            root = Path(temporary)
+            transition._stage_dependency_closure(
+                self.repo, self.controller_commit, root, observations
+            )
+            harness = root / transition.HARNESS_RELATIVE_PATH
+            harness.unlink()
+            harness.symlink_to(root / transition.PROBE_RELATIVE_PATH)
+            with self.assertRaises(transition.ReadinessTransitionError):
+                transition._stage_dependency_closure_observations(root)
 
     def test_dirty_tracked_state_is_rejected_before_probe(self) -> None:
         self.prepare_review()

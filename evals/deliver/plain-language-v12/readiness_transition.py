@@ -1,29 +1,46 @@
 #!/usr/bin/env python3
-"""Version-pinned, auditable readiness transitions for Deliver oracle v12.30."""
+"""Version-pinned, auditable readiness transitions for Deliver oracle v12.31."""
 
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 import os
 import re
 import secrets
+import stat
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.30"
-SCHEMA_VERSION = 27
+ORACLE_VERSION = "deliver-plain-language-v12.31"
+SCHEMA_VERSION = 28
 READINESS_RELATIVE_PATH = "evals/deliver/plain-language-v12/oracle-readiness.json"
 REVIEW_RELATIVE_PATH = "evals/deliver/plain-language-v12/independent-review-record.json"
 ISOLATION_RELATIVE_PATH = "evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json"
 PROBE_RELATIVE_PATH = "evals/deliver/plain-language-v12/root_isolation_probe.py"
+TRANSITION_RELATIVE_PATH = "evals/deliver/plain-language-v12/readiness_transition.py"
+HARNESS_RELATIVE_PATH = "evals/deliver/harness.py"
+DEPENDENCY_MANIFEST_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/root-isolation-dependencies.json"
+)
+DEPENDENCY_ROLES = {
+    TRANSITION_RELATIVE_PATH: "readiness_transition_entrypoint",
+    PROBE_RELATIVE_PATH: "root_isolation_probe_entrypoint",
+    HARNESS_RELATIVE_PATH: "dynamic_deliver_harness_import",
+}
+DEPENDENCY_OBSERVED_ROLES = {
+    **DEPENDENCY_ROLES,
+    DEPENDENCY_MANIFEST_RELATIVE_PATH: "dependency_manifest_root",
+}
 PUBLIC_REPOSITORY = Path("/Volumes/Code/primedirective")
 PRIVATE_EVALUATOR_REPOSITORY = Path(
-    "/private/tmp/deliver-plain-language-v130-evaluator.SaR0Md/repo"
+    "/private/tmp/deliver-plain-language-v131-evaluator.JKNpUB/repo"
 )
 HEX40 = re.compile(r"^[0-9a-f]{40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
@@ -34,8 +51,8 @@ NETWORK_POLICY = (
     "denial are not claimed; parent network credentials, inherited environment, and "
     "hidden evaluator data remain unavailable to the arm"
 )
-OUTER_PROBE_ID = "deliver-v12.30-outer-sandbox-v1"
-PREFLIGHT_PROBE_ID = "deliver-v12.30-real-preflight-v1"
+OUTER_PROBE_ID = "deliver-v12.31-outer-sandbox-v1"
+PREFLIGHT_PROBE_ID = "deliver-v12.31-real-preflight-v1"
 OUTER_CLAIMS = frozenset({
     "stage_read_allowed",
     "stage_write_allowed",
@@ -176,11 +193,215 @@ def _blob(repo: Path, commit: str, relative_path: str) -> bytes:
     return bytes(git(repo, ["cat-file", "blob", f"{commit}:{relative_path}"], binary=True))
 
 
+def _tree(repo: Path, commit: str) -> str:
+    value = str(git(repo, ["rev-parse", f"{commit}^{{tree}}"]))
+    if not HEX40.fullmatch(value):
+        raise ReadinessTransitionError("public Git tree is malformed")
+    return value
+
+
+def _ls_tree_entry(repo: Path, commit: str, relative_path: str) -> tuple[str, str]:
+    output = str(git(repo, ["ls-tree", commit, "--", relative_path]))
+    lines = output.splitlines()
+    if len(lines) != 1:
+        raise ReadinessTransitionError(f"dependency is missing or ambiguous: {relative_path}")
+    try:
+        metadata, listed_path = lines[0].split("\t", 1)
+        mode, kind, object_id = metadata.split()
+    except ValueError as exc:
+        raise ReadinessTransitionError(
+            f"dependency Git metadata is malformed: {relative_path}"
+        ) from exc
+    if (
+        listed_path != relative_path
+        or kind != "blob"
+        or mode not in {"100644", "100755"}
+        or not HEX40.fullmatch(object_id)
+    ):
+        raise ReadinessTransitionError(
+            f"dependency is not a regular tracked Git blob: {relative_path}"
+        )
+    return mode, object_id
+
+
 def _last_touch(repo: Path, commit: str, relative_path: str) -> str:
     value = str(git(repo, ["log", "-1", "--format=%H", commit, "--", relative_path])).strip()
     if not HEX40.fullmatch(value):
         raise ReadinessTransitionError(f"no committed origin for {relative_path}")
     return value
+
+
+def _file_mode(path: Path) -> str:
+    return "100755" if stat.S_IMODE(path.stat().st_mode) & 0o111 else "100644"
+
+
+def _require_regular_checkout_file(repo: Path, relative_path: str) -> Path:
+    path = repo / relative_path
+    try:
+        metadata = path.lstat()
+    except OSError as exc:
+        raise ReadinessTransitionError(f"dependency is unavailable: {relative_path}") from exc
+    if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
+        raise ReadinessTransitionError(
+            f"dependency must be a regular non-symlink file: {relative_path}"
+        )
+    return path
+
+
+def _dependency_observations(repo: Path, ref: str) -> list[dict[str, str]]:
+    commit = _commit(repo, ref)
+    observations: list[dict[str, str]] = []
+    for relative_path in sorted(DEPENDENCY_OBSERVED_ROLES):
+        mode, object_id = _ls_tree_entry(repo, commit, relative_path)
+        blob = _blob(repo, commit, relative_path)
+        path = _require_regular_checkout_file(repo, relative_path)
+        if path.read_bytes() != blob or _file_mode(path) != mode:
+            raise ReadinessTransitionError(
+                f"dependency checkout bytes or mode differ from Git: {relative_path}"
+            )
+        observations.append({
+            "path": relative_path,
+            "role": DEPENDENCY_OBSERVED_ROLES[relative_path],
+            "sha256": sha256_bytes(blob),
+            "git_blob": object_id,
+            "git_mode": mode,
+            "last_touch_commit": _last_touch(repo, commit, relative_path),
+        })
+    return observations
+
+
+def _manifest_payload(document: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in document.items() if key != "manifest_sha256"}
+
+
+def _stdlib_only_imports(source: bytes, label: str) -> None:
+    try:
+        tree = ast.parse(source, filename=label)
+    except SyntaxError as exc:
+        raise ReadinessTransitionError(f"dependency source is invalid Python: {label}") from exc
+    roots: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            roots.update(alias.name.split(".", 1)[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            roots.add(node.module.split(".", 1)[0])
+    allowed = set(sys.stdlib_module_names) | {"__future__"}
+    unexpected = sorted(roots - allowed)
+    if unexpected:
+        raise ReadinessTransitionError(
+            f"unlisted non-stdlib import in {label}: {', '.join(unexpected)}"
+        )
+
+
+def _validate_dependency_source_closure(entries: list[dict[str, str]], blobs: dict[str, bytes]) -> None:
+    if [entry["path"] for entry in entries] != sorted(DEPENDENCY_ROLES):
+        raise ReadinessTransitionError("dependency manifest entry set is not exact")
+    for relative_path in sorted(DEPENDENCY_ROLES):
+        _stdlib_only_imports(blobs[relative_path], relative_path)
+    probe_source = blobs[PROBE_RELATIVE_PATH].decode("utf-8")
+    transition_source = blobs[TRANSITION_RELATIVE_PATH].decode("utf-8")
+    harness_source = blobs[HARNESS_RELATIVE_PATH].decode("utf-8")
+    if (
+        probe_source.count("spec_from_file_location(") != 1
+        or "HARNESS_RELATIVE_PATH" not in probe_source
+        or "--closure-root" not in probe_source
+        or "--dependency-manifest-sha256" not in probe_source
+        or "-I" not in transition_source
+        or "PROBE_ENVIRONMENT" not in transition_source
+        or "subprocess" not in harness_source
+    ):
+        raise ReadinessTransitionError("dependency execution closure source audit failed")
+
+
+def _validate_dependency_manifest_document(
+    document: dict[str, Any], blobs: dict[str, bytes], modes: dict[str, str],
+) -> None:
+    expected_fields = {
+        "schema_version", "oracle_version", "manifest_kind", "entry_count", "entries",
+        "entries_sha256", "closure_policy", "manifest_sha256",
+    }
+    entries = document.get("entries")
+    if (
+        set(document) != expected_fields
+        or document.get("schema_version") != 1
+        or document.get("oracle_version") != ORACLE_VERSION
+        or document.get("manifest_kind")
+        != "root_isolation_repo_local_execution_and_data_dependency_closure"
+        or not isinstance(entries, list)
+        or document.get("entry_count") != len(entries)
+        or document.get("entries_sha256") != sha256_bytes(canonical_json(entries))
+        or document.get("closure_policy")
+        != root_isolation_contract()["dependency_closure_policy"]
+        or document.get("manifest_sha256")
+        != sha256_bytes(canonical_json(_manifest_payload(document)))
+    ):
+        raise ReadinessTransitionError("dependency manifest schema or digest is invalid")
+    expected_entries = [
+        {
+            "path": path,
+            "role": DEPENDENCY_ROLES[path],
+            "sha256": sha256_bytes(blobs[path]),
+            "git_mode": modes[path],
+        }
+        for path in sorted(DEPENDENCY_ROLES)
+    ]
+    if entries != expected_entries:
+        raise ReadinessTransitionError("dependency manifest has missing, extra, or drifted entries")
+    _validate_dependency_source_closure(entries, blobs)
+
+
+def build_dependency_manifest(repo: Path) -> dict[str, Any]:
+    blobs: dict[str, bytes] = {}
+    modes: dict[str, str] = {}
+    for relative_path in sorted(DEPENDENCY_ROLES):
+        path = _require_regular_checkout_file(repo, relative_path)
+        blobs[relative_path] = path.read_bytes()
+        modes[relative_path] = _file_mode(path)
+    entries = [
+        {
+            "path": path,
+            "role": DEPENDENCY_ROLES[path],
+            "sha256": sha256_bytes(blobs[path]),
+            "git_mode": modes[path],
+        }
+        for path in sorted(DEPENDENCY_ROLES)
+    ]
+    document: dict[str, Any] = {
+        "schema_version": 1,
+        "oracle_version": ORACLE_VERSION,
+        "manifest_kind": "root_isolation_repo_local_execution_and_data_dependency_closure",
+        "entry_count": len(entries),
+        "entries": entries,
+        "entries_sha256": sha256_bytes(canonical_json(entries)),
+        "closure_policy": root_isolation_contract()["dependency_closure_policy"],
+    }
+    document["manifest_sha256"] = sha256_bytes(canonical_json(document))
+    _validate_dependency_manifest_document(document, blobs, modes)
+    return document
+
+
+def dependency_binding(repo: Path, ref: str) -> dict[str, Any]:
+    commit = _commit(repo, ref)
+    observations = _dependency_observations(repo, commit)
+    blobs = {
+        entry["path"]: _blob(repo, commit, entry["path"])
+        for entry in observations if entry["path"] in DEPENDENCY_ROLES
+    }
+    modes = {
+        entry["path"]: entry["git_mode"]
+        for entry in observations if entry["path"] in DEPENDENCY_ROLES
+    }
+    raw = _blob(repo, commit, DEPENDENCY_MANIFEST_RELATIVE_PATH)
+    manifest = load_json_bytes(raw, "root isolation dependency manifest")
+    _validate_dependency_manifest_document(manifest, blobs, modes)
+    return {
+        "manifest_path": DEPENDENCY_MANIFEST_RELATIVE_PATH,
+        "manifest_sha256": sha256_bytes(raw),
+        "entries_sha256": sha256_bytes(canonical_json(observations)),
+        "controller_commit": commit,
+        "controller_tree": _tree(repo, commit),
+        "entries": observations,
+    }
 
 
 def _parent(repo: Path, commit: str) -> str:
@@ -223,6 +444,21 @@ def root_isolation_contract() -> dict[str, Any]:
         "operation": "run-root-isolation",
         "public_repository": str(PUBLIC_REPOSITORY),
         "probe_path": PROBE_RELATIVE_PATH,
+        "dependency_manifest_path": DEPENDENCY_MANIFEST_RELATIVE_PATH,
+        "dependency_paths": sorted(DEPENDENCY_ROLES),
+        "dependency_roles": dict(sorted(DEPENDENCY_ROLES.items())),
+        "dependency_closure_policy": {
+            "normal_imports": "stdlib_only_ast_validated",
+            "dynamic_imports": {
+                PROBE_RELATIVE_PATH: [HARNESS_RELATIVE_PATH],
+            },
+            "repo_local_subprocess_entrypoints": [],
+            "repo_local_data_inputs": [],
+            "unlisted_repo_local_resolution_allowed": False,
+            "execution_source": "verified_git_blobs_in_sealed_staging",
+            "python_isolated_mode_required": True,
+            "caller_pythonpath_allowed": False,
+        },
         "private_evaluator_repository": str(PRIVATE_EVALUATOR_REPOSITORY),
         "probe_ids": [OUTER_PROBE_ID, PREFLIGHT_PROBE_ID],
         "required_claims": {
@@ -240,7 +476,7 @@ def root_isolation_contract() -> dict[str, Any]:
 
 def _validate_common(document: dict[str, Any]) -> None:
     if document.get("schema_version") != SCHEMA_VERSION or document.get("oracle_version") != ORACLE_VERSION:
-        raise ReadinessTransitionError("readiness version is not v12.30")
+        raise ReadinessTransitionError("readiness version is not v12.31")
     if document.get("status") not in {"author_ready", "independent_review_pass", "ready"}:
         raise ReadinessTransitionError("readiness status is invalid")
     if document.get("immutable_readiness_sha256") != immutable_digest(document):
@@ -261,14 +497,32 @@ def _validate_common(document: dict[str, Any]) -> None:
         or ISOLATION_RELATIVE_PATH in frozen_digests
     ):
         raise ReadinessTransitionError("frozen public file maps are not exact")
+    required_frozen_paths = set(DEPENDENCY_ROLES) | {DEPENDENCY_MANIFEST_RELATIVE_PATH}
+    if not required_frozen_paths.issubset(frozen_digests):
+        raise ReadinessTransitionError("root isolation dependency closure is not fully frozen")
     for path, digest in frozen_digests.items():
         if (
             not isinstance(path, str)
-            or not path.startswith("evals/deliver/plain-language-v12/")
+            or not path.startswith("evals/deliver/")
             or not HEX64.fullmatch(str(digest))
             or not HEX40.fullmatch(str(frozen_commits[path]))
         ):
             raise ReadinessTransitionError("frozen public file binding is malformed")
+    binding = document.get("root_isolation_dependency_binding")
+    if (
+        not isinstance(binding, dict)
+        or set(binding) != {
+            "manifest_path", "manifest_sha256", "entries_sha256", "controller_commit",
+            "controller_tree", "entries",
+        }
+        or binding.get("manifest_path") != DEPENDENCY_MANIFEST_RELATIVE_PATH
+        or not HEX64.fullmatch(str(binding.get("manifest_sha256")))
+        or not HEX64.fullmatch(str(binding.get("entries_sha256")))
+        or binding.get("controller_commit") != document.get("public_adapter_introducing_commit")
+        or not HEX40.fullmatch(str(binding.get("controller_tree")))
+        or not isinstance(binding.get("entries"), list)
+    ):
+        raise ReadinessTransitionError("root isolation dependency binding is malformed")
 
 
 def _verify_private_evaluator(document: dict[str, Any]) -> None:
@@ -325,11 +579,26 @@ def _verify_private_evaluator(document: dict[str, Any]) -> None:
 
 def _validate_frozen_files(repo: Path, ref: str, document: dict[str, Any]) -> None:
     commit = _commit(repo, ref)
+    controller = _commit(repo, document["public_adapter_introducing_commit"])
+    ancestor = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", controller, commit],
+        cwd=repo, check=False, capture_output=True,
+    )
+    if ancestor.returncode:
+        raise ReadinessTransitionError("public controller is not an ancestor of readiness state")
     for path, digest in document["frozen_public_file_digests"].items():
         if sha256_bytes(_blob(repo, commit, path)) != digest:
             raise ReadinessTransitionError(f"frozen public file digest drifted: {path}")
         if _last_touch(repo, commit, path) != document["frozen_public_file_commits"][path]:
             raise ReadinessTransitionError(f"frozen public file was touched after freeze: {path}")
+    expected_binding = dependency_binding(repo, controller)
+    if document.get("root_isolation_dependency_binding") != expected_binding:
+        raise ReadinessTransitionError("root isolation dependency binding is not authentic")
+    current_observations = _dependency_observations(repo, commit)
+    if current_observations != expected_binding["entries"]:
+        raise ReadinessTransitionError(
+            "root isolation dependency closure changed after controller freeze"
+        )
 
 
 def _readiness_at(repo: Path, commit: str) -> tuple[dict[str, Any], bytes]:
@@ -443,6 +712,10 @@ def _validate_isolation_receipt(
         "predecessor_readiness_sha256", "independent_review_record_sha256",
         "independent_review_transition_commit", "immutable_readiness_sha256",
         "root_isolation_contract_sha256", "network_policy", "python_identity", "probes",
+        "dependency_manifest_sha256", "dependency_pre_observations",
+        "dependency_pre_observations_sha256", "dependency_post_observations",
+        "dependency_post_observations_sha256", "staged_dependency_observations",
+        "staged_dependency_observations_sha256",
     }
     python_identity = receipt.get("python_identity")
     probes = receipt.get("probes")
@@ -476,6 +749,28 @@ def _validate_isolation_receipt(
         or len(probes) != len(PROBE_SPECS)
     ):
         raise ReadinessTransitionError("trusted-host isolation receipt is not exactly bound")
+    binding = readiness["root_isolation_dependency_binding"]
+    expected_observations = binding["entries"]
+    staged_observations = [
+        {
+            "path": entry["path"], "role": entry["role"],
+            "sha256": entry["sha256"], "git_mode": entry["git_mode"],
+        }
+        for entry in expected_observations
+    ]
+    if (
+        receipt.get("dependency_manifest_sha256") != binding["manifest_sha256"]
+        or receipt.get("dependency_pre_observations") != expected_observations
+        or receipt.get("dependency_post_observations") != expected_observations
+        or receipt.get("staged_dependency_observations") != staged_observations
+        or receipt.get("dependency_pre_observations_sha256")
+        != sha256_bytes(canonical_json(expected_observations))
+        or receipt.get("dependency_post_observations_sha256")
+        != sha256_bytes(canonical_json(expected_observations))
+        or receipt.get("staged_dependency_observations_sha256")
+        != sha256_bytes(canonical_json(staged_observations))
+    ):
+        raise ReadinessTransitionError("trusted-host dependency closure evidence is invalid")
     python_path = Path(python_identity["path"])
     try:
         observed_python = _python_identity(python_path)
@@ -514,10 +809,10 @@ def _validate_isolation_receipt(
         command = _probe_command(
             Path(python_identity["path"]),
             Path(readiness["root_isolation_contract"]["public_repository"]),
-            operation,
-            receipt["isolation_nonce"],
+            Path("<sealed-dependency-closure>"), operation,
+            receipt["isolation_nonce"], receipt["dependency_manifest_sha256"],
         )
-        if probe["command_identity_sha256"] != sha256_bytes(canonical_json(command)):
+        if probe["command_identity_sha256"] != _probe_command_identity(command):
             raise ReadinessTransitionError("trusted-host probe command identity drifted")
 
 
@@ -532,6 +827,7 @@ def _validate_probe_evidence(
         if probe_id == OUTER_PROBE_ID
         else {"bundled_codex_identity", "runner_trace_sha256", "runner_profile_sha256"}
     )
+    extra |= {"dependency_manifest_sha256", "staged_dependency_observations_sha256"}
     if (
         not isinstance(evidence, dict)
         or set(evidence) != common | extra
@@ -543,6 +839,8 @@ def _validate_probe_evidence(
         or not isinstance(evidence.get("claims"), dict)
         or set(evidence["claims"]) != claims
         or any(value is not True for value in evidence["claims"].values())
+        or not HEX64.fullmatch(str(evidence.get("dependency_manifest_sha256")))
+        or not HEX64.fullmatch(str(evidence.get("staged_dependency_observations_sha256")))
     ):
         raise ReadinessTransitionError("trusted-host probe evidence is incomplete or invalid")
     if probe_id == OUTER_PROBE_ID:
@@ -725,19 +1023,40 @@ def _python_identity(path: Path) -> dict[str, str]:
 
 
 def _probe_command(
-    python: Path, repo: Path, operation: str, challenge: str,
+    python: Path, repo: Path, closure_root: Path, operation: str, challenge: str,
+    dependency_manifest_sha256: str,
 ) -> list[str]:
     if operation not in PROBE_SPECS:
         raise ReadinessTransitionError("root probe operation is unknown")
     return [
-        str(python), "-I", str(repo / PROBE_RELATIVE_PATH), operation,
+        str(python), "-I", str(closure_root / PROBE_RELATIVE_PATH), operation,
         "--repo", str(repo),
+        "--closure-root", str(closure_root),
+        "--dependency-manifest-sha256", dependency_manifest_sha256,
         "--private-repo", str(PRIVATE_EVALUATOR_REPOSITORY),
         "--challenge", challenge,
     ]
 
 
+def _probe_command_identity(command: list[str]) -> str:
+    logical = list(command)
+    logical[2] = f"<sealed-dependency-closure>/{PROBE_RELATIVE_PATH}"
+    try:
+        logical[logical.index("--closure-root") + 1] = "<sealed-dependency-closure>"
+    except (ValueError, IndexError) as exc:
+        raise ReadinessTransitionError("root probe command lacks sealed closure binding") from exc
+    return sha256_bytes(canonical_json(logical))
+
+
+def _validate_probe_environment() -> None:
+    if set(PROBE_ENVIRONMENT) != {
+        "PATH", "LANG", "LC_ALL", "PYTHONSAFEPATH", "PYTHONDONTWRITEBYTECODE",
+    } or any(name in PROBE_ENVIRONMENT for name in ("PYTHONPATH", "PYTHONHOME")):
+        raise ReadinessTransitionError("root probe environment is not the frozen scrubbed allowlist")
+
+
 def _execute_probe_command(command: list[str], repo: Path) -> subprocess.CompletedProcess[str]:
+    _validate_probe_environment()
     return subprocess.run(
         command,
         cwd=repo,
@@ -749,11 +1068,14 @@ def _execute_probe_command(command: list[str], repo: Path) -> subprocess.Complet
 
 
 def _observe_probe(
-    repo: Path, python: Path, operation: str, challenge: str,
-    probe_source_sha256: str,
+    repo: Path, closure_root: Path, python: Path, operation: str, challenge: str,
+    probe_source_sha256: str, dependency_manifest_sha256: str,
+    staged_dependency_observations_sha256: str,
 ) -> dict[str, Any]:
     probe_id, claims = PROBE_SPECS[operation]
-    command = _probe_command(python, repo, operation, challenge)
+    command = _probe_command(
+        python, repo, closure_root, operation, challenge, dependency_manifest_sha256,
+    )
     result = _execute_probe_command(command, repo)
     if result.returncode != 0:
         raise ReadinessTransitionError(
@@ -766,13 +1088,19 @@ def _observe_probe(
     except ReadinessTransitionError as exc:
         raise ReadinessTransitionError(f"required {operation} host probe evidence failed") from exc
     _validate_probe_evidence(evidence, probe_id, claims, challenge)
+    if (
+        evidence["dependency_manifest_sha256"] != dependency_manifest_sha256
+        or evidence["staged_dependency_observations_sha256"]
+        != staged_dependency_observations_sha256
+    ):
+        raise ReadinessTransitionError(f"required {operation} closure evidence drifted")
     canonical_stdout = canonical_json(evidence) + b"\n"
     if result.stdout.encode("utf-8") != canonical_stdout:
         raise ReadinessTransitionError(f"required {operation} host probe output is not canonical")
     return {
         "probe_id": probe_id,
         "operation": operation,
-        "command_identity_sha256": sha256_bytes(canonical_json(command)),
+        "command_identity_sha256": _probe_command_identity(command),
         "source_path": PROBE_RELATIVE_PATH,
         "source_sha256": probe_source_sha256,
         "stdout_sha256": sha256_bytes(canonical_stdout),
@@ -780,6 +1108,68 @@ def _observe_probe(
         "exit_status": result.returncode,
         "evidence": evidence,
     }
+
+
+def _stage_dependency_closure(
+    repo: Path, commit: str, destination: Path, observations: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    expected_paths = [entry["path"] for entry in observations]
+    if expected_paths != sorted(DEPENDENCY_OBSERVED_ROLES):
+        raise ReadinessTransitionError("dependency observation set is not exact")
+    for entry in observations:
+        relative_path = entry["path"]
+        target = destination / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists() or target.is_symlink():
+            raise ReadinessTransitionError("sealed dependency staging target already exists")
+        descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        try:
+            with os.fdopen(descriptor, "wb") as handle:
+                handle.write(_blob(repo, commit, relative_path))
+                handle.flush()
+                os.fsync(handle.fileno())
+        except BaseException:
+            target.unlink(missing_ok=True)
+            raise
+        target.chmod(0o755 if entry["git_mode"] == "100755" else 0o644)
+    staged: list[dict[str, str]] = []
+    for entry in observations:
+        path = _require_regular_checkout_file(destination, entry["path"])
+        observed = {
+            "path": entry["path"], "role": entry["role"],
+            "sha256": sha256_bytes(path.read_bytes()), "git_mode": _file_mode(path),
+        }
+        if observed != {
+            "path": entry["path"], "role": entry["role"],
+            "sha256": entry["sha256"], "git_mode": entry["git_mode"],
+        }:
+            raise ReadinessTransitionError("sealed dependency staging bytes drifted")
+        staged.append(observed)
+    return staged
+
+
+def _stage_dependency_closure_observations(destination: Path) -> list[dict[str, str]]:
+    observed_paths = sorted(
+        path.relative_to(destination).as_posix()
+        for path in destination.rglob("*") if path.is_file() or path.is_symlink()
+    )
+    if observed_paths != sorted(DEPENDENCY_OBSERVED_ROLES):
+        raise ReadinessTransitionError("sealed dependency staging file set is not exact")
+    observations: list[dict[str, str]] = []
+    for relative_path in observed_paths:
+        current = destination
+        for part in Path(relative_path).parts:
+            current = current / part
+            if current.is_symlink():
+                raise ReadinessTransitionError("sealed dependency staging contains a symlink")
+        path = _require_regular_checkout_file(destination, relative_path)
+        observations.append({
+            "path": relative_path,
+            "role": DEPENDENCY_OBSERVED_ROLES[relative_path],
+            "sha256": sha256_bytes(path.read_bytes()),
+            "git_mode": _file_mode(path),
+        })
+    return observations
 
 
 def run_root_isolation(repo: Path) -> None:
@@ -797,25 +1187,46 @@ def run_root_isolation(repo: Path) -> None:
     if receipt_path.exists() or receipt_path.is_symlink():
         raise ReadinessTransitionError("trusted-host isolation receipt is write-once")
     _verify_private_evaluator(document)
-    probe_source = repo / PROBE_RELATIVE_PATH
-    if probe_source.is_symlink() or not probe_source.is_file():
-        raise ReadinessTransitionError("root isolation probe source is unavailable")
-    probe_source_sha256 = sha256_bytes(probe_source.read_bytes())
-    if probe_source_sha256 != document["frozen_public_file_digests"].get(PROBE_RELATIVE_PATH):
-        raise ReadinessTransitionError("root isolation probe source is not frozen")
+    _validate_probe_environment()
+    _validate_frozen_files(repo, head_before, document)
+    dependency_binding_value = document["root_isolation_dependency_binding"]
+    dependency_pre_observations = _dependency_observations(repo, head_before)
+    if dependency_pre_observations != dependency_binding_value["entries"]:
+        raise ReadinessTransitionError("pre-probe dependency closure is not frozen")
+    probe_source_sha256 = document["frozen_public_file_digests"][PROBE_RELATIVE_PATH]
     python_identity = _python_identity(Path(sys.executable))
     python = Path(python_identity["path"])
     challenge = secrets.token_hex(32)
-    probes = [
-        _observe_probe(repo, python, operation, challenge, probe_source_sha256)
-        for operation in PROBE_SPECS
-    ]
+    with tempfile.TemporaryDirectory(
+        prefix="deliver-v1231-frozen-closure-", dir="/private/tmp"
+    ) as closure_text:
+        closure_root = Path(closure_text)
+        staged_dependency_observations = _stage_dependency_closure(
+            repo, head_before, closure_root, dependency_pre_observations,
+        )
+        staged_dependency_observations_sha256 = sha256_bytes(
+            canonical_json(staged_dependency_observations)
+        )
+        probes = [
+            _observe_probe(
+                repo, closure_root, python, operation, challenge, probe_source_sha256,
+                dependency_binding_value["manifest_sha256"],
+                staged_dependency_observations_sha256,
+            )
+            for operation in PROBE_SPECS
+        ]
+        if _stage_dependency_closure_observations(closure_root) != staged_dependency_observations:
+            raise ReadinessTransitionError("sealed dependency staging changed while probes ran")
     if _commit(repo, "HEAD") != head_before:
         raise ReadinessTransitionError("public HEAD changed while root probes ran")
     if readiness_path.read_bytes() != readiness_before:
         raise ReadinessTransitionError("readiness changed while root probes ran")
     if str(git(repo, ["status", "--porcelain=v1", "--untracked-files=no"])).strip():
         raise ReadinessTransitionError("tracked public state changed while root probes ran")
+    dependency_post_observations = _dependency_observations(repo, head_before)
+    if dependency_post_observations != dependency_pre_observations:
+        raise ReadinessTransitionError("dependency closure changed while root probes ran")
+    _validate_frozen_files(repo, head_before, document)
     _verify_private_evaluator(document)
     receipt = {
         "schema_version": 2,
@@ -837,6 +1248,19 @@ def run_root_isolation(repo: Path) -> None:
         ),
         "network_policy": NETWORK_POLICY,
         "python_identity": python_identity,
+        "dependency_manifest_sha256": dependency_binding_value["manifest_sha256"],
+        "dependency_pre_observations": dependency_pre_observations,
+        "dependency_pre_observations_sha256": sha256_bytes(
+            canonical_json(dependency_pre_observations)
+        ),
+        "dependency_post_observations": dependency_post_observations,
+        "dependency_post_observations_sha256": sha256_bytes(
+            canonical_json(dependency_post_observations)
+        ),
+        "staged_dependency_observations": staged_dependency_observations,
+        "staged_dependency_observations_sha256": sha256_bytes(
+            canonical_json(staged_dependency_observations)
+        ),
         "probes": probes,
     }
     receipt_raw = canonical_file_bytes(receipt)

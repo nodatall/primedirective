@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Host-dependent isolation probes for Deliver oracle v12.30.
+"""Host-dependent isolation probes for Deliver oracle v12.31.
 
 This module is only invoked by the frozen ``run-root-isolation`` readiness
 operation. It emits machine evidence; it never writes readiness state.
@@ -13,6 +13,7 @@ import importlib.util
 import json
 import os
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -20,11 +21,32 @@ from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.30"
+ORACLE_VERSION = "deliver-plain-language-v12.31"
 SCHEMA_VERSION = 1
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
-OUTER_PROBE_ID = "deliver-v12.30-outer-sandbox-v1"
-PREFLIGHT_PROBE_ID = "deliver-v12.30-real-preflight-v1"
+OUTER_PROBE_ID = "deliver-v12.31-outer-sandbox-v1"
+PREFLIGHT_PROBE_ID = "deliver-v12.31-real-preflight-v1"
+TRANSITION_RELATIVE_PATH = "evals/deliver/plain-language-v12/readiness_transition.py"
+PROBE_RELATIVE_PATH = "evals/deliver/plain-language-v12/root_isolation_probe.py"
+HARNESS_RELATIVE_PATH = "evals/deliver/harness.py"
+DEPENDENCY_MANIFEST_RELATIVE_PATH = (
+    "evals/deliver/plain-language-v12/root-isolation-dependencies.json"
+)
+DEPENDENCY_ROLES = {
+    TRANSITION_RELATIVE_PATH: "readiness_transition_entrypoint",
+    PROBE_RELATIVE_PATH: "root_isolation_probe_entrypoint",
+    HARNESS_RELATIVE_PATH: "dynamic_deliver_harness_import",
+}
+CLOSURE_POLICY = {
+    "normal_imports": "stdlib_only_ast_validated",
+    "dynamic_imports": {PROBE_RELATIVE_PATH: [HARNESS_RELATIVE_PATH]},
+    "repo_local_subprocess_entrypoints": [],
+    "repo_local_data_inputs": [],
+    "unlisted_repo_local_resolution_allowed": False,
+    "execution_source": "verified_git_blobs_in_sealed_staging",
+    "python_isolated_mode_required": True,
+    "caller_pythonpath_allowed": False,
+}
 OUTER_CLAIMS = (
     "stage_read_allowed",
     "stage_write_allowed",
@@ -63,11 +85,105 @@ def sha256_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
-def _load_harness(repo: Path) -> Any:
-    path = repo / "evals/deliver/harness.py"
+def _canonical_file_bytes(document: dict[str, Any]) -> bytes:
+    return json.dumps(document, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+
+
+def _file_mode(path: Path) -> str:
+    return "100755" if stat.S_IMODE(path.stat().st_mode) & 0o111 else "100644"
+
+
+def _require_regular(root: Path, relative_path: str) -> Path:
+    current = root
+    for part in Path(relative_path).parts:
+        current = current / part
+        try:
+            metadata = current.lstat()
+        except OSError as exc:
+            raise ProbeError(f"sealed dependency is unavailable: {relative_path}") from exc
+        if stat.S_ISLNK(metadata.st_mode):
+            raise ProbeError("sealed dependency closure contains a symlink")
+    if not stat.S_ISREG(current.stat().st_mode):
+        raise ProbeError("sealed dependency must be a regular file")
+    return current
+
+
+def _validate_staged_closure(closure_root: Path, expected_manifest_sha256: str) -> str:
+    if closure_root.is_symlink():
+        raise ProbeError("sealed dependency closure root cannot be a symlink")
+    closure_root = closure_root.resolve(strict=True)
+    if not closure_root.is_dir() or not HEX64.fullmatch(expected_manifest_sha256):
+        raise ProbeError("sealed dependency closure arguments are invalid")
+    manifest_path = _require_regular(closure_root, DEPENDENCY_MANIFEST_RELATIVE_PATH)
+    raw = manifest_path.read_bytes()
+    if sha256_bytes(raw) != expected_manifest_sha256:
+        raise ProbeError("sealed dependency manifest digest drifted")
+    try:
+        manifest = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ProbeError("sealed dependency manifest is invalid JSON") from exc
+    expected_fields = {
+        "schema_version", "oracle_version", "manifest_kind", "entry_count", "entries",
+        "entries_sha256", "closure_policy", "manifest_sha256",
+    }
+    if not isinstance(manifest, dict) or set(manifest) != expected_fields:
+        raise ProbeError("sealed dependency manifest schema is not exact")
+    entries = manifest.get("entries")
+    payload = {key: value for key, value in manifest.items() if key != "manifest_sha256"}
+    if (
+        manifest.get("schema_version") != 1
+        or manifest.get("oracle_version") != ORACLE_VERSION
+        or manifest.get("manifest_kind")
+        != "root_isolation_repo_local_execution_and_data_dependency_closure"
+        or not isinstance(entries, list)
+        or manifest.get("entry_count") != len(entries)
+        or manifest.get("entries_sha256") != sha256_bytes(canonical_json(entries))
+        or manifest.get("closure_policy") != CLOSURE_POLICY
+        or manifest.get("manifest_sha256") != sha256_bytes(canonical_json(payload))
+        or raw != _canonical_file_bytes(manifest)
+    ):
+        raise ProbeError("sealed dependency manifest values are invalid")
+    expected_paths = sorted(DEPENDENCY_ROLES)
+    if [entry.get("path") for entry in entries if isinstance(entry, dict)] != expected_paths:
+        raise ProbeError("sealed dependency manifest has missing or extra entries")
+    observations: list[dict[str, str]] = []
+    for entry in entries:
+        path = _require_regular(closure_root, entry["path"])
+        observed = {
+            "path": entry["path"], "role": entry.get("role"),
+            "sha256": sha256_bytes(path.read_bytes()), "git_mode": _file_mode(path),
+        }
+        expected = {
+            "path": entry["path"], "role": DEPENDENCY_ROLES[entry["path"]],
+            "sha256": entry.get("sha256"), "git_mode": entry.get("git_mode"),
+        }
+        if set(entry) != {"path", "role", "sha256", "git_mode"} or observed != expected:
+            raise ProbeError("sealed dependency file bytes, mode, or role drifted")
+        observations.append(observed)
+    manifest_observation = {
+        "path": DEPENDENCY_MANIFEST_RELATIVE_PATH,
+        "role": "dependency_manifest_root",
+        "sha256": sha256_bytes(raw),
+        "git_mode": _file_mode(manifest_path),
+    }
+    observations.append(manifest_observation)
+    observations.sort(key=lambda item: item["path"])
+    observed_paths = sorted(
+        path.relative_to(closure_root).as_posix()
+        for path in closure_root.rglob("*") if path.is_file() or path.is_symlink()
+    )
+    if observed_paths != sorted((*DEPENDENCY_ROLES, DEPENDENCY_MANIFEST_RELATIVE_PATH)):
+        raise ProbeError("sealed dependency staging file set is not exact")
+    if sys.flags.isolated != 1 or "PYTHONPATH" in os.environ or "PYTHONHOME" in os.environ:
+        raise ProbeError("probe Python process is not isolated from module shadowing")
+    return sha256_bytes(canonical_json(observations))
+
+
+def _load_harness(closure_root: Path) -> Any:
+    path = closure_root / HARNESS_RELATIVE_PATH
     if path.is_symlink() or not path.is_file():
         raise ProbeError("frozen Deliver harness is unavailable")
-    spec = importlib.util.spec_from_file_location("deliver_v1230_host_harness", path)
+    spec = importlib.util.spec_from_file_location("deliver_v1231_host_harness", path)
     if spec is None or spec.loader is None:
         raise ProbeError("frozen Deliver harness cannot be loaded")
     module = importlib.util.module_from_spec(spec)
@@ -84,18 +200,21 @@ def _regular_sentinel(path: Path, payload: bytes) -> str:
     return sha256_bytes(payload)
 
 
-def _outer_sandbox(repo: Path, private_repo: Path, challenge: str) -> dict[str, Any]:
-    harness = _load_harness(repo)
+def _outer_sandbox(
+    repo: Path, private_repo: Path, closure_root: Path, challenge: str,
+    dependency_manifest_sha256: str, staged_observations_sha256: str,
+) -> dict[str, Any]:
+    harness = _load_harness(closure_root)
     evaluator_target = private_repo / "private-oracle/cases.json"
     if evaluator_target.is_symlink() or not evaluator_target.is_file():
         raise ProbeError("private evaluator sentinel is unavailable")
     evaluator_before = sha256_bytes(evaluator_target.read_bytes())
     created: list[Path] = []
-    payload = ("deliver-v12.30-root-probe-" + challenge + "\n").encode("ascii")
+    payload = ("deliver-v12.31-root-probe-" + challenge + "\n").encode("ascii")
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1230-isolation-", dir="/private/tmp"
+        prefix="deliver-v1231-isolation-", dir="/private/tmp"
     ) as root_text, tempfile.TemporaryDirectory(
-        prefix="deliver-v1230-other-temp-", dir="/private/tmp"
+        prefix="deliver-v1231-other-temp-", dir="/private/tmp"
     ) as other_text:
         root = Path(root_text)
         other_root = Path(other_text)
@@ -109,8 +228,8 @@ def _outer_sandbox(repo: Path, private_repo: Path, challenge: str) -> dict[str, 
         other_target = other_root / "sentinel.txt"
         _regular_sentinel(sibling_target, payload)
         other_digest = _regular_sentinel(other_target, payload)
-        home_target = Path(f"/Users/fromdarkness/.deliver-v1230-home-{challenge[:16]}")
-        volume_target = Path(f"/Volumes/Code/.deliver-v1230-volume-{challenge[:16]}")
+        home_target = Path(f"/Users/fromdarkness/.deliver-v1231-home-{challenge[:16]}")
+        volume_target = Path(f"/Volumes/Code/.deliver-v1231-volume-{challenge[:16]}")
         try:
             for target in (home_target, volume_target):
                 _regular_sentinel(target, payload)
@@ -123,7 +242,7 @@ import sys
 
 stage, sibling, evaluator, other_temp, home, volume = map(Path, sys.argv[1:7])
 claims = {}
-claims["stage_read_allowed"] = stage.read_bytes().startswith(b"deliver-v12.30-root-probe-")
+claims["stage_read_allowed"] = stage.read_bytes().startswith(b"deliver-v12.31-root-probe-")
 (stage.parent / "stage-output.txt").write_bytes(b"stage-write-ok\n")
 claims["stage_write_allowed"] = (stage.parent / "stage-output.txt").read_bytes() == b"stage-write-ok\n"
 for label, path in (
@@ -191,6 +310,8 @@ print(json.dumps(claims, sort_keys=True, separators=(",", ":")))
                 "result": "pass",
                 "claims": observed,
                 "sandbox_profile_sha256": sha256_bytes(profile.read_bytes()),
+                "dependency_manifest_sha256": dependency_manifest_sha256,
+                "staged_dependency_observations_sha256": staged_observations_sha256,
             }
         finally:
             for path in created:
@@ -198,10 +319,13 @@ print(json.dumps(claims, sort_keys=True, separators=(",", ":")))
                     path.unlink()
 
 
-def _real_preflight(repo: Path, challenge: str) -> dict[str, Any]:
-    harness = _load_harness(repo)
+def _real_preflight(
+    repo: Path, closure_root: Path, challenge: str, dependency_manifest_sha256: str,
+    staged_observations_sha256: str,
+) -> dict[str, Any]:
+    harness = _load_harness(closure_root)
     with tempfile.TemporaryDirectory(
-        prefix="deliver-v1230-preflight-evidence-", dir="/private/tmp"
+        prefix="deliver-v1231-preflight-evidence-", dir="/private/tmp"
     ) as root_text:
         output = Path(root_text) / "runner-preflight.json"
         try:
@@ -250,6 +374,8 @@ def _real_preflight(repo: Path, challenge: str) -> dict[str, Any]:
             },
             "runner_trace_sha256": smoke["trace_sha256"],
             "runner_profile_sha256": smoke["profile_sha256"],
+            "dependency_manifest_sha256": dependency_manifest_sha256,
+            "staged_dependency_observations_sha256": staged_observations_sha256,
         }
 
 
@@ -257,6 +383,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("operation", choices=("outer-sandbox", "real-preflight"))
     parser.add_argument("--repo", type=Path, required=True)
+    parser.add_argument("--closure-root", type=Path, required=True)
+    parser.add_argument("--dependency-manifest-sha256", required=True)
     parser.add_argument("--private-repo", type=Path, required=True)
     parser.add_argument("--challenge", required=True)
     args = parser.parse_args()
@@ -264,10 +392,20 @@ def main() -> int:
         raise ProbeError("probe challenge is malformed")
     repo = args.repo.resolve(strict=True)
     private_repo = args.private_repo.resolve(strict=True)
+    staged_observations_sha256 = _validate_staged_closure(
+        args.closure_root, args.dependency_manifest_sha256,
+    )
+    closure_root = args.closure_root.resolve(strict=True)
     result = (
-        _outer_sandbox(repo, private_repo, args.challenge)
+        _outer_sandbox(
+            repo, private_repo, closure_root, args.challenge,
+            args.dependency_manifest_sha256, staged_observations_sha256,
+        )
         if args.operation == "outer-sandbox"
-        else _real_preflight(repo, args.challenge)
+        else _real_preflight(
+            repo, closure_root, args.challenge,
+            args.dependency_manifest_sha256, staged_observations_sha256,
+        )
     )
     print(canonical_json(result).decode("utf-8"))
     return 0
