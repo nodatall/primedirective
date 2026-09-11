@@ -80,6 +80,7 @@ class ReadinessTransitionTests(unittest.TestCase):
             "independent_semantic_review_status": "pending_independent_review",
             "hidden_material_noninterference_independent_review_status": "pending_independent_review",
             "judge_packet_recursive_identity_scan_independent_review_status": "pending_independent_review",
+            "content_control_plane_separation_independent_review_status": "pending_independent_review",
             "case_grouping_independent_review_status": "pending_independent_review",
             "zero_static_coverage_independent_review_status": "pending_independent_review",
             "comparison_runtime_review_status": "pending_independent_review",
