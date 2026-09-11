@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
-- Evaluator version: `deliver-plain-language-v12.27`
+- Evaluator version: `deliver-plain-language-v12.28`
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -27,10 +27,11 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.24`; rejected because caller-provided roots and pass booleans could authenticate themselves and aggregation could downgrade regression to neutral.
 - Invalidated evaluator: `deliver-plain-language-v12.25`; rejected because packet freezing accepted caller-authored lane payloads and attached verified provenance without deriving those bytes from sealed-arm artifacts.
 - Invalidated evaluator: `deliver-plain-language-v12.26`; rejected because its author-ready bytes could not make the required committed review and isolation transitions, and several control counts were declarations rather than executed named-control totals.
-- V12.27 resolves its frozen controller artifacts from the version-pinned `.deliver-evaluator/v12` runtime root; the durable lifecycle fixture uses that same public layout.
-- Evaluator source and author-ready commits: `ca74bcffe1d6bfddd7233132af91ea7614ad9c1d` and `024542b8aef4e52ed2cf47b55a5c5b632febc6f7`
-- Public controller commit: `62023a709fdbce80a524daaedde69c83075883ce`
-- Author-ready-state SHA-256: `d95da7a6b7e03045784223ece402e78ac75fd722f280d2a15a008306f8412622`
+- Invalidated evaluator: `deliver-plain-language-v12.27`; rejected because a nested comprehension payload field exposed literal arm identity while its published blinding control inspected only the outer provenance field.
+- V12.28 constructs exact lane-specific judge projections at the private boundary, keeps scores, roots, seals, and identity maps private, and recursively rejects identity-bearing keys and string values before freezing any judge packet.
+- Evaluator source and author-ready commits: pending the v12.28 private freeze.
+- Public controller commit: pending the v12.28 public freeze.
+- Author-ready-state SHA-256: pending the v12.28 public freeze.
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
@@ -58,13 +59,13 @@ the two allowlisted files before the matching verify command succeeds.
 
 ```bash
 python3 evals/deliver/plain-language-v12/readiness_transition.py verify-author-ready --repo . --ref HEAD
-python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-independent-review --repo . --record /absolute/path/to/v12.27-independent-review-record.json
+python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-independent-review --repo . --record /absolute/path/to/v12.28-independent-review-record.json
 git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/independent-review-record.json
-git commit -m "Record Deliver evaluator v12.27 independent review"
+git commit -m "Record Deliver evaluator v12.28 independent review"
 python3 evals/deliver/plain-language-v12/readiness_transition.py verify-independent-review --repo . --ref HEAD
-python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-ready --repo . --receipt /absolute/path/to/v12.27-trusted-host-isolation-receipt.json
+python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-ready --repo . --receipt /absolute/path/to/v12.28-trusted-host-isolation-receipt.json
 git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json
-git commit -m "Mark Deliver evaluator v12.27 ready"
+git commit -m "Mark Deliver evaluator v12.28 ready"
 python3 evals/deliver/plain-language-v12/readiness_transition.py verify-ready --repo . --ref HEAD
 ```
 

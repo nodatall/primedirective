@@ -179,6 +179,8 @@ class AdapterTests(unittest.TestCase):
             "independent_semantic_review_status": "pass",
             "hidden_material_noninterference_independent_review_status": "pass",
             "judge_packet_structural_blinding_author_status": "pass",
+            "judge_packet_recursive_identity_scan_author_status": "pass",
+            "judge_packet_recursive_identity_scan_independent_review_status": "pass",
             "case_grouping_independent_review_status": "pass",
             "zero_static_coverage_independent_review_status": "pass",
             "arm_projection_status": "pass",
@@ -197,8 +199,8 @@ class AdapterTests(unittest.TestCase):
             "live_model_execution_performed": False,
             "deterministic_controls_are_live_arm_execution": False,
             "deterministic_controls_are_judge_verdict_evidence": False,
-            "runtime_positive_test_count": 22,
-            "runtime_negative_test_count": 164,
+            "runtime_positive_test_count": 25,
+            "runtime_negative_test_count": 180,
             "fresh_judge_allocation_count": 3,
             "expected_per_arm_output_bytes": 1,
             "context_margin_tokens": 1,
@@ -212,7 +214,7 @@ class AdapterTests(unittest.TestCase):
             "trusted_host_isolation_receipt_path": adapter.readiness_transition.ISOLATION_RELATIVE_PATH,
             "trusted_host_isolation_receipt_sha256": "1" * 64,
             "durable_lifecycle_positive_control_count": 1,
-            "lifecycle_order_tamper_negative_control_count": 22,
+            "lifecycle_order_tamper_negative_control_count": 27,
             "unbound_verdict_shape_negative_control_count": 1,
             "trusted_root_positive_control_count": 1,
             "trusted_root_negative_control_count": 8,
@@ -224,6 +226,11 @@ class AdapterTests(unittest.TestCase):
             "caller_payload_rejection_negative_control_count": 1,
             "artifact_transitive_binding_negative_control_count": 11,
             "judge_packet_schema_control_count": 3,
+            "judge_identity_blinding_control_count": 14,
+            "identity_metadata_allowed": False,
+            "private_scores_allowed_in_judge_input": False,
+            "hard_gate_results_allowed_in_judge_input": False,
+            "private_identity_map_allowed_in_judge_input": False,
             "discarded_channel_reachability_control_count": 2,
             "clean_content_preservation_control_count": 2,
             "rationale_discarded_before_judge_input": True,
@@ -243,7 +250,8 @@ class AdapterTests(unittest.TestCase):
                 "gate_recomputation_negative": 2,
                 "hidden_material_noninterference": 8,
                 "judge_packet_schema": 3,
-                "lifecycle_order_tamper": 22,
+                "judge_identity_blinding": 14,
+                "lifecycle_order_tamper": 27,
                 "response_schema": 4,
                 "scorer_mutation": 108,
                 "sealed_artifact_positive": 1,
@@ -452,6 +460,11 @@ class AdapterTests(unittest.TestCase):
     def test_readiness_requires_structural_judge_blinding_controls(self) -> None:
         cases = (
             ("judge_packet_schema_control_count", 0),
+            ("judge_identity_blinding_control_count", 0),
+            ("identity_metadata_allowed", True),
+            ("private_scores_allowed_in_judge_input", True),
+            ("hard_gate_results_allowed_in_judge_input", True),
+            ("private_identity_map_allowed_in_judge_input", True),
             ("discarded_channel_reachability_control_count", 0),
             ("clean_content_preservation_control_count", 0),
             ("rationale_discarded_before_judge_input", False),
@@ -476,6 +489,16 @@ class AdapterTests(unittest.TestCase):
 
     def test_readiness_rejects_declared_count_not_derived_from_named_controls(self) -> None:
         self.readiness_document["clean_content_preservation_control_count"] += 1
+        self.write_readiness()
+        with (
+            mock.patch.object(adapter, "READINESS_PATH", self.readiness),
+            mock.patch.object(adapter, "VOCABULARY_PATH", self.schema),
+            self.assertRaisesRegex(adapter.AdapterError, "executed named controls"),
+        ):
+            adapter.validate_readiness(self.packet, self.schema)
+
+    def test_readiness_rejects_identity_blinding_count_not_derived_from_named_controls(self) -> None:
+        self.readiness_document["judge_identity_blinding_control_count"] += 1
         self.write_readiness()
         with (
             mock.patch.object(adapter, "READINESS_PATH", self.readiness),

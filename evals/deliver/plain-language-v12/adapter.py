@@ -37,8 +37,8 @@ import readiness_transition  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 24
-ORACLE_VERSION = "deliver-plain-language-v12.27"
+READINESS_SCHEMA_VERSION = 25
+ORACLE_VERSION = "deliver-plain-language-v12.28"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -98,6 +98,8 @@ REQUIRED_READINESS_PASS_FIELDS = (
     "independent_semantic_review_status",
     "hidden_material_noninterference_independent_review_status",
     "judge_packet_structural_blinding_author_status",
+    "judge_packet_recursive_identity_scan_author_status",
+    "judge_packet_recursive_identity_scan_independent_review_status",
     "case_grouping_independent_review_status",
     "zero_static_coverage_independent_review_status",
     "arm_projection_status",
@@ -174,6 +176,9 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "caller_payload_rejection_negative_control_count",
     "artifact_transitive_binding_negative_control_count",
     "judge_packet_schema_control_count", "discarded_channel_reachability_control_count",
+    "judge_identity_blinding_control_count", "identity_metadata_allowed",
+    "private_scores_allowed_in_judge_input", "hard_gate_results_allowed_in_judge_input",
+    "private_identity_map_allowed_in_judge_input",
     "clean_content_preservation_control_count", "rationale_discarded_before_judge_input",
     "rationale_affects_deterministic_score", "rationale_affects_combined_verdict",
     "proportionality", "coverage_credit_policy", "execution_limits",
@@ -181,6 +186,8 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "hidden_material_noninterference_author_status",
     "hidden_material_noninterference_independent_review_status",
     "judge_packet_structural_blinding_author_status",
+    "judge_packet_recursive_identity_scan_author_status",
+    "judge_packet_recursive_identity_scan_independent_review_status",
     "case_grouping_independent_review_status", "zero_static_coverage_independent_review_status",
     "arm_projection_status", "byte_identical_arm_packet_status",
     "public_adapter_deterministic_integration_status",
@@ -216,7 +223,7 @@ READINESS_NESTED_ALLOWED_FIELDS = {
         "caller_payload_rejection", "canonical_invariance", "clean_content_preservation",
         "comparability_negative", "discarded_channel_reachability",
         "durable_lifecycle_positive", "gate_recomputation_negative",
-        "hidden_material_noninterference", "judge_packet_schema",
+        "hidden_material_noninterference", "judge_packet_schema", "judge_identity_blinding",
         "lifecycle_order_tamper", "response_schema", "scorer_mutation",
         "sealed_artifact_positive", "trusted_root_negative", "trusted_root_positive",
         "unbound_verdict_shape",
@@ -709,7 +716,7 @@ def validate_candidate_behavior_map(inventory: dict[str, Any]) -> tuple[list[str
     removed = mapping.get("intentionally_removed_behavior_ids") if isinstance(mapping, dict) else None
     clauses = mapping.get("clauses") if isinstance(mapping, dict) else None
     if (
-        mapping.get("schema_version") != 6
+        mapping.get("schema_version") != 7
         or mapping.get("oracle_version") != ORACLE_VERSION
         or mapping.get("inventory_id") != inventory.get("inventory_id")
         or mapping.get("baseline_commit") != inventory.get("baseline_commit")
@@ -971,8 +978,16 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
             raise AdapterError("oracle readiness trusted-root and recomputation controls are incomplete")
     if (
         readiness.get("judge_packet_structural_blinding_author_status") != "pass"
+        or readiness.get("judge_packet_recursive_identity_scan_author_status") != "pass"
+        or readiness.get("judge_packet_recursive_identity_scan_independent_review_status") != "pass"
         or type(readiness.get("judge_packet_schema_control_count")) is not int
         or readiness.get("judge_packet_schema_control_count") <= 0
+        or type(readiness.get("judge_identity_blinding_control_count")) is not int
+        or readiness.get("judge_identity_blinding_control_count") <= 0
+        or readiness.get("identity_metadata_allowed") is not False
+        or readiness.get("private_scores_allowed_in_judge_input") is not False
+        or readiness.get("hard_gate_results_allowed_in_judge_input") is not False
+        or readiness.get("private_identity_map_allowed_in_judge_input") is not False
         or type(readiness.get("discarded_channel_reachability_control_count")) is not int
         or readiness.get("discarded_channel_reachability_control_count") <= 0
         or type(readiness.get("clean_content_preservation_control_count")) is not int
@@ -989,6 +1004,7 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         "canonical_invariance_control_count": "canonical_invariance",
         "hidden_material_noninterference_control_count": "hidden_material_noninterference",
         "judge_packet_schema_control_count": "judge_packet_schema",
+        "judge_identity_blinding_control_count": "judge_identity_blinding",
         "discarded_channel_reachability_control_count": "discarded_channel_reachability",
         "clean_content_preservation_control_count": "clean_content_preservation",
         "durable_lifecycle_positive_control_count": "durable_lifecycle_positive",

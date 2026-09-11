@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Version-pinned, auditable readiness transitions for Deliver oracle v12.27."""
+"""Version-pinned, auditable readiness transitions for Deliver oracle v12.28."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ from pathlib import Path
 from typing import Any
 
 
-ORACLE_VERSION = "deliver-plain-language-v12.27"
-SCHEMA_VERSION = 24
+ORACLE_VERSION = "deliver-plain-language-v12.28"
+SCHEMA_VERSION = 25
 READINESS_RELATIVE_PATH = "evals/deliver/plain-language-v12/oracle-readiness.json"
 REVIEW_RELATIVE_PATH = "evals/deliver/plain-language-v12/independent-review-record.json"
 ISOLATION_RELATIVE_PATH = "evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json"
@@ -40,6 +40,7 @@ MUTABLE_TOP_LEVEL_FIELDS = frozenset({
     "private_trusted_host_isolation_tested_final_commit",
     "independent_semantic_review_status",
     "hidden_material_noninterference_independent_review_status",
+    "judge_packet_recursive_identity_scan_independent_review_status",
     "case_grouping_independent_review_status",
     "zero_static_coverage_independent_review_status",
     "comparison_runtime_review_status",
@@ -55,6 +56,7 @@ MUTABLE_NESTED_FIELDS = {
 INDEPENDENT_PASS_FIELDS = (
     "independent_semantic_review_status",
     "hidden_material_noninterference_independent_review_status",
+    "judge_packet_recursive_identity_scan_independent_review_status",
     "case_grouping_independent_review_status",
     "zero_static_coverage_independent_review_status",
     "comparison_runtime_review_status",
@@ -65,6 +67,7 @@ INDEPENDENT_PASS_FIELDS = (
 REVIEW_CHECKS = frozenset({
     "semantic_review",
     "hidden_noninterference",
+    "recursive_identity_blinding",
     "case_disjointness",
     "runtime_controls",
     "lifecycle_controls",
@@ -172,7 +175,7 @@ def immutable_digest(document: dict[str, Any]) -> str:
 
 def _validate_common(document: dict[str, Any]) -> None:
     if document.get("schema_version") != SCHEMA_VERSION or document.get("oracle_version") != ORACLE_VERSION:
-        raise ReadinessTransitionError("readiness version is not v12.27")
+        raise ReadinessTransitionError("readiness version is not v12.28")
     if document.get("status") not in {"author_ready", "independent_review_pass", "ready"}:
         raise ReadinessTransitionError("readiness status is invalid")
     if document.get("immutable_readiness_sha256") != immutable_digest(document):
