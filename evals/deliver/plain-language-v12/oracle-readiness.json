@@ -1,16 +1,16 @@
 {
-  "schema_version": 27,
-  "oracle_version": "deliver-plain-language-v12.30",
+  "schema_version": 28,
+  "oracle_version": "deliver-plain-language-v12.31",
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
   "public_adapter_identifier": "deliver_plain_language_v12",
-  "public_adapter_introducing_commit": "2d154a023e3d4630c974cd364d7e8d75e92bcc7a",
+  "public_adapter_introducing_commit": "4d60e7e7fa6d9f7ba208434a5aa233354770ffbf",
   "public_adapter_path": "evals/deliver/plain-language-v12/adapter.py",
-  "public_adapter_sha256": "49f8f68f5097e7e80f48527d1a741996b0910864685a026f5dcee29d6ea7811a",
+  "public_adapter_sha256": "717c0aef2eb8043a12846bb5ec077314e2fd0a3f566e085fd07280441c2b178b",
   "public_execution_policy_path": "evals/deliver/plain-language-v12/execution-policy.json",
   "public_execution_policy_sha256": "9566fae22001ca38fe90372eafcfc244e4e6d25274ff9ef46968d7c0724224af",
   "public_contract_inventory_sha256": "1d7abc4af460b7c0864b625fb14b139afde8a022c47c185c974bad5dbbcf0715",
-  "candidate_behavior_map_sha256": "a39da372355ce2f451f178c5172aadc386426dccecc55146176bd510890c2d4e",
+  "candidate_behavior_map_sha256": "984220b01de01492a52bdca1cdbe68b360afb87a5d0137e111582f8888a2ae41",
   "wording_approval_record_path": "evals/deliver/plain-language-v12/wording-approval.json",
   "wording_approval_record_sha256": "49708aaab9e4881044878da7e37805e60c71bfb6c1e85f5e8c2d7085eb405d7a",
   "wording_approval_record_commit": "9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5",
@@ -19,16 +19,18 @@
   "baseline_package_content_manifest_sha256": "755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5",
   "candidate_package_manifest_sha256": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9",
   "candidate_package_content_manifest_sha256": "c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae",
-  "private_evaluator_source_commit": "f7c6a222e4e0ac18bf910308d50934c9c6decb3c",
-  "private_evaluator_commit": "b4de0359cb5c9676054e37215e2336f961806a56",
+  "private_evaluator_source_commit": "703fa74ad18eb852e6cc82fe3e0dd4d9551f3b5b",
+  "private_evaluator_commit": "cf7267deb8f69b7a8411d8643e3b937f9a69830c",
   "frozen_public_file_digests": {
-    "evals/deliver/plain-language-v12/adapter.py": "49f8f68f5097e7e80f48527d1a741996b0910864685a026f5dcee29d6ea7811a",
-    "evals/deliver/plain-language-v12/readiness_transition.py": "e6c9fcca281b1851d5321c4a69f0f3f6a572616288997aa6c47ec3433f90c334",
-    "evals/deliver/plain-language-v12/root_isolation_probe.py": "ecace7529935f97fdd1ab78be8671bfad5d72f14f8131a1f21853a06da6acb5f",
-    "evals/deliver/plain-language-v12/tests/test_adapter.py": "c90420ef4a204895c6cdbd598d321584c27b1854bbad607b348603b28114fb27",
-    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "548c8d5169878aeb8638ea04f7cbca4d2bf37c624f9f282b62f680719b1941cb",
-    "evals/deliver/plain-language-v12/candidate-behavior-map.json": "a39da372355ce2f451f178c5172aadc386426dccecc55146176bd510890c2d4e",
-    "evals/deliver/plain-language-v12/comprehension-vocabulary.json": "b19944d0de5744eff14482df5fd3a62671a8e7253765a5d7aba7e8b8da612c72",
+    "evals/deliver/plain-language-v12/adapter.py": "717c0aef2eb8043a12846bb5ec077314e2fd0a3f566e085fd07280441c2b178b",
+    "evals/deliver/plain-language-v12/readiness_transition.py": "d4caaba8e18a925c81982a9d019f2907af0578c551f2a1e42227ee697293f7d2",
+    "evals/deliver/plain-language-v12/root_isolation_probe.py": "340daf70e5fae04eed80db004d33ceb2a50f342333b6043db103ee7481fe1d8b",
+    "evals/deliver/plain-language-v12/root-isolation-dependencies.json": "8b457d397f2b4a724032fcb56953b6b00f3fb1fcbf0687bb7f33b9cbda9f15e5",
+    "evals/deliver/harness.py": "0969dff5a248902365dd52b763d705d5e371defa950ce544fe155e3867614dc3",
+    "evals/deliver/plain-language-v12/tests/test_adapter.py": "8a4677e8452db4417105c41f2a670dc66b72044ace60cdc2ae766a6762ccf238",
+    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "ed54cd06ef455afb619f044f4edf01d2bfbdf2117dd0ea7aea6b72abcc8fdd4b",
+    "evals/deliver/plain-language-v12/candidate-behavior-map.json": "984220b01de01492a52bdca1cdbe68b360afb87a5d0137e111582f8888a2ae41",
+    "evals/deliver/plain-language-v12/comprehension-vocabulary.json": "74c3738614ed581f4f899259d604ef82291a9c43cf955cb18dfe0d051c08d0d1",
     "evals/deliver/plain-language-v12/public-contract-inventory.json": "1d7abc4af460b7c0864b625fb14b139afde8a022c47c185c974bad5dbbcf0715",
     "evals/deliver/plain-language-v12/baseline-package-manifest.json": "6e367564333f4ab208405ba1105cc791e00a84c04a5e77ec6867aebbab33b450",
     "evals/deliver/plain-language-v12/candidate-package-manifest.json": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9",
@@ -37,13 +39,15 @@
     "evals/deliver/plain-language-v12/v11-file-manifest.json": "033397cfcaa6fc3a233daaad0665fb660449f45143d21a2b8ccc776f02816dcd"
   },
   "frozen_public_file_commits": {
-    "evals/deliver/plain-language-v12/adapter.py": "cc4d07cb81652af01a139eaf967ba0570928988a",
-    "evals/deliver/plain-language-v12/readiness_transition.py": "2b0c510fee3e963dc08b2c8e9bd79048cfe8343f",
-    "evals/deliver/plain-language-v12/root_isolation_probe.py": "3c345ada6a7b3476ca80d8a928cf29ca05e00db2",
-    "evals/deliver/plain-language-v12/tests/test_adapter.py": "5eaf0d1f9ae823a888ee0a7ed5a52fd5d869b47a",
-    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "2b0c510fee3e963dc08b2c8e9bd79048cfe8343f",
-    "evals/deliver/plain-language-v12/candidate-behavior-map.json": "2b0c510fee3e963dc08b2c8e9bd79048cfe8343f",
-    "evals/deliver/plain-language-v12/comprehension-vocabulary.json": "2b0c510fee3e963dc08b2c8e9bd79048cfe8343f",
+    "evals/deliver/plain-language-v12/adapter.py": "4d60e7e7fa6d9f7ba208434a5aa233354770ffbf",
+    "evals/deliver/plain-language-v12/readiness_transition.py": "727efbd67c467c69594565e3ee31cbc20bb874e1",
+    "evals/deliver/plain-language-v12/root_isolation_probe.py": "727efbd67c467c69594565e3ee31cbc20bb874e1",
+    "evals/deliver/plain-language-v12/root-isolation-dependencies.json": "727efbd67c467c69594565e3ee31cbc20bb874e1",
+    "evals/deliver/harness.py": "2df979694124c8a49c58892e497ead35a4a4aa07",
+    "evals/deliver/plain-language-v12/tests/test_adapter.py": "4d60e7e7fa6d9f7ba208434a5aa233354770ffbf",
+    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "727efbd67c467c69594565e3ee31cbc20bb874e1",
+    "evals/deliver/plain-language-v12/candidate-behavior-map.json": "727efbd67c467c69594565e3ee31cbc20bb874e1",
+    "evals/deliver/plain-language-v12/comprehension-vocabulary.json": "727efbd67c467c69594565e3ee31cbc20bb874e1",
     "evals/deliver/plain-language-v12/public-contract-inventory.json": "f8ddaf50ae9ce70376e40c7013cf3b0dd42b7579",
     "evals/deliver/plain-language-v12/baseline-package-manifest.json": "0a953050094875b7cef8f0dcff0e7cb313cb8434",
     "evals/deliver/plain-language-v12/candidate-package-manifest.json": "ab611781a1c480e8a2dc8c73f0378f42dde013c2",
@@ -64,8 +68,22 @@
   "private_trusted_host_isolation_tested_source_commit": "pending_trusted_host_isolation",
   "private_trusted_host_isolation_tested_final_commit": "pending_trusted_host_isolation",
   "case_count": 108,
-  "previous_oracle_case_reuse_count": 0,
-  "previous_oracle_case_digest_overlap_count": 0,
+  "authenticated_prior_case_versions": [
+    "deliver-plain-language-v12.23",
+    "deliver-plain-language-v12.24",
+    "deliver-plain-language-v12.25",
+    "deliver-plain-language-v12.26",
+    "deliver-plain-language-v12.27",
+    "deliver-plain-language-v12.28",
+    "deliver-plain-language-v12.29",
+    "deliver-plain-language-v12.30"
+  ],
+  "authenticated_prior_case_reuse_count": 0,
+  "authenticated_prior_case_digest_overlap_count": 0,
+  "case_freshness_basis": "prevented_by_v1231_specific_namespace",
+  "case_author_process": "fresh_no_context_sol_xhigh_from_public_inventory_only",
+  "semantic_nonreuse_against_v12_22_status": "unavailable_lost_authenticated_case_bytes",
+  "semantic_nonreuse_claimed": false,
   "hard_scored_field_instance_count": 540,
   "assertion_count": 108,
   "baseline_behavior_id_count": 108,
@@ -259,15 +277,15 @@
   "caller_payload_rejection_negative_control_count": 1,
   "artifact_transitive_binding_negative_control_count": 11,
   "fresh_judge_allocation_count": 3,
-  "projected_packet_bytes": 96635,
-  "projected_packet_lexical_word_count": 12543,
-  "expected_per_arm_output_bytes": 20618,
-  "context_margin_tokens": 200062,
+  "projected_packet_bytes": 46746,
+  "projected_packet_lexical_word_count": 5395,
+  "expected_per_arm_output_bytes": 21113,
+  "context_margin_tokens": 212410,
   "proportionality": {
     "safe_grouping_review_status": "pending_independent_review",
-    "packet_byte_count": 96635,
-    "packet_lexical_word_count": 12543,
-    "expected_per_arm_output_byte_count": 20618
+    "packet_byte_count": 46746,
+    "packet_lexical_word_count": 5395,
+    "expected_per_arm_output_byte_count": 21113
   },
   "coverage_credit_policy": {
     "hidden_deterministic_comprehension_assertions": 108,
@@ -315,19 +333,44 @@
   "live_model_execution_performed": false,
   "isolation_probe_status": "pending_trusted_host_isolation",
   "status": "author_ready",
-  "per_arm_response_schema_sha256": "b19944d0de5744eff14482df5fd3a62671a8e7253765a5d7aba7e8b8da612c72",
-  "private_projected_packet_sha256": "6675aeb7f9b7dd7f6597a585b48309ffe01a0103f470dd9e721a0ce6aba58d10",
+  "per_arm_response_schema_sha256": "74c3738614ed581f4f899259d604ef82291a9c43cf955cb18dfe0d051c08d0d1",
+  "private_projected_packet_sha256": "da23afe6405e24ce86e0efed75f07168f62860a25558870a24acaddc977b00aa",
   "root_isolation_contract": {
     "operation": "run-root-isolation",
     "public_repository": "/Volumes/Code/primedirective",
     "probe_path": "evals/deliver/plain-language-v12/root_isolation_probe.py",
-    "private_evaluator_repository": "/private/tmp/deliver-plain-language-v130-evaluator.SaR0Md/repo",
+    "dependency_manifest_path": "evals/deliver/plain-language-v12/root-isolation-dependencies.json",
+    "dependency_paths": [
+      "evals/deliver/harness.py",
+      "evals/deliver/plain-language-v12/readiness_transition.py",
+      "evals/deliver/plain-language-v12/root_isolation_probe.py"
+    ],
+    "dependency_roles": {
+      "evals/deliver/harness.py": "dynamic_deliver_harness_import",
+      "evals/deliver/plain-language-v12/readiness_transition.py": "readiness_transition_entrypoint",
+      "evals/deliver/plain-language-v12/root_isolation_probe.py": "root_isolation_probe_entrypoint"
+    },
+    "dependency_closure_policy": {
+      "normal_imports": "stdlib_only_ast_validated",
+      "dynamic_imports": {
+        "evals/deliver/plain-language-v12/root_isolation_probe.py": [
+          "evals/deliver/harness.py"
+        ]
+      },
+      "repo_local_subprocess_entrypoints": [],
+      "repo_local_data_inputs": [],
+      "unlisted_repo_local_resolution_allowed": false,
+      "execution_source": "verified_git_blobs_in_sealed_staging",
+      "python_isolated_mode_required": true,
+      "caller_pythonpath_allowed": false
+    },
+    "private_evaluator_repository": "/private/tmp/deliver-plain-language-v131-evaluator.JKNpUB/repo",
     "probe_ids": [
-      "deliver-v12.30-outer-sandbox-v1",
-      "deliver-v12.30-real-preflight-v1"
+      "deliver-v12.31-outer-sandbox-v1",
+      "deliver-v12.31-real-preflight-v1"
     ],
     "required_claims": {
-      "deliver-v12.30-outer-sandbox-v1": [
+      "deliver-v12.31-outer-sandbox-v1": [
         "evaluator_read_denied",
         "evaluator_write_denied",
         "external_sentinel_unchanged",
@@ -342,7 +385,7 @@
         "volume_read_denied",
         "volume_write_denied"
       ],
-      "deliver-v12.30-real-preflight-v1": [
+      "deliver-v12.31-real-preflight-v1": [
         "credential_copy_boundary",
         "empty_inherited_environment",
         "isolated_codex_home",
@@ -359,5 +402,46 @@
       "evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json"
     ]
   },
-  "immutable_readiness_sha256": "8f0cc4772dcaa4566022e2e3715a2c0f2a92ecb6a34bcbb1aae17646ad025a5e"
+  "root_isolation_dependency_binding": {
+    "manifest_path": "evals/deliver/plain-language-v12/root-isolation-dependencies.json",
+    "manifest_sha256": "8b457d397f2b4a724032fcb56953b6b00f3fb1fcbf0687bb7f33b9cbda9f15e5",
+    "entries_sha256": "974e0be532d152fc4d15edcca757865f8f8c3db315be7aa6a1869ea7f625a400",
+    "controller_commit": "4d60e7e7fa6d9f7ba208434a5aa233354770ffbf",
+    "controller_tree": "4137926f5fe98e677c7f1154ccf7b9a0d312e87b",
+    "entries": [
+      {
+        "path": "evals/deliver/harness.py",
+        "role": "dynamic_deliver_harness_import",
+        "sha256": "0969dff5a248902365dd52b763d705d5e371defa950ce544fe155e3867614dc3",
+        "git_blob": "b541615aade5a40b4b6505802229b55dcc95fd7d",
+        "git_mode": "100644",
+        "last_touch_commit": "2df979694124c8a49c58892e497ead35a4a4aa07"
+      },
+      {
+        "path": "evals/deliver/plain-language-v12/readiness_transition.py",
+        "role": "readiness_transition_entrypoint",
+        "sha256": "d4caaba8e18a925c81982a9d019f2907af0578c551f2a1e42227ee697293f7d2",
+        "git_blob": "be15e378282d868e96be85c499516c9d6e1e2188",
+        "git_mode": "100644",
+        "last_touch_commit": "727efbd67c467c69594565e3ee31cbc20bb874e1"
+      },
+      {
+        "path": "evals/deliver/plain-language-v12/root-isolation-dependencies.json",
+        "role": "dependency_manifest_root",
+        "sha256": "8b457d397f2b4a724032fcb56953b6b00f3fb1fcbf0687bb7f33b9cbda9f15e5",
+        "git_blob": "572fd6a9ae09372964826b5c49375bf62dd59b97",
+        "git_mode": "100644",
+        "last_touch_commit": "727efbd67c467c69594565e3ee31cbc20bb874e1"
+      },
+      {
+        "path": "evals/deliver/plain-language-v12/root_isolation_probe.py",
+        "role": "root_isolation_probe_entrypoint",
+        "sha256": "340daf70e5fae04eed80db004d33ceb2a50f342333b6043db103ee7481fe1d8b",
+        "git_blob": "f96d529824de1df102c30512dea681ef61de960f",
+        "git_mode": "100644",
+        "last_touch_commit": "727efbd67c467c69594565e3ee31cbc20bb874e1"
+      }
+    ]
+  },
+  "immutable_readiness_sha256": "78d184a13b13b573455d9df29e97184751e151a6c4603c5286f18309bb0a8014"
 }
