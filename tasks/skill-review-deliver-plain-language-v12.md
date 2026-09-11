@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
-- Evaluator version: `deliver-plain-language-v12.30`
+- Evaluator version: `deliver-plain-language-v12.31`
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -30,11 +30,13 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.27`; rejected because a nested comprehension payload field exposed literal arm identity while its published blinding control inspected only the outer provenance field.
 - Invalidated evaluator: `deliver-plain-language-v12.28`; rejected because its recursive value denylist treated authenticated contract prose as control metadata and rejected legitimate package content.
 - Invalidated evaluator: `deliver-plain-language-v12.29`; rejected because its root-isolation wrapper accepted self-asserted pass environment variables and falsely claimed a network boundary that the host does not provide.
-- V12.30 preserves the opaque readability content plane and evaluator-owned packet derivation, while its public root command directly runs the frozen outer-sandbox and real bundled-Codex preflight probes and derives the receipt from their observed evidence. The policy requires Codex connectivity and makes no network-isolation claim.
-- Evaluator source and author-ready commits: `f7c6a222e4e0ac18bf910308d50934c9c6decb3c` and `b4de0359cb5c9676054e37215e2336f961806a56`
-- Public controller commit: `2d154a023e3d4630c974cd364d7e8d75e92bcc7a`
-- Public author-ready commit: `0f5568f23024bee905464f504fad131452ad95e8`
-- Author-ready-state SHA-256: `83f34e835812d6106ef94fb132b83527ab3f8688081569463b355bb600a74424`
+- Invalidated evaluator: `deliver-plain-language-v12.30`; rejected because its frozen root-isolation closure omitted the dynamically imported Deliver harness, allowing a descendant harness replacement to fabricate a passing probe.
+- V12.31 preserves the opaque readability content plane and evaluator-owned packet derivation. Its root command verifies a complete explicit local execution closure, including the transition helper, probe, dependency manifest, and Deliver harness, before and after sealed staging. The policy requires Codex connectivity and makes no network-isolation claim.
+- V12.31 uses an independently authored no-context case bundle with a version-specific namespace. Exact case reuse is absent against authenticated v12.23-v12.30 case sets; semantic nonreuse against v12.22 is unavailable because those authenticated case bytes were lost, so no semantic nonreuse claim is made.
+- Evaluator source and final commits: `703fa74ad18eb852e6cc82fe3e0dd4d9551f3b5b` and `cf7267deb8f69b7a8411d8643e3b937f9a69830c`
+- Public controller commit: `4d60e7e7fa6d9f7ba208434a5aa233354770ffbf`
+- Public author-ready commit: `3bd095616629174fa58aa264d02d05ed2bfb7176`
+- Author-ready-state SHA-256: `2df285c80face7652e8b94a042834922fef0d705af901409ea4f72ccb7417775`
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
@@ -66,13 +68,13 @@ before the matching verify command succeeds.
 
 ```bash
 python3 evals/deliver/plain-language-v12/readiness_transition.py verify-author-ready --repo . --ref HEAD
-python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-independent-review --repo . --record /absolute/path/to/v12.30-independent-review-record.json
+python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-independent-review --repo . --record /absolute/path/to/v12.31-independent-review-record.json
 git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/independent-review-record.json
-git commit -m "Record Deliver evaluator v12.30 independent review"
+git commit -m "Record Deliver evaluator v12.31 independent review"
 python3 evals/deliver/plain-language-v12/readiness_transition.py verify-independent-review --repo . --ref HEAD
 python3 evals/deliver/plain-language-v12/readiness_transition.py run-root-isolation --repo .
 git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json
-git commit -m "Mark Deliver evaluator v12.30 ready"
+git commit -m "Mark Deliver evaluator v12.31 ready"
 python3 evals/deliver/plain-language-v12/readiness_transition.py verify-ready --repo . --ref HEAD
 ```
 
