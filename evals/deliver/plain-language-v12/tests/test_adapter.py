@@ -188,6 +188,15 @@ class AdapterTests(unittest.TestCase):
             "live_model_execution_performed": False,
             "deterministic_controls_are_live_arm_execution": False,
             "deterministic_controls_are_judge_verdict_evidence": False,
+            "frozen_public_file_digests": {adapter.ADAPTER_RELATIVE_PATH: "a" * 64},
+            "frozen_public_file_commits": {adapter.ADAPTER_RELATIVE_PATH: "b" * 40},
+            "immutable_readiness_sha256": "c" * 64,
+            "readiness_predecessor_commit": "d" * 40,
+            "readiness_predecessor_sha256": "e" * 64,
+            "independent_review_record_path": adapter.readiness_transition.REVIEW_RELATIVE_PATH,
+            "independent_review_record_sha256": "f" * 64,
+            "trusted_host_isolation_receipt_path": adapter.readiness_transition.ISOLATION_RELATIVE_PATH,
+            "trusted_host_isolation_receipt_sha256": "1" * 64,
             "durable_lifecycle_positive_control_count": 1,
             "lifecycle_order_tamper_negative_control_count": 12,
             "unbound_verdict_shape_negative_control_count": 1,
@@ -209,6 +218,16 @@ class AdapterTests(unittest.TestCase):
             "execution_limits": dict(adapter.READINESS_EXECUTION_LIMITS),
         }
         self.write_readiness()
+        self.lifecycle_patcher = mock.patch.object(
+            adapter,
+            "validate_readiness_lifecycle",
+            side_effect=lambda: {
+                "status": "ready",
+                "commit": "a" * 40,
+                "sha256": adapter.sha256_file(adapter.READINESS_PATH),
+            },
+        )
+        self.lifecycle_patcher.start()
         self.identity = {
             "commit": "1" * 40,
             "evals_tree": "2" * 40,
@@ -221,6 +240,7 @@ class AdapterTests(unittest.TestCase):
         )
 
     def tearDown(self) -> None:
+        self.lifecycle_patcher.stop()
         for runtime in self.runtimes:
             if runtime.parent == Path("/private/tmp") and adapter.SAFE_RUNTIME.fullmatch(runtime.name):
                 shutil.rmtree(runtime, ignore_errors=True)

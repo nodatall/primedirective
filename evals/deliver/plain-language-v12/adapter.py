@@ -30,11 +30,15 @@ if str(REPO_ROOT) not in sys.path:
 
 from evals.deliver import harness as v11  # noqa: E402
 
+if str(V12_ROOT) not in sys.path:
+    sys.path.insert(0, str(V12_ROOT))
+import readiness_transition  # noqa: E402
+
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 23
-ORACLE_VERSION = "deliver-plain-language-v12.26"
+READINESS_SCHEMA_VERSION = 24
+ORACLE_VERSION = "deliver-plain-language-v12.27"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
 STATE_NAME = "controller-state.json"
@@ -189,6 +193,11 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "isolation_probe_status", "live_model_feasibility_status", "live_model_execution_performed",
     "deterministic_controls_are_live_arm_execution",
     "deterministic_controls_are_judge_verdict_evidence",
+    "immutable_readiness_sha256", "frozen_public_file_digests",
+    "frozen_public_file_commits", "readiness_predecessor_commit",
+    "readiness_predecessor_sha256", "independent_review_record_path",
+    "independent_review_record_sha256", "trusted_host_isolation_receipt_path",
+    "trusted_host_isolation_receipt_sha256",
 })
 READINESS_NESTED_ALLOWED_FIELDS = {
     "proportionality": frozenset({
@@ -725,7 +734,15 @@ def validate_candidate_behavior_map(inventory: dict[str, Any]) -> tuple[list[str
     return retained, removed
 
 
+def validate_readiness_lifecycle() -> dict[str, str]:
+    try:
+        return readiness_transition.verify_ready(REPO_ROOT)
+    except readiness_transition.ReadinessTransitionError as exc:
+        raise AdapterError(f"oracle readiness lifecycle is invalid: {exc}") from exc
+
+
 def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
+    lifecycle = validate_readiness_lifecycle()
     readiness = load_json(READINESS_PATH, "oracle readiness")
     vocabulary = load_json(VOCABULARY_PATH, "public response schema")
     baseline_manifest = load_json(BASELINE_MANIFEST_PATH, "baseline package manifest")
@@ -764,6 +781,12 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         raise AdapterError("oracle readiness or vocabulary version differs from the frozen adapter")
     if readiness.get("status") != "ready":
         raise AdapterError("oracle readiness is not frozen ready")
+    if (
+        lifecycle.get("status") != "ready"
+        or lifecycle.get("sha256") != sha256_file(READINESS_PATH)
+        or not nonzero_hex(lifecycle.get("commit"), HEX40, 40)
+    ):
+        raise AdapterError("oracle readiness lifecycle does not bind the consumed ready bytes")
     failed_gates = [
         field for field in REQUIRED_READINESS_PASS_FIELDS if readiness.get(field) != "pass"
     ]
@@ -1014,6 +1037,7 @@ def initialize_runtime(
     v11_manifest = verify_v11_files()
     evaluator = repository_identity()
     readiness = validate_readiness(packet, schema)
+    readiness_lifecycle = validate_readiness_lifecycle()
     require_regular_file(baseline_manifest, "baseline package authority")
     if (
         sha256_file(baseline_manifest) != readiness["baseline_package_manifest_sha256"]
@@ -1101,6 +1125,7 @@ def initialize_runtime(
             "execution_policy_sha256": sha256_file(POLICY_PATH),
             "run_label_map_sha256": sha256_file(inputs / "run-label-map"),
             "public_readiness_sha256": sha256_file(READINESS_PATH),
+            "public_readiness_commit": readiness_lifecycle["commit"],
             "wording_approval_sha256": sha256_file(WORDING_APPROVAL_PATH),
             "v11_file_manifest_sha256": v11_manifest["manifest_sha256"],
             "model": policy["model"],
@@ -1265,6 +1290,12 @@ def verify_live_bindings(state: dict[str, Any]) -> None:
         raise AdapterError("execution policy digest drifted")
     if sha256_file(READINESS_PATH) != state["binding"].get("public_readiness_sha256"):
         raise AdapterError("public readiness digest drifted")
+    readiness_lifecycle = validate_readiness_lifecycle()
+    if (
+        readiness_lifecycle.get("commit") != state["binding"].get("public_readiness_commit")
+        or readiness_lifecycle.get("sha256") != state["binding"].get("public_readiness_sha256")
+    ):
+        raise AdapterError("public readiness committed lifecycle drifted")
     if sha256_file(WORDING_APPROVAL_PATH) != state["binding"].get("wording_approval_sha256"):
         raise AdapterError("wording approval digest drifted")
     if policy["model"] != state["binding"]["model"] or policy["reasoning"] != state["binding"]["reasoning"]:

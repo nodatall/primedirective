@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
-- Evaluator version: `deliver-plain-language-v12.26`
+- Evaluator version: `deliver-plain-language-v12.27`
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -26,8 +26,9 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.23`; rejected because its combine step accepted unbound lane-verdict objects.
 - Invalidated evaluator: `deliver-plain-language-v12.24`; rejected because caller-provided roots and pass booleans could authenticate themselves and aggregation could downgrade regression to neutral.
 - Invalidated evaluator: `deliver-plain-language-v12.25`; rejected because packet freezing accepted caller-authored lane payloads and attached verified provenance without deriving those bytes from sealed-arm artifacts.
-- Evaluator source and author-ready commits: pending v12.26 author freeze
-- Public adapter and author-ready-state SHA-256: pending v12.26 author freeze
+- Invalidated evaluator: `deliver-plain-language-v12.26`; rejected because its author-ready bytes could not make the required committed review and isolation transitions, and several control counts were declarations rather than executed named-control totals.
+- Evaluator source and author-ready commits: pending v12.27 author freeze
+- Public adapter and author-ready-state SHA-256: pending v12.27 author freeze
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
@@ -43,6 +44,27 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - [ ] Fresh baseline and candidate arms complete with comparable inputs.
 - [ ] Outputs-only comprehension, contract-readability, and behavior judge verdicts freeze before identity reveal.
 - [ ] Combined v12 verdict and user wording approval are recorded.
+
+## Readiness Transitions
+
+The committed readiness state advances only in this order: `author_ready` ->
+`independent_review_pass` -> `ready`. The transition helper verifies immutable
+evaluator identities, exact frozen public file bytes and last-touch commits,
+the predecessor commit and digest, and the stage-specific record before it
+prepares the next state. Each prepared transition must be committed as exactly
+the two allowlisted files before the matching verify command succeeds.
+
+```bash
+python3 evals/deliver/plain-language-v12/readiness_transition.py verify-author-ready --repo . --ref HEAD
+python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-independent-review --repo . --record /absolute/path/to/v12.27-independent-review-record.json
+git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/independent-review-record.json
+git commit -m "Record Deliver evaluator v12.27 independent review"
+python3 evals/deliver/plain-language-v12/readiness_transition.py verify-independent-review --repo . --ref HEAD
+python3 evals/deliver/plain-language-v12/readiness_transition.py prepare-ready --repo . --receipt /absolute/path/to/v12.27-trusted-host-isolation-receipt.json
+git add evals/deliver/plain-language-v12/oracle-readiness.json evals/deliver/plain-language-v12/trusted-host-isolation-receipt.json
+git commit -m "Mark Deliver evaluator v12.27 ready"
+python3 evals/deliver/plain-language-v12/readiness_transition.py verify-ready --repo . --ref HEAD
+```
 
 ## Frozen Verdict Transitions
 
