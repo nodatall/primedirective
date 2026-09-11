@@ -27,6 +27,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.24`; rejected because caller-provided roots and pass booleans could authenticate themselves and aggregation could downgrade regression to neutral.
 - Invalidated evaluator: `deliver-plain-language-v12.25`; rejected because packet freezing accepted caller-authored lane payloads and attached verified provenance without deriving those bytes from sealed-arm artifacts.
 - Invalidated evaluator: `deliver-plain-language-v12.26`; rejected because its author-ready bytes could not make the required committed review and isolation transitions, and several control counts were declarations rather than executed named-control totals.
+- V12.27 resolves its frozen controller artifacts from the version-pinned `.deliver-evaluator/v12` runtime root; the durable lifecycle fixture uses that same public layout.
 - Evaluator source and author-ready commits: `a23b04cf299fc098c8e3b64e0e2cecc4a24cc586` and `62fa640d4cd2334aa6018e098c5fcb387f5a447a`
 - Public controller commit: `29c4d66d716d6c54863c3174d54e3f10b557533b`
 - Author-ready-state SHA-256: `1b6f440a0c327e8c1bd7dfcaaf794836ef28f813531797b3cc97043e9d5f8eee`
