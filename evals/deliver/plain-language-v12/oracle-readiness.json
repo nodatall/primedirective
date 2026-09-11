@@ -4,7 +4,7 @@
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
   "public_adapter_identifier": "deliver_plain_language_v12",
-  "public_adapter_introducing_commit": "26f686c161da7899eb25932ffd0b6e9a05c2c488",
+  "public_adapter_introducing_commit": "b542538d36d87961dc6468b503514eee8df4c35a",
   "public_adapter_path": "evals/deliver/plain-language-v12/adapter.py",
   "public_adapter_sha256": "8118149ce26b8f9eb353c2ae609f28a99707e22afc57863af7141c18cfb4588b",
   "public_execution_policy_path": "evals/deliver/plain-language-v12/execution-policy.json",
@@ -19,8 +19,8 @@
   "baseline_package_content_manifest_sha256": "755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5",
   "candidate_package_manifest_sha256": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9",
   "candidate_package_content_manifest_sha256": "c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae",
-  "private_evaluator_source_commit": "d980404f0d86eea71f4b1f9028d1cf1f61210955",
-  "private_evaluator_commit": "5d67b7de0fd0410662968a6f00b8cd208497cbb7",
+  "private_evaluator_source_commit": "279e023e8c14e9497d5c3a2d0b35959dc16acf3e",
+  "private_evaluator_commit": "f2fbcf6bed807d224e5d4e8cd10e97cd1b3d0a47",
   "frozen_public_file_digests": {
     "evals/deliver/plain-language-v12/adapter.py": "8118149ce26b8f9eb353c2ae609f28a99707e22afc57863af7141c18cfb4588b",
     "evals/deliver/plain-language-v12/readiness_transition.py": "c3d2ac12f96f5dd0ab4af653ecff217efe80f68a100971518df7c5e17afbee8e",
@@ -307,5 +307,5 @@
   "status": "author_ready",
   "per_arm_response_schema_sha256": "e315787d683233c2755e2ce17e34e9c5647eb24136a569ccdee27f00bd8e823a",
   "private_projected_packet_sha256": "5cd9a009d5eba64a82dd313ce4630d9503032c068bbebc98b6b7859fa20820c1",
-  "immutable_readiness_sha256": "a19624148690db77544002346ae515bd992522e8514699423225f2633bf158de"
+  "immutable_readiness_sha256": "3faf6dd6859b266a6879fac4e5ecc365f9ac27f9728f9c281fbe16cfe249b89d"
 }
