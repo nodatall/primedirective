@@ -215,7 +215,7 @@ READINESS_ALLOWED_FIELDS = frozenset({
     "readiness_predecessor_sha256", "independent_review_record_path",
     "independent_review_record_sha256", "trusted_host_isolation_receipt_path",
     "trusted_host_isolation_receipt_sha256",
-    "root_isolation_dependency_binding", "executed_control_counts",
+    "root_isolation_contract", "root_isolation_dependency_binding", "executed_control_counts",
 })
 READINESS_NESTED_ALLOWED_FIELDS = {
     "proportionality": frozenset({
@@ -853,6 +853,8 @@ def validate_readiness(packet: Path, schema: Path) -> dict[str, Any]:
         or readiness.get("live_model_execution_performed") is not False
     ):
         raise AdapterError("oracle readiness live execution state is not the frozen pre-run state")
+    if readiness.get("root_isolation_contract") != readiness_transition.root_isolation_contract():
+        raise AdapterError("oracle readiness root isolation contract is not exact")
     public_bindings = {
         "public_adapter_identifier": ADAPTER_IDENTIFIER,
         "public_adapter_path": ADAPTER_RELATIVE_PATH,

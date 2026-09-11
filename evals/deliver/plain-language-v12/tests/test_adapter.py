@@ -227,6 +227,7 @@ class AdapterTests(unittest.TestCase):
             "independent_review_record_sha256": "f" * 64,
             "trusted_host_isolation_receipt_path": adapter.readiness_transition.ISOLATION_RELATIVE_PATH,
             "trusted_host_isolation_receipt_sha256": "1" * 64,
+            "root_isolation_contract": adapter.readiness_transition.root_isolation_contract(),
             "root_isolation_dependency_binding": {
                 "manifest_path": adapter.readiness_transition.DEPENDENCY_MANIFEST_RELATIVE_PATH,
                 "manifest_sha256": "2" * 64,
@@ -718,6 +719,7 @@ class AdapterTests(unittest.TestCase):
             ("candidate_behavior_map_sha256", "0" * 64, "candidate"),
             ("candidate_package_manifest_sha256", "0" * 64, "candidate"),
             ("candidate_commit", "0" * 40, "candidate"),
+            ("root_isolation_contract", {}, "root isolation contract"),
         )
         for field, value, message in cases:
             with self.subTest(field=field):
