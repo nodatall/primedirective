@@ -31,10 +31,10 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.28`; rejected because its recursive value denylist treated authenticated contract prose as control metadata and rejected legitimate package content.
 - Invalidated evaluator: `deliver-plain-language-v12.29`; rejected because its root-isolation wrapper accepted self-asserted pass environment variables and falsely claimed a network boundary that the host does not provide.
 - V12.30 preserves the opaque readability content plane and evaluator-owned packet derivation, while its public root command directly runs the frozen outer-sandbox and real bundled-Codex preflight probes and derives the receipt from their observed evidence. The policy requires Codex connectivity and makes no network-isolation claim.
-- Evaluator source and author-ready commits: `8f1d1d9b348c21c5d1d7886288cbf69a0efd6ba9` and `8ab22aa706b38a8e20729a9ffff55d924b24da7a`
-- Public controller commit: `cc4d07cb81652af01a139eaf967ba0570928988a`
-- Public author-ready commit: `5adb7e4ec29025d3385f5dae1f929c11a5ed7cd0`
-- Author-ready-state SHA-256: `1da97914d6f9028fd56d53491fa2d33eef499b63b461265f2550129465aa67c8`
+- Evaluator source and author-ready commits: `f7c6a222e4e0ac18bf910308d50934c9c6decb3c` and `b4de0359cb5c9676054e37215e2336f961806a56`
+- Public controller commit: `2d154a023e3d4630c974cd364d7e8d75e92bcc7a`
+- Public author-ready commit: `0f5568f23024bee905464f504fad131452ad95e8`
+- Author-ready-state SHA-256: `83f34e835812d6106ef94fb132b83527ab3f8688081569463b355bb600a74424`
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
