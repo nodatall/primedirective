@@ -4,7 +4,7 @@
   "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
   "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
   "public_adapter_identifier": "deliver_plain_language_v12",
-  "public_adapter_introducing_commit": "0d19bd9fc7ea375b60f0bce2ccbcac3dc754bea0",
+  "public_adapter_introducing_commit": "29c4d66d716d6c54863c3174d54e3f10b557533b",
   "public_adapter_path": "evals/deliver/plain-language-v12/adapter.py",
   "public_adapter_sha256": "f0975dd89924cd7d0ae9df1afc540ea072fd2afcc798bd050cc3d30f2e8fde59",
   "public_execution_policy_path": "evals/deliver/plain-language-v12/execution-policy.json",
@@ -19,13 +19,13 @@
   "baseline_package_content_manifest_sha256": "755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5",
   "candidate_package_manifest_sha256": "aaedf07ecc208342ddd5a287baa2543be66adaefe8af0d688bf387e26a36cbb9",
   "candidate_package_content_manifest_sha256": "c3330c9405f3635027ce82965c1743a988686cc81336468733b7ee0411d9d7ae",
-  "private_evaluator_source_commit": "a8af85c574fefb226135682c7c1c98bd755810d3",
-  "private_evaluator_commit": "1cfaa04b17fa2ae577af370b6fa3e927566a90cc",
+  "private_evaluator_source_commit": "a23b04cf299fc098c8e3b64e0e2cecc4a24cc586",
+  "private_evaluator_commit": "62fa640d4cd2334aa6018e098c5fcb387f5a447a",
   "frozen_public_file_digests": {
     "evals/deliver/plain-language-v12/adapter.py": "f0975dd89924cd7d0ae9df1afc540ea072fd2afcc798bd050cc3d30f2e8fde59",
-    "evals/deliver/plain-language-v12/readiness_transition.py": "d901d32810991853dde915525e9f1edbcf3083cf441b0fa52bb6c96361e22609",
+    "evals/deliver/plain-language-v12/readiness_transition.py": "bd0511db89356fc529d19491d977bcd2a19cc25686987c15827359c9e8133cbe",
     "evals/deliver/plain-language-v12/tests/test_adapter.py": "1d197e20b448fa783649dce45d898bdbad93abe22ebff771f117d36960444877",
-    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "1bc1c1083218b941d72e3f78d4e656dd8481cd0fa79e347cc10736d96b1829e7",
+    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "8bc8b04b29f33de1f4d95ce8ca0e5ee09ec72ad10ab1d5f05ccb1147d1e04469",
     "evals/deliver/plain-language-v12/candidate-behavior-map.json": "32a960d1bb3818f2df01ea477cd9d3350f4f239bf37af420b02c336a23c31e1f",
     "evals/deliver/plain-language-v12/comprehension-vocabulary.json": "c2f91e1f4d3d279acdab8ad3a19cef27151c6a3675c46c378fa21b3689a8f4ea",
     "evals/deliver/plain-language-v12/public-contract-inventory.json": "1d7abc4af460b7c0864b625fb14b139afde8a022c47c185c974bad5dbbcf0715",
@@ -37,9 +37,9 @@
   },
   "frozen_public_file_commits": {
     "evals/deliver/plain-language-v12/adapter.py": "0d19bd9fc7ea375b60f0bce2ccbcac3dc754bea0",
-    "evals/deliver/plain-language-v12/readiness_transition.py": "172b981398edd2cf9d31d98dc85bee551375770d",
+    "evals/deliver/plain-language-v12/readiness_transition.py": "29c4d66d716d6c54863c3174d54e3f10b557533b",
     "evals/deliver/plain-language-v12/tests/test_adapter.py": "0d19bd9fc7ea375b60f0bce2ccbcac3dc754bea0",
-    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "172b981398edd2cf9d31d98dc85bee551375770d",
+    "evals/deliver/plain-language-v12/tests/test_readiness_transition.py": "29c4d66d716d6c54863c3174d54e3f10b557533b",
     "evals/deliver/plain-language-v12/candidate-behavior-map.json": "172b981398edd2cf9d31d98dc85bee551375770d",
     "evals/deliver/plain-language-v12/comprehension-vocabulary.json": "172b981398edd2cf9d31d98dc85bee551375770d",
     "evals/deliver/plain-language-v12/public-contract-inventory.json": "f8ddaf50ae9ce70376e40c7013cf3b0dd42b7579",
@@ -299,5 +299,5 @@
   "status": "author_ready",
   "per_arm_response_schema_sha256": "c2f91e1f4d3d279acdab8ad3a19cef27151c6a3675c46c378fa21b3689a8f4ea",
   "private_projected_packet_sha256": "7c2e9d4357ba66b748b083444dc7a2b09e8beabbbab09269aac8be060007bf3e",
-  "immutable_readiness_sha256": "8b9c0b058a85aacaca00bb089ce9d424abea73f02c14c6a1eae9e289a76d583f"
+  "immutable_readiness_sha256": "bac8ca7a4df63e16ef424fec722a6b4ec0b8ae739787e4c040814de839a7176d"
 }
