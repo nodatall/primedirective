@@ -27,8 +27,9 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.24`; rejected because caller-provided roots and pass booleans could authenticate themselves and aggregation could downgrade regression to neutral.
 - Invalidated evaluator: `deliver-plain-language-v12.25`; rejected because packet freezing accepted caller-authored lane payloads and attached verified provenance without deriving those bytes from sealed-arm artifacts.
 - Invalidated evaluator: `deliver-plain-language-v12.26`; rejected because its author-ready bytes could not make the required committed review and isolation transitions, and several control counts were declarations rather than executed named-control totals.
-- Evaluator source and author-ready commits: pending v12.27 author freeze
-- Public adapter and author-ready-state SHA-256: pending v12.27 author freeze
+- Evaluator source and author-ready commits: `a8af85c574fefb226135682c7c1c98bd755810d3` and `1cfaa04b17fa2ae577af370b6fa3e927566a90cc`
+- Public adapter commit: `0d19bd9fc7ea375b60f0bce2ccbcac3dc754bea0`
+- Author-ready-state SHA-256: `3aa4b81efe3385ca42ea2d48473216238e4bf3a266864bce9b05fc9e5a8acbcb`
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
