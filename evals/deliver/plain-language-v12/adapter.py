@@ -37,7 +37,7 @@ import readiness_transition  # noqa: E402
 
 ADAPTER_IDENTIFIER = "deliver_plain_language_v12"
 SCHEMA_VERSION = 1
-READINESS_SCHEMA_VERSION = 26
+READINESS_SCHEMA_VERSION = 27
 ORACLE_VERSION = "deliver-plain-language-v12.30"
 ADAPTER_RELATIVE_PATH = "evals/deliver/plain-language-v12/adapter.py"
 POLICY_RELATIVE_PATH = "evals/deliver/plain-language-v12/execution-policy.json"
