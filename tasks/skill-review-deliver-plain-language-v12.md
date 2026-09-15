@@ -5,7 +5,7 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Skill: `deliver`
 - Baseline: `021ac29eab5b28afc2222e16944c540dfd8362e9`
 - Candidate: `23b3d4e38b30f882c4a6f20f293b73f701138e3b`
-- Evaluator version: `deliver-plain-language-v12.32` (`author_ready`; independent review and trusted-host isolation pending)
+- Evaluator version: `deliver-plain-language-v12.34` (`author_ready`; independent review completed, formal recording blocked by auto-review; trusted-host isolation pending)
 - Public adapter: `deliver_plain_language_v12` at `evals/deliver/plain-language-v12/adapter.py`
 - Public process policy: `evals/deliver/plain-language-v12/execution-policy.json`
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
@@ -33,7 +33,10 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Invalidated evaluator: `deliver-plain-language-v12.30`; rejected because its frozen root-isolation closure omitted the dynamically imported Deliver harness, allowing a descendant harness replacement to fabricate a passing probe.
 - Invalidated evaluator: `deliver-plain-language-v12.31`; rejected because one independently authored bundle file was replaced during import while the original manifest remained, so standalone and integrated bindings could not both be true.
 - V12.32 Phase A freezes the public schema and complete eight-file independent-bundle interface before hidden case authoring. The controller binds every public code/data input used by the readiness, isolation, and bundle-validation paths. Imported bundle files, including the manifest, must remain byte-identical; no build step may rewrite them.
-- V12.32 independently authored bundle import, private evaluator source/final freeze, and public author readiness are complete. Independent review, trusted-host isolation, official arms, and judge runs remain pending.
+- Invalidated evaluator: `deliver-plain-language-v12.32`; rejected because local Python imports could resolve an untracked private file before trust checks.
+- Invalidated evaluator: `deliver-plain-language-v12.33`; its first staged root probe created bytecode cache files, so the second probe rejected the changed closure.
+- V12.34 carries the independently authored v12.32 bundle byte-for-byte and corrects staged probe invocation to `python -I -B`. Public controller, private source/final freeze, and author readiness are complete. The fresh independent review completed with 72 public tests and 225 private controls passing, but auto-review blocked creating its formal input record. No trusted-host isolation, official arm, or judge has run for v12.34.
+- Completed review evidence: `tasks/evaluator-v12.34-independent-review-evidence.md`. This factual note changes no gate.
 - Committed wording-approval record: `9d8f98f34cb6ebfe78f067be832f4c2c41f00ce5`
 - Official runtime, run ID, nonce, run-label-map digest, and arm seals: created only by `initialize` after public and private readiness gates pass
 
@@ -52,9 +55,9 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 
 ## Author Freeze
 
-V12.32 is `author_ready` after importing all eight source files byte-for-byte
-from one committed independent bundle and reconciling standalone and integrated
-validation against the frozen controller. Initialization remains blocked until
+V12.34 is `author_ready`, with the eight independently authored bundle files
+unchanged. Its public controller is `28ff942`, author readiness is `2442911`,
+and private source/final are `bc98e9f` / `c8bf86b`. Initialization remains blocked until
 the required readiness order completes: `author_ready` ->
 `independent_review_pass` -> `ready`.
 
