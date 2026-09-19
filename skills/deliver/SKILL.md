@@ -79,10 +79,11 @@ Return to refinement only after a material plan change or when implementation ev
 
 Use the current thread, pasted material, rough checklist, existing plan, review, research, or user-named path as source material. Inspect enough of the repo to honor obvious local constraints.
 
-Run `git status --short` before edits. Preserve unrelated changes. Stop if unrelated or dangerous changes overlap this work.
+Run `git status --short` and `git branch --show-current` before edits. Preserve unrelated changes. Stop if unrelated or dangerous changes overlap this work.
 
-- Stay on a non-base branch.
-- On `main`, `master`, or the resolved local base branch, create a feature branch before writing a plan or implementation file. Prefer `deliver/<plan-key>` when local conventions do not suggest a better name.
+- If already on a non-base branch, keep that exact branch for planning, implementation, and resumed work. Do not create, switch, or rename a branch or create another worktree unless the user explicitly asks. Its name need not match `deliver/<plan-key>` or the current task.
+- Create a feature branch only when currently on `main`, `master`, or the repo's configured base/default branch, unless the user explicitly requests another branch. Do this before writing a plan or implementation file. Prefer `deliver/<plan-key>` when local conventions do not suggest a better name; this naming preference never justifies replacing an existing non-base branch.
+- Resolve the base from repo instructions/configuration or the remote default branch, not from the current branch's upstream or a review comparison target. If the base is unknown, keep the current named branch.
 - On detached `HEAD`, stop and ask.
 - Do not carry overlapping unrelated or dangerous changes onto a new branch without asking.
 

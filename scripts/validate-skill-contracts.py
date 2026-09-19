@@ -615,6 +615,20 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     deliver_agent = (ROOT / "skills/deliver/agents/openai.yaml").read_text()
     plan_format = (ROOT / "skills/deliver/references/plan-format.md").read_text()
 
+    deliver_branch_tokens = [
+        "git branch --show-current",
+        "If already on a non-base branch, keep that exact branch for planning, implementation, and resumed work.",
+        "Do not create, switch, or rename a branch or create another worktree unless the user explicitly asks.",
+        "Its name need not match `deliver/<plan-key>` or the current task.",
+        "Create a feature branch only when currently on `main`, `master`, or the repo's configured base/default branch",
+        "not from the current branch's upstream or a review comparison target",
+        "If the base is unknown, keep the current named branch.",
+        "On detached `HEAD`, stop and ask.",
+    ]
+    for token in deliver_branch_tokens:
+        if token not in deliver:
+            fail(errors, "PD-DELIVER-BRANCH", f"skills/deliver/SKILL.md missing branch-preservation rule: {token}")
+
     deliver_tokens = [
         "The normal order is: plan -> optional deep research -> optional Pro analysis -> refine -> user review and approval -> implement -> validate -> final review -> archive -> commit -> finalize -> handoff.",
         "Execution scope is the entire unchecked remainder of `tasks/execution-plan-<plan-key>.md`",
