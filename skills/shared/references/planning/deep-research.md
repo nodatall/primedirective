@@ -12,6 +12,8 @@ The goal is not just citation coverage. The goal is to scour current best practi
 
 Treat this as a current-state research task, not a timeless brainstorming task. The prompt and memo must stay anchored to the actual run date and the project's concrete stack, constraints, and risk areas.
 
+For `$deliver`, use `skills/deliver/references/plan-format.md` to place adopted findings. Keep scope, behavior, limits, acceptance criteria, and stop conditions in the execution plan. Preserve useful verified implementation mechanics in its linked durable implementation notes when warranted; reuse existing authoritative documents rather than duplicating them. This placement rule does not reduce the research evidence bar or completion gates below.
+
 ## Accepted activation suffixes
 
 - `--deep-research`
@@ -145,7 +147,7 @@ Before the first external search:
    - run the Final Load-Bearing Falsification Pass before closing the memo
    - choose the highest-value findings to adopt
    - note meaningful ideas rejected or deferred and why
-   - update PRD/TDD before tasks-plan generation, or update the `$deliver` execution plan before Pro analysis or refinement
+   - update PRD/TDD before tasks-plan generation, or update the `$deliver` execution plan and its linked implementation notes as appropriate before Pro analysis or refinement
    - distill the plan-specific checklist items and decisions worth carrying into this plan's execution
 20. If research would materially change product behavior, external scope, or business intent, stop and ask one targeted follow-up question before finalizing artifacts.
 21. If research materially changes the previously approved plain-language summary, present one revised standalone summary checkpoint before `tasks-plan` generation unless the caller explicitly owns direct orchestration. In a direct orchestration flow, adopt the findings into the artifacts and continue unless the change is a true blocker that is unsafe, contradictory, or impossible to default.
@@ -299,7 +301,7 @@ The working memo must include a Finding-to-Artifact Delta. Each finding row must
 - `task_plan_inputs_created`
 - `disposition_reason`
 
-Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding is not adopted unless it changes PRD/TDD, changes the `$deliver` execution plan, or creates an explicit task-plan input; otherwise record the reason in `disposition_reason`.
+Use `disposition` values such as `adopted`, `rejected`, or `deferred`. A finding is not adopted unless it changes PRD/TDD, changes the `$deliver` execution plan or its linked implementation notes, or creates an explicit task-plan input; otherwise record the reason in `disposition_reason`. For `$deliver`, also identify any linked implementation-note paths and sections changed in the Finding-to-Artifact Delta.
 
 ## Deep Research Completion Stamp
 
@@ -367,7 +369,7 @@ The temporary research memo must contain:
 - explicit note when a bucket was not applicable
 - explicit note when a claim was not checked further because changing it would not change the plan
 
-Do not start `tasks-plan` drafting until this memo is substantively complete and the adopted findings have been written back into PRD/TDD. For `$deliver --deep-research`, do not start Pro analysis, refinement, user review, or implementation until this memo is substantively complete and adopted findings have been written back into `tasks/execution-plan-<plan-key>.md`.
+Do not start `tasks-plan` drafting until this memo is substantively complete and the adopted findings have been written back into PRD/TDD. For `$deliver --deep-research`, do not start Pro analysis, refinement, user review, or implementation until this memo is substantively complete and adopted findings have been written back into `tasks/execution-plan-<plan-key>.md` and its linked implementation notes as appropriate under the Deliver placement rule above.
 
 ## Research output
 
@@ -376,7 +378,7 @@ Capture these outcomes:
 - a short research summary
 - concrete recommendations adopted into the plan
 - alternatives considered and rejected when they materially affect the design
-- the best ideas pulled from the working memo and how they changed PRD/TDD or the `$deliver` execution plan
+- the best ideas pulled from the working memo and how they changed PRD/TDD or the `$deliver` execution plan and linked implementation notes as appropriate
 - risks, constraints, or follow-up validation uncovered by research
 - source links or citations supporting the adopted recommendations
 - at least 3 answered research questions backed by cited external sources
@@ -385,6 +387,7 @@ Capture these outcomes:
 Default behavior:
 
 - inline the findings into PRD when product-facing constraints changed, into TDD for technical rationale, and into the improve-plan pass
+- for `$deliver`, preserve useful verified implementation mechanics in the linked durable implementation notes before deleting the temporary research memo; keep plan-level requirements in the execution plan
 - delete the standalone research memo after planning completes
 
 Preservation behavior:
@@ -397,7 +400,7 @@ Preservation behavior:
 - PRD: update only when research changes product-facing constraints, defaults, guardrails, or acceptance behavior
 - TDD: absorb the detailed technical recommendations and rationale
 - tasks-plan: generate only after PRD/TDD revisions are complete, and add any new rollout, migration, verification, cleanup, or sequencing work discovered by research
-- `$deliver`: continue only after execution-plan revisions are complete, and add any new rollout, migration, verification, cleanup, or sequencing work discovered by research
+- `$deliver`: continue only after execution-plan and linked implementation-note revisions are complete as appropriate; record when no plan change was needed. Add any new rollout, migration, verification, cleanup, or sequencing work discovered by research to the execution plan
 
 ## Completion checks
 
@@ -411,4 +414,4 @@ Before continuing to tasks-plan generation or `$deliver` Pro/refinement:
 6. The Deep Research Completion Stamp records `research_started_at`, `research_completed_at`, `elapsed_minutes`, and `duration_expectation_met: yes`.
 7. The Deep Research Completion Stamp says `evidence_bar_met: yes`.
 8. Load-bearing claims were challenged with counterevidence or targeted follow-up research before conclusions were finalized.
-9. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied; `$deliver` Pro/refinement has not started before the research memo was completed and execution-plan revisions were applied.
+9. `tasks-plan` drafting has not started before the research memo was completed and PRD/TDD revisions were applied; `$deliver` Pro/refinement has not started before the research memo was completed and execution-plan and linked implementation-note revisions were applied as appropriate, with an explicit memo record when no plan change was needed.

@@ -22,6 +22,7 @@ Done when:
 Relevant context:
 - <only facts or decision notes needed for this step>
 - <important constraints from the approved plan>
+- Implementation notes: <linked path and relevant sections, when present>
 
 Repo context:
 - Current branch:
@@ -45,6 +46,8 @@ Rules:
 ```
 
 The orchestrator chooses the item, writes the packet, integrates the change, judges validation, updates the plan, commits, and changes scope when evidence requires it. The worker receives one item, not the backlog.
+
+Read the referenced implementation-note sections before repeating research or implementing the item. Keep their source and verification limits intact; report contradictions or stale findings rather than treating notes as additional approved scope.
 
 When tests may change, the orchestrator decides `test_disposition` and writes its evidence-backed rationale before assigning permanent-test work. If the evidence is not yet enough, assign only reproduction or repair. Decide test persistence after inspecting the result.
 

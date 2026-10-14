@@ -66,7 +66,10 @@ Use those references for detailed Deliver plan shape, bounded refinement discipl
 This skill may create or update only:
 
 - `tasks/execution-plan-<plan-key>.md`, except in `--approval-gate`
+- `tasks/implementation-notes-<plan-key>.md` for the same active plan, linked from that plan, except in `--approval-gate`
 - `tasks/tmp/review-plan-<plan-key>.md`
+
+Other linked authoritative guides are read-only evidence. Task-specific notes support the plan; they do not authorize implementation or new scope.
 
 This skill must never edit:
 
@@ -98,7 +101,7 @@ Inspect `git status --short` before editing:
 
 - Continue when the working tree is clean.
 - Continue when unrelated dirty files exist, but do not touch them.
-- If unrelated dirty files overlap the execution plan or review log path, stop and ask before editing.
+- If unrelated dirty files overlap the execution plan, its task-specific implementation notes, or review log path, stop and ask before editing.
 
 ## Workflow
 
@@ -110,13 +113,14 @@ Inspect `git status --short` before editing:
 3. Confirm the plan is a Deliver execution plan.
    - It should carry the Deliver implementation instruction or clearly be the active readable `$deliver` execution plan.
    - If it is a legacy PRD/TDD/tasks-plan artifact or a goal plan, stop and route to the owning skill instead of converting it here.
+   - Read linked implementation notes needed for the review. Check that useful research is preserved, local links resolve, and the notes agree with the plan's scope.
 4. Set the effective max round count to `8`.
 5. For each round from 1 through 8:
-   - Start from the current execution plan and current review log.
+   - Start from the current execution plan, its linked implementation notes, and current review log.
    - Spawn one fresh read-only reviewer subagent for the round.
    - If a fresh reviewer cannot be spawned, stop immediately; this workflow requires a fresh reviewer for every round.
    - Request the strongest appropriate reasoning tier for plan review, following `reasoning-budget.md`.
-   - Send the reviewer the execution plan, plan key, round number, this skill, and the required references.
+   - Send the reviewer the execution plan, linked implementation notes, plan key, round number, this skill, and the required references.
    - Require the reviewer to run a first-principles adversarial council internally before producing findings.
    - Treat the council as an internal adversarial conversation, not a user-visible transcript.
    - Use 3-5 independent lanes before synthesis, selected from the first-principles-mode pattern: mechanism/root-cause analyst, skeptic/adversary, systems/architecture analyst, operator/pragmatist, and contrarian/reframe analyst.
@@ -145,7 +149,9 @@ Inspect `git status --short` before editing:
    - `minor` is wording, formatting, or polish that does not affect user understanding or execution risk.
 8. In default mode, apply only safe plan-only fixes.
    - Safe fixes may clarify ambiguous checkboxes, split oversized steps, restore omitted source scope, reorder dependency flow, add missing verification obligations, add missing rollout or rollback notes, remove contradictions, or tighten acceptance criteria.
-   - Safe fixes must stay inside `tasks/execution-plan-<plan-key>.md` and must not invent exact APIs, schemas, routes, helper names, tests, migrations, file paths, or implementation details unless already supported by the plan or repo evidence.
+   - Safe fixes must stay inside `tasks/execution-plan-<plan-key>.md` and its linked `tasks/implementation-notes-<plan-key>.md`, and must not invent exact APIs, schemas, routes, helper names, tests, migrations, file paths, or implementation details unless already supported by source research, the plan, or repo evidence.
+   - Use the shortest change that resolves the finding. Apply the plan format's cut pass after additions; do not expand a compact plan into a technical specification or repeat routine Deliver obligations.
+   - Preserve useful researched mechanics in the linked notes before cutting them from the plan. Keep scope, constraints, acceptance criteria and implementation-changing questions visible in the plan; do not hide them in notes.
    - Do not remove scope just because it is hard.
    - Do not weaken Deliver closeout obligations, validation expectations, final review, archive movement, or user approval rules.
    - Do not apply findings with `needs_user_decision`, `unsafe_to_auto_fix`, `residual_risk`, or `no_action`.
@@ -153,6 +159,7 @@ Inspect `git status --short` before editing:
    - Apply `minor` fixes only when needed to keep the plan coherent after a blocker/material fix.
 9. In `--approval-gate` mode, stay read-only with respect to the execution plan.
    - Do not edit `tasks/execution-plan-<plan-key>.md`.
+   - Do not edit its linked implementation notes.
    - Write proposed fixes to `tasks/tmp/review-plan-<plan-key>.md`.
    - For each `blocker` or `material` finding, include the proposed replacement text, insertion point, or deletion in a form the user can review.
    - Stop after the first reviewer round that finds any `blocker` or `material` issue, because no plan edit has occurred and later rounds would not be reviewing a changed plan.

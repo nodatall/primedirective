@@ -673,10 +673,19 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-TERMINAL-GATE", f"skills/deliver/SKILL.md missing terminal-gate token: {token}")
 
     deliver_refined_tokens = [
-        "For normal planning, create or reuse the canonical execution plan and include `Deliver implementation instruction:` near the top.",
+        "For normal planning, create or reuse the canonical execution plan and put `Deliver implementation instruction:` at the very bottom.",
         "Keep the main plan high-level and readable.",
+        "Default to the shortest sufficient plan, with no review-request boilerplate or automatic technical appendix.",
         "Every refinement round must apply the Plain-Language Review in `skills/deliver/references/plan-format.md` to the whole plan",
         "Difficulty understanding the plan is a material issue.",
+        "Unnecessary length is also a material issue.",
+        "Optional implementation notes: `tasks/implementation-notes-<plan-key>.md`",
+        "Create or update the notes before removing those details from the plan.",
+        "On resume, reopen the plan and its linked implementation notes before repeating discovery",
+        "Give each refinement reviewer the plan and its linked implementation notes.",
+        "Read the relevant linked implementation notes before implementing each item",
+        "Move `tasks/implementation-notes-<plan-key>.md`, when present, into the same archive directory.",
+        "verify that the archived plan's implementation references still resolve.",
         "Fix it and rereview before requesting approval or starting `--fast` implementation",
         "no material scope, execution, or readability issue",
         "unresolved implementation-changing `Open question:` checkboxes",
@@ -690,6 +699,20 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     plan_format_tokens = [
         "Apply `skills/shared/references/plain-language.md`, the same writing rules used by `$plain-language`, to the entire plan.",
         "## Plain-Language Review",
+        "Default to the shortest sufficient plan:",
+        "Run a cut pass on every draft and refinement",
+        "## Linked Implementation Notes",
+        "Implementation notes: [implementation-notes-<plan-key>.md](implementation-notes-<plan-key>.md)",
+        "Reuse and link an existing authoritative guide",
+        "No companion is needed when there are no useful technical findings to retain.",
+        "Keep source links, the date checked, and whether each finding was documented, locally verified, or still needs a live check.",
+        "The execution plan controls scope.",
+        "Preserve useful researched implementation details in linked notes before removing them from the plan.",
+        "Delete filler rather than relocating it.",
+        "Check that linked implementation notes retain useful source findings, resolve from the plan, and agree with its scope.",
+        "Do not add a technical appendix by default.",
+        "Keep the review request in the chat handoff, not in the plan.",
+        "Do not add checkboxes for routine Deliver refinement, final review, archive movement, commits, or finalization.",
         "Give each checkbox one understandable outcome.",
         "Keep scope, settled decisions, exact limits, acceptance criteria, stop conditions, and implementation-changing `Open question:` items visible in plain words.",
         "Simplifying must not delete, weaken, or postpone them.",
@@ -706,6 +729,22 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
     for token in plan_format_tokens:
         if token not in plan_format:
             fail(errors, "PD-DELIVER-PLAN-FORMAT", f"skills/deliver/references/plan-format.md missing refined-plan token: {token}")
+
+    plan_template = re.search(r"```md\n(.*?)\n```", plan_format, re.DOTALL)
+    implementation_footer = (
+        "Deliver implementation instruction:\n"
+        "When asked to implement this doc, load the `$deliver` skill, use this file as the approved execution plan, "
+        "scan every checkbox, and continue through final review, archive movement, commit, and finalization before the final handoff."
+    )
+    if plan_template is None:
+        fail(errors, "PD-DELIVER-PLAN-TEMPLATE", "Deliver plan format is missing its Markdown template")
+    else:
+        template = plan_template.group(1).strip()
+        if not template.endswith(implementation_footer) or template.count("Deliver implementation instruction:") != 1:
+            fail(errors, "PD-DELIVER-PLAN-TEMPLATE", "Deliver plan template must end with exactly one implementation footer")
+        for boilerplate in ("Please review this before I start", "Tell me what is wrong, missing, or out of order", "Fast mode note:"):
+            if boilerplate in template:
+                fail(errors, "PD-DELIVER-PLAN-TEMPLATE", "Keep review and mode boilerplate in chat, not the plan template")
 
     deliver_goal_tokens = [
         "skills/plan-to-goal/SKILL.md",
@@ -741,11 +780,22 @@ def validate_deliver_terminal_gate(errors: list[str]) -> None:
         "For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`.",
         "When `$deliver --deep-research --pro-analysis` is active, the gate is hard:",
         "For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md`",
-        "For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation",
+        "Include relevant linked implementation notes in the selected plan context.",
+        "For `$deliver --pro-analysis`, apply the synthesized findings to the readable execution plan and its linked implementation notes as appropriate before refinement and either user review or `--fast` implementation",
+        "retain them there before any cleanup of the temporary Pro-analysis memo.",
     ]
     for token in pro_deliver_reference_tokens:
         if token not in pro_reference:
             fail(errors, "PD-DELIVER-PRO-ANALYSIS", f"skills/shared/references/analysis/pro-browser-analysis.md missing deliver pro-analysis token: {token}")
+    deep_reference = (ROOT / "skills/shared/references/planning/deep-research.md").read_text()
+    for token in [
+        "For `$deliver`, use `skills/deliver/references/plan-format.md` to place adopted findings.",
+        "changes the `$deliver` execution plan or its linked implementation notes",
+        "identify any linked implementation-note paths and sections changed in the Finding-to-Artifact Delta.",
+        "preserve useful verified implementation mechanics in the linked durable implementation notes before deleting the temporary research memo",
+    ]:
+        if token not in deep_reference:
+            fail(errors, "PD-DELIVER-IMPLEMENTATION-NOTES", f"skills/shared/references/planning/deep-research.md missing notes-preservation token: {token}")
     stale_pro_gate_tokens = [
         "The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission.",
         "Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.",
@@ -922,6 +972,9 @@ def validate_review_plan_contract(errors: list[str]) -> None:
         "skills/deliver/references/plan-format.md",
         "Failure of Deliver's Plain-Language Review is also `material`",
         "to the whole plan in every round, including after technical findings are applied.",
+        "`tasks/implementation-notes-<plan-key>.md` for the same active plan",
+        "Other linked authoritative guides are read-only evidence.",
+        "Read linked implementation notes needed for the review.",
         "Supports `--approval-gate`",
         "tasks/execution-plan-<plan-key>.md",
         "tasks/tmp/review-plan-<plan-key>.md",
@@ -975,6 +1028,7 @@ def validate_review_plan_contract(errors: list[str]) -> None:
     approval_gate = approval_gate_match.group(0) if approval_gate_match else ""
     approval_gate_tokens = [
         "Do not edit `tasks/execution-plan-<plan-key>.md`.",
+        "Do not edit its linked implementation notes.",
         "Write proposed fixes to `tasks/tmp/review-plan-<plan-key>.md`.",
         "Ask the user to approve the proposed fixes or request changes.",
         "When the user approves, apply still-valid proposed fixes or rerun against the current plan before editing.",
@@ -1253,6 +1307,8 @@ def validate_deliver_review_proportionality(errors: list[str]) -> None:
             fail(errors, "PD-DELIVER-REVIEW-PROPORTIONALITY", f"{deliver_path} missing token: {token}")
 
     worker_packet_tokens = [
+        "Implementation notes: <linked path and relevant sections, when present>",
+        "Read the referenced implementation-note sections before repeating research or implementing the item.",
         "Test value when this step adds or changes tests:",
         "test_disposition: permanent | table_case | probe_only | no_test",
         "the orchestrator decides `test_disposition` and writes its evidence-backed rationale before assigning permanent-test work",

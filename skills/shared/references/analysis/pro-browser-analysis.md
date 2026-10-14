@@ -70,12 +70,14 @@ Before starting the ChatGPT browser run, confirm the plan key and the current pl
 
 For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`. Use that plan plus selected repo context as the Pro browser input. Do not run Pro against only the raw conversation when a deliver plan has not yet been created, and do not require a separate user review before the Pro pass.
 
+Include relevant linked implementation notes in the selected plan context. Follow `skills/deliver/references/plan-format.md` when placing adopted findings: scope, behavior, limits, acceptance criteria, and stop conditions stay in the execution plan; useful verified implementation mechanics may be retained in its linked durable implementation notes.
+
 When `$deliver --deep-research --pro-analysis` is active, the gate is hard:
 
 - `tasks/tmp/research-plan-<plan-key>.md` exists.
 - The research memo contains a Deep Research Completion Stamp with `evidence_bar_met: yes`.
 - The execution plan has been revised from adopted research findings, or the research memo records that no execution-plan section changes were needed.
-- No current research finding marked adopted is still waiting to be reflected in `tasks/execution-plan-<plan-key>.md` or explicitly deferred/rejected with a reason.
+- No current research finding marked adopted is still waiting to be reflected in `tasks/execution-plan-<plan-key>.md` or its linked implementation notes as appropriate, or explicitly deferred/rejected with a reason.
 
 If any pre-browser check fails, stop. Do not run the Pro browser pass as a substitute for the missing research pass. Report the unmet gate and complete or repair deep research first.
 
@@ -89,12 +91,12 @@ For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with
 - browser run evidence: driver used (`chrome` or `computer-use`), ChatGPT surface used, UI variant, exact selected model and reasoning or effort labels, `Power` position and maximum when exposed, Pro-selection verification method, submission method (`paste`, `upload`, or both), response completion evidence, and capture method
 - Pro findings ledger: stable finding ID, Pro claim, local verification evidence, disposition (`adopted`, `rejected`, `deferred`), and disposition reason
 - conflict reconciliation: conflicts with repo evidence, the deep-research memo, or the execution plan, and how each conflict was resolved
-- artifact delta: execution-plan sections changed; source-backed claims independently verified when Pro suggested external sources
+- artifact delta: execution-plan sections and linked implementation-note paths and sections changed; source-backed claims independently verified when Pro suggested external sources
 - Pro synthesis completion stamp containing `pro_result_read`, `pro_browser_run`, `pro_model_selected`, `findings_reconciled`, `artifact_changes_applied`, `unresolved_blockers`, and `pro_synthesis_complete`
 
 Before setting `pro_synthesis_complete: yes`, print a short `Pro Findings Summary` in the visible thread/log: adopted, rejected/deferred, blockers, and artifact changes.
 
-Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with a qualifying Pro reasoning state verified before submission, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
+Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with a qualifying Pro reasoning state verified before submission, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan and its linked implementation notes as appropriate, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
 
 If `pro_result_read`, `pro_browser_run`, `pro_model_selected`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not refine a `$deliver` plan or execute.
 
@@ -120,7 +122,9 @@ Treat the Pro answer as an external reviewer, not as source of truth.
 
 For `$first-principles-mode --pro-analysis`, stop after synthesis unless the user separately asked for edits.
 
-For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+For `$deliver --pro-analysis`, apply the synthesized findings to the readable execution plan and its linked implementation notes as appropriate before refinement and either user review or `--fast` implementation unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+
+Apply verified implementation mechanics to relevant linked implementation notes under the Deliver placement rule above, and retain them there before any cleanup of the temporary Pro-analysis memo. Do not copy raw Pro output into the notes or treat it as verified evidence.
 
 For `$deliver --pro-analysis`, raw Pro browser output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
 

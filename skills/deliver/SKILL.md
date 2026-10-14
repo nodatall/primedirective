@@ -64,6 +64,7 @@ Return to refinement only after a material plan change or when implementation ev
 ## Files
 
 - Execution plan: `tasks/execution-plan-<plan-key>.md`
+- Optional implementation notes: `tasks/implementation-notes-<plan-key>.md`, or an existing authoritative guide linked from the plan
 - Optional frontend mockup: `tasks/ui-mockup-<plan-key>.html`
 - Goal plan: `tasks/goal-plan-<plan-key>.md`
 - Optional active-step note: `tasks/tmp/active-step-<plan-key>-<step>.md`
@@ -101,29 +102,31 @@ Goal mode creates `tasks/goal-plan-<plan-key>.md` with `Goal`, `Done When`, `Not
 
 Follow `skills/deliver/references/plan-format.md`, including its Plain-Language Review, when drafting or updating the plan.
 
-For normal planning, create or reuse the canonical execution plan and include `Deliver implementation instruction:` near the top. Treat `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes as source material only. Preserve their concrete in-scope items unless they are duplicates, contradictions, or user-approved removals. Never implement from a tasks-plan, spec, or notes file. A named existing plan such as `tasks/execution-plan-startup-fixes.md` follows the same rule.
+For normal planning, create or reuse the canonical execution plan and put `Deliver implementation instruction:` at the very bottom. Treat `tasks/tasks-plan-<plan-key>.md`, `tasks/*-spec.md`, pasted checklists, and review notes as source material only. Preserve their concrete in-scope items unless they are duplicates, contradictions, or user-approved removals. Never implement from a tasks-plan, spec, or notes file. A named existing plan such as `tasks/execution-plan-startup-fixes.md` follows the same rule.
 
-Keep the main plan high-level and readable. Keep decisions and success criteria the user needs to approve visible, and place implementation detail as directed by the plan format.
+Keep the main plan high-level and readable. Default to the shortest sufficient plan, with no review-request boilerplate or automatic technical appendix. Keep decisions and success criteria the user needs to approve visible, and place implementation detail as directed by the plan format.
+
+Preserve useful researched implementation details in linked notes as directed by the plan format, including findings from earlier conversation, attachments, repo investigation, and optional research or Pro passes. Create or update the notes before removing those details from the plan. On resume, reopen the plan and its linked implementation notes before repeating discovery; notes support the approved plan and do not authorize extra scope.
 
 ### 4. Run Optional Gates
 
-With `--deep-research`, use `skills/shared/references/planning/deep-research.md`. Run local reconnaissance, write `tasks/tmp/research-plan-<plan-key>.md`, apply adopted findings to the execution plan, and print a short `Deep Research Summary`.
+With `--deep-research`, use `skills/shared/references/planning/deep-research.md`. Run local reconnaissance, write `tasks/tmp/research-plan-<plan-key>.md`, apply adopted findings to the execution plan and linked implementation notes as appropriate, and print a short `Deep Research Summary`.
 
 Do not continue to Pro analysis, refinement, review, or implementation until the memo has its exact Deep Research Completion Stamp. All material findings must be applied or dispositioned, and the memo must end with `evidence_bar_met: yes`. Keep repairing an incomplete pass. Stop only for unavailable web access, unsafe context exposure, a required user decision, or when the user explicitly drops `--deep-research`.
 
-With `--pro-analysis`, use `skills/shared/references/analysis/pro-browser-analysis.md`. Write `tasks/tmp/pro-analysis-<plan-key>.md`, verify and disposition the findings, apply adopted findings to the plan, and print a short `Pro Findings Summary`. A degraded or incomplete pass is diagnostic only. Do not refine, review, or implement until the required browser evidence and synthesis fields are complete and the memo ends with `pro_synthesis_complete: yes`, unless the user explicitly drops `--pro-analysis`.
+With `--pro-analysis`, use `skills/shared/references/analysis/pro-browser-analysis.md`. Write `tasks/tmp/pro-analysis-<plan-key>.md`, verify and disposition the findings, apply adopted findings to the plan and linked implementation notes as appropriate, and print a short `Pro Findings Summary`. A degraded or incomplete pass is diagnostic only. Do not refine, review, or implement until the required browser evidence and synthesis fields are complete and the memo ends with `pro_synthesis_complete: yes`, unless the user explicitly drops `--pro-analysis`.
 
 ### 5. Refine And Get Approval
 
 Run at least one refinement round. Use a fresh reviewer subagent by default when subagents are available. The reviewer checks missing scope, vague items, order, duplicates, oversized work, hidden dependencies, contradictions, unclear next steps, and meta-planning placeholders. Keep the plan in dependency order without turning it into a per-file script.
 
-Every refinement round must apply the Plain-Language Review in `skills/deliver/references/plan-format.md` to the whole plan, including additions from research or other reviews. Difficulty understanding the plan is a material issue. Fix it and rereview before requesting approval or starting `--fast` implementation; a short chat summary does not substitute for a readable plan.
+Every refinement round must apply the Plain-Language Review in `skills/deliver/references/plan-format.md` to the whole plan, including its cut pass and additions from research or other reviews. Difficulty understanding the plan is a material issue. Unnecessary length is also a material issue. Fix it and rereview before requesting approval or starting `--fast` implementation; a short chat summary does not substitute for a readable plan.
 
-When a round finds a material issue or changes the plan, edit only the plan and run a full post-edit round. Do not create a separate refinement artifact. Stop when a round finds no material scope, execution, or readability issue or after 8 rounds. At the limit, show the exact unresolved blocker and do not implement.
+Give each refinement reviewer the plan and its linked implementation notes. When a round finds a material issue or changes either document, edit only those planning artifacts and run a full post-edit round. Do not create a separate refinement log. Stop when a round finds no material scope, execution, or readability issue or after 8 rounds. At the limit, show the exact unresolved blocker and do not implement.
 
 Normal mode: link `tasks/execution-plan-<plan-key>.md` and ask the user to review it directly. Ask them to say `implement the doc` when it is right or explain what is wrong, missing, or out of order. Do not launch a review app or external viewer.
 
-If the user asks for an adversarial plan review, route it through `$review-plan`. It may improve only the plan and must return here without starting implementation.
+If the user asks for an adversarial plan review, route it through `$review-plan`. It may improve only the plan and its task-specific implementation notes within that skill's edit boundaries, and must return here without starting implementation.
 
 In `--fast` mode, mention that the first review pause was skipped and continue to implementation. Still stop for:
 
@@ -139,6 +142,8 @@ In `--fast` mode, mention that the first review pause was skipped and continue t
 ### 6. Implement The Whole Plan
 
 Start only from the canonical approved execution plan. Choose the next unchecked item in file order unless evidence makes another order clearly better; update the plan before changing order.
+
+Read the relevant linked implementation notes before implementing each item and include their path and section references in its worker packet. Update findings when implementation disproves them, keeping scope changes and unresolved decisions in the plan.
 
 Before editing, identify repo-local implementation and validation patterns. Use a private active-step note only when helpful. For each non-trivial item, create the packet from `skills/deliver/references/worker-packet.md` and assign one worker by default when workers are available. Never run implementation workers in parallel. Only read-only discovery or review lanes, such as `$repo-sweep --swarm`, may run in parallel. The orchestrator implements directly only when workers are unavailable. Do not mention whether reviewers or workers were used unless it creates a real blocker or residual risk.
 
@@ -179,9 +184,10 @@ After final-review findings are dispositioned and required repairs are verified:
 
 1. Move `tasks/execution-plan-<plan-key>.md` to `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`.
 2. If `tasks/ui-mockup-<plan-key>.html` exists, move it into the same directory as `ui-mockup-<plan-key>.html` so its relative link still works.
-3. Leave the archived plan readable. Do not turn it into an audit log.
-4. Remove disposable active-step files unless a blocker still needs them. Remove `tasks/tmp/review-plan-<plan-key>.md` after a completed `$review-plan` with no unresolved risk unless the user requested preserved artifacts.
-5. Commit the archive move and every final-review, checklist, cleanup, implementation, or validation edit before handoff.
+3. Move `tasks/implementation-notes-<plan-key>.md`, when present, into the same archive directory. Keep existing authoritative guides in place. Repair relative links affected by the move, including backlinks, and verify that the archived plan's implementation references still resolve.
+4. Leave the archived plan readable. Do not turn it into an audit log.
+5. Remove disposable active-step files unless a blocker still needs them. Remove `tasks/tmp/review-plan-<plan-key>.md` after a completed `$review-plan` with no unresolved risk unless the user requested preserved artifacts. Preserve linked implementation notes when cleaning up temporary research or Pro memos.
+6. Commit the archive move and every final-review, checklist, cleanup, implementation, or validation edit before handoff.
 
 Do not archive `tasks/goal-plan-<plan-key>.md` unless the user explicitly converts it into a normal execution plan.
 
