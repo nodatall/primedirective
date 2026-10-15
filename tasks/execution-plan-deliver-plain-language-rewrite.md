@@ -2,6 +2,8 @@
 
 Goal: Make the Deliver skill much easier for people and agents to understand while preserving its behavior except for removals the user explicitly approves during wording review.
 
+Status: Historical plan. On October 15, 2026, the user retired the unfinished v12 comparison and its comparison-dependent closeout requirements so this branch can ship. The remaining unchecked items are preserved as incomplete historical work; they are no longer an active execution mandate. Normal repository validation and required PR checks still apply. See the [evaluation retirement record](skill-review-deliver-plain-language-v12.md#requirement-retirement).
+
 Please review this before I start.
 Tell me what is wrong, missing, or out of order.
 

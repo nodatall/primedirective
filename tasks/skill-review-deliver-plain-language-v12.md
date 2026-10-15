@@ -11,8 +11,14 @@ Invocation: `$skill-review skill=deliver scenario=deliver-plain-language-v12 bas
 - Scenario: frozen comprehension packet plus unchanged `retry-failed` and `preflight-remediation-holdout` behavior lanes
 - Runner: bundled Codex, `gpt-5.6-sol`, `xhigh`
 - Preserved artifact root: `agent-scratch/skill-review/deliver-plain-language-v12/`
-- Verdict: pending official arms and three frozen v12 judge lanes
-- Merge readiness: blocked until the complete v12 comparison finishes
+- Verdict: inconclusive; official arms and three frozen v12 judge lanes were not run
+- Merge readiness: the v12 comparison requirement was retired by the user on October 15, 2026; normal validation and required PR checks still apply
+
+## Requirement Retirement
+
+The user explicitly retired the v12 evaluation requirement on October 15, 2026 and authorized continuing the branch shipment. The unfinished comparison no longer blocks merging. Its pending checkboxes, frozen transition rules, and completion stamp below remain historical records of an incomplete evaluation, not a passing result.
+
+No evaluator, scoring, isolation, or readiness controls were changed. This record does not claim that the candidate passed the v12 comparison.
 
 ## Frozen Public Identities
 
