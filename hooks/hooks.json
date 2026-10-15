@@ -1,0 +1,52 @@
+{
+  "description": "Runtime guardrails for full Clarifier passes.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/hooks/clarifier_dispatch_gate.py\"",
+            "timeout": 3,
+            "statusMessage": "Preparing Clarifier revision"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(Agent|exec|multi_agent_v1__spawn_agent|collaboration(?:\\.|__)spawn_agent)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/hooks/clarifier_dispatch_gate.py\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/hooks/clarifier_dispatch_gate.py\"",
+            "timeout": 3,
+            "statusMessage": "Checking Clarifier revision"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/hooks/clarifier_dispatch_gate.py\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

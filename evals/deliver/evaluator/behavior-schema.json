@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "arm_binding": {
+      "additionalProperties": false,
+      "properties": {
+        "arm_name": {"enum": ["retry-failed-baseline", "retry-failed-candidate", "preflight-remediation-holdout-baseline", "preflight-remediation-holdout-candidate"]},
+        "terminal_seal_sha256": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
+      },
+      "required": ["arm_name", "terminal_seal_sha256"],
+      "type": "object"
+    },
+    "comparison_binding": {"$ref": "comparison-artifacts-schema.json#/$defs/comparisonBinding"},
+    "behavior": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation_additions": {"minimum": 0, "type": "integer"},
+        "implementation_deletions": {"minimum": 0, "type": "integer"},
+        "implementation_diff": {"type": "string"},
+        "probe_results": {"items": {"$ref": "evidence-records-schema.json#/$defs/probe"}, "type": "array"},
+        "review_actions": {"items": {"$ref": "evidence-records-schema.json#/$defs/review"}, "type": "array"},
+        "review_rounds": {"items": {"$ref": "evidence-records-schema.json#/$defs/round"}, "minItems": 1, "type": "array"},
+        "test_additions": {"minimum": 0, "type": "integer"},
+        "test_diff": {"type": "string"}
+      },
+      "required": ["implementation_diff", "test_diff", "implementation_additions", "implementation_deletions", "test_additions", "probe_results", "review_actions", "review_rounds"],
+      "type": "object"
+    },
+    "measurements": {
+      "additionalProperties": false,
+      "properties": {
+        "full_review_rounds": {"minimum": 0, "type": "integer"},
+        "targeted_rereviews": {"minimum": 0, "type": "integer"},
+        "test_count": {"minimum": 0, "type": "integer"},
+        "test_size_lines": {"minimum": 0, "type": "integer"},
+        "wall_time_seconds": {"minimum": 2, "type": "integer"}
+      },
+      "required": ["test_count", "test_size_lines", "full_review_rounds", "targeted_rereviews", "wall_time_seconds"],
+      "type": "object"
+    },
+    "scenario_id": {"enum": ["retry-failed", "preflight-remediation-holdout"]},
+    "schema_version": {"const": 1},
+    "snapshots": {
+      "additionalProperties": false,
+      "properties": {
+        "post_remediation": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
+      },
+      "required": ["pre_packet", "post_remediation"],
+      "type": "object"
+    },
+    "source_hashes": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation_diff": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_manifest": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_metadata": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_profile": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_prompt": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_snapshot": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_stderr": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_trace": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "pre_packet_validation": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "probe_results": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_manifest": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_metadata": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_profile": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_prompt": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_stderr": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "remediation_trace": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "review_log": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "review_rounds": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "run_record": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "runner_preflight": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "test_diff": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
+      },
+      "required": ["implementation_diff", "test_diff", "probe_results", "review_log", "review_rounds", "run_record", "runner_preflight", "pre_packet_snapshot", "pre_packet_validation", "pre_packet_trace", "pre_packet_stderr", "pre_packet_metadata", "pre_packet_prompt", "pre_packet_manifest", "pre_packet_profile", "remediation_trace", "remediation_stderr", "remediation_metadata", "remediation_prompt", "remediation_manifest", "remediation_profile"],
+      "type": "object"
+    },
+    "upstream_sha256s": {
+      "additionalProperties": false,
+      "properties": {
+        "output_freeze": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "terminal_seal": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
+      },
+      "required": ["output_freeze", "terminal_seal"],
+      "type": "object"
+    }
+  },
+  "required": ["schema_version", "comparison_binding", "arm_binding", "scenario_id", "snapshots", "behavior", "measurements", "source_hashes", "upstream_sha256s"],
+  "type": "object"
+}

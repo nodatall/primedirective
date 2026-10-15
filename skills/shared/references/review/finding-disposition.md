@@ -38,6 +38,32 @@ Do not use this schema as ceremony for trivial notes. Apply it to material findi
 
 `no action` means the sweep investigated the concern and intentionally decided it is not a problem, not reachable, already guarded, duplicated by a stronger control, or out of scope.
 
+## Deliver Test Value
+
+This section applies only to new or changed tests proposed during `$deliver` implementation or authorized final-review remediation. It does not add fields or test-persistence requirements to `$review-chain`, `$merge-review`, `$repo-sweep`, planning refinement, or any other consumer.
+
+Before any new or changed Deliver test is kept as permanent coverage, classify it as `test_disposition: permanent | table_case | probe_only | no_test` using the criteria below. During implementation, record the decision and concise evidence-backed rationale with the existing active-step verification evidence; do not create a separate artifact. During final-review remediation, record it on each material `fix` finding, and on an investigated `no action` concern when the test choice matters.
+
+Choose `permanent` or `table_case` only when the proposed coverage:
+
+- exercises a supported path that is reachable in normal use or through an explicitly supported boundary
+- protects a material behavior tied to the explicit contract or credible harm
+- is uniquely uncovered rather than already protected by stronger existing coverage
+- is deterministic enough to be a reliable regression signal
+- is stable across supported environments
+- is economical to understand and maintain relative to the protection it adds
+
+Use the dispositions as follows:
+
+- `permanent`: keep one durable standalone regression when the criteria above hold and the behavior does not belong in an existing coherent case group. A uniquely uncovered material semantic invariant stays standalone unless it shares the same supported boundary, expected result, and failure mechanism with that group. Ordering or chronology that determines an irreversible selection is one example of such an invariant, not an automatic keyword rule.
+- `table_case`: add the case to the smallest coherent table-driven test only when related inputs share the same supported boundary, expected result, and failure mechanism. Consolidate related cases instead of preserving one test per discovery, and do not keep duplicate permanent coverage.
+- `probe_only`: preserve useful one-run reproduction or verification under `agent-scratch/` when it proves the repair but would not add economical durable protection. An exact extreme-depth, extreme-size, recursion-limit, interpreter-limit, or resource-limit trigger defaults to `probe_only` even when the reproduction is deterministic; determinism alone does not make the pathological trigger valuable permanent coverage. The default applies to the exact pathological trigger, not to a distinct stable and economical semantic or safety boundary whose explicit contract or credible-harm value is uniquely uncovered. In that case, protect the boundary with the smallest supported-path permanent or table-driven case, and do not also keep the pathological trigger as duplicate permanent coverage.
+- `no_test`: add no new test when stronger coverage already proves the boundary or permanent reproduction would add no durable protection. Record the existing evidence or the reason reproduction has no lasting value.
+
+When working in a disposable or historical fixture that has no established permanent test path, keep supplied shell checks and one-run reproductions as `probe_only`. Do not invent a permanent test harness only to retain them.
+
+Every implementation change and repaired finding still requires recorded verification evidence, regardless of test disposition. A fix may proceed without a permanent test. `test_disposition` is independent of `Disposition`: it never weakens `Disposition: fix`. Every verified, in-scope defect that is safe to repair remains a required fix even when its proof is `probe_only` or `no_test`.
+
 ## Looks Bad But Is Fine
 
 Use a short `Looks bad but is fine` section when a repo contains patterns that are easy for future reviewers to misclassify.

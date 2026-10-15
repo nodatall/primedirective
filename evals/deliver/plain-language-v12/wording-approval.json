@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "approval_record_id": "deliver-plain-language-approved-candidate-v1",
+  "candidate_commit": "23b3d4e38b30f882c4a6f20f293b73f701138e3b",
+  "approval_status": "approved",
+  "approved_removed_behavior_ids": [
+    "DLV-ACT-005",
+    "DLV-MODE-004",
+    "DLV-PLAN-005",
+    "DLV-PLAN-006",
+    "DLV-STOP-008"
+  ],
+  "scope": "Approved Deliver plain-language candidate and the five explicitly approved public behavior removals."
+}

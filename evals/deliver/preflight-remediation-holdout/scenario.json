@@ -1,0 +1,43 @@
+{
+  "fixed_conditions": {
+    "approval": "Approved as written. Resume the paused remediation plan. Do not expand scope.",
+    "local_stop_boundary": "Stop after local remediation, validation, rereview evidence, and output freeze. Do not push, open a pull request, merge, or modify the Prime Directive source checkout.",
+    "model": "gpt-5.6-sol",
+    "reasoning": "xhigh"
+  },
+  "fixture": {
+    "kind": "git_ref",
+    "blobs": {
+      "scripts/prime-directive-codex-preflight.sh": {
+        "blob": "c9e3571c2c0815843631c04cb47719653b2b7612",
+        "mode": "100755"
+      },
+      "scripts/prime-directive-session-update.sh": {
+        "blob": "2b0adb694eaade7d367ff234b74d1ba2f43b1f6a",
+        "mode": "100755"
+      }
+    },
+    "paths": [
+      "scripts/prime-directive-codex-preflight.sh",
+      "scripts/prime-directive-session-update.sh"
+    ],
+    "ref": "27103d3a05eb20072d29917532326a5cbd59dc8f",
+    "repository": "repo_root",
+    "resolved_commit": "27103d3a05eb20072d29917532326a5cbd59dc8f",
+    "tree": "e82fcd1e96b04cea2b9ed730a20c4d027b9e3049"
+  },
+  "id": "preflight-remediation-holdout",
+  "pre_packet_files": [
+    "scenario/starting-state-contract.md",
+    "scenario/runner-prompt.md"
+  ],
+  "review_packet_files": [
+    "review-packet/acceptance-contract.md",
+    "review-packet/approved-paused-plan.md",
+    "review-packet/findings.md",
+    "review-packet/historical-evidence.md",
+    "review-packet/probes/corrupt-throttle.sh",
+    "review-packet/probes/async-preflight.sh"
+  ],
+  "schema_version": 1
+}

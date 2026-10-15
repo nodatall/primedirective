@@ -1,0 +1,700 @@
+{
+  "schema_version": 29,
+  "oracle_version": "deliver-plain-language-v12.34",
+  "description": "Public no-choice structured comprehension vocabulary and response schema.",
+  "set_semantics": "All four array fields are unordered unique atomic sets. Empty sets are allowed only when the case requires no atom in that field.",
+  "global_vocabulary": {
+    "next_action": [
+      {
+        "code": "NX-06CF22",
+        "operational_meaning": "Enter final appraisal and closeout after the last construction item is proven."
+      },
+      {
+        "code": "NX-0B4176",
+        "operational_meaning": "Produce the terminal handoff strictly from post-gate evidence, including archive, commits, proof, appraisal, risks, and repository state."
+      },
+      {
+        "code": "NX-1861B4",
+        "operational_meaning": "Mark the completed item and revise later ordering or scope when new evidence changes the best path."
+      },
+      {
+        "code": "NX-278AE6",
+        "operational_meaning": "Maintain a preliminary discussion ledger; do not enter construction."
+      },
+      {
+        "code": "NX-29154C",
+        "operational_meaning": "Perform every missing closeout gate; if one truly fails, report that exact gate and required user action."
+      },
+      {
+        "code": "NX-2EC015",
+        "operational_meaning": "Repair each authorized in-scope fix finding, rerun relevant proof, and repeat fresh derived-scope appraisal to closure."
+      },
+      {
+        "code": "NX-420BE3",
+        "operational_meaning": "Continue the sanctioned canonical ledger at its earliest pending implementation item."
+      },
+      {
+        "code": "NX-46D46A",
+        "operational_meaning": "Relocate the readable execution ledger into its dated permanent directory only after final appraisal closes."
+      },
+      {
+        "code": "NX-483D00",
+        "operational_meaning": "Reopen the entire ledger and resume the discovered pending in-scope item."
+      },
+      {
+        "code": "NX-4A00D9",
+        "operational_meaning": "Assign the single bounded construction unit to one worker; use direct execution only if none is available."
+      },
+      {
+        "code": "NX-4B987B",
+        "operational_meaning": "Create an appropriately named feature revision before producing durable material."
+      },
+      {
+        "code": "NX-51E338",
+        "operational_meaning": "Inspect repository state and suspend before writing if unrelated edits intersect the intended surface."
+      },
+      {
+        "code": "NX-570B38",
+        "operational_meaning": "Complete enabled auxiliary passes and refinement, then present the ledger for human acceptance."
+      },
+      {
+        "code": "NX-625350",
+        "operational_meaning": "Commit the permanent move together with all remaining appraisal, cleanup, construction, and proof edits."
+      },
+      {
+        "code": "NX-6833FB",
+        "operational_meaning": "Rescan the entire sanctioned ledger and immediately take its earliest pending item."
+      },
+      {
+        "code": "NX-6D06E7",
+        "operational_meaning": "Perform the earliest pending stage in the prescribed end-to-end sequence."
+      },
+      {
+        "code": "NX-72ACEF",
+        "operational_meaning": "Use the normal visible Chrome ChatGPT Pro surface with curated safe repository context."
+      },
+      {
+        "code": "NX-769748",
+        "operational_meaning": "Run the protocol-derived targeted or full repair appraisal after authorized fixes."
+      },
+      {
+        "code": "NX-79D67B",
+        "operational_meaning": "Run another fresh whole-ledger refinement pass after every material edit until one pass is clean."
+      },
+      {
+        "code": "NX-8BB9F9",
+        "operational_meaning": "Revise the existing preliminary ledger and remain in discussion state."
+      },
+      {
+        "code": "NX-941F74",
+        "operational_meaning": "Execute every required prompt sequentially in one uninterrupted round while the main agent owns disposition and repairs."
+      },
+      {
+        "code": "NX-95D286",
+        "operational_meaning": "Run finalization immediately before any terminal-sounding response."
+      },
+      {
+        "code": "NX-9C9352",
+        "operational_meaning": "Delete the withdrawn scope and retain only a brief safeguard against accidental reintroduction when useful."
+      },
+      {
+        "code": "NX-9DB661",
+        "operational_meaning": "Perform local reconnaissance plus live web investigation, persist the memo, apply adopted findings, and summarize."
+      },
+      {
+        "code": "NX-A7FD3E",
+        "operational_meaning": "Load architectural guidance and maintain the repository boundary document when the change affects ownership."
+      },
+      {
+        "code": "NX-B022F8",
+        "operational_meaning": "Keep the permanent ledger readable and remove disposable step or risk-free appraisal material when allowed."
+      },
+      {
+        "code": "NX-B46A2F",
+        "operational_meaning": "Invoke the bounded adversarial appraisal and return without constructing anything."
+      },
+      {
+        "code": "NX-BB6400",
+        "operational_meaning": "Inspect local construction and proof conventions, then prepare a bounded packet for substantial work."
+      },
+      {
+        "code": "NX-C711E2",
+        "operational_meaning": "Apply deep-research results first, Pro-analysis results second, and refine afterward."
+      },
+      {
+        "code": "NX-D3FE7A",
+        "operational_meaning": "State competing explanations and run the smallest deterministic discriminator before choosing a repair."
+      },
+      {
+        "code": "NX-D41819",
+        "operational_meaning": "Run one fresh whole-diff final appraisal using the execution ledger as scope."
+      },
+      {
+        "code": "NX-D5D066",
+        "operational_meaning": "Commit the useful bounded result without absorbing unrelated edits or creating an empty commit."
+      },
+      {
+        "code": "NX-DD12A4",
+        "operational_meaning": "Enter Deliver processing even though the request omitted a slash-style invocation."
+      },
+      {
+        "code": "NX-E76EBC",
+        "operational_meaning": "Classify the failure layer, then gather the smallest discriminating observation before another patch."
+      },
+      {
+        "code": "NX-EAB2DC",
+        "operational_meaning": "Transcribe the fixed outside scope into the canonical ledger, then execute from that ledger."
+      },
+      {
+        "code": "NX-F707BF",
+        "operational_meaning": "Retain the currently checked-out non-base revision line."
+      },
+      {
+        "code": "NX-22CF3A",
+        "operational_meaning": "Do not enter or preserve retired draft-discussion behavior; continue through a currently supported planning or execution route."
+      }
+    ],
+    "required_artifact": [
+      {
+        "code": "AR-149292",
+        "operational_meaning": "Capture the initial repository-change baseline used by the terminal gate."
+      },
+      {
+        "code": "AR-20DB1D",
+        "operational_meaning": "Produce and validate the structured correction-boundary artifact."
+      },
+      {
+        "code": "AR-374FAA",
+        "operational_meaning": "Produce the adaptive-loop launch specification with entry criteria, exit criteria, and invocation."
+      },
+      {
+        "code": "AR-7002DD",
+        "operational_meaning": "Relocate the legible execution ledger into its timestamped permanent directory."
+      },
+      {
+        "code": "AR-7EFEE5",
+        "operational_meaning": "Relocate the visual-intent prototype beside the stored ledger under its stable filename."
+      },
+      {
+        "code": "AR-8FEF49",
+        "operational_meaning": "Persist the governing execution ledger in its prescribed Markdown location."
+      },
+      {
+        "code": "AR-A57750",
+        "operational_meaning": "Persist the external-research dossier ending with the prescribed substantiation declaration."
+      },
+      {
+        "code": "AR-AB9809",
+        "operational_meaning": "Persist the premium-analysis reconciliation ledger before plan cleanup."
+      },
+      {
+        "code": "AR-B2CC8C",
+        "operational_meaning": "Persist the terminal appraisal journal through the finish gate."
+      },
+      {
+        "code": "AR-F9CD19",
+        "operational_meaning": "Persist the contained implementation brief for the current item."
+      },
+      {
+        "code": "AR-FAA5BC",
+        "operational_meaning": "Persist the lightweight standalone visual-intent prototype."
+      },
+      {
+        "code": "AR-4D330C",
+        "operational_meaning": "Create no draft-only plan artifact or notice; use the normal canonical execution-plan artifact when the supported workflow calls for one."
+      }
+    ],
+    "required_check": [
+      {
+        "code": "CK-07D3A9",
+        "operational_meaning": "Confirm the refined ledger has shallow phases, its execution notice, and a direct acceptance request."
+      },
+      {
+        "code": "CK-0E2879",
+        "operational_meaning": "Choose no-test when stronger lasting coverage already protects the same boundary."
+      },
+      {
+        "code": "CK-1030B5",
+        "operational_meaning": "Accept a fixed remediation packet only with unchanged-diff provenance, complete profile, fresh critic, and authorized boundary."
+      },
+      {
+        "code": "CK-103594",
+        "operational_meaning": "Require the repair record validator before starting and again before completing the repair appraisal."
+      },
+      {
+        "code": "CK-14CFE8",
+        "operational_meaning": "Require a linked lightweight visual-intent prototype before acceptance of frontend scope."
+      },
+      {
+        "code": "CK-15B3E0",
+        "operational_meaning": "Use ordinary planning when decisive evidence is costly, scheduled, permission-gated, or nonrepeatable."
+      },
+      {
+        "code": "CK-178448",
+        "operational_meaning": "Exercise the changed rendered surface in its real interface and preserve visual evidence."
+      },
+      {
+        "code": "CK-192DE0",
+        "operational_meaning": "Require a fresh critic to challenge scope, order, dependencies, duplication, ambiguity, and oversized slices."
+      },
+      {
+        "code": "CK-1AA276",
+        "operational_meaning": "Compare current repository status with the saved initial dirty-state snapshot and reject new uncommitted run work."
+      },
+      {
+        "code": "CK-1DD757",
+        "operational_meaning": "Confirm the preliminary ledger has its required notice, request for inspection, and checklist form."
+      },
+      {
+        "code": "CK-20EA08",
+        "operational_meaning": "Require the worker packet to state boundary, context, proof, UI need, test disposition, no-commit rule, and return evidence."
+      },
+      {
+        "code": "CK-3712BC",
+        "operational_meaning": "Require a complete round log, every applicable prompt, resolved material items, quality check, and passing or justified tests."
+      },
+      {
+        "code": "CK-3A12B6",
+        "operational_meaning": "Escalate repair appraisal to full when architecture, trust, concurrency, isolation, contract, security, or data risk demands it."
+      },
+      {
+        "code": "CK-3A30FD",
+        "operational_meaning": "Run the narrow proof that directly substantiates the completed bounded item."
+      },
+      {
+        "code": "CK-3B0D23",
+        "operational_meaning": "Choose a table case when related inputs share boundary, expected result, and failure mechanism."
+      },
+      {
+        "code": "CK-49F665",
+        "operational_meaning": "Keep the ledger high-level and put item-level mechanics in the bounded step packet."
+      },
+      {
+        "code": "CK-4BEA8E",
+        "operational_meaning": "Confirm every Deliver deliverable uses its prescribed repository location."
+      },
+      {
+        "code": "CK-5932BC",
+        "operational_meaning": "Classify artificial depth, size, recursion, interpreter, or resource-limit reproduction as probe-only by default."
+      },
+      {
+        "code": "CK-5D6729",
+        "operational_meaning": "Require targeted repair scope to include finding IDs, diff boundary, adjacent callers, prompts, reruns, and fresh closure."
+      },
+      {
+        "code": "CK-5E297B",
+        "operational_meaning": "Assign and record one permanent, table-case, probe-only, or no-test disposition with evidence."
+      },
+      {
+        "code": "CK-5F739E",
+        "operational_meaning": "Reduce the preliminary ledger to short phases, shallow boxes, and useful unresolved questions."
+      },
+      {
+        "code": "CK-641B3A",
+        "operational_meaning": "Record evidence-tied agent-loop process findings without letting process commentary independently block completion."
+      },
+      {
+        "code": "CK-660613",
+        "operational_meaning": "Exercise accepted-looking parser inputs against downstream grammar, including malformed and base-sensitive numeric states."
+      },
+      {
+        "code": "CK-6DA7EC",
+        "operational_meaning": "Choose a standalone lasting regression for one uniquely uncovered supported boundary."
+      },
+      {
+        "code": "CK-73CB45",
+        "operational_meaning": "Keep chosen outcomes and constraints while removing justification prose, nesting, and deferred meta-work."
+      },
+      {
+        "code": "CK-7C2682",
+        "operational_meaning": "Maintain one readable execution ledger instead of the retired multi-document planning stack."
+      },
+      {
+        "code": "CK-86CC84",
+        "operational_meaning": "Use the short Codex profile for GPT-family critics and the full profile for other critics."
+      },
+      {
+        "code": "CK-8867CA",
+        "operational_meaning": "Use adaptive-goal form only for a repeatable inspect-change-measure loop with a meaningful comparator."
+      },
+      {
+        "code": "CK-90A200",
+        "operational_meaning": "Require a complete final-appraisal log with no unresolved unchecked or material item before terminal handoff."
+      },
+      {
+        "code": "CK-9649C7",
+        "operational_meaning": "Require real-state visual and interaction evidence across changed screens, states, breakpoints, controls, and accessibility."
+      },
+      {
+        "code": "CK-97AF6F",
+        "operational_meaning": "Challenge bugs, smaller deltas, and falsifiers, then rebut the findings before declaring clean."
+      },
+      {
+        "code": "CK-982889",
+        "operational_meaning": "Audit failure handling, secrets, destructive safeguards, rollback, performance, dependencies, security, monitoring, and go-live risk."
+      },
+      {
+        "code": "CK-9AB174",
+        "operational_meaning": "Omit routine status, result, commit, and transcript bookkeeping from the ledger."
+      },
+      {
+        "code": "CK-9D7D0E",
+        "operational_meaning": "Require every material finding to carry the complete severity, gate, disposition, evidence, impact, and fix shape."
+      },
+      {
+        "code": "CK-9FEA15",
+        "operational_meaning": "Validate effect vocabulary, contract-change flag consistency, uncertainty isolation, and derived scope."
+      },
+      {
+        "code": "CK-A0D58B",
+        "operational_meaning": "Exercise readiness completion, simultaneous waiters, ownership loss, stale recovery, and foreground defaults."
+      },
+      {
+        "code": "CK-A58E37",
+        "operational_meaning": "Match reasoning effort to role: strongest for research/blockers, strong for judgment/coding, standard for mechanics."
+      },
+      {
+        "code": "CK-B04ACE",
+        "operational_meaning": "Keep a disposable historical-fixture reproduction as a one-run probe without inventing a harness."
+      },
+      {
+        "code": "CK-B4C525",
+        "operational_meaning": "Require executed end-to-end proof of the original outcome plus explicit assumptions, skips, risks, and destructive-path safety."
+      },
+      {
+        "code": "CK-B75D74",
+        "operational_meaning": "Classify UI and production-readiness prompts from the changed surfaces, with reasons for non-applicability."
+      },
+      {
+        "code": "CK-C0E129",
+        "operational_meaning": "Derive the ledger from supplied material after inspecting repository-specific constraints."
+      },
+      {
+        "code": "CK-C3D21F",
+        "operational_meaning": "Verify and repair an in-scope defect independently of whether its reproduction becomes lasting coverage."
+      },
+      {
+        "code": "CK-CA21C2",
+        "operational_meaning": "Require main-point-first, short, concrete, full-sentence language with only decision-relevant detail."
+      },
+      {
+        "code": "CK-DB8B28",
+        "operational_meaning": "Consult the design guide and surface the unresolved product choice instead of inventing it."
+      },
+      {
+        "code": "CK-DBBC1C",
+        "operational_meaning": "Confirm the coordinator retains selection, integration, proof judgment, ledger updates, and commits."
+      },
+      {
+        "code": "CK-EA003A",
+        "operational_meaning": "Reject the invocation because its modifier set falls outside the supported trio."
+      },
+      {
+        "code": "CK-EF7D1E",
+        "operational_meaning": "Keep lasting coverage only when it is supported, material, unique, deterministic, stable, and economical."
+      },
+      {
+        "code": "CK-4F2A81",
+        "operational_meaning": "Confirm the retired draft-discussion mode, legacy discuss alias, draft-only plan shape, and draft-only stop boundary are absent."
+      }
+    ],
+    "stop_condition": [
+      {
+        "code": "ST-163612",
+        "operational_meaning": "Continue repairing incomplete web investigation; suspend only for unavailable access, unsafe exposure, a required decision, or explicit removal."
+      },
+      {
+        "code": "ST-24EAE8",
+        "operational_meaning": "Hold closing appraisal when required environment or interaction evidence cannot be obtained."
+      },
+      {
+        "code": "ST-3211A9",
+        "operational_meaning": "Suspend after the eighth refinement round if any material planning defect remains."
+      },
+      {
+        "code": "ST-4C7281",
+        "operational_meaning": "Suspend with a brief link after updating the preliminary discussion ledger; await an explicit refine or execute request."
+      },
+      {
+        "code": "ST-59429A",
+        "operational_meaning": "Suspend with the genuine final-appraisal blocker and make no completion claim."
+      },
+      {
+        "code": "ST-72D661",
+        "operational_meaning": "Hold for sponsor direction when the unresolved product choice changes the route."
+      },
+      {
+        "code": "ST-7572BE",
+        "operational_meaning": "Rescan the entire sanctioned ledger and immediately take its earliest pending item."
+      },
+      {
+        "code": "ST-7AE22A",
+        "operational_meaning": "Suspend accelerated execution at any unsafe, irreversible, unavailable, ambiguous, incomplete, or approval-gated boundary."
+      },
+      {
+        "code": "ST-7AE72D",
+        "operational_meaning": "Hold closing appraisal while a material security or release-safety risk remains unresolved."
+      },
+      {
+        "code": "ST-AC8094",
+        "operational_meaning": "Hold closing appraisal while required end-to-end verification remains blocked."
+      },
+      {
+        "code": "ST-AD03D8",
+        "operational_meaning": "Suspend for a human repair decision and preserve residual risk for the terminal handoff."
+      },
+      {
+        "code": "ST-B5D8FD",
+        "operational_meaning": "Suspend transmission and request direction when the proposed context is unsafe or excessively broad."
+      },
+      {
+        "code": "ST-BB29E7",
+        "operational_meaning": "Suspend and request direction when no named revision is attached or unrelated edits cannot travel safely."
+      },
+      {
+        "code": "ST-C891DE",
+        "operational_meaning": "Suspend active construction only for a required decision, unavailable dependency, unsafe action, material contradiction, or proof blocker."
+      },
+      {
+        "code": "ST-CD3C1D",
+        "operational_meaning": "Block refinement while Pro analysis is degraded or incomplete unless the requester explicitly removes that gate."
+      },
+      {
+        "code": "ST-F4A943",
+        "operational_meaning": "Suspend after producing the adaptive goal document and launch prompt until the requester explicitly starts goal mode."
+      },
+      {
+        "code": "ST-FED3A4",
+        "operational_meaning": "Do not put an adaptive-goal document through ordinary Deliver closeout without explicit conversion."
+      },
+      {
+        "code": "ST-6AB2E0",
+        "operational_meaning": "Do not stop at the retired draft-discussion boundary; stop only at a current normal blocker or approval boundary."
+      }
+    ],
+    "user_approval": [
+      {
+        "code": "AP-0622CC",
+        "operational_meaning": "No new user approval is required at this workflow moment."
+      },
+      {
+        "code": "AP-70E8A0",
+        "operational_meaning": "Do not perform the unsafe or destructive action without explicit approval."
+      },
+      {
+        "code": "AP-C05662",
+        "operational_meaning": "Existing approval of the fixed plan or packet authorizes the bounded next step."
+      },
+      {
+        "code": "AP-C65668",
+        "operational_meaning": "Pause and request the user decision needed to choose a safe path."
+      }
+    ]
+  },
+  "prohibited_public_material": [
+    "case prompts",
+    "case codes",
+    "eligible per-case vocabulary",
+    "behavior mappings",
+    "expected answers",
+    "accepted alternatives"
+  ],
+  "per_arm_response_schema": {
+    "type": "array",
+    "minItems": 108,
+    "maxItems": 108,
+    "uniqueItems": true,
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_code",
+        "next_action",
+        "required_artifact",
+        "required_check",
+        "stop_condition",
+        "user_approval",
+        "rationale"
+      ],
+      "properties": {
+        "case_code": {
+          "type": "string",
+          "pattern": "^K-[A-F0-9]{8}$"
+        },
+        "next_action": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 37,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "NX-06CF22",
+              "NX-0B4176",
+              "NX-1861B4",
+              "NX-278AE6",
+              "NX-29154C",
+              "NX-2EC015",
+              "NX-420BE3",
+              "NX-46D46A",
+              "NX-483D00",
+              "NX-4A00D9",
+              "NX-4B987B",
+              "NX-51E338",
+              "NX-570B38",
+              "NX-625350",
+              "NX-6833FB",
+              "NX-6D06E7",
+              "NX-72ACEF",
+              "NX-769748",
+              "NX-79D67B",
+              "NX-8BB9F9",
+              "NX-941F74",
+              "NX-95D286",
+              "NX-9C9352",
+              "NX-9DB661",
+              "NX-A7FD3E",
+              "NX-B022F8",
+              "NX-B46A2F",
+              "NX-BB6400",
+              "NX-C711E2",
+              "NX-D3FE7A",
+              "NX-D41819",
+              "NX-D5D066",
+              "NX-DD12A4",
+              "NX-E76EBC",
+              "NX-EAB2DC",
+              "NX-F707BF",
+              "NX-22CF3A"
+            ]
+          }
+        },
+        "required_artifact": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "AR-149292",
+              "AR-20DB1D",
+              "AR-374FAA",
+              "AR-7002DD",
+              "AR-7EFEE5",
+              "AR-8FEF49",
+              "AR-A57750",
+              "AR-AB9809",
+              "AR-B2CC8C",
+              "AR-F9CD19",
+              "AR-FAA5BC",
+              "AR-4D330C"
+            ]
+          }
+        },
+        "required_check": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 48,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "CK-07D3A9",
+              "CK-0E2879",
+              "CK-1030B5",
+              "CK-103594",
+              "CK-14CFE8",
+              "CK-15B3E0",
+              "CK-178448",
+              "CK-192DE0",
+              "CK-1AA276",
+              "CK-1DD757",
+              "CK-20EA08",
+              "CK-3712BC",
+              "CK-3A12B6",
+              "CK-3A30FD",
+              "CK-3B0D23",
+              "CK-49F665",
+              "CK-4BEA8E",
+              "CK-5932BC",
+              "CK-5D6729",
+              "CK-5E297B",
+              "CK-5F739E",
+              "CK-641B3A",
+              "CK-660613",
+              "CK-6DA7EC",
+              "CK-73CB45",
+              "CK-7C2682",
+              "CK-86CC84",
+              "CK-8867CA",
+              "CK-90A200",
+              "CK-9649C7",
+              "CK-97AF6F",
+              "CK-982889",
+              "CK-9AB174",
+              "CK-9D7D0E",
+              "CK-9FEA15",
+              "CK-A0D58B",
+              "CK-A58E37",
+              "CK-B04ACE",
+              "CK-B4C525",
+              "CK-B75D74",
+              "CK-C0E129",
+              "CK-C3D21F",
+              "CK-CA21C2",
+              "CK-DB8B28",
+              "CK-DBBC1C",
+              "CK-EA003A",
+              "CK-EF7D1E",
+              "CK-4F2A81"
+            ]
+          }
+        },
+        "stop_condition": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 18,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "ST-163612",
+              "ST-24EAE8",
+              "ST-3211A9",
+              "ST-4C7281",
+              "ST-59429A",
+              "ST-72D661",
+              "ST-7572BE",
+              "ST-7AE22A",
+              "ST-7AE72D",
+              "ST-AC8094",
+              "ST-AD03D8",
+              "ST-B5D8FD",
+              "ST-BB29E7",
+              "ST-C891DE",
+              "ST-CD3C1D",
+              "ST-F4A943",
+              "ST-FED3A4",
+              "ST-6AB2E0"
+            ]
+          }
+        },
+        "user_approval": {
+          "type": "string",
+          "enum": [
+            "AP-0622CC",
+            "AP-70E8A0",
+            "AP-C05662",
+            "AP-C65668"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        }
+      }
+    }
+  }
+}

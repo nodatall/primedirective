@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "probe": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence_ref": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "exit_status": {"maximum": 255, "minimum": 0, "type": "integer"},
+        "id": {"enum": ["RF-001", "RF-002", "RF-003", "RF-004", "PF-001", "PF-002"]}
+      },
+      "required": ["id", "command", "exit_status", "evidence", "evidence_ref", "evidence_sha256"],
+      "type": "object"
+    },
+    "review": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence_ref": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "exit_status": {"maximum": 255, "minimum": 0, "type": "integer"},
+        "finding_id": {"enum": ["RF-001", "RF-002", "RF-003", "RF-004", "PF-001", "PF-002"]},
+        "rereview_scope": {"enum": ["targeted", "full", null]},
+        "test_disposition": {"enum": ["permanent", "table_case", "probe_only", "no_test"]}
+      },
+      "required": ["finding_id", "test_disposition", "rereview_scope", "command", "exit_status", "evidence", "evidence_ref", "evidence_sha256"],
+      "type": "object"
+    },
+    "round": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence_ref": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "evidence_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "exit_status": {"maximum": 255, "minimum": 0, "type": "integer"},
+        "reviewed_finding_ids": {
+          "items": {"enum": ["RF-001", "RF-002", "RF-003", "RF-004", "PF-001", "PF-002"]},
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "round_id": {"minLength": 1, "pattern": ".*\\S.*", "type": "string"},
+        "scope": {"enum": ["targeted", "full"]}
+      },
+      "required": ["round_id", "scope", "reviewed_finding_ids", "command", "exit_status", "evidence", "evidence_ref", "evidence_sha256"],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "probe_results": {"items": {"$ref": "#/$defs/probe"}, "type": "array", "uniqueItems": true},
+    "review_actions": {"items": {"$ref": "#/$defs/review"}, "type": "array", "uniqueItems": true},
+    "review_rounds": {"items": {"$ref": "#/$defs/round"}, "minItems": 1, "type": "array", "uniqueItems": true}
+  },
+  "required": ["probe_results", "review_actions", "review_rounds"],
+  "type": "object"
+}

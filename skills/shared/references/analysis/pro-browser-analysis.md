@@ -10,7 +10,7 @@ Do not use a third-party browser runner or private automation profile for Pro an
 2. Use the Chrome plugin/control surface to inspect and claim an already-open ChatGPT tab in the user's normal Chrome profile when available.
 3. If no ChatGPT tab is already open, use the same Chrome control surface to navigate a regular Chrome tab to ChatGPT.
 4. Fall back to Computer Use only when Chrome automation cannot reliably operate the visible regular Chrome UI.
-5. Select the Pro Extended model in the visible ChatGPT UI.
+5. Select and verify a qualifying Pro reasoning state in the visible ChatGPT UI. ChatGPT may expose this as a combined model label or as separate model and `Power` or effort controls.
 6. Paste or upload the context bundle, submit the prompt, wait for completion, and copy or scrape the answer.
 7. Save and synthesize the answer before any downstream planning, refinement, or execution continues.
 
@@ -22,15 +22,22 @@ If the first visible browser target is blank, `about:blank`, an empty new tab, o
 
 Do not introduce a private browser profile or package-managed browser runner. Do not use the in-app Browser plugin or standalone Playwright MCP surface as the Pro path; those can be logged out even when the user's normal Chrome session is logged in. A logged-out Browser or standalone Playwright ChatGPT page is diagnostic only and is not evidence that the user's regular Chrome ChatGPT tab is unavailable. A Pro browser run must be observable in the user's normal logged-in ChatGPT surface, with visible failure points such as model picker unavailable, composer unavailable, upload failed, no response completed, or answer copy failed.
 
-For any workflow invoked with `--pro-analysis`, a degraded fallback is not a completed Pro pass. If the run did not visibly use Pro Extended, if the answer was not read, or if the browser driver evidence cannot be recorded, the Pro synthesis may be saved for diagnostic value, but it must not set `pro_synthesis_complete: yes`.
+For any workflow invoked with `--pro-analysis`, a degraded fallback is not a completed Pro pass. If the run did not visibly use a qualifying Pro reasoning state, if the answer was not read, or if the browser driver evidence cannot be recorded, the Pro synthesis may be saved for diagnostic value, but it must not set `pro_synthesis_complete: yes`.
 
-## Model Selection Gate
+## Pro Selection Gate
 
-The Pro browser gate requires a visible ChatGPT model label of `Pro Extended` or `Extended Pro` before submission. Treat `Thinking Extended`, `Extended Thinking`, ordinary thinking modes, or any non-Pro label as a failed Pro model-selection gate, even if the prompt was pasted successfully.
+The Pro browser gate requires a visible, selected Pro reasoning state before submission. Accept either:
 
-Before submitting, explicitly inspect the model picker or composer header, switch to `Pro Extended` or `Extended Pro` when it is not already selected, and re-check the visible label after the switch. If the driver cannot find or select a Pro Extended option, stop and report the failed model-selection gate instead of submitting with the current model.
+- `legacy-combined`: the visible selected model label is `Pro Extended` or `Extended Pro`; or
+- `split-controls`: record the visible selected model label, verify that the selected reasoning or effort label is `Pro`, and, when a `Power` control exposes an ordinal, verify that it is at its maximum position, such as `5 of 5`.
 
-Record the exact visible model label and how it was verified in the synthesis memo. Set `pro_model_selected: yes` only when the visible selected label was `Pro Extended` or `Extended Pro`.
+A model label such as `GPT-5.6 Sol` is model identity; it neither proves nor disproves Pro reasoning. `Extra High` at `4 of 5` is a lower, actionable state, not evidence that Pro is unavailable. Open the composer-adjacent control labeled `Power`, effort, or the current tier; select `Pro` directly when offered, otherwise advance the accessible control to its maximum; then fetch fresh UI state and verify the selected state again.
+
+Discover the control by semantic role, accessible name and value, selected state, and proximity to the composer rather than by one exact label or CSS selector. After each interaction, read fresh DOM or accessibility state and re-derive the target. If Chrome cannot reliably operate the visible control after fresh reinspection and an alternate semantic interaction, use Computer Use against the same Chrome window. Inspect fresh accessibility state first and use screenshot coordinates only when accessibility is incomplete, then re-check the state.
+
+Before submission, close the picker when necessary and verify that the qualifying state persists in the composer. Hidden or `aria-hidden` text, an unselected option, a model name containing `Pro` without selected-state evidence, a lower tier such as `Thinking Extended`, `Extended Thinking`, or `Extra High`, or a maximum ordinal without selected `Pro` semantics does not qualify. Conflicting evidence fails closed.
+
+Record the UI variant, exact selected model label, exact selected reasoning label, `Power` position and maximum when exposed, and the verification method. Set `pro_model_selected: yes` only after a qualifying `legacy-combined` or `split-controls` state is verified. The stamp field name is retained for compatibility; it certifies the selected Pro reasoning state and does not require the model name itself to contain `Pro`.
 
 ## Consent Boundary
 
@@ -63,12 +70,14 @@ Before starting the ChatGPT browser run, confirm the plan key and the current pl
 
 For `$deliver --pro-analysis`, the readable execution plan must already exist as `tasks/execution-plan-<plan-key>.md`. Use that plan plus selected repo context as the Pro browser input. Do not run Pro against only the raw conversation when a deliver plan has not yet been created, and do not require a separate user review before the Pro pass.
 
+Include relevant linked implementation notes in the selected plan context. Follow `skills/deliver/references/plan-format.md` when placing adopted findings: scope, behavior, limits, acceptance criteria, and stop conditions stay in the execution plan; useful verified implementation mechanics may be retained in its linked durable implementation notes.
+
 When `$deliver --deep-research --pro-analysis` is active, the gate is hard:
 
 - `tasks/tmp/research-plan-<plan-key>.md` exists.
 - The research memo contains a Deep Research Completion Stamp with `evidence_bar_met: yes`.
 - The execution plan has been revised from adopted research findings, or the research memo records that no execution-plan section changes were needed.
-- No current research finding marked adopted is still waiting to be reflected in `tasks/execution-plan-<plan-key>.md` or explicitly deferred/rejected with a reason.
+- No current research finding marked adopted is still waiting to be reflected in `tasks/execution-plan-<plan-key>.md` or its linked implementation notes as appropriate, or explicitly deferred/rejected with a reason.
 
 If any pre-browser check fails, stop. Do not run the Pro browser pass as a substitute for the missing research pass. Report the unmet gate and complete or repair deep research first.
 
@@ -79,15 +88,15 @@ After the browser run completes, read the Pro answer and synthesize it before st
 For `$deliver --pro-analysis`, write `tasks/tmp/pro-analysis-<plan-key>.md` with:
 
 - context bundle summary: files or scope sent to Pro, rough size if known, and any excluded risky/noisy paths
-- browser run evidence: driver used (`chrome` or `computer-use`), ChatGPT surface used, exact selected model label, model-selection verification method, submission method (`paste`, `upload`, or both), response completion evidence, and capture method
+- browser run evidence: driver used (`chrome` or `computer-use`), ChatGPT surface used, UI variant, exact selected model and reasoning or effort labels, `Power` position and maximum when exposed, Pro-selection verification method, submission method (`paste`, `upload`, or both), response completion evidence, and capture method
 - Pro findings ledger: stable finding ID, Pro claim, local verification evidence, disposition (`adopted`, `rejected`, `deferred`), and disposition reason
 - conflict reconciliation: conflicts with repo evidence, the deep-research memo, or the execution plan, and how each conflict was resolved
-- artifact delta: execution-plan sections changed; source-backed claims independently verified when Pro suggested external sources
+- artifact delta: execution-plan sections and linked implementation-note paths and sections changed; source-backed claims independently verified when Pro suggested external sources
 - Pro synthesis completion stamp containing `pro_result_read`, `pro_browser_run`, `pro_model_selected`, `findings_reconciled`, `artifact_changes_applied`, `unresolved_blockers`, and `pro_synthesis_complete`
 
 Before setting `pro_synthesis_complete: yes`, print a short `Pro Findings Summary` in the visible thread/log: adopted, rejected/deferred, blockers, and artifact changes.
 
-Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with `Pro Extended` or `Extended Pro` visibly selected before submission, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
+Set `pro_synthesis_complete: yes` only when the Pro answer was read, the browser evidence shows a real ChatGPT browser run with a qualifying Pro reasoning state verified before submission, every material Pro finding has a disposition, adopted findings have been applied to the `$deliver` execution plan and its linked implementation notes as appropriate, conflicts have been reconciled, the visible findings summary was emitted, and no unresolved blocker remains.
 
 If `pro_result_read`, `pro_browser_run`, `pro_model_selected`, or `pro_synthesis_complete` is missing or not `yes`, stop. Do not refine a `$deliver` plan or execute.
 
@@ -113,7 +122,9 @@ Treat the Pro answer as an external reviewer, not as source of truth.
 
 For `$first-principles-mode --pro-analysis`, stop after synthesis unless the user separately asked for edits.
 
-For `$deliver --pro-analysis`, apply the synthesized findings into the readable execution plan before refinement and either user review or `--fast` implementation unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+For `$deliver --pro-analysis`, apply the synthesized findings to the readable execution plan and its linked implementation notes as appropriate before refinement and either user review or `--fast` implementation unless the Pro pass reveals a true blocker that is unsafe, contradictory, or impossible to default.
+
+Apply verified implementation mechanics to relevant linked implementation notes under the Deliver placement rule above, and retain them there before any cleanup of the temporary Pro-analysis memo. Do not copy raw Pro output into the notes or treat it as verified evidence.
 
 For `$deliver --pro-analysis`, raw Pro browser output is not a sufficient synthesis artifact. The Pro answer must be reduced into `tasks/tmp/pro-analysis-<plan-key>.md`, a short `Pro Findings Summary` must be printed in the visible thread/log, and the memo must end with `pro_result_read: yes`, `pro_browser_run: yes`, `pro_model_selected: yes`, and `pro_synthesis_complete: yes` before downstream planning continues.
 

@@ -1,0 +1,116 @@
+{
+  "schema_version": 2,
+  "oracle_version": "deliver-plain-language-v12.34",
+  "bundle_oracle_version": "deliver-plain-language-v12.32",
+  "bundle_manifest_schema_version": 2,
+  "bundle_subdirectory": "private-oracle",
+  "required_files": [
+    "author-v132.mjs",
+    "bundle-manifest.json",
+    "cases.json",
+    "expected-answers.json",
+    "judge-allocation-manifest.json",
+    "projected-arm-packet.json",
+    "response-schema.json",
+    "validate-v132.mjs"
+  ],
+  "manifest_declared_imported_files": [
+    "author-v132.mjs",
+    "cases.json",
+    "expected-answers.json",
+    "judge-allocation-manifest.json",
+    "projected-arm-packet.json",
+    "response-schema.json",
+    "validate-v132.mjs"
+  ],
+  "required_file_modes": {
+    "author-v132.mjs": "100755",
+    "bundle-manifest.json": "100644",
+    "cases.json": "100644",
+    "expected-answers.json": "100644",
+    "judge-allocation-manifest.json": "100644",
+    "projected-arm-packet.json": "100644",
+    "response-schema.json": "100644",
+    "validate-v132.mjs": "100755"
+  },
+  "public_binding_paths": [
+    "evals/deliver/harness.py",
+    "evals/deliver/plain-language-v12/adapter.py",
+    "evals/deliver/plain-language-v12/baseline-package-manifest.json",
+    "evals/deliver/plain-language-v12/candidate-behavior-map.json",
+    "evals/deliver/plain-language-v12/candidate-package-manifest.json",
+    "evals/deliver/plain-language-v12/case_bundle_validator.py",
+    "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
+    "evals/deliver/plain-language-v12/execution-policy.json",
+    "evals/deliver/plain-language-v12/independent-case-bundle-interface.json",
+    "evals/deliver/plain-language-v12/private_runtime_launcher.py",
+    "evals/deliver/plain-language-v12/public-contract-inventory.json",
+    "evals/deliver/plain-language-v12/readiness_transition.py",
+    "evals/deliver/plain-language-v12/root-isolation-dependencies.json",
+    "evals/deliver/plain-language-v12/root_isolation_probe.py",
+    "evals/deliver/plain-language-v12/standalone_case_bundle_validator.mjs",
+    "evals/deliver/plain-language-v12/wording-approval.json"
+  ],
+  "response_schema_binding": {
+    "bundle_file": "response-schema.json",
+    "public_source": "evals/deliver/plain-language-v12/comprehension-vocabulary.json",
+    "required_relation": "byte_identical"
+  },
+  "standalone_validator_binding": {
+    "bundle_file": "validate-v132.mjs",
+    "public_source": "evals/deliver/plain-language-v12/standalone_case_bundle_validator.mjs",
+    "required_relation": "byte_identical"
+  },
+  "expected_counts": {
+    "public_behavior_count": 108,
+    "retained_case_count": 103,
+    "removal_absence_case_count": 5,
+    "total_case_count": 108,
+    "expected_answer_count": 108,
+    "judge_lane_count": 3
+  },
+  "expected_model": "gpt-5.6-sol",
+  "expected_reasoning": "xhigh",
+  "expected_allocation_status": "allocated_not_run",
+  "namespace_pattern": "^v1232-[0-9a-f]{20}$",
+  "freshness_contract": {
+    "author_context": "fresh_no_context_sol_xhigh_from_public_inventory_only",
+    "candidate_contract_wording_available": false,
+    "prior_hidden_case_access": false,
+    "exact_byte_freshness_basis": "v1232_specific_namespace",
+    "semantic_nonreuse_against_v12_22_status": "unavailable_lost_authenticated_case_bytes",
+    "semantic_nonreuse_claimed": false
+  },
+  "carried_bundle_binding": {
+    "bundle_controller_commit": "5bdd3d012e9a85da91747b975971f25c3c5bfe55",
+    "bundle_source_commit": "ab2ce57b733c3f04629121cdf3e6dce845431240",
+    "bundle_source_tree": "8b3f4c18655ee77f6d3f09f52ce125abc0457509",
+    "bundle_manifest_sha256": "97f43a97aa462c1be94ef679a008fff7271f2467e4b1b7f1b4a76f009c7b9956",
+    "manifest_payload_sha256": "8297e7e0a5aefa08a545eeeb97d456702aea4973b821ecba424f4a9ef58db47d",
+    "official_arm_execution_performed": false,
+    "official_judge_execution_performed": false,
+    "preservation_reason": "The hidden case semantics, answers, and allocated-not-run judge lanes are unchanged; v12.34 only corrects the staged root probe launch to suppress bytecode writes."
+  },
+  "import_policy": {
+    "all_required_source_files_must_be_committed": true,
+    "all_manifest_declared_files_must_import_byte_exact": true,
+    "bundle_manifest_must_import_byte_exact": true,
+    "post_import_rewrite_allowed": false,
+    "derived_files_may_not_collide_with_required_files": true,
+    "standalone_and_integrated_validation_must_reconcile": true
+  },
+  "standalone_validator_output_fields": [
+    "bundle_manifest_sha256",
+    "bundle_source_commit",
+    "bundle_source_tree",
+    "controller_commit",
+    "controller_tree",
+    "imported_file_sha256",
+    "manifest_payload_sha256",
+    "oracle_version",
+    "public_file_sha256",
+    "schema_version",
+    "status"
+  ],
+  "integrated_validator_path": "evals/deliver/plain-language-v12/case_bundle_validator.py"
+}

@@ -1,0 +1,24 @@
+{
+  "fixed_conditions": {
+    "approval": "Approved as written. Implement the complete plan. Do not expand scope.",
+    "local_stop_boundary": "Stop after local implementation, validation, remediation review evidence, and output freeze. Do not push, open a pull request, merge, or modify the tracked source fixture.",
+    "model": "gpt-5.6-sol",
+    "reasoning": "xhigh"
+  },
+  "fixture": {
+    "kind": "directory",
+    "path": "fixture",
+    "tree_sha256": "5e09ad69f031f7231c35b517c745e02b47bcaf311177f1b0c472bed3be0fa49f"
+  },
+  "id": "retry-failed",
+  "pre_packet_files": [
+    "scenario/source-bullets.md",
+    "scenario/acceptance-contract.md",
+    "scenario/runner-prompt.md"
+  ],
+  "review_packet_files": [
+    "review-packet/findings.md",
+    "review-packet/deep-structure-probe.py"
+  ],
+  "schema_version": 1
+}

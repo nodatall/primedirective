@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "021ac29eab5b28afc2222e16944c540dfd8362e9",
+  "files": [
+    {
+      "path": "skills/deliver/SKILL.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "832044c64a0d9e49c4572143f59f64eba5ce5ee6",
+      "sha256": "94569e1e7e005348901b6193e0fdfb7ef16132fec70c6ef300f1435ef1ced5cf",
+      "byte_size": 43712
+    },
+    {
+      "path": "skills/deliver/agents/openai.yaml",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "a83def5a21266d28873b5a0d5180ba5ecedfcbeb",
+      "sha256": "bd9642468f72f9d61d0c207c9fca2250da9fcfa7bd4bfa09309a097bed08f68f",
+      "byte_size": 562
+    },
+    {
+      "path": "skills/deliver/references/plan-format.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "9ac0279f3da8d1b933bd31817fbff489768da35d",
+      "sha256": "59248785d651310248330af24f5b59f72e1fb4b07210fd02e740780499c98b12",
+      "byte_size": 6549
+    },
+    {
+      "path": "skills/deliver/references/rereview-scope-record.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "a086d458dda96898b34fa06833e9da23b27df8e1",
+      "sha256": "18fe42f8e104b9184dad4b17bfc50605adb4f14d58874f9c1969d05a17960df4",
+      "byte_size": 4718
+    },
+    {
+      "path": "skills/deliver/references/worker-packet.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "157c94b88ed8e2234c2a1ab4df5f846136e8bc49",
+      "sha256": "00ce208f8d277eaf9058dc2f8390968610fa113665ad8c0479d99c821f9c0780",
+      "byte_size": 2462
+    },
+    {
+      "path": "skills/deliver/scripts/validate_rereview_scope.py",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "8859137686d8fe75c83fe8dcb2d9f5f1aa818aea",
+      "sha256": "10faa0f7baad767846e423c218e27e17e8427e97b98e695c33d5b6b9060e36c0",
+      "byte_size": 9891
+    },
+    {
+      "path": "skills/plan-to-goal/SKILL.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "031eaf653be4ef8cd791a02cd747af5d05ef6e4e",
+      "sha256": "d95bdd8922f747845171f38a445c4b5f5426dd7cc9cacfda150230c98a3781b1",
+      "byte_size": 19798
+    },
+    {
+      "path": "skills/review-plan/SKILL.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "30b3d69e3a637c6a62723b9e250ab2c0892676ca",
+      "sha256": "bb4b2d3cdb16aa169f3b7f12691b55a5a90a4358a2bc2291f1a6d6b3e9febb95",
+      "byte_size": 17822
+    },
+    {
+      "path": "skills/shared/references/analysis/pro-browser-analysis.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "1d23333712c182e19cec3a9328c6cc29b6f6e557",
+      "sha256": "16fe84008db7f7a8d0f0365293bbdfaba48de43dd86b8a2952921239ffbfffd6",
+      "byte_size": 11093
+    },
+    {
+      "path": "skills/shared/references/analysis/verification-pivot.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "230377f31ce9d9b3735cef9b4e1501bf16c8a6bd",
+      "sha256": "7a3f438e33461f0534b38547b49b3b9289d20c9098c4d7fed501eccc0c7565fd",
+      "byte_size": 3457
+    },
+    {
+      "path": "skills/shared/references/architecture/architecture-guidance.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "f51343c320e16ab220a1186a636af4a735b8435c",
+      "sha256": "abe6e5960f9a851e68f3dfd1562beeab5bcaad8a8fac9bf49d969ed9fb9d0810",
+      "byte_size": 7881
+    },
+    {
+      "path": "skills/shared/references/contract-ownership.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "c4ffd53a52ed8ec9997b8969f2d92c5f51eda8ce",
+      "sha256": "0efb4fa3cb864fa012a5281a3905d90018426d9f5e9755322415e13b13fa3b65",
+      "byte_size": 13224
+    },
+    {
+      "path": "skills/shared/references/execution/finalization-gate.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "ff5d0044789872863429282407c9cf7b9e316415",
+      "sha256": "a83f572ed440702e480fbfbd422bc1d0acfd0c1d3e7c48ff31935c26515ded73",
+      "byte_size": 5682
+    },
+    {
+      "path": "skills/shared/references/plain-language.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "858451445a8041b56605e4cc041a0d1e3ef884b3",
+      "sha256": "04684d2e101b72a7077653be76f0ffe226fbfa0c20663680dad71efdeed02d49",
+      "byte_size": 1549
+    },
+    {
+      "path": "skills/shared/references/planning/deep-research.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "350c6ad00f5115e2022cf9ef6e29771a347f3086",
+      "sha256": "8a294d811c7a7c5890fcc58a9ccd6bd1d1fd6a7dfc24341013d2f30e6efe3a5c",
+      "byte_size": 27763
+    },
+    {
+      "path": "skills/shared/references/reasoning-budget.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "b0775cb19abdb042fb1c26bf246b780b97c9bc80",
+      "sha256": "bbf6ea053eef522d897fda2248c170934fcfc3ff31c5bcb57d4f418a0c397940",
+      "byte_size": 2624
+    },
+    {
+      "path": "skills/shared/references/review/finding-disposition.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "49ab7fded99564356187b9d637ea144eb187977c",
+      "sha256": "caa0c5cfeb9bad2eaa9df08456f16929d6c07fff71733e11d6ff5740cb5a3b66",
+      "byte_size": 7635
+    },
+    {
+      "path": "skills/shared/references/review/review-calibration.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "aff058b94c235e4d994cf2813480c58a1615fd71",
+      "sha256": "39e0834d27caab52dace14157c00778a3f07d9e4bad149d7cf64a79e25bf6329",
+      "byte_size": 3352
+    },
+    {
+      "path": "skills/shared/references/review/review-protocol.md",
+      "git_mode": "100644",
+      "executable": false,
+      "git_blob_sha": "3b096c8d1430de2324d0e7ab821cdc74d0a92782",
+      "sha256": "e77523128d68cb6317955c79b2b4ab3f9c819c5acb5ac690cdcbb706f623bd8c",
+      "byte_size": 44270
+    }
+  ],
+  "full_contract_paths": [
+    "skills/deliver/SKILL.md",
+    "skills/deliver/agents/openai.yaml",
+    "skills/deliver/references/plan-format.md",
+    "skills/deliver/references/rereview-scope-record.md",
+    "skills/deliver/references/worker-packet.md",
+    "skills/deliver/scripts/validate_rereview_scope.py",
+    "skills/plan-to-goal/SKILL.md",
+    "skills/review-plan/SKILL.md",
+    "skills/shared/references/analysis/pro-browser-analysis.md",
+    "skills/shared/references/analysis/verification-pivot.md",
+    "skills/shared/references/architecture/architecture-guidance.md",
+    "skills/shared/references/contract-ownership.md",
+    "skills/shared/references/execution/finalization-gate.md",
+    "skills/shared/references/plain-language.md",
+    "skills/shared/references/planning/deep-research.md",
+    "skills/shared/references/reasoning-budget.md",
+    "skills/shared/references/review/finding-disposition.md",
+    "skills/shared/references/review/review-calibration.md",
+    "skills/shared/references/review/review-protocol.md"
+  ],
+  "behavior_runner_paths": [
+    "skills/deliver/SKILL.md",
+    "skills/deliver/references/plan-format.md",
+    "skills/deliver/references/rereview-scope-record.md",
+    "skills/deliver/references/worker-packet.md",
+    "skills/deliver/scripts/validate_rereview_scope.py",
+    "skills/shared/references/analysis/verification-pivot.md",
+    "skills/shared/references/execution/finalization-gate.md",
+    "skills/shared/references/plain-language.md",
+    "skills/shared/references/reasoning-budget.md",
+    "skills/shared/references/review/finding-disposition.md",
+    "skills/shared/references/review/review-protocol.md"
+  ],
+  "interface_paths": [
+    "skills/deliver/SKILL.md",
+    "skills/deliver/agents/openai.yaml",
+    "skills/deliver/references/plan-format.md",
+    "skills/deliver/references/rereview-scope-record.md",
+    "skills/deliver/references/worker-packet.md"
+  ],
+  "manifest_sha256": "755d7c7db5f88bd2f3a21c5bf9adcc9c357c13188a207f4c6461b2cb32fb18e5"
+}

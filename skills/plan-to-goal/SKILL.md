@@ -56,7 +56,7 @@ Write:
 
 The goal plan is a review artifact and source-of-truth context file. It should start with a first-screen finish-line summary: `Goal`, `Done When`, and `Not Done Yet If`, followed by a `Start Prompt` section containing the exact copy-pasteable `/goal` prompt for starting the goal. It should also contain the plain-language summary, evidence, loop rules, primary verifier, supporting checks, stop conditions, acceptance gates, anti-cheat criteria, resume state, and boundaries the user needs to review before the goal starts.
 
-The goal plan itself must contain the compact paste-ready `/goal` prompt. After writing or updating the goal plan, print the same prompt in the chat response for convenience. The slash prompt must reference the absolute path to `tasks/goal-plan-<plan-key>.md` and tell the goal agent to read that file as the source of truth. Keep the `/goal` prompt compact. Target roughly 900 characters and keep it under 4,000 characters. Do not duplicate the plan text inside the slash prompt; put rationale, examples, and long evidence in the goal-plan doc.
+The goal plan itself must contain the compact paste-ready `/goal` prompt. After writing or updating the goal plan, print the same prompt in the chat response for convenience. The slash prompt must reference the absolute path to `tasks/goal-plan-<plan-key>.md` and tell the goal agent to read that file as the source of truth. Keep the `/goal` prompt compact. Target roughly 900 characters and keep it under 4,000 characters. Do not duplicate the plan text inside the slash prompt; keep only essential rationale and evidence references in the goal-plan doc. Distill the whole document using Final Distillation before presenting it.
 
 Every goal plan must put the `Goal`, `Done When`, `Not Done Yet If`, and `Start Prompt` sections before rationale, evidence, and process detail. The `Goal` section names what the goal is trying to accomplish. `Done When` synthesizes the target, primary verifier, required supporting checks, and success stop condition into the shortest useful finish line. `Not Done Yet If` names common early-stop traps from the negative stop conditions. `Start Prompt` is only the copy-pasteable slash goal prompt in a text fence; do not include review prose such as "Please review this before I start" or "If this looks right, say..." Every goal plan must also include a short `Plain Language Summary`, a `Primary Verifier` section with the single strongest success check, a `Supporting Checks` section for non-decisive quality/regression/safety checks, explicit `Stop Conditions`, and a `Resume State` section that gives the next agent one obvious place to resume from after compaction, interruption, or handoff.
 
@@ -116,9 +116,17 @@ Run this pass before the Weak Goal Gate:
 14. Fill `Resume State` so a new agent has one obvious next exact action without rereading the whole conversation.
 15. Write a plain-language summary in two to four short sentences. It should say what the goal is trying to accomplish, why it is adaptive, and what evidence will prove progress.
 16. Write stop conditions that make early stopping hard: success only when the target is met, the primary verifier passes, required supporting checks pass, blocked only when a named external/user/credential/destructive-action blocker prevents useful progress, and interrupted only with `Resume State` updated. A failed validation, partial fix, confusing result, or completed sub-step is not a stop condition by itself.
-17. Write the same compact, file-referential `/goal` prompt in the first-screen `Start Prompt` section and in the chat response. Include a short no-early-stop instruction. Put rationale, examples, detailed file lists, and optimization reasoning in `tasks/goal-plan-<plan-key>.md`, not inside the slash prompt.
+17. Write the same compact, file-referential `/goal` prompt in the first-screen `Start Prompt` section and in the chat response. Include a short no-early-stop instruction. Keep essential rationale and evidence references in `tasks/goal-plan-<plan-key>.md`, not inside the slash prompt; omit examples, exhaustive file lists, and optimization reasoning unless needed to execute or verify the goal.
 
 If the optimizer can recover all Weak Goal Gate items from the source or a cheap repo inspection, write the goal plan. If it cannot, stop with the missing items using the Weak Goal Gate response.
+
+## Final Distillation
+
+On every creation or update, draft the complete goal contract first, then distill the entire goal-plan document to roughly 10% of the draft's word count (about 90% shorter). This applies to the saved plan, not just the chat response or `/goal` prompt. Present only the distilled version.
+
+- Remove repeated explanations, generic advice, speculative branches, and background that does not change execution or verification. Link existing source/evidence artifacts instead of copying them; do not move discarded prose into an appendix or new companion document to claim the reduction.
+- Preserve required sections and every decision needed to run the goal: objective, baseline/target, exact commands and evidence paths, primary verifier, required supporting checks, acceptance and anti-cheat criteria, boundaries, stop conditions, next exact action, and `/goal` prompt. Keep each fact in one place and use brief cross-references where sections overlap. The template is a coverage guide, not a length target.
+- Compare draft and final word counts, then rerun the Weak Goal Gate on the distilled plan. Do not pad a short draft or delete essential execution details to force the ratio; if 10% would make it incomplete, keep the shortest runnable version and briefly explain the exception in chat.
 
 ## Format
 
@@ -240,10 +248,11 @@ Keep the `Resume State` section in that goal plan current after meaningful check
 11. Include measurable baseline, target, ceiling, benchmark, or comparator when available. If missing and central to the goal, add a clear first-loop instruction to measure the baseline before optimizing.
 12. Write the first-screen `Goal`, `Done When`, `Not Done Yet If`, and `Start Prompt` sections before any rationale, evidence, or process detail.
 13. Write the `Plain Language Summary`, `Primary Verifier`, `Supporting Checks`, `Anti-Cheat Criteria`, and `Stop Conditions` sections before printing the `/goal` prompt. If any section is vague, fix the goal plan before review.
-14. Print the same `/goal` prompt in chat after the file is written. The prompt should name the absolute goal-plan path, tell the agent to use the file as source of truth, include the no-early-stop instruction, and stay compact.
-15. Fill `Resume State` with the initial status, current phase, next exact action, blockers, last validation, protected paths, and evidence paths. Use `none yet` only when that is true.
-16. Refine the goal plan for missing evidence, absent baseline or target metrics, vague first-screen finish line, vague primary verifier, missing supporting checks, vague stopping rules, unsafe side effects, unclear validation commands, weak resume state, missing boundaries, and any stop condition that would let the goal finish before the target is met or a true blocker is proven.
-17. Stop for user review. Do not start the goal unless the user explicitly says to start it.
+14. Fill `Resume State` with the initial status, current phase, next exact action, blockers, last validation, protected paths, and evidence paths. Use `none yet` only when that is true.
+15. Refine the goal plan for missing evidence, absent baseline or target metrics, vague first-screen finish line, vague primary verifier, missing supporting checks, vague stopping rules, unsafe side effects, unclear validation commands, weak resume state, missing boundaries, and any stop condition that would let the goal finish before the target is met or a true blocker is proven.
+16. Run Final Distillation, save the distilled version to the same goal-plan path, and verify it still passes the Weak Goal Gate.
+17. Print the same `/goal` prompt in chat after the distilled file is written. The prompt should name the absolute goal-plan path, tell the agent to use the file as source of truth, include the no-early-stop instruction, and stay compact.
+18. Stop for user review. Do not start the goal unless the user explicitly says to start it.
 
 Start prompt and chat prompt shape:
 

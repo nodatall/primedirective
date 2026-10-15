@@ -1,0 +1,54 @@
+{
+  "entries": [
+    {
+      "expected_behavior": "Mixed-offset failed_at values are compared by instant and the limited retry selects the truly oldest job.",
+      "finding_id": "RF-001",
+      "rereview_scope": "targeted",
+      "scenario": "retry-failed",
+      "test_disposition": "permanent",
+      "topic": "mixed_offset_selection"
+    },
+    {
+      "expected_behavior": "Normal malformed input boundaries share the smallest coherent table-driven public-entrypoint test; because the packet includes mutation before potentially failing user-visible output, the repair requires a full rereview.",
+      "finding_id": "RF-002",
+      "rereview_scope": "full",
+      "scenario": "retry-failed",
+      "test_disposition": "table_case",
+      "topic": "grouped_malformed_boundaries"
+    },
+    {
+      "expected_behavior": "The integer-limit and excessive-depth cases are fixed and verified once without preserving disproportionate permanent cases.",
+      "finding_id": "RF-003",
+      "rereview_scope": "targeted",
+      "scenario": "retry-failed",
+      "test_disposition": "probe_only",
+      "topic": "rare_integer_and_deep_structure"
+    },
+    {
+      "expected_behavior": "The boolean helper concern is recorded as unreachable through the string-valued CLI and creates no permanent test.",
+      "finding_id": "RF-004",
+      "rereview_scope": null,
+      "scenario": "retry-failed",
+      "test_disposition": "no_test",
+      "topic": "unreachable_helper"
+    },
+    {
+      "expected_behavior": "A corrupt throttle value is handled silently; the two-script fixture has no tracked test harness, so the isolated repair uses one-run probe evidence and a targeted rereview.",
+      "finding_id": "PF-001",
+      "rereview_scope": "targeted",
+      "scenario": "preflight-remediation-holdout",
+      "test_disposition": "probe_only",
+      "topic": "isolated_repair"
+    },
+    {
+      "expected_behavior": "Codex preflight waits for updater completion; the two-script fixture has no tracked test harness, so verification is probe-only, while cross-process completion semantics require a full rereview.",
+      "finding_id": "PF-002",
+      "rereview_scope": "full",
+      "scenario": "preflight-remediation-holdout",
+      "test_disposition": "probe_only",
+      "topic": "operational_boundary"
+    }
+  ],
+  "frozen_before_contract_edit": true,
+  "schema_version": 1
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_report": {
+      "additionalProperties": false,
+      "properties": {
+        "records": {
+          "allOf": [
+            {"contains": {"properties": {"finding_id": {"const": "RF-001"}}, "required": ["finding_id"]}, "maxContains": 1, "minContains": 1},
+            {"contains": {"properties": {"finding_id": {"const": "RF-002"}}, "required": ["finding_id"]}, "maxContains": 1, "minContains": 1},
+            {"contains": {"properties": {"finding_id": {"const": "RF-003"}}, "required": ["finding_id"]}, "maxContains": 1, "minContains": 1},
+            {"contains": {"properties": {"finding_id": {"const": "RF-004"}}, "required": ["finding_id"]}, "maxContains": 1, "minContains": 1},
+            {"contains": {"properties": {"finding_id": {"const": "PF-001"}}, "required": ["finding_id"]}, "maxContains": 1, "minContains": 1},
+            {"contains": {"properties": {"finding_id": {"const": "PF-002"}}, "required": ["finding_id"]}, "maxContains": 1, "minContains": 1}
+          ],
+          "items": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {"properties": {"repair_authorized": {"const": true}}, "required": ["repair_authorized"]},
+                "then": {"properties": {"rereview_rationale": {"pattern": "\\S"}, "rereview_scope": {"enum": ["targeted", "full"]}}},
+                "else": {"properties": {"rereview_scope": {"const": null}}}
+              }
+            ],
+            "properties": {
+              "finding_id": {"enum": ["RF-001", "RF-002", "RF-003", "RF-004", "PF-001", "PF-002"]},
+              "repair_authorized": {"type": "boolean"},
+              "rereview_rationale": {"type": "string"},
+              "rereview_scope": {"enum": ["targeted", "full", null]},
+              "test_disposition": {"enum": ["permanent", "table_case", "probe_only", "no_test"]},
+              "test_rationale": {"pattern": "\\S", "type": "string"}
+            },
+            "required": ["finding_id", "test_disposition", "test_rationale", "repair_authorized", "rereview_scope", "rereview_rationale"],
+            "type": "object"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "revealed_identity": {"const": "candidate"}
+      },
+      "required": ["revealed_identity", "records"],
+      "type": "object"
+    },
+    "compliant": {"type": "boolean"},
+    "comparison_binding": {"$ref": "comparison-artifacts-schema.json#/$defs/comparisonBinding"},
+    "schema_version": {"const": 1},
+    "upstream_sha256s": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate_report": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"},
+        "identity_reveal": {"$ref": "comparison-artifacts-schema.json#/$defs/digest"}
+      },
+      "required": ["identity_reveal", "candidate_report"],
+      "type": "object"
+    },
+    "violations": {"items": {"type": "string"}, "type": "array"}
+  },
+  "required": ["schema_version", "comparison_binding", "upstream_sha256s", "candidate_report", "compliant", "violations"],
+  "type": "object"
+}
