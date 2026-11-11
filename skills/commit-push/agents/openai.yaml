@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit and Push"
+  short_description: "Commit all changes and push to GitHub"
+  default_prompt: "Use $commit-push to commit all working-tree changes with a concise message and push the current branch to GitHub."

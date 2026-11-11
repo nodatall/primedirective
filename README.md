@@ -38,6 +38,7 @@ The skills are composable. `$deliver` is the main orchestration workflow, and se
 | `first-principles-mode` | Use `$first-principles-mode` when the main need is deep read-only analysis, not edits. It uses a default adversarial council with independent lanes and rebuttal rounds, checks load-bearing claims, and supports `--deep-research` and `--pro-analysis`. |
 | `deep-research-prompt` | Use `$deep-research-prompt` when you want a paste-ready ChatGPT.com Deep Research prompt from the current thread before local planning or execution. It asks for a load-bearing falsification pass and says to revise the conclusion when the evidence breaks. |
 | `repo-sweep` | Use `$repo-sweep` when you want a broad repository audit and production-readiness pass; use `/goal $repo-sweep` when you want the repair/resweep loop. Supports `--pro-analysis`, `--swarm`, `--dep-scan`, and `--preserve-review-artifacts`; `--swarm` includes nitpick depth. |
+| `commit-push` | Use `$commit-push` to commit all working-tree changes, including new files while respecting `.gitignore`, and push the current branch to GitHub. |
 | `ship-branch` | Use `$ship-branch` when the current feature branch should be pushed, PR'd, merged, deleted locally/remotely, and the checkout returned to the base branch. |
 | `page-speed-optimizer` | Use `$page-speed-optimizer` when the work is specifically frontend journey speed: page load, Core Web Vitals, interaction responsiveness, route transitions, flashes, layout shifts, bfcache/back-forward behavior, frontend assets, third-party cost, or browser-perceived performance. Bare `$page-speed-optimizer` is report-first; use `/goal $page-speed-optimizer` for the bounded measured fix loop. |
 | `test-suite-optimizer` | Use `$test-suite-optimizer` when the work is specifically test-suite or CI feedback speed: slow tests, setup/teardown cost, runner configuration, flaky tests that cause reruns, coverage/report cost, CI caches, artifacts, sharding, or parallelism while preserving validation confidence. Bare `$test-suite-optimizer` is report-first; use `/goal $test-suite-optimizer` for the bounded measured fix loop. |
@@ -122,6 +123,10 @@ Modifiers:
 - `--preserve-review-artifacts`: keep sweep/review logs instead of cleaning them after success.
 
 Runs a broad repository audit. It starts with first-principles no-edit analysis, runs review/security/production-readiness checks, reports findings, and pauses before fixes. Invoke `/goal $repo-sweep` for the bounded repair/resweep loop.
+
+### `$commit-push`
+
+Commits all staged, unstaged, and untracked changes while respecting `.gitignore`, then pushes the current branch to GitHub. Invocation authorizes the commit and push without another confirmation. Uses a concise message based on the staged diff, honors required repository checks and Git hooks, and stops on conflicts, an ambiguous destination, or a rejected push. Does not force-push, create or merge PRs, or clean up branches.
 
 ### `$ship-branch`
 
