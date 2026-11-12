@@ -28,14 +28,14 @@ Load these files before running:
 - `skills/shared/references/review/review-calibration.md`
 - `skills/shared/references/review/finding-disposition.md`
 - `skills/shared/references/architecture/architecture-guidance.md` when `docs/ARCHITECTURE.md` exists or the review touches boundary-affecting changes
-- `skills/shared/references/execution/task-file-contract.md`
+- `skills/merge-review/references/merge-readiness-rubric.md`, `Required Inputs` section only
 - `skills/shared/references/reasoning-budget.md`
 
 ## Workflow
 
 1. Keep current branch (do not create/rename/switch branch during review).
 2. Create the correct review log file when missing, otherwise append a new review round to the existing file.
-3. For task-scoped review, use PRD + TDD + tasks-plan as scope context when those artifacts exist.
+3. Resolve the review context below and pass it to the review subagent along with the full-branch review scope.
 4. Select the active prompt profile from `review-protocol.md`, then execute its prompts sequentially, one prompt at a time.
    - Follow `reasoning-budget.md`: explicit review runs should use the strongest appropriate reasoning tier for the selected model family or budget.
    - Include the bounded adversarial-prior checks from `review-protocol.md` during Prompt A, and do not force findings when the hostile prior is falsified by evidence.
@@ -50,8 +50,16 @@ Default behavior is report-first. Do not patch files from standalone `$review-ch
 
 ## Scope
 
-- Task mode review: review all branch changes vs `origin/main`, including working-tree edits, against PRD + TDD + tasks-plan context.
+- Task mode review: review all branch changes vs `origin/main`, including working-tree edits, against the selected execution plan.
 - Ad-hoc review: same branch-wide scope, without task-artifact requirements unless explicitly requested.
+
+## Review context
+
+- Use the approved execution plan identified by the user or active task/thread, normally `tasks/execution-plan-<plan-key>.md`, as the primary scope context. Read its linked implementation notes when relevant; the plan controls scope and the notes support it.
+- If no plan is identified, use an approved execution plan only when it is clearly associated with the reviewed branch or task. Ask which plan applies when that association is ambiguous; do not select an unrelated plan merely because it exists in `tasks/`.
+- Ad-hoc branch review does not require planning artifacts; use the user's stated goal and branch evidence.
+- Include any relevant existing `tasks/tmp/plan-task-<task-id>.md` contract as supporting context, following `review-protocol.md`.
+- Collect the `Required Inputs` from `skills/merge-review/references/merge-readiness-rubric.md` for both review modes. Trace affected callers and consumers through relevant contracts, configuration, and tests when the change touches boundaries. Reuse only its context-gathering guidance; keep this skill's report-first behavior, branch scope, and repair permissions.
 
 ## Output
 

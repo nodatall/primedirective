@@ -52,11 +52,9 @@ Current-branch operational translation:
 
 ## Review context for task-based work
 
-For task-based execution or task-scoped review, evaluate changes against:
+For task-based execution or task-scoped review, evaluate changes against the planning context resolved by the parent workflow:
 
-- `tasks/prd-<plan-key>.md`
-- `tasks/tdd-<plan-key>.md`
-- `tasks/tasks-plan-<plan-key>.md`
+- The approved execution plan, normally `tasks/execution-plan-<plan-key>.md`, and its relevant linked implementation notes when selected. The plan controls scope; notes provide supporting context.
 - `tasks/tmp/plan-task-<task-id>.md` when it exists for the reviewed sub-task
 
 Use those artifacts to judge scope alignment, missing work, and regression risk.
@@ -86,15 +84,11 @@ When subagents are available, execute each review round in one fresh dedicated r
 - During one-shot execution, the main agent must spawn the review subagent after all implementation workers return.
 - Review subagents are siblings of implementation workers. Do not have a worker spawn, direct, or review itself through its own child agent.
 - For task-based `sub-task` review rounds, pass the review subagent:
-  - `tasks/prd-<plan-key>.md`
-  - `tasks/tdd-<plan-key>.md`
-  - `tasks/tasks-plan-<plan-key>.md`
+  - the resolved planning context from `Review context for task-based work` above
   - `tasks/tmp/plan-task-<task-id>.md` when it exists
   - the exact sub-task ID and the current `sub-task` review scope
 - For task-based `full-branch` review rounds, pass the review subagent:
-  - `tasks/prd-<plan-key>.md`
-  - `tasks/tdd-<plan-key>.md`
-  - `tasks/tasks-plan-<plan-key>.md`
+  - the resolved planning context from `Review context for task-based work` above
   - any still-relevant `tasks/tmp/plan-task-<task-id>.md` file that remains available and materially informs branch-wide review
   - the current `full-branch` review scope
 - The main agent still owns review orchestration, review-log updates, decisions about findings, fixes, tests, task-list updates, and commits.
@@ -500,7 +494,7 @@ For one-shot execution only:
 - After all sub-tasks are complete and before finalization, run one review round in `full-branch` scope.
 - When subagents are available, execute that final `full-branch` review round in one fresh review subagent spawned by the main agent.
 - This final round must review the entire branch diff vs `origin/main`, including all committed sub-task work.
-- Unlike one-shot worker handoffs, final review must receive full PRD, TDD, task plan, and still-relevant temp contracts so it can check global intent, cross-task coherence, and accepted risks.
+- Unlike one-shot worker handoffs, final review must receive the full resolved planning context and still-relevant temp contracts so it can check global intent, cross-task coherence, and accepted risks.
 - Start final review scope discovery with concise commands such as `git diff --stat`, `git diff --name-only`, and targeted hunk reads. Do not re-dump every large diff or replay every historical focused test unless evidence is missing, stale, or contradicted.
 - Review the focused verification evidence recorded during the implementation loop, then run the strongest practical broad validation needed for final confidence.
 - Include Agent-Loop Backprop in the final review log. This is required only for task-based `full-branch` review rounds, and should stay tied to material code findings or confidence gaps rather than producing generic process commentary.

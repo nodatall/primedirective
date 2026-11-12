@@ -7,8 +7,6 @@ See `skills/shared/references/contract-ownership.md` for the broader contract ow
 ## Accepted Activations
 
 - Plan refinement: `$plan-refine` with optional `plan-key=<plan-key>`
-- Task review: `$review-chain` with a specific task ID
-- Ad-hoc review: `$review-chain` without a task ID
 - Legacy artifact conversion: `$deliver` or `$plan-to-goal` may use a PRD/TDD/tasks-plan set as source material.
 
 ## Owner References
