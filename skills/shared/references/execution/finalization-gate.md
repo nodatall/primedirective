@@ -2,7 +2,7 @@
 
 Portable hard gate for `$deliver` and legacy task-artifact execution.
 
-This gate uses normal shell commands and repo artifacts only. It does not depend on a Prime Directive script being available in the target repository.
+This gate uses normal shell commands and workflow evidence. It does not depend on a Prime Directive script being available in the target repository.
 
 See `skills/shared/references/contract-ownership.md` for shared contract ownership. This file owns baseline capture and terminal handoff checks.
 
@@ -25,6 +25,18 @@ If `tasks/tmp/` is gitignored, leave the baseline uncommitted. If it is tracked 
 The baseline is a guardrail, not a clean-tree requirement. Dirty files that existed before this workflow began may remain dirty at completion. The run may not leave new uncommitted implementation, test, planning, archive, or cleanup changes that it created.
 
 If a pre-existing dirty file overlaps the planned implementation surface, treat it as an explicit risk: inspect carefully, work with the existing changes, and make sure the final diff/commit accounts for your additions instead of silently hiding them behind the baseline.
+
+## Deliver With `--no-artifacts`
+
+For `$deliver --no-artifacts` only, use the storage rules in `skills/deliver/references/no-artifacts.md` and these substitutions for the default file checks below:
+
+- At kickoff, record `HEAD` and the exact initial `git status --porcelain=v1` output in chat. If a baseline file is useful, write it only in the run-owned external temporary directory; do not create `tasks/tmp/`. Keep the original baseline across approval pauses and resumed work.
+- For check 1, inspect the complete final-review log in that temporary directory, including any required rereview-scope validator results. Missing or incomplete review evidence still blocks completion. Preserve the review outcome and material dispositions in chat before cleanup.
+- For check 2, inspect the entire latest approved chat plan and checkbox state. Every in-scope item must be complete or explicitly deferred by the user. A missing plan file is expected; a missing or incomplete chat plan still blocks completion.
+- Replace check 3's archive requirement with an absence check: inspect the working tree, index, and commits created since kickoff for generated workflow files. Check recorded scratch paths too; a clean git status alone does not prove ignored files or committed-then-deleted artifacts are absent. Preserve pre-existing user files and requested deliverables.
+- Keep checks 4–6: implementation and requested deliverable changes must be committed, and final status must be compared with the original baseline. After checking the review evidence, remove the run-owned temporary files, verify their absence, and rerun final status. Cleanup failure blocks a no-artifacts completion claim.
+
+The final handoff reports cleanup instead of an archive path. These substitutions change storage and archive checks only; they do not waive review, validation, commits, or completion checks. Default Deliver and legacy execution retain the file-based checks below.
 
 ## Before Terminal Handoff
 

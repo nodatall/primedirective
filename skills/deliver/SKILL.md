@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Plan and complete repo work from one readable Markdown execution plan. Supports normal review, `--deep-research`, `--pro-analysis`, and `--fast`; fast skips only the first plan-review pause.
+description: Plan and complete repo work from one readable Markdown execution plan. Supports normal review, `--deep-research`, `--pro-analysis`, `--fast`, and `--no-artifacts`; fast skips only the first plan-review pause, and no-artifacts keeps planning in chat without saved workflow files.
 ---
 
 # Deliver
@@ -20,6 +20,7 @@ Always load:
 Load these before the named decision or action:
 
 - `skills/deliver/references/plan-format.md` before drafting or refining a plan
+- `skills/deliver/references/no-artifacts.md` before any workflow writes when `--no-artifacts` is present
 - `skills/plan-to-goal/SKILL.md` before choosing goal mode for work that may need an adaptive evidence loop
 - `skills/review-plan/SKILL.md` when the user asks for adversarial plan review
 - `skills/shared/references/planning/deep-research.md` when `--deep-research` is present
@@ -30,7 +31,7 @@ Load these before the named decision or action:
 - `skills/shared/references/review/finding-disposition.md`, `skills/shared/references/review/review-protocol.md`, and `skills/deliver/references/rereview-scope-record.md` before final review
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
 
-The shared references own their detailed rules. Apply their Deliver-only `test_disposition` and final-review `rereview_scope` rules only to Deliver. Do not copy their rubrics here or apply them to other review workflows.
+The shared references own their detailed rules. With `--no-artifacts`, apply the storage and handoff substitutions in `skills/deliver/references/no-artifacts.md` throughout this skill and its delegated workflows; all other gates still apply. Apply their Deliver-only `test_disposition` and final-review `rereview_scope` rules only to Deliver. Do not copy their rubrics here or apply them to other review workflows.
 
 ## Commands And Modes
 
@@ -41,13 +42,15 @@ Supported modifiers:
 - `--deep-research`
 - `--pro-analysis`
 - `--fast`
+- `--no-artifacts`
 
 The modes are:
 
 - **Normal:** `$deliver`, `$deliver refine`, `$deliver plan`, or an equivalent request creates or reuses `tasks/execution-plan-<plan-key>.md`. Run requested research, Pro analysis, and refinement in the same command. Then ask the user to review the Markdown plan before implementation.
 - **Fast:** `$deliver --fast` follows the same path, treats the refined plan as approved scope, and starts implementation without the first plan-review pause.
+- **No artifacts:** `$deliver --no-artifacts` keeps the canonical plan and implementation context in this chat, uses temporary files outside the repo only where tooling needs them, and leaves no generated workflow files or archive. It keeps the normal approval pause; combine with `--fast` to skip that pause.
 
-`$deliver --deep-research` and `$deliver --pro-analysis` use the normal mode with their named gate. Their modifiers may be combined with each other and with `--fast`.
+`$deliver --deep-research` and `$deliver --pro-analysis` use the normal mode with their named gate. All modifiers may be combined; `--no-artifacts` changes storage, not the required gates.
 
 When both optional modifiers are present, finish and apply deep research before Pro analysis. Finish and apply Pro analysis before refinement.
 
@@ -62,6 +65,8 @@ Its review replaces Deliver's initial full review only when `skills/shared/refer
 Return to refinement only after a material plan change or when implementation evidence exposes a blocking contradiction.
 
 ## Files
+
+These are the default paths. With `--no-artifacts`, use its chat and external temporary-file substitutions instead; never create these workflow files in the repo or commit them.
 
 - Execution plan: `tasks/execution-plan-<plan-key>.md`
 - Optional implementation notes: `tasks/implementation-notes-<plan-key>.md`, or an existing authoritative guide linked from the plan
