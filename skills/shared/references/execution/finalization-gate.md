@@ -28,15 +28,15 @@ If a pre-existing dirty file overlaps the planned implementation surface, treat 
 
 ## Deliver With `--no-artifacts`
 
-For `$deliver --no-artifacts` only, use the storage rules in `skills/deliver/references/no-artifacts.md` and these substitutions for the default file checks below:
+For `$deliver --no-artifacts` only, use the normal kickoff baseline and live planning/review documents, with the retention rules in `skills/deliver/references/no-artifacts.md`. Run finalization in this order instead of archiving:
 
-- At kickoff, record `HEAD` and the exact initial `git status --porcelain=v1` output in chat. If a baseline file is useful, write it only in the run-owned external temporary directory; do not create `tasks/tmp/`. Keep the original baseline across approval pauses and resumed work.
-- For check 1, inspect the complete final-review log in that temporary directory, including any required rereview-scope validator results. Missing or incomplete review evidence still blocks completion. Preserve the review outcome and material dispositions in chat before cleanup.
-- For check 2, inspect the entire latest approved chat plan and checkbox state. Every in-scope item must be complete or explicitly deferred by the user. A missing plan file is expected; a missing or incomplete chat plan still blocks completion.
-- Replace check 3's archive requirement with an absence check: inspect the working tree, index, and commits created since kickoff for generated workflow files. Check recorded scratch paths too; a clean git status alone does not prove ignored files or committed-then-deleted artifacts are absent. Preserve pre-existing user files and requested deliverables.
-- Keep checks 4–6: implementation and requested deliverable changes must be committed, and final status must be compared with the original baseline. After checking the review evidence, remove the run-owned temporary files, verify their absence, and rerun final status. Cleanup failure blocks a no-artifacts completion claim.
+1. Finish implementation, validation, final review, authorized repairs, and required implementation commits. Run checks 1 and 2 below against the normal live review log and execution plan; verify required rereview-scope validator results too. Every in-scope item must be complete or explicitly deferred by the user. Missing or incomplete documents still block completion.
+2. Read the kickoff baseline and recorded artifact inventory before deleting anything. Compare current status with the baseline, accounting for the run-owned workflow documents intentionally left uncommitted. Any other new implementation or deliverable changes must be committed. Preserve the baseline comparison, validation, and review outcome needed for the final handoff.
+3. Replace check 3's archive requirement with deletion of the recorded workflow-owned files, including ignored and external scratch files, the live plan, implementation notes, review logs, optional memos, mockups, rereview records, baseline, and inventory. Do not delete pre-existing user files, authoritative guides, or requested deliverables. Keep documents intact on approval pauses, blockers, and unfinished runs.
+4. Verify every recorded cleanup path is absent. Inspect the index and commits created during the run to confirm generated workflow documents were excluded. A clean git status alone does not prove ignored files or committed-then-deleted documents are absent.
+5. Run checks 4–6 below using the baseline already read before deletion. Commit any required tracked cleanup and rerun final status. If cleanup fails or new uncommitted run changes remain, stop with the exact blocker rather than claiming completion.
 
-The final handoff reports cleanup instead of an archive path. These substitutions change storage and archive checks only; they do not waive review, validation, commits, or completion checks. Default Deliver and legacy execution retain the file-based checks below.
+The final handoff reports cleanup instead of an archive path. Do not rerun file-presence checks after intentionally deleting documents that passed them. These substitutions change closeout retention and sequencing only; they do not waive document-based planning, review, validation, commits, or completion checks. Default Deliver and legacy execution retain the archive checks below.
 
 ## Before Terminal Handoff
 

@@ -1,24 +1,21 @@
-# Deliver Without Saved Artifacts
+# Deliver With Cleanup After Completion
 
-Read this before any workflow writes when `$deliver --no-artifacts` is active. These substitutions override file creation, persistence, archive, and file-link instructions in Deliver and its delegated planning and review workflows. Approval, refinement, research evidence, validation, review, commits, and stop conditions still apply. `--fast` independently controls the first approval pause.
+Read this before any workflow writes when `$deliver --no-artifacts` is active. Create and use the normal planning and review documents on disk. This flag changes their retention after successful delivery; planning, approval, research, implementation, validation, and review still use their normal documents and gates. `--fast` independently controls the first approval pause.
 
-## Plan And Resume In Chat
+## During The Work
 
-- Keep the canonical plan, checkbox state, implementation findings, open questions, and resume checkpoint in this chat. Follow the plan format and its readability review, but omit the file-specific implementation footer. Do not save execution plans, goal plans, companion notes, or archives.
-- Show the refined plan inline for normal approval. With `--fast`, continue from the refined chat plan. On resume, use the latest approved chat plan and findings; retain `--no-artifacts` even when the user does not repeat the flag.
-- Read existing plans and authoritative guides as source material without modifying, moving, or deleting them as workflow housekeeping. Requested product code, tests, documentation, and other deliverables remain normal repo changes; this mode suppresses Deliver's own process files.
-- Give reviewers and workers the exact plan text, relevant findings, active flag, and temporary workspace location instead of nonexistent plan or notes paths. Update the chat checklist after each item and inspect the entire checklist before continuing or finishing.
-- Optional research and Pro analysis use the same plan and evidence gates. Supply the current chat plan as their input and keep adopted implementation findings in chat. Put required machine-readable records or browser evidence in the temporary workspace; do not create a repo plan to satisfy a file-path default.
-- For goal-shaped work, apply `$plan-to-goal`'s planning checks and show the goal plan and a self-contained `/goal` start prompt inline. The prompt must include the objective, completion criteria, verifier, boundaries, stop conditions, and no-artifacts storage policy instead of referencing an unsaved plan. Stop at that handoff unless the user explicitly asks to start the goal.
+- Create the execution plan, implementation notes, review logs, research and Pro memos, rereview records, and other workflow files at their normal paths. Link the plan for approval and pass real document paths to workers and reviewers. Update and reopen the plan normally.
+- Record the exact workflow-owned paths created during this run, including ignored files and documents from earlier turns of the same run. Keep the path inventory with the temporary review records and include the inventory itself in final cleanup. Preserve pre-existing source documents, authoritative guides, unrelated user files, and requested deliverables.
+- Keep the planning and review documents through approval pauses, plan-only or goal-plan handoffs, blockers, cancellation, and resumed work. Those states do not mean the whole delivery is complete. Retain `--no-artifacts` on resume even when the user does not repeat the flag.
+- Keep generated workflow files out of implementation commits. Inspect staged paths before every commit; never commit an artifact with the intention of deleting it later. This exception applies only to workflow files, not requested code, tests, or product documentation. Do not unstage pre-existing user changes.
+- Record any generated scratch files, screenshots, caches, or reports outside the normal task paths too. Do not delete still-needed planning or review evidence merely because one phase has finished.
 
-## Temporary Files And Cleanup
+## After Successful Completion
 
-When tooling needs files, create one run-owned temporary directory outside every repo/worktree, for example with `mktemp -d "${TMPDIR:-/tmp}/deliver-no-artifacts.XXXXXX"`. Verify its resolved location before using it and record the exact path. Pass it to every delegated worker and reviewer.
+Use the `--no-artifacts` sequence in `skills/shared/references/execution/finalization-gate.md`:
 
-Use that directory for the kickoff baseline, review logs, rereview JSON, research and Pro memos, HTML mockups, screenshots, active-step notes, and disposable probes. Redirect tool caches and generated reports there or disable them. Required evidence fields, completion stamps, and validator phases remain unchanged. Run bundled validators in place against the relocated records. Preview a required frontend mockup from this directory before approval and verify the real UI after implementation.
+1. Finish the entire approved plan, focused validation, final review, authorized repairs, and required commits. Inspect the live plan, review log, required rereview records, and kickoff baseline while they still exist. Missing documents or failed gates block cleanup and completion.
+2. Capture the final review result, material findings, validation, and baseline comparison needed for the final handoff. Then delete every recorded workflow-owned document and scratch file, including the plan, notes, review logs, optional memos, mockups, rereview records, baseline, and path inventory. Delete them instead of moving them into an archive. Do not clean by broad filename patterns.
+3. Verify the recorded paths are absent, preserve requested deliverables and pre-existing files, commit any required tracked cleanup, and rerun final status. Report cleanup in the final handoff instead of linking an archive. If cleanup fails, name the remaining paths and do not claim that no artifacts remain.
 
-Before every commit, inspect the staged paths and exclude generated workflow files. Never commit a plan or log with the intention of deleting it later: it would remain in git history. Do not delete or unstage pre-existing user files to enforce this mode.
-
-Before any handoff, including the plan-review pause, a blocker, cancellation, or final completion, preserve the necessary findings, baseline, and resume state in chat, then remove only the run-owned temporary directory and any other explicitly recorded run-owned scratch files. Do not clean by broad filename patterns. On resume, recreate temporary evidence from the recorded state or rerun the relevant checks; preserve the original kickoff baseline rather than replacing it with the current dirty state.
-
-For final completion, use the `--no-artifacts` path in `skills/shared/references/execution/finalization-gate.md`. Check review evidence before removing it. Report the completed work, validation, review result, and cleanup result in chat; omit archive links. If cleanup fails, report the exact remaining path and do not claim that no artifacts remain.
+If the run stops before successful delivery, keep its documents for review and resumption unless the user explicitly asks to discard them. A goal-plan handoff must retain the goal plan for its `/goal` start prompt; it is not permission to start the goal or delete its inputs.

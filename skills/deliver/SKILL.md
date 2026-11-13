@@ -1,6 +1,6 @@
 ---
 name: deliver
-description: Plan and complete repo work from one readable Markdown execution plan. Supports normal review, `--deep-research`, `--pro-analysis`, `--fast`, and `--no-artifacts`; fast skips only the first plan-review pause, and no-artifacts keeps planning in chat without saved workflow files.
+description: Plan and complete repo work from one readable Markdown execution plan. Supports normal review, `--deep-research`, `--pro-analysis`, `--fast`, and `--no-artifacts`; fast skips only the first plan-review pause, and no-artifacts deletes generated workflow documents after successful completion.
 ---
 
 # Deliver
@@ -31,7 +31,7 @@ Load these before the named decision or action:
 - `skills/shared/references/review/finding-disposition.md`, `skills/shared/references/review/review-protocol.md`, and `skills/deliver/references/rereview-scope-record.md` before final review
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
 
-The shared references own their detailed rules. With `--no-artifacts`, apply the storage and handoff substitutions in `skills/deliver/references/no-artifacts.md` throughout this skill and its delegated workflows; all other gates still apply. Apply their Deliver-only `test_disposition` and final-review `rereview_scope` rules only to Deliver. Do not copy their rubrics here or apply them to other review workflows.
+The shared references own their detailed rules. With `--no-artifacts`, apply the retention and cleanup rules in `skills/deliver/references/no-artifacts.md` throughout this skill and its delegated workflows; all other gates still apply. Apply their Deliver-only `test_disposition` and final-review `rereview_scope` rules only to Deliver. Do not copy their rubrics here or apply them to other review workflows.
 
 ## Commands And Modes
 
@@ -48,9 +48,9 @@ The modes are:
 
 - **Normal:** `$deliver`, `$deliver refine`, `$deliver plan`, or an equivalent request creates or reuses `tasks/execution-plan-<plan-key>.md`. Run requested research, Pro analysis, and refinement in the same command. Then ask the user to review the Markdown plan before implementation.
 - **Fast:** `$deliver --fast` follows the same path, treats the refined plan as approved scope, and starts implementation without the first plan-review pause.
-- **No artifacts:** `$deliver --no-artifacts` keeps the canonical plan and implementation context in this chat, uses temporary files outside the repo only where tooling needs them, and leaves no generated workflow files or archive. It keeps the normal approval pause; combine with `--fast` to skip that pause.
+- **No artifacts:** `$deliver --no-artifacts` creates and uses the normal planning and review documents on disk throughout the work, then deletes the run's workflow documents after successful completion instead of archiving them. Keep them during review pauses, blockers, and unfinished work. Combine with `--fast` to skip the first plan-review pause.
 
-`$deliver --deep-research` and `$deliver --pro-analysis` use the normal mode with their named gate. All modifiers may be combined; `--no-artifacts` changes storage, not the required gates.
+`$deliver --deep-research` and `$deliver --pro-analysis` use the normal mode with their named gate. All modifiers may be combined; `--no-artifacts` changes retention after completion, not planning or the required gates.
 
 When both optional modifiers are present, finish and apply deep research before Pro analysis. Finish and apply Pro analysis before refinement.
 
@@ -66,7 +66,7 @@ Return to refinement only after a material plan change or when implementation ev
 
 ## Files
 
-These are the default paths. With `--no-artifacts`, use its chat and external temporary-file substitutions instead; never create these workflow files in the repo or commit them.
+Use these paths in every mode. With `--no-artifacts`, keep generated workflow documents uncommitted during the run and delete them only after successful completion, following its cleanup rules instead of archiving.
 
 - Execution plan: `tasks/execution-plan-<plan-key>.md`
 - Optional implementation notes: `tasks/implementation-notes-<plan-key>.md`, or an existing authoritative guide linked from the plan
@@ -185,6 +185,8 @@ Skip final review only when a real blocker prevents it. Stop with the blocker an
 
 ### 9. Archive And Finalize
 
+With `--no-artifacts`, follow the completion checks and deletion sequence in `skills/shared/references/execution/finalization-gate.md` instead of the archive steps below. Check the live plan and review documents before deleting them.
+
 After final-review findings are dispositioned and required repairs are verified:
 
 1. Move `tasks/execution-plan-<plan-key>.md` to `tasks/archive/<yyyy-mm-dd>-<plan-key>/execution-plan-<plan-key>.md`.
@@ -196,7 +198,7 @@ After final-review findings are dispositioned and required repairs are verified:
 
 Do not archive `tasks/goal-plan-<plan-key>.md` unless the user explicitly converts it into a normal execution plan.
 
-Run the `$deliver` readable-plan path in `skills/shared/references/execution/finalization-gate.md` immediately before the final handoff. Search the entire live or archived plan for unchecked items. Continue when any in-scope item remains unless a real blocker prevents it. Commit any new closeout work.
+Run the `$deliver` readable-plan path in `skills/shared/references/execution/finalization-gate.md` immediately before the final handoff. Search the entire live or archived plan for unchecked items; with `--no-artifacts`, make this check before cleanup. Continue when any in-scope item remains unless a real blocker prevents it. Commit any new closeout work.
 
 ## Handoffs
 
@@ -204,6 +206,6 @@ At the normal plan-review gate, link the plan, say whether refinement finished, 
 
 In `--fast` mode, say the first plan-review pause was skipped. Stop and list any implementation-changing `Open question:` instead of starting work. Otherwise continue without a review handoff.
 
-Write the final handoff only from evidence that passed finalization. Include the archived plan, completed work, relevant commits and validation, final-review result and material findings, skipped checks, blockers, residual risk, branch or PR state, and final working-tree status.
+Write the final handoff only from evidence that passed finalization. Include the archived plan (or cleanup result with `--no-artifacts`), completed work, relevant commits and validation, final-review result and material findings, skipped checks, blockers, residual risk, branch or PR state, and final working-tree status.
 
 Do not claim completion until every in-scope checkbox is done or the user explicitly deferred it, focused validation ran, and final review completed.

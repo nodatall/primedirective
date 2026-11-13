@@ -31,7 +31,7 @@ The skills are composable. `$deliver` is the main orchestration workflow, and se
 
 | Skill | What it does |
 | --- | --- |
-| `deliver` | Use `$deliver` for the main planning, implementation, and review workflow. After you talk through what you want to build, it turns the conversation into a plain Markdown plan with checkboxes, optionally runs `--deep-research` or `--pro-analysis`, improves the plan, shows it for review, then implements it task by task with focused subagents, commits, validation, and final review. Use `--fast` only when you want to skip the initial plan-review pause. Add `--no-artifacts` to keep planning in chat and leave no generated workflow files or archive. |
+| `deliver` | Use `$deliver` for the main planning, implementation, and review workflow. After you talk through what you want to build, it turns the conversation into a plain Markdown plan with checkboxes, optionally runs `--deep-research` or `--pro-analysis`, improves the plan, shows it for review, then implements it task by task with focused subagents, commits, validation, and final review. Use `--fast` only when you want to skip the initial plan-review pause. Add `--no-artifacts` to use planning and review documents normally, then delete them after successful completion instead of archiving. |
 | `clarifier` | Use `$clarifier` when you want it to reconstruct the relevant context, question the apparent main point, and search supported directions in parallel. It returns concise feedback and useful directions by default; ask explicitly for a rewrite when you want one selected natural revision. |
 | `plain-language` | Use `$plain-language` when you want a shorter, clearer, plainer answer or rewrite. |
 | `plan-to-goal` | Use `$plan-to-goal [plan-key=<plan-key>]` when a rough goal prompt, thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with an embedded copy-pasteable `/goal` start prompt. |
@@ -62,7 +62,7 @@ Modifiers:
 - `--pro-analysis`: run ChatGPT Pro browser escalation after the readable execution plan exists, synthesize findings into the plan, then refine and ask the user to review the Markdown file only after the Pro synthesis gate succeeds.
 - `--deep-research --pro-analysis`: run deep research first, apply adopted findings to the execution plan, then run ChatGPT Pro against the researched plan before refinement.
 - `--fast`: skip only the initial plan-review pause after refinement, then start implementation immediately; validation, final review, archive, commit, and finalization still run.
-- `--no-artifacts`: keep the plan and implementation context in chat, use external temporary files only where tooling needs them, and clean them before handoff without saving or archiving workflow files. Review and validation still run. Combine with `--fast` to also skip the initial plan-review pause.
+- `--no-artifacts`: create and use planning and review documents normally, keep them while work is in progress, then delete the run's workflow files after successful completion instead of archiving. Keep generated workflow files out of commits. Combine with `--fast` to also skip the initial plan-review pause.
 
 `$deliver` is the main packaged workflow for planning, implementation, and review.
 
@@ -70,7 +70,7 @@ It is also a composition point. It does not try to keep every behavior in one gi
 
 The normal flow starts with freeform conversation. You talk with the agent until the work is clear enough, then say `deliver`. The skill takes the whole conversation and turns it into one readable execution plan refined right away. The plan is simple, plain-language, saved on disk, and built around checkboxes so the work can be reviewed, resumed, and finished deliberately.
 
-For work where the repository should contain only the requested deliverables, use `$deliver --no-artifacts` or `$deliver --fast --no-artifacts`. The plan stays in chat, temporary workflow evidence is cleaned before handoff, and no process files enter the repo or git history. Existing user files and requested product documentation are preserved.
+For work where the repository should end with only the requested deliverables, use `$deliver --no-artifacts` or `$deliver --fast --no-artifacts`. Plans and review documents exist on disk throughout planning, implementation, and final review. They remain available across pauses and blockers, then are deleted once the whole delivery succeeds. Existing user files and requested product documentation are preserved.
 
 When the work needs an adaptive loop instead of a normal execution plan, `$deliver` can route to a goal-plan prompt for adaptive evidence loops.
 

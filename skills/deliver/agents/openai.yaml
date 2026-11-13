@@ -1,4 +1,4 @@
 interface:
   display_name: "Deliver"
-  short_description: "Plan and finish work with optional saved artifacts"
-  default_prompt: "Use $deliver to make one readable plan, run --deep-research and --pro-analysis when requested, wait for my approval unless I use --fast, then implement, validate, review, archive, commit, and finalize the approved work. With --no-artifacts, keep planning in chat and replace archiving with cleanup of temporary workflow files before handoff."
+  short_description: "Plan and finish work with optional cleanup at completion"
+  default_prompt: "Use $deliver to make one readable plan, run --deep-research and --pro-analysis when requested, wait for my approval unless I use --fast, then implement, validate, review, archive, commit, and finalize the approved work. With --no-artifacts, create and use planning and review documents normally, then delete the run's workflow files after successful completion instead of archiving."
