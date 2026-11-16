@@ -150,7 +150,9 @@ Start only from the canonical approved execution plan. Choose the next unchecked
 
 Read the relevant linked implementation notes before implementing each item and include their path and section references in its worker packet. Update findings when implementation disproves them, keeping scope changes and unresolved decisions in the plan.
 
-Before editing, identify repo-local implementation and validation patterns. Use a private active-step note only when helpful. For each non-trivial item, create the packet from `skills/deliver/references/worker-packet.md` and assign one worker by default when workers are available. Never run implementation workers in parallel. Only read-only discovery or review lanes, such as `$repo-sweep --swarm`, may run in parallel. The orchestrator implements directly only when workers are unavailable. Do not mention whether reviewers or workers were used unless it creates a real blocker or residual risk.
+Before adding logic, find where the behavior is decided today and how callers use it. Reuse that implementation when its rules fit the request. If the behavior already exists, verify it. If sharing would force unrelated callers through new flags or exceptions, keep the distinct behavior local. Among correct solutions, prefer the one a maintainer can trace and safely change. Add an abstraction when it makes a rule, dependency, or variation that exists today easier to manage. Identify repo-local implementation and validation patterns as needed.
+
+Use a private active-step note only when helpful. For each non-trivial item, create the packet from `skills/deliver/references/worker-packet.md` and assign one worker by default when workers are available. Never run implementation workers in parallel. Only read-only discovery or review lanes, such as `$repo-sweep --swarm`, may run in parallel. The orchestrator implements directly only when workers are unavailable. Do not mention whether reviewers or workers were used unless it creates a real blocker or residual risk.
 
 Before keeping a new or changed test as permanent coverage, use `skills/shared/references/review/finding-disposition.md`. Record `test_disposition: permanent | table_case | probe_only | no_test` and a concise evidence-backed rationale. A disposable or historical fixture without a permanent-test path uses `probe_only`; do not invent a permanent test harness. Every implementation change still needs verification.
 
@@ -167,7 +169,7 @@ After implementation starts, stop only for a required user decision, a missing e
 
 ### 7. Verify Each Change
 
-- Run the narrow check that proves the current item.
+- Run the narrowest existing check or real flow that exercises the changed behavior. When the expected result is unclear, state what the caller should observe. For a bug fix, confirm the check exposes the original failure and passes after the repair when practical.
 - For a parser or validator repair, test accepted-looking inputs against the downstream consumer grammar. When relevant to shell numeric state, include empty, non-digit, leading-zero or base-sensitive, and bounded-length inputs.
 - For an approved cross-process lifecycle repair, verify synchronous completion after any intermediate readiness signal, concurrent waiters, the active owner or lock, failed or stale owner recovery, and default-versus-foreground behavior. A synchronous caller must not return while protected work or its live owner or lock remains active. Do not expand the approved contract to satisfy the check.
 - For UI, layout, styling, or rendered-content changes, inspect the real affected UI when practical and capture visual evidence.

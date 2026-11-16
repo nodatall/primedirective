@@ -27,11 +27,12 @@ Relevant context:
 Repo context:
 - Current branch:
 - Relevant files or surfaces to inspect first:
-- Existing local pattern to follow:
+- Existing behavior owner, caller, and local pattern, when present:
 - Unrelated dirty files to avoid:
 
 Validation:
-- Focused command or flow to run:
+- Focused command or real flow to run:
+- Expected observable result: <include when unclear>
 - UI/app inspection needed: yes/no
 
 Test value when this step adds or changes tests:
