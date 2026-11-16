@@ -32,6 +32,7 @@ The skills are composable. `$deliver` is the main orchestration workflow, and se
 | Skill | What it does |
 | --- | --- |
 | `deliver` | Use `$deliver` for the main planning, implementation, and review workflow. After you talk through what you want to build, it turns the conversation into a plain Markdown plan with checkboxes, optionally runs `--deep-research` or `--pro-analysis`, improves the plan, shows it for review, then implements it task by task with focused subagents, commits, validation, and final review. Use `--fast` only when you want to skip the initial plan-review pause. Add `--no-artifacts` to use planning and review documents normally, then delete them after successful completion instead of archiving. |
+| `orchestrator` | Use `$orchestrator` to make the current chat coordinate subagents. Prefix tasks with `!` to delegate them; the parent chooses each worker's model and reasoning effort, coordinates ownership, and checks the result. Use `$orchestrator off` to end the convention. |
 | `clarifier` | Use `$clarifier` when you want it to reconstruct the relevant context, question the apparent main point, and search supported directions in parallel. It returns concise feedback and useful directions by default; ask explicitly for a rewrite when you want one selected natural revision. |
 | `plain-language` | Use `$plain-language` when you want a shorter, clearer, plainer answer or rewrite. |
 | `plan-to-goal` | Use `$plan-to-goal [plan-key=<plan-key>]` when a rough goal prompt, thread plan, readable execution plan, or PRD/TDD/tasks-plan set should become a reviewable goal-plan doc with an embedded copy-pasteable `/goal` start prompt. |
@@ -53,6 +54,12 @@ The skills are composable. `$deliver` is the main orchestration workflow, and se
 | `cleanup-merged-branches` | Use `$cleanup-merged-branches` when you want safe local and remote cleanup of merged branches. You can include a branch name to inspect only that branch. |
 
 ## Skill Details
+
+### `$orchestrator`
+
+Run `$orchestrator` once in a chat, then send tasks such as `! Fix the button spacing` or `! Investigate the duplicate checkout requests`. The parent stays responsible for context, worker assignments, verification, and the answer. Codex directly selects each worker's model and reasoning effort from the current runtime using task demands, documented capabilities, and available cost or latency information. It uses no separate routing model or service. New models become eligible when the runtime exposes them; the skill contains no fixed model list or model-to-task table. Each model-routed worker receives a focused brief; full-history workers inherit the parent's settings when the runtime requires it.
+
+Ordinary messages remain conversation with the parent. A bare `!` delegates the most recently agreed task when it is clear. `$orchestrator off` ends the convention for this chat. This does not change global model defaults or expand authorization for external actions, commits, or pushes. A requested specialist skill keeps its own workflow requirements.
 
 ### `$deliver`
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Orchestrator"
+  short_description: "Delegate ! tasks with per-worker model routing"
+  default_prompt: "Use $orchestrator to coordinate this chat and delegate tasks I prefix with !. Have Codex directly choose each worker model and reasoning level from current runtime capabilities, without a separate router."
