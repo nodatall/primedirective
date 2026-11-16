@@ -4,11 +4,20 @@ Read this before assigning a non-trivial `$deliver` implementation item.
 
 Give the worker one bounded item and only the context needed for it:
 
+Before dispatch, select settings using `skills/deliver/references/agent-routing.md` and make the spawn request match the routing fields below. These fields describe the assignment's actual settings, including inheritance or unavailable overrides when applicable.
+
 ```md
 # Active Step Packet
 
 Plan: tasks/execution-plan-<plan-key>.md
 Step: <exact phase and checkbox text>
+
+Subagent routing:
+- Role and difficulty:
+- Model: <exact available identifier, or inherited>
+- Reasoning effort: <supported level, or inherited>
+- Context mode: <focused brief, or full-history inheritance>
+- Selection reason: <one sentence>
 
 Goal:
 <one sentence from the plan when useful>

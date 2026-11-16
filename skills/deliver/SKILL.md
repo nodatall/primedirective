@@ -15,6 +15,7 @@ Always load:
 
 - `skills/shared/references/plain-language.md`
 - `skills/shared/references/reasoning-budget.md`
+- `skills/deliver/references/agent-routing.md` before choosing settings for any subagent
 - `skills/shared/references/analysis/verification-pivot.md`
 
 Load these before the named decision or action:
@@ -32,6 +33,8 @@ Load these before the named decision or action:
 - `skills/shared/references/execution/finalization-gate.md` before any terminal handoff
 
 The shared references own their detailed rules. With `--no-artifacts`, apply the retention and cleanup rules in `skills/deliver/references/no-artifacts.md` throughout this skill and its delegated workflows; all other gates still apply. Apply their Deliver-only `test_disposition` and final-review `rereview_scope` rules only to Deliver. Do not copy their rubrics here or apply them to other review workflows.
+
+For every subagent assignment, use `skills/deliver/references/agent-routing.md` to select an available model and supported reasoning effort by task difficulty and role. Its Deliver-specific rules take precedence over the generic role defaults in `reasoning-budget.md`; keep the parent model and the existing worker and review topology unchanged.
 
 ## Commands And Modes
 

@@ -2,6 +2,8 @@
 
 Use phase-appropriate model and reasoning settings. Every skill run should choose deliberately by role, while staying within the user's selected model family or budget unless they explicitly authorize changing it.
 
+Deliver uses `skills/deliver/references/agent-routing.md` for every subagent's model and reasoning selection. That scoped policy replaces the generic role defaults and legacy one-shot fast-model restriction below for Deliver runs only, while preserving its strong-review requirements and explicit user constraints. Other workflows keep the defaults below unless their own routing contract says otherwise.
+
 - Planning, plan refinement, and final review: start with a strong reasoning setting that is appropriate for the user's selected model family or budget.
 - Deep research, first-principles audit, unresolved blocker analysis, repeated review churn, and prior-pass failure recovery: escalate to the strongest available reasoning setting.
 - Implementation and build workers: use strong reasoning, usually one tier below escalated research and review work.

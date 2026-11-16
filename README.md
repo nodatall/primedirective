@@ -87,6 +87,8 @@ After that, the agent runs a self-improvement loop over the plan: ask what can b
 
 Once the user says `implement`, the orchestrator works through the checklist. It packages one small task and the needed context for a subagent, waits for that task to finish, pulls the work back in, validates it, commits useful progress, updates the plan, and moves to the next checkbox. Implementation is sequential by default because broad parallel execution gets messy; the orchestrator may only run work in parallel when it is clearly safe.
 
+For each subagent, Deliver chooses the model and reasoning effort from the current runtime's available options based on task difficulty and role. Mechanical work can use a fast economical model; ordinary implementation uses a suitable coding model; ambiguous work and substantive reviews use strong reasoning. Capability classes let new models take these roles without a fixed model list. User model and budget constraints still apply, the parent model stays unchanged, and implementation workers remain sequential. The selection and reason go in the worker's brief.
+
 When every checkbox is done, `$deliver` runs final review. That review is also handled through focused subagents: each reviewer gets a targeted review job, reports back, and the orchestrator records the findings. The workflow fixes what should be fixed, validates again, commits the review work, archives the plan artifacts, and performs the finalization checks before handoff.
 
 Use bare `$deliver`, `refine`, or `plan`: keep the active checklist in `tasks/execution-plan-<plan-key>.md`, refine it, and ask the user to review the Markdown file before approving implementation unless `--fast` is present.
